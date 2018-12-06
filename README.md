@@ -1,4 +1,5 @@
-# pmd_tool and dlb_pmd_lib
+# pmd_tool
+## (dlb_pmd_lib)
 # version 1.2.0
 
 pmd_tool is a common line utility that converts between
