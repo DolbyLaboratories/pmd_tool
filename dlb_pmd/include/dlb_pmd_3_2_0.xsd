@@ -1,0 +1,1699 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:element name="Smpte2109">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ContainerConfig"/>
+        <xs:element ref="ProfessionalMetadata"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ContainerConfig">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="SampleOffset"/>
+        <xs:element ref="DynamicTags"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SampleOffset">
+    <xs:simpleType>
+      <xs:restriction base="xs:integer">
+        <xs:minInclusive value="-32768"/>
+        <xs:maxInclusive value="32767"/>
+      </xs:restriction>
+    </xs:simpleType>
+  </xs:element>
+  <xs:element name="DynamicTags">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" name="Tag">
+          <xs:complexType>
+            <xs:simpleContent>
+              <xs:extension base="TagReplacement">
+                <xs:attribute name="id" use="required" type="DynamicTagId"/>
+              </xs:extension>
+            </xs:simpleContent>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="TagReplacement">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9a-fA-F]{2}(\.[0-9a-fA-F]{2}){15}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DynamicTagId">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9a-fA-F]+"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PmdString">
+    <xs:restriction base="xs:string">
+        <xs:maxLength value="64"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="ProfessionalMetadata">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="1" name="Title" type="PmdString"/>
+        <xs:element minOccurs="1" maxOccurs="1" ref="AudioSignals"/>
+        <xs:element minOccurs="1" maxOccurs="1" ref="AudioElements"/>
+        <xs:element minOccurs="1" maxOccurs="1" ref="Presentations"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PresentationLoudness"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="EncoderConfigurations"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DynamicUpdate"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="IAT"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="HeadphoneElements"/>
+      </xs:sequence>
+      <xs:attribute name="version" use="required" type="VersionType"/>
+      <xs:attribute name="profile_number" use="optional" type="ProfileInt"/>
+      <xs:attribute name="profile_level"  use="optional" type="ProfileInt"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="ProfileInt">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="VersionType">
+    <xs:restriction base="PmdString">
+      <xs:pattern value="[0-9]+\.[0-9]+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- ___ Audio Signals _______________________________________________________________ -->
+
+  <xs:element name="AudioSignals">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="255" name="AudioSignal" type="AudioSignalDef"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="AudioSignalDef">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Name" type="PmdString"/>
+    </xs:sequence>
+    <xs:attribute name="id" use="required" type="AudioSignalIdType"/>
+  </xs:complexType>
+
+  <xs:simpleType name="AudioSignalIdType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="255"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- __ Audio Elements __________________________________________________ -->
+
+  <xs:element name="AudioElements">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AudioBed"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AudioObject"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="AudioBed">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" name="Name" type="PmdString"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="SpeakerConfig" type = "SpeakerConfigType"/>
+	<xs:element minOccurs="0" maxOccurs="1" name="SourceBedId" type = "AudioElementIdType"/>
+        <xs:element ref="OutputTargets"/>
+      </xs:sequence>
+      <xs:attribute name="id" use="required" type="AudioElementIdType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="AudioElementIdType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="4095"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SpeakerConfigType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="2.0"/>
+      <xs:enumeration value="3.0"/>
+      <xs:enumeration value="5.1"/>
+      <xs:enumeration value="5.1.2"/>
+      <xs:enumeration value="5.1.4"/>
+      <xs:enumeration value="7.1.4"/>
+      <xs:enumeration value="9.1.6"/>
+      <xs:enumeration value="Portable Speaker"/>
+      <xs:enumeration value="Portable Headphone"/>
+      <xs:enumeration value="Not Indicated"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SpeakerType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Left"/>
+      <xs:enumeration value="Right"/>
+      <xs:enumeration value="Center"/>
+      <xs:enumeration value="LFE"/>
+      <xs:enumeration value="Left Surround"/>
+      <xs:enumeration value="Right Surround"/>
+      <xs:enumeration value="Left Rear Surround"/>
+      <xs:enumeration value="Right Rear Surround"/>
+      <xs:enumeration value="Left Top Front"/>
+      <xs:enumeration value="Right Top Front"/>
+      <xs:enumeration value="Left Top Middle"/>
+      <xs:enumeration value="Right Top Middle"/>
+      <xs:enumeration value="Left Top Rear"/>
+      <xs:enumeration value="Right Top Rear"/>
+      <xs:enumeration value="Left Front Wide"/>
+      <xs:enumeration value="Right Front Wide"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:element name="OutputTargets">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="OutputTarget"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="OutputTarget">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="AudioSignals">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element minOccurs="1" maxOccurs="unbounded" name="ID">
+                <xs:complexType>
+      <xs:simpleContent>
+          <xs:extension base="AudioSignalIdType">
+          <xs:attribute name="source_gain_db" type="Gain"/>
+        </xs:extension>
+      </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="id" use="required" type="SpeakerType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="AudioObject">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" name="Name"           type="PmdString"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Class"          type="ClassEnum"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="DynamicUpdates" type="Boolean"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="X_Pos"          type="Coordinate"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Y_Pos"          type="Coordinate"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Z_Pos"          type="Coordinate"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Size"           type="UnitFloat"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Size_3D"        type="Boolean"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Diverge"        type="Boolean"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="AudioSignal"    type="AudioSignalIdType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="SourceGainDB"   type="Gain"/>
+      </xs:sequence>
+      <xs:attribute name="id" use="required" type="AudioElementIdType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="ClassEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Dialog"/>
+      <xs:enumeration value="VDS"/>
+      <xs:enumeration value="Voice Over"/>
+      <xs:enumeration value="Spoken Subtitle"/>
+      <xs:enumeration value="Emergency Alert"/>
+      <xs:enumeration value="Emergency Information"/>
+      <xs:enumeration value="Generic"/>
+      <xs:enumeration value="Reserved"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Boolean">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="False"/>
+      <xs:enumeration value="True"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="UnitFloat">
+    <xs:restriction base="xs:float">  
+      <xs:minInclusive value="0.0"/>
+      <xs:maxInclusive value="1.0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Coordinate">
+    <xs:restriction base="xs:float">  
+      <xs:minInclusive value="-1.0"/>
+      <xs:maxInclusive value="1.0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Gain">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="-infdB"/>
+      <xs:enumeration value="-25.0dB"/>
+      <xs:enumeration value="-24.5dB"/>      
+      <xs:enumeration value="-24.0dB"/>
+      <xs:enumeration value="-23.5dB"/>
+      <xs:enumeration value="-23.0dB"/>
+      <xs:enumeration value="-22.5dB"/>
+      <xs:enumeration value="-22.0dB"/>
+      <xs:enumeration value="-21.5dB"/>
+      <xs:enumeration value="-21.0dB"/>
+      <xs:enumeration value="-20.5dB"/>
+      <xs:enumeration value="-20.0dB"/>
+      <xs:enumeration value="-19.5dB"/>
+      <xs:enumeration value="-19.0dB"/>
+      <xs:enumeration value="-18.5dB"/>
+      <xs:enumeration value="-18.0dB"/>
+      <xs:enumeration value="-17.5dB"/>
+      <xs:enumeration value="-17.0dB"/>
+      <xs:enumeration value="-16.5dB"/>
+      <xs:enumeration value="-16.0dB"/>
+      <xs:enumeration value="-15.5dB"/>
+      <xs:enumeration value="-15.0dB"/>
+      <xs:enumeration value="-14.5dB"/>
+      <xs:enumeration value="-14.0dB"/>
+      <xs:enumeration value="-13.5dB"/>
+      <xs:enumeration value="-13.0dB"/>
+      <xs:enumeration value="-12.5dB"/>
+      <xs:enumeration value="-12.0dB"/>
+      <xs:enumeration value="-11.5dB"/>
+      <xs:enumeration value="-11.0dB"/>
+      <xs:enumeration value="-10.5dB"/>
+      <xs:enumeration value="-10.0dB"/>
+      <xs:enumeration value="-9.5dB"/>
+      <xs:enumeration value="-9.0dB"/>
+      <xs:enumeration value="-8.5dB"/>
+      <xs:enumeration value="-8.0dB"/>
+      <xs:enumeration value="-7.5dB"/>
+      <xs:enumeration value="-7.0dB"/>
+      <xs:enumeration value="-6.5dB"/>
+      <xs:enumeration value="-6.0dB"/>
+      <xs:enumeration value="-5.5dB"/>
+      <xs:enumeration value="-5.0dB"/>
+      <xs:enumeration value="-4.5dB"/>
+      <xs:enumeration value="-4.0dB"/>
+      <xs:enumeration value="-3.5dB"/>
+      <xs:enumeration value="-3.0dB"/>
+      <xs:enumeration value="-2.5dB"/>
+      <xs:enumeration value="-2.0dB"/>
+      <xs:enumeration value="-1.5dB"/>
+      <xs:enumeration value="-1.0dB"/>
+      <xs:enumeration value="-0.5dB"/>
+      <xs:enumeration value="0.0dB"/>
+      <xs:enumeration value="0.5dB"/>
+      <xs:enumeration value="1.0dB"/>
+      <xs:enumeration value="1.5dB"/>
+      <xs:enumeration value="2.0dB"/>
+      <xs:enumeration value="2.5dB"/>
+      <xs:enumeration value="3.0dB"/>
+      <xs:enumeration value="3.5dB"/>
+      <xs:enumeration value="4.0dB"/>
+      <xs:enumeration value="4.5dB"/>
+      <xs:enumeration value="5.0dB"/>
+      <xs:enumeration value="5.5dB"/>
+      <xs:enumeration value="6.0dB"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!-- __ Headphone Elements __________________________________________________ -->
+
+  <xs:element name="HeadphoneElements">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="HeadphoneElement"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="HeadphoneElement">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="1" name="Element" type="AudioElementIdType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="HeadTrackingEnabled" type="Boolean"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="RenderMode" type="RenderModeType"/>
+        <xs:element minOccurs="0" maxOccurs="1" name="ChannelExclusions" type="ChannelExclusionsType"/>
+      </xs:sequence>
+      <xs:attribute name="id" type="AudioElementIdType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="RenderModeType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="127"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="ChannelExclusionsType">
+    <xs:sequence>
+       <xs:element maxOccurs="unbounded" name="ID" type="SpeakerType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- _____ Presentations ________________________________________________ -->
+
+  <xs:element name="Presentations">
+     <xs:complexType>
+       <xs:sequence>
+         <xs:element minOccurs="1" maxOccurs="511" name="Presentation" type="PresentationDef"/>
+       </xs:sequence>
+     </xs:complexType>   
+  </xs:element>
+
+  <xs:simpleType name="PresentationIdType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="511"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="PresentationDef">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="16" name="Name">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="PmdString">
+              <xs:attribute name="language" type="CountryCode"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+      <xs:element minOccurs="1" maxOccurs="1" name="Config"       type="PresentationConfig"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="Language"     type="CountryCode"/>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Element"      type="AudioElementIdType"/>
+    </xs:sequence>
+    <xs:attribute name="id" use="required" type="PresentationIdType"/>
+  </xs:complexType>  
+
+  <xs:simpleType name="PresentationConfig">
+    <xs:restriction base="xs:string">
+      <xs:whiteSpace value="collapse"/>
+      <xs:pattern value="(((2\.0)|(3\.0)|(5\.1(\.(2|4))?)|(7\.1\.4)|(9\.1\.6))( (ME|CM))?( ?\+ [0-9]*(D|VDS|VO|SS|O|EI|EA))*)|(Portable (Headphone|Speaker))"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- ______ Presentation Loudness ______________________________________________-->
+
+  <xs:element name="PresentationLoudness">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" name="Presentation" type="Loudness"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="Loudness">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="1" name="PresentationId"        type="PresentationIdType"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="PracticeType"          type="PracticeTypeType"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="LoudnessRelativeGated" type="LUFS"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="LoudnessSpeechGated"   type="LoudnessSpeechGatedType"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Loudness3Seconds"      type="LUFS"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="MaxLoudness3Seconds"   type="LUFS"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="TruePeak"              type="LUFS"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="MaxTruePeak"           type="LUFS"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="ProgramBoundary"       type="ProgramBoundaryType"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="LoudnessRange"         type="LoudnessRangeType"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="MomentaryLoudness"     type="LUFS"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="MaxMomentaryLoudness"  type="LUFS"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Extension"             type="LoudnessExtensionType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="LoudnessSpeechGatedType">
+    <xs:simpleContent>    
+      <xs:extension base="LUFS">
+        <xs:attribute name="dialgate" type="DialgateType"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="PracticeTypeType">
+    <xs:simpleContent>
+      <xs:extension base="PracticeTypeEnum">
+        <xs:attribute name="dialgate" type="DialgateType"/>
+        <xs:attribute name="correction_type" use="required" type="CorrectionTypeType"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  
+  <xs:simpleType name="PracticeTypeEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="NI"/>
+      <xs:enumeration value="ATSC"/>
+      <xs:enumeration value="EBU"/>
+      <xs:enumeration value="ARIB"/>
+      <xs:enumeration value="FreeTV"/>
+      <xs:enumeration value="5"/>
+      <xs:enumeration value="6"/>
+      <xs:enumeration value="7"/>
+      <xs:enumeration value="8"/>
+      <xs:enumeration value="9"/>
+      <xs:enumeration value="10"/>
+      <xs:enumeration value="11"/>
+      <xs:enumeration value="12"/>
+      <xs:enumeration value="13"/>
+      <xs:enumeration value="Manual"/>
+      <xs:enumeration value="Consumer"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="DialgateType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="NI"/>
+      <xs:enumeration value="Center"/>
+      <xs:enumeration value="Front"/>
+      <xs:enumeration value="Manual"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CorrectionTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="file"/>
+      <xs:enumeration value="realtime"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="LUFS">
+    <xs:restriction base="xs:float">  
+      <xs:minInclusive value="-102.4"/>
+      <xs:maxInclusive value="102.3"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="ProgramBoundaryType">
+    <xs:simpleContent>
+       <xs:extension base="ProgramBoundaryValue">
+         <xs:attribute name="offset" type="ProgramBoundaryOffsetType"/>
+       </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="ProgramBoundaryValue">
+    <xs:restriction base="xs:integer">
+      <xs:enumeration value="-512"/>
+      <xs:enumeration value="-256"/>
+      <xs:enumeration value="-128"/>
+      <xs:enumeration value="-64"/>
+      <xs:enumeration value="-32"/>
+      <xs:enumeration value="-16"/>
+      <xs:enumeration value="-8"/>
+      <xs:enumeration value="-4"/>
+      <xs:enumeration value="-2"/>
+      <xs:enumeration value="2"/>
+      <xs:enumeration value="4"/>
+      <xs:enumeration value="8"/>
+      <xs:enumeration value="16"/>
+      <xs:enumeration value="32"/>
+      <xs:enumeration value="64"/>
+      <xs:enumeration value="128"/>
+      <xs:enumeration value="256"/>
+      <xs:enumeration value="512"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ProgramBoundaryOffsetType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="2047"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:complexType name="LoudnessRangeType">
+    <xs:simpleContent>
+      <xs:extension base="LoudnessRangeValue">
+        <xs:attribute name="practice" use="required" type="LRAPracType"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="LoudnessRangeValue">
+    <xs:restriction base="xs:float">
+      <xs:minInclusive value="0.0"/>
+      <xs:maxInclusive value="102.3"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="LRAPracType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="7"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="LoudnessExtensionType">
+    <xs:complexContent>
+      <xs:extension base="codedstring">
+        <xs:attribute name="bits" type="LoudnessExtensionBitsType"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:simpleType name="LoudnessExtensionBitsType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="2048"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- _____ Encoder configurations ______________________________________________ -->
+
+  <xs:element name="EncoderConfigurations">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Eac3EncodingParameters"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ED2Turnaround"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+
+  <!-- _____ Eac3 encoding parameters ____________________________________________ -->
+
+  <xs:element name="Eac3EncodingParameters">
+    <xs:complexType>
+       <xs:sequence>      
+         <xs:element minOccurs="0" maxOccurs="1" name="Name"          type="PmdString"/>
+         <xs:element minOccurs="0" maxOccurs="1" name="Encoder"       type="Eac3EncoderParamsType"/>
+         <xs:element minOccurs="0" maxOccurs="1" name="Bitstream"     type="Eac3BitstreamParamsType"/>
+         <xs:element minOccurs="0" maxOccurs="1" name="DRC"           type="Eac3DrcParamsType"/>
+         <xs:element minOccurs="0" maxOccurs="1" name="Presentations" type="Eac3PresentationsParamsType"/>
+       </xs:sequence>      
+       <xs:attribute name="id" use="required" type="Eac3EncodingParametersIdType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="Eac3EncodingParametersIdType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="255"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="Eac3EncoderParamsType">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="1" name="DynrngProf" type="ComprProfType"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="ComprProf"  type="ComprProfType"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="Surround90" type="Surround90Type"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="HMixLev"    type="HMixLevType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="ComprProfType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None"/>
+      <xs:enumeration value="Film Standard"/>
+      <xs:enumeration value="Film Light"/>
+      <xs:enumeration value="Music Standard"/>
+      <xs:enumeration value="Music Light"/>
+      <xs:enumeration value="Speech"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Surround90Type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="On"/>
+      <xs:enumeration value="Off"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="HMixLevType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="-infdB"/>
+      <xs:enumeration value="-30.0dB"/>
+      <xs:enumeration value="-29.0dB"/>
+      <xs:enumeration value="-28.0dB"/>
+      <xs:enumeration value="-27.0dB"/>
+      <xs:enumeration value="-26.0dB"/>
+      <xs:enumeration value="-25.0dB"/>
+      <xs:enumeration value="-24.0dB"/>
+      <xs:enumeration value="-23.0dB"/>
+      <xs:enumeration value="-22.0dB"/>
+      <xs:enumeration value="-21.0dB"/>
+      <xs:enumeration value="-20.0dB"/>
+      <xs:enumeration value="-19.0dB"/>
+      <xs:enumeration value="-18.0dB"/>
+      <xs:enumeration value="-17.0dB"/>
+      <xs:enumeration value="-16.0dB"/>
+      <xs:enumeration value="-15.0dB"/>
+      <xs:enumeration value="-14.0dB"/>
+      <xs:enumeration value="-13.0dB"/>
+      <xs:enumeration value="-12.0dB"/>
+      <xs:enumeration value="-11.0dB"/>
+      <xs:enumeration value="-10.0dB"/>
+      <xs:enumeration value="-9.0dB"/>
+      <xs:enumeration value="-8.0dB"/>
+      <xs:enumeration value="-7.0dB"/>
+      <xs:enumeration value="-6.0dB"/>
+      <xs:enumeration value="-5.0dB"/>
+      <xs:enumeration value="-4.0dB"/>
+      <xs:enumeration value="-3.0dB"/>
+      <xs:enumeration value="-2.0dB"/>
+      <xs:enumeration value="-1.0dB"/>
+      <xs:enumeration value="0.0dB"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="Eac3BitstreamParamsType">
+    <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="1" name="BsMod"         type="BsModType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="SurMod"        type="SurModType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Dialnorm"      type="DialnormType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="PrefDMixMod"   type="DmixModType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="LtRtCMixLev"   type="CMixLevType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="LtRtSurMixLev" type="SurMixLevType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="LoRoCMixLev"   type="CMixLevType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="LoRoSurMixLev" type="SurMixLevType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="BsModType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Complete Main"/>     
+      <xs:enumeration value="Music and Effects"/>
+      <xs:enumeration value="Visually Impaired"/>
+      <xs:enumeration value="Hearing Impaired"/>
+      <xs:enumeration value="Dialogue"/>
+      <xs:enumeration value="Commentary"/>
+      <xs:enumeration value="Emergency"/>
+      <xs:enumeration value="Voice Over"/>
+      <xs:enumeration value="ME"/>
+      <xs:enumeration value="CM"/>
+      <xs:enumeration value="VI"/>
+      <xs:enumeration value="HI"/>
+      <xs:enumeration value="D"/>
+      <xs:enumeration value="C"/>
+      <xs:enumeration value="E"/>
+      <xs:enumeration value="VO"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SurModType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Not Indicated"/>
+      <xs:enumeration value="NI"/>
+      <xs:enumeration value="Not Dolby Surround Encoded"/>
+      <xs:enumeration value="Dolby Surround Encoded"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="DialnormType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="31"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="DmixModType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Not Indicated"/>
+      <xs:enumeration value="LtRt"/>
+      <xs:enumeration value="LoRo"/>
+      <xs:enumeration value="PLII"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CMixLevType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="+3.0dB"/>
+      <xs:enumeration value="+1.5dB"/>
+      <xs:enumeration value="3.0dB"/>
+      <xs:enumeration value="1.5dB"/>
+      <xs:enumeration value="0.0dB"/>
+      <xs:enumeration value="-1.5dB"/>
+      <xs:enumeration value="-3.0dB"/>
+      <xs:enumeration value="-4.5dB"/>
+      <xs:enumeration value="-6.0dB"/>
+      <xs:enumeration value="-infdB"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SurMixLevType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="-1.5dB"/>
+      <xs:enumeration value="-3.0dB"/>
+      <xs:enumeration value="-4.5dB"/>
+      <xs:enumeration value="-6.0dB"/>
+      <xs:enumeration value="-infdB"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="Eac3DrcParamsType">
+    <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="1" name="Portable_Speakers_DRC_Profile"   type="ComprProfType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Portable_Headphones_DRC_Profile" type="ComprProfType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Flat_Panel_DRC_Profile"          type="ComprProfType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Home_Theater_DRC_Profile"        type="ComprProfType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="DDPlus_DRC_Profile"              type="ComprProfType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Eac3PresentationsParamsType">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="unbounded" name="ID" type="PresentationIdType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!--_______ ED2 turnaround ____________________________________________-->
+
+  <xs:simpleType name="ED2TurnaroundIdType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="255"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:element name="ED2Turnaround">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" name="Name" type="PmdString"/>
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="1" ref="ED2"/>
+          <xs:element minOccurs="0" maxOccurs="1" ref="DolbyE"/>
+        </xs:sequence>
+      </xs:sequence>
+      <xs:attribute name="id" use="required" type="ED2TurnaroundIdType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="DolbyE">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="1" name="FrameRate" type="FrameRateType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="ProgramConfiguration" type="DEProgramConfigurationType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Presentations" type="ED2TurnaroundPresentationsType"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ED2">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="1" name="FrameRate" type="FrameRateType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Presentations" type="ED2TurnaroundPresentationsType"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="FrameRateType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="23.98"/>
+      <xs:enumeration value="24"/>
+      <xs:enumeration value="25"/>
+      <xs:enumeration value="29.97"/>
+      <xs:enumeration value="30"/>
+      <xs:enumeration value="50"/>
+      <xs:enumeration value="59.94"/>
+      <xs:enumeration value="60"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="DEProgramConfigurationType">
+    <xs:restriction base="xs:string">
+      <xs:whiteSpace value="collapse"/>
+      <xs:enumeration value="5.1+2"/>
+      <xs:enumeration value="5.1+1+1"/>
+      <xs:enumeration value="4+4"/>
+      <xs:enumeration value="4+2+2"/>
+      <xs:enumeration value="4+2+1+1"/>
+      <xs:enumeration value="4+1+1+1+1"/>
+      <xs:enumeration value="2+2+2+2"/>
+      <xs:enumeration value="2+2+2+1+1"/>
+      <xs:enumeration value="2+2+1+1+1+1"/>
+      <xs:enumeration value="2+1+1+1+1+1+1"/>
+      <xs:enumeration value="1+1+1+1+1+1+1+1"/>
+      <xs:enumeration value="5.1"/>
+      <xs:enumeration value="4+2"/>
+      <xs:enumeration value="4+1+1"/>
+      <xs:enumeration value="2+2+2"/>
+      <xs:enumeration value="2+2+1+1"/>
+      <xs:enumeration value="2+1+1+1+1"/>
+      <xs:enumeration value="1+1+1+1+1+1"/>
+      <xs:enumeration value="4"/>
+      <xs:enumeration value="2+2"/>
+      <xs:enumeration value="2+1+1"/>
+      <xs:enumeration value="1+1+1+1"/>
+      <xs:enumeration value="7.1"/>
+      <xs:enumeration value="7.1s"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="ED2TurnaroundPresentationsType">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="unbounded" name="Presentation">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element minOccurs="1" maxOccurs="1" name="ID" type="PresentationIdType"/>
+            <xs:element minOccurs="1" maxOccurs="1" name="Eac3EncodingParameters" type="Eac3EncodingParametersIdType"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <!-- ________ Dynamic Update ____________________________________________-->
+
+  <xs:element name="DynamicUpdate">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="1" name="ID"      type="AudioElementIdType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="X_Pos"   type="Coordinate"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Y_Pos"   type="Coordinate"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Z_Pos"   type="Coordinate"/>
+      </xs:sequence>
+      <xs:attribute name="sample_time" use="required" type="xs:integer"/>
+    </xs:complexType>
+  </xs:element>
+
+
+  <!--_____ Identity and Timing (IAT) ____________________________________-->
+
+  <xs:element name="IAT">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" name="Content_ID"        type="IATContentIDType"/>
+        <xs:element minOccurs="0" maxOccurs="1" name="Distribution_ID"   type="IATDistributionIDType"/>
+        <xs:element minOccurs="1" maxOccurs="1" name="Timestamp"         type="IATTimestampType"/>
+        <xs:element minOccurs="0" maxOccurs="1" name="Offset"            type="IATOffsetType"/>
+        <xs:element minOccurs="0" maxOccurs="1" name="Validity_Duration" type="IATValidityDurationType"/>
+        <xs:element minOccurs="0" maxOccurs="1" name="User_Data"         type="codedstring"/>
+        <xs:element minOccurs="0" maxOccurs="1" name="Extension"         type="codedstring"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="IATContentIDType">
+    <xs:choice>
+       <xs:element name="UUID"  type="UUIDContentType"/>
+       <xs:element name="EIDR"  type="EIDRContentType"/>
+       <xs:element name="Ad-ID" type="ADIdContentType"/>
+       <xs:element name="Raw"   type="RawContentType"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:simpleType name="UUIDContentType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="EIDRContentType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="(10\.)?5240/?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?C?"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ADIdContentType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9a-zA-Z]{11}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="RawContentType">
+    <xs:complexContent>
+      <xs:extension base="codedstring">
+        <xs:attribute name="type" use="required" type="RawContentTypeType"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:simpleType name="RawContentTypeType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="3"/>
+      <xs:maxInclusive value="30"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="IATDistributionIDType">
+    <xs:choice>
+      <xs:element name="ATSC3" type="ATSC3DistributionIDType"/>
+      <xs:element name="Raw"   type="RawDistributionIDType"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="ATSC3DistributionIDType">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="1" name="BroadcastStreamID"    type="ATSCBSID"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="Major_Channel_Number" type="ATSCChannelNumber"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="Minor_Channel_Number" type="ATSCChannelNumber"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="ATSCBSID">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="65535"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ATSCChannelNumber">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="1023"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="RawDistributionIDType">
+    <xs:complexContent>
+      <xs:extension base="codedstring">
+        <xs:attribute name="type" use="required" type="RawDistributionTypeType"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:simpleType name="RawDistributionTypeType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="7"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <xs:simpleType name="IATTimestampType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="34359738367"/>  <!-- (1ull << 35) - 1 -->
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="IATOffsetType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="2047"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="IATValidityDurationType">
+    <xs:restriction base="xs:integer">
+      <xs:minInclusive value="0"/>
+      <xs:maxInclusive value="2047"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="codedstring">
+    <xs:choice>
+      <xs:element name="ascii" type="xs:string"/>
+      <xs:element name="base16" type="hexstring"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:simpleType name="hexstring">
+    <xs:restriction base="xs:string">
+       <xs:pattern value="[0-9a-fA-F]+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CountryCode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="aa" />        <!-- Afar -->
+      <xs:enumeration value="aar"/>        <!-- Afar -->
+      <xs:enumeration value="ab" />        <!-- Abkhazian -->
+      <xs:enumeration value="abk"/>        <!-- Abkhazian -->
+      <xs:enumeration value="ace"/>        <!-- Achinese -->
+      <xs:enumeration value="ach"/>        <!-- Acoli -->
+      <xs:enumeration value="ada"/>        <!-- Adangme -->
+      <xs:enumeration value="ady"/>        <!-- Adyghe; Adygei -->
+      <xs:enumeration value="ae" />        <!-- Avestan -->
+      <xs:enumeration value="afa"/>        <!-- Afro-Asiatic languages -->
+      <xs:enumeration value="af" />        <!-- Afrikaans -->
+      <xs:enumeration value="afh"/>        <!-- Afrihili -->
+      <xs:enumeration value="afr"/>        <!-- Afrikaans -->
+      <xs:enumeration value="ain"/>        <!-- Ainu -->
+      <xs:enumeration value="aka"/>        <!-- Akan -->
+      <xs:enumeration value="ak" />        <!-- Akan -->
+      <xs:enumeration value="akk"/>        <!-- Akkadian -->
+      <xs:enumeration value="alb"/>        <!-- Albanian -->
+      <xs:enumeration value="ale"/>        <!-- Aleut -->
+      <xs:enumeration value="alg"/>        <!-- Algonquian languages -->
+      <xs:enumeration value="alt"/>        <!-- Southern Altai -->
+      <xs:enumeration value="am" />        <!-- Amharic -->
+      <xs:enumeration value="amh"/>        <!-- Amharic -->
+      <xs:enumeration value="an" />        <!-- Aragonese -->
+      <xs:enumeration value="ang"/>        <!-- "English -->
+      <xs:enumeration value="anp"/>        <!-- Angika -->
+      <xs:enumeration value="apa"/>        <!-- Apache languages -->
+      <xs:enumeration value="ara"/>        <!-- Arabic -->
+      <xs:enumeration value="ar" />        <!-- Arabic -->
+      <xs:enumeration value="arc"/>        <!-- Official Aramaic (700-300 BCE); Imperial Aramaic (700-300 BCE) -->
+      <xs:enumeration value="arg"/>        <!-- Aragonese -->
+      <xs:enumeration value="arm"/>        <!-- Armenian -->
+      <xs:enumeration value="arn"/>        <!-- Mapudungun; Mapuche -->
+      <xs:enumeration value="arp"/>        <!-- Arapaho -->
+      <xs:enumeration value="art"/>        <!-- Artificial languages -->
+      <xs:enumeration value="arw"/>        <!-- Arawak -->
+      <xs:enumeration value="as" />        <!-- Assamese -->
+      <xs:enumeration value="asm"/>        <!-- Assamese -->
+      <xs:enumeration value="ast"/>        <!-- Asturian; Bable; Leonese; Asturleonese -->
+      <xs:enumeration value="ath"/>        <!-- Athapascan languages -->
+      <xs:enumeration value="aus"/>        <!-- Australian languages -->
+      <xs:enumeration value="ava"/>        <!-- Avaric -->
+      <xs:enumeration value="av" />        <!-- Avaric -->
+      <xs:enumeration value="ave"/>        <!-- Avestan -->
+      <xs:enumeration value="awa"/>        <!-- Awadhi -->
+      <xs:enumeration value="ay" />        <!-- Aymara -->
+      <xs:enumeration value="aym"/>        <!-- Aymara -->
+      <xs:enumeration value="az" />        <!-- Azerbaijani -->
+      <xs:enumeration value="aze"/>        <!-- Azerbaijani -->
+      <xs:enumeration value="ba" />        <!-- Bashkir -->
+      <xs:enumeration value="bad"/>        <!-- Banda languages -->
+      <xs:enumeration value="bai"/>        <!-- Bamileke languages -->
+      <xs:enumeration value="bak"/>        <!-- Bashkir -->
+      <xs:enumeration value="bal"/>        <!-- Baluchi -->
+      <xs:enumeration value="bam"/>        <!-- Bambara -->
+      <xs:enumeration value="ban"/>        <!-- Balinese -->
+      <xs:enumeration value="baq"/>        <!-- Basque -->
+      <xs:enumeration value="bas"/>        <!-- Basa -->
+      <xs:enumeration value="bat"/>        <!-- Baltic languages -->
+      <xs:enumeration value="be" />        <!-- Belarusian -->
+      <xs:enumeration value="bej"/>        <!-- Beja; Bedawiyet -->
+      <xs:enumeration value="bel"/>        <!-- Belarusian -->
+      <xs:enumeration value="bem"/>        <!-- Bemba -->
+      <xs:enumeration value="ben"/>        <!-- Bengali -->
+      <xs:enumeration value="ber"/>        <!-- Berber languages -->
+      <xs:enumeration value="bg" />        <!-- Bulgarian -->
+      <xs:enumeration value="bh" />        <!-- Bihari languages -->
+      <xs:enumeration value="bho"/>        <!-- Bhojpuri -->
+      <xs:enumeration value="bi" />        <!-- Bislama -->
+      <xs:enumeration value="bih"/>        <!-- Bihari languages -->
+      <xs:enumeration value="bik"/>        <!-- Bikol -->
+      <xs:enumeration value="bin"/>        <!-- Bini; Edo -->
+      <xs:enumeration value="bis"/>        <!-- Bislama -->
+      <xs:enumeration value="bla"/>        <!-- Siksika -->
+      <xs:enumeration value="bm" />        <!-- Bambara -->
+      <xs:enumeration value="bn" />        <!-- Bengali -->
+      <xs:enumeration value="bnt"/>        <!-- Bantu (Other) -->
+      <xs:enumeration value="bod"/>        <!-- Tibetan -->
+      <xs:enumeration value="bos"/>        <!-- Bosnian -->
+      <xs:enumeration value="bo" />        <!-- Tibetan -->
+      <xs:enumeration value="bra"/>        <!-- Braj -->
+      <xs:enumeration value="br" />        <!-- Breton -->
+      <xs:enumeration value="bre"/>        <!-- Breton -->
+      <xs:enumeration value="bs" />        <!-- Bosnian -->
+      <xs:enumeration value="btk"/>        <!-- Batak languages -->
+      <xs:enumeration value="bua"/>        <!-- Buriat -->
+      <xs:enumeration value="bug"/>        <!-- Buginese -->
+      <xs:enumeration value="bul"/>        <!-- Bulgarian -->
+      <xs:enumeration value="bur"/>        <!-- Burmese -->
+      <xs:enumeration value="byn"/>        <!-- Blin; Bilin -->
+      <xs:enumeration value="ca" />        <!-- Catalan; Valencian -->
+      <xs:enumeration value="cad"/>        <!-- Caddo -->
+      <xs:enumeration value="cai"/>        <!-- Central American Indian languages -->
+      <xs:enumeration value="car"/>        <!-- Galibi Carib -->
+      <xs:enumeration value="cat"/>        <!-- Catalan; Valencian -->
+      <xs:enumeration value="cau"/>        <!-- Caucasian languages -->
+      <xs:enumeration value="ceb"/>        <!-- Cebuano -->
+      <xs:enumeration value="ce" />        <!-- Chechen -->
+      <xs:enumeration value="cel"/>        <!-- Celtic languages -->
+      <xs:enumeration value="ces"/>        <!-- Czech -->
+      <xs:enumeration value="cha"/>        <!-- Chamorro -->
+      <xs:enumeration value="chb"/>        <!-- Chibcha -->
+      <xs:enumeration value="ch" />        <!-- Chamorro -->
+      <xs:enumeration value="che"/>        <!-- Chechen -->
+      <xs:enumeration value="chg"/>        <!-- Chagatai -->
+      <xs:enumeration value="chi"/>        <!-- Chinese -->
+      <xs:enumeration value="chk"/>        <!-- Chuukese -->
+      <xs:enumeration value="chm"/>        <!-- Mari -->
+      <xs:enumeration value="chn"/>        <!-- Chinook jargon -->
+      <xs:enumeration value="cho"/>        <!-- Choctaw -->
+      <xs:enumeration value="chp"/>        <!-- Chipewyan; Dene Suline -->
+      <xs:enumeration value="chr"/>        <!-- Cherokee -->
+      <xs:enumeration value="chu"/>        <!-- Church Slavic; Old Slavonic; Church Slavonic; Old Bulgarian; Old Church Slavonic -->
+      <xs:enumeration value="chv"/>        <!-- Chuvash -->
+      <xs:enumeration value="chy"/>        <!-- Cheyenne -->
+      <xs:enumeration value="cmc"/>        <!-- Chamic languages -->
+      <xs:enumeration value="co" />        <!-- Corsican -->
+      <xs:enumeration value="cop"/>        <!-- Coptic -->
+      <xs:enumeration value="cor"/>        <!-- Cornish -->
+      <xs:enumeration value="cos"/>        <!-- Corsican -->
+      <xs:enumeration value="cpe"/>        <!-- "Creoles and pidgins -->
+      <xs:enumeration value="cpf"/>        <!-- "Creoles and pidgins -->
+      <xs:enumeration value="cpp"/>        <!-- "Creoles and pidgins -->
+      <xs:enumeration value="cr" />        <!-- Cree -->
+      <xs:enumeration value="cre"/>        <!-- Cree -->
+      <xs:enumeration value="crh"/>        <!-- Crimean Tatar; Crimean Turkish -->
+      <xs:enumeration value="crp"/>        <!-- Creoles and pidgins -->
+      <xs:enumeration value="csb"/>        <!-- Kashubian -->
+      <xs:enumeration value="cs" />        <!-- Czech -->
+      <xs:enumeration value="cu" />        <!-- Church Slavic; Old Slavonic; Church Slavonic; Old Bulgarian; Old Church Slavonic -->
+      <xs:enumeration value="cus"/>        <!-- Cushitic languages -->
+      <xs:enumeration value="cv" />        <!-- Chuvash -->
+      <xs:enumeration value="cym"/>        <!-- Welsh -->
+      <xs:enumeration value="cy" />        <!-- Welsh -->
+      <xs:enumeration value="cze"/>        <!-- Czech -->
+      <xs:enumeration value="da" />        <!-- Danish -->
+      <xs:enumeration value="dak"/>        <!-- Dakota -->
+      <xs:enumeration value="dan"/>        <!-- Danish -->
+      <xs:enumeration value="dar"/>        <!-- Dargwa -->
+      <xs:enumeration value="day"/>        <!-- Land Dayak languages -->
+      <xs:enumeration value="de" />        <!-- German -->
+      <xs:enumeration value="del"/>        <!-- Delaware -->
+      <xs:enumeration value="den"/>        <!-- Slave (Athapascan) -->
+      <xs:enumeration value="deu"/>        <!-- German -->
+      <xs:enumeration value="dgr"/>        <!-- Dogrib -->
+      <xs:enumeration value="din"/>        <!-- Dinka -->
+      <xs:enumeration value="div"/>        <!-- Divehi; Dhivehi; Maldivian -->
+      <xs:enumeration value="doi"/>        <!-- Dogri -->
+      <xs:enumeration value="dra"/>        <!-- Dravidian languages -->
+      <xs:enumeration value="dsb"/>        <!-- Lower Sorbian -->
+      <xs:enumeration value="dua"/>        <!-- Duala -->
+      <xs:enumeration value="dum"/>        <!-- "Dutch -->
+      <xs:enumeration value="dut"/>        <!-- Dutch; Flemish -->
+      <xs:enumeration value="dv" />        <!-- Divehi; Dhivehi; Maldivian -->
+      <xs:enumeration value="dyu"/>        <!-- Dyula -->
+      <xs:enumeration value="dz" />        <!-- Dzongkha -->
+      <xs:enumeration value="dzo"/>        <!-- Dzongkha -->
+      <xs:enumeration value="ee" />        <!-- Ewe -->
+      <xs:enumeration value="efi"/>        <!-- Efik -->
+      <xs:enumeration value="egy"/>        <!-- Egyptian (Ancient) -->
+      <xs:enumeration value="eka"/>        <!-- Ekajuk -->
+      <xs:enumeration value="el" />        <!-- "Greek -->
+      <xs:enumeration value="ell"/>        <!-- "Greek -->
+      <xs:enumeration value="elx"/>        <!-- Elamite -->
+      <xs:enumeration value="en" />        <!-- English -->
+      <xs:enumeration value="eng"/>        <!-- English -->
+      <xs:enumeration value="enm"/>        <!-- "English -->
+      <xs:enumeration value="eo" />        <!-- Esperanto -->
+      <xs:enumeration value="epo"/>        <!-- Esperanto -->
+      <xs:enumeration value="es" />        <!-- Spanish; Castilian -->
+      <xs:enumeration value="est"/>        <!-- Estonian -->
+      <xs:enumeration value="et" />        <!-- Estonian -->
+      <xs:enumeration value="eu" />        <!-- Basque -->
+      <xs:enumeration value="eus"/>        <!-- Basque -->
+      <xs:enumeration value="ewe"/>        <!-- Ewe -->
+      <xs:enumeration value="ewo"/>        <!-- Ewondo -->
+      <xs:enumeration value="fan"/>        <!-- Fang -->
+      <xs:enumeration value="fao"/>        <!-- Faroese -->
+      <xs:enumeration value="fa" />        <!-- Persian -->
+      <xs:enumeration value="fas"/>        <!-- Persian -->
+      <xs:enumeration value="fat"/>        <!-- Fanti -->
+      <xs:enumeration value="ff" />        <!-- Fulah -->
+      <xs:enumeration value="fi" />        <!-- Finnish -->
+      <xs:enumeration value="fij"/>        <!-- Fijian -->
+      <xs:enumeration value="fil"/>        <!-- Filipino; Pilipino -->
+      <xs:enumeration value="fin"/>        <!-- Finnish -->
+      <xs:enumeration value="fiu"/>        <!-- Finno-Ugrian languages -->
+      <xs:enumeration value="fj" />        <!-- Fijian -->
+      <xs:enumeration value="fo" />        <!-- Faroese -->
+      <xs:enumeration value="fon"/>        <!-- Fon -->
+      <xs:enumeration value="fra"/>        <!-- French -->
+      <xs:enumeration value="fre"/>        <!-- French -->
+      <xs:enumeration value="fr" />        <!-- French -->
+      <xs:enumeration value="frm"/>        <!-- "French -->
+      <xs:enumeration value="fro"/>        <!-- "French -->
+      <xs:enumeration value="frr"/>        <!-- Northern Frisian -->
+      <xs:enumeration value="frs"/>        <!-- Eastern Frisian -->
+      <xs:enumeration value="fry"/>        <!-- Western Frisian -->
+      <xs:enumeration value="ful"/>        <!-- Fulah -->
+      <xs:enumeration value="fur"/>        <!-- Friulian -->
+      <xs:enumeration value="fy" />        <!-- Western Frisian -->
+      <xs:enumeration value="gaa"/>        <!-- Ga -->
+      <xs:enumeration value="ga" />        <!-- Irish -->
+      <xs:enumeration value="gay"/>        <!-- Gayo -->
+      <xs:enumeration value="gba"/>        <!-- Gbaya -->
+      <xs:enumeration value="gd" />        <!-- Gaelic; Scottish Gaelic -->
+      <xs:enumeration value="gem"/>        <!-- Germanic languages -->
+      <xs:enumeration value="geo"/>        <!-- Georgian -->
+      <xs:enumeration value="ger"/>        <!-- German -->
+      <xs:enumeration value="gez"/>        <!-- Geez -->
+      <xs:enumeration value="gil"/>        <!-- Gilbertese -->
+      <xs:enumeration value="gla"/>        <!-- Gaelic; Scottish Gaelic -->
+      <xs:enumeration value="gle"/>        <!-- Irish -->
+      <xs:enumeration value="gl" />        <!-- Galician -->
+      <xs:enumeration value="glg"/>        <!-- Galician -->
+      <xs:enumeration value="glv"/>        <!-- Manx -->
+      <xs:enumeration value="gmh"/>        <!-- "German -->
+      <xs:enumeration value="gn" />        <!-- Guarani -->
+      <xs:enumeration value="goh"/>        <!-- "German -->
+      <xs:enumeration value="gon"/>        <!-- Gondi -->
+      <xs:enumeration value="gor"/>        <!-- Gorontalo -->
+      <xs:enumeration value="got"/>        <!-- Gothic -->
+      <xs:enumeration value="grb"/>        <!-- Grebo -->
+      <xs:enumeration value="grc"/>        <!-- "Greek -->
+      <xs:enumeration value="gre"/>        <!-- "Greek -->
+      <xs:enumeration value="grn"/>        <!-- Guarani -->
+      <xs:enumeration value="gsw"/>        <!-- Swiss German; Alemannic; Alsatian -->
+      <xs:enumeration value="gu" />        <!-- Gujarati -->
+      <xs:enumeration value="guj"/>        <!-- Gujarati -->
+      <xs:enumeration value="gv" />        <!-- Manx -->
+      <xs:enumeration value="gwi"/>        <!-- Gwich'in -->
+      <xs:enumeration value="ha" />        <!-- Hausa -->
+      <xs:enumeration value="hai"/>        <!-- Haida -->
+      <xs:enumeration value="hat"/>        <!-- Haitian; Haitian Creole -->
+      <xs:enumeration value="hau"/>        <!-- Hausa -->
+      <xs:enumeration value="haw"/>        <!-- Hawaiian -->
+      <xs:enumeration value="heb"/>        <!-- Hebrew -->
+      <xs:enumeration value="he" />        <!-- Hebrew -->
+      <xs:enumeration value="her"/>        <!-- Herero -->
+      <xs:enumeration value="hi" />        <!-- Hindi -->
+      <xs:enumeration value="hil"/>        <!-- Hiligaynon -->
+      <xs:enumeration value="him"/>        <!-- Himachali languages; Western Pahari languages -->
+      <xs:enumeration value="hin"/>        <!-- Hindi -->
+      <xs:enumeration value="hit"/>        <!-- Hittite -->
+      <xs:enumeration value="hmn"/>        <!-- Hmong; Mong -->
+      <xs:enumeration value="hmo"/>        <!-- Hiri Motu -->
+      <xs:enumeration value="ho" />        <!-- Hiri Motu -->
+      <xs:enumeration value="hr" />        <!-- Croatian -->
+      <xs:enumeration value="hrv"/>        <!-- Croatian -->
+      <xs:enumeration value="hsb"/>        <!-- Upper Sorbian -->
+      <xs:enumeration value="ht" />        <!-- Haitian; Haitian Creole -->
+      <xs:enumeration value="hu" />        <!-- Hungarian -->
+      <xs:enumeration value="hun"/>        <!-- Hungarian -->
+      <xs:enumeration value="hup"/>        <!-- Hupa -->
+      <xs:enumeration value="hy" />        <!-- Armenian -->
+      <xs:enumeration value="hye"/>        <!-- Armenian -->
+      <xs:enumeration value="hz" />        <!-- Herero -->
+      <xs:enumeration value="ia" />        <!-- Interlingua (International Auxiliary Language Association) -->
+      <xs:enumeration value="iba"/>        <!-- Iban -->
+      <xs:enumeration value="ibo"/>        <!-- Igbo -->
+      <xs:enumeration value="ice"/>        <!-- Icelandic -->
+      <xs:enumeration value="id" />        <!-- Indonesian -->
+      <xs:enumeration value="ido"/>        <!-- Ido -->
+      <xs:enumeration value="ie" />        <!-- Interlingue; Occidental -->
+      <xs:enumeration value="ig" />        <!-- Igbo -->
+      <xs:enumeration value="iii"/>        <!-- Sichuan Yi; Nuosu -->
+      <xs:enumeration value="ii" />        <!-- Sichuan Yi; Nuosu -->
+      <xs:enumeration value="ijo"/>        <!-- Ijo languages -->
+      <xs:enumeration value="ik" />        <!-- Inupiaq -->
+      <xs:enumeration value="iku"/>        <!-- Inuktitut -->
+      <xs:enumeration value="ile"/>        <!-- Interlingue; Occidental -->
+      <xs:enumeration value="ilo"/>        <!-- Iloko -->
+      <xs:enumeration value="ina"/>        <!-- Interlingua (International Auxiliary Language Association) -->
+      <xs:enumeration value="inc"/>        <!-- Indic languages -->
+      <xs:enumeration value="ind"/>        <!-- Indonesian -->
+      <xs:enumeration value="ine"/>        <!-- Indo-European languages -->
+      <xs:enumeration value="inh"/>        <!-- Ingush -->
+      <xs:enumeration value="io" />        <!-- Ido -->
+      <xs:enumeration value="ipk"/>        <!-- Inupiaq -->
+      <xs:enumeration value="ira"/>        <!-- Iranian languages -->
+      <xs:enumeration value="iro"/>        <!-- Iroquoian languages -->
+      <xs:enumeration value="is" />        <!-- Icelandic -->
+      <xs:enumeration value="isl"/>        <!-- Icelandic -->
+      <xs:enumeration value="ita"/>        <!-- Italian -->
+      <xs:enumeration value="it" />        <!-- Italian -->
+      <xs:enumeration value="iu" />        <!-- Inuktitut -->
+      <xs:enumeration value="ja" />        <!-- Japanese -->
+      <xs:enumeration value="jav"/>        <!-- Javanese -->
+      <xs:enumeration value="jbo"/>        <!-- Lojban -->
+      <xs:enumeration value="jpn"/>        <!-- Japanese -->
+      <xs:enumeration value="jpr"/>        <!-- Judeo-Persian -->
+      <xs:enumeration value="jrb"/>        <!-- Judeo-Arabic -->
+      <xs:enumeration value="jv" />        <!-- Javanese -->
+      <xs:enumeration value="kaa"/>        <!-- Kara-Kalpak -->
+      <xs:enumeration value="kab"/>        <!-- Kabyle -->
+      <xs:enumeration value="kac"/>        <!-- Kachin; Jingpho -->
+      <xs:enumeration value="ka" />        <!-- Georgian -->
+      <xs:enumeration value="kal"/>        <!-- Kalaallisut; Greenlandic -->
+      <xs:enumeration value="kam"/>        <!-- Kamba -->
+      <xs:enumeration value="kan"/>        <!-- Kannada -->
+      <xs:enumeration value="kar"/>        <!-- Karen languages -->
+      <xs:enumeration value="kas"/>        <!-- Kashmiri -->
+      <xs:enumeration value="kat"/>        <!-- Georgian -->
+      <xs:enumeration value="kau"/>        <!-- Kanuri -->
+      <xs:enumeration value="kaw"/>        <!-- Kawi -->
+      <xs:enumeration value="kaz"/>        <!-- Kazakh -->
+      <xs:enumeration value="kbd"/>        <!-- Kabardian -->
+      <xs:enumeration value="kg" />        <!-- Kongo -->
+      <xs:enumeration value="kha"/>        <!-- Khasi -->
+      <xs:enumeration value="khi"/>        <!-- Khoisan languages -->
+      <xs:enumeration value="khm"/>        <!-- Central Khmer -->
+      <xs:enumeration value="kho"/>        <!-- Khotanese; Sakan -->
+      <xs:enumeration value="ki" />        <!-- Kikuyu; Gikuyu -->
+      <xs:enumeration value="kik"/>        <!-- Kikuyu; Gikuyu -->
+      <xs:enumeration value="kin"/>        <!-- Kinyarwanda -->
+      <xs:enumeration value="kir"/>        <!-- Kirghiz; Kyrgyz -->
+      <xs:enumeration value="kj" />        <!-- Kuanyama; Kwanyama -->
+      <xs:enumeration value="kk" />        <!-- Kazakh -->
+      <xs:enumeration value="kl" />        <!-- Kalaallisut; Greenlandic -->
+      <xs:enumeration value="kmb"/>        <!-- Kimbundu -->
+      <xs:enumeration value="km" />        <!-- Central Khmer -->
+      <xs:enumeration value="kn" />        <!-- Kannada -->
+      <xs:enumeration value="kok"/>        <!-- Konkani -->
+      <xs:enumeration value="ko" />        <!-- Korean -->
+      <xs:enumeration value="kom"/>        <!-- Komi -->
+      <xs:enumeration value="kon"/>        <!-- Kongo -->
+      <xs:enumeration value="kor"/>        <!-- Korean -->
+      <xs:enumeration value="kos"/>        <!-- Kosraean -->
+      <xs:enumeration value="kpe"/>        <!-- Kpelle -->
+      <xs:enumeration value="krc"/>        <!-- Karachay-Balkar -->
+      <xs:enumeration value="kr" />        <!-- Kanuri -->
+      <xs:enumeration value="krl"/>        <!-- Karelian -->
+      <xs:enumeration value="kro"/>        <!-- Kru languages -->
+      <xs:enumeration value="kru"/>        <!-- Kurukh -->
+      <xs:enumeration value="ks" />        <!-- Kashmiri -->
+      <xs:enumeration value="kua"/>        <!-- Kuanyama; Kwanyama -->
+      <xs:enumeration value="ku" />        <!-- Kurdish -->
+      <xs:enumeration value="kum"/>        <!-- Kumyk -->
+      <xs:enumeration value="kur"/>        <!-- Kurdish -->
+      <xs:enumeration value="kut"/>        <!-- Kutenai -->
+      <xs:enumeration value="kv" />        <!-- Komi -->
+      <xs:enumeration value="kw" />        <!-- Cornish -->
+      <xs:enumeration value="ky" />        <!-- Kirghiz; Kyrgyz -->
+      <xs:enumeration value="lad"/>        <!-- Ladino -->
+      <xs:enumeration value="lah"/>        <!-- Lahnda -->
+      <xs:enumeration value="la" />        <!-- Latin -->
+      <xs:enumeration value="lam"/>        <!-- Lamba -->
+      <xs:enumeration value="lao"/>        <!-- Lao -->
+      <xs:enumeration value="lat"/>        <!-- Latin -->
+      <xs:enumeration value="lav"/>        <!-- Latvian -->
+      <xs:enumeration value="lb" />        <!-- Luxembourgish; Letzeburgesch -->
+      <xs:enumeration value="lez"/>        <!-- Lezghian -->
+      <xs:enumeration value="lg" />        <!-- Ganda -->
+      <xs:enumeration value="li" />        <!-- Limburgan; Limburger; Limburgish -->
+      <xs:enumeration value="lim"/>        <!-- Limburgan; Limburger; Limburgish -->
+      <xs:enumeration value="lin"/>        <!-- Lingala -->
+      <xs:enumeration value="lit"/>        <!-- Lithuanian -->
+      <xs:enumeration value="ln" />        <!-- Lingala -->
+      <xs:enumeration value="lo" />        <!-- Lao -->
+      <xs:enumeration value="lol"/>        <!-- Mongo -->
+      <xs:enumeration value="loz"/>        <!-- Lozi -->
+      <xs:enumeration value="lt" />        <!-- Lithuanian -->
+      <xs:enumeration value="ltz"/>        <!-- Luxembourgish; Letzeburgesch -->
+      <xs:enumeration value="lua"/>        <!-- Luba-Lulua -->
+      <xs:enumeration value="lub"/>        <!-- Luba-Katanga -->
+      <xs:enumeration value="lug"/>        <!-- Ganda -->
+      <xs:enumeration value="lui"/>        <!-- Luiseno -->
+      <xs:enumeration value="lu" />        <!-- Luba-Katanga -->
+      <xs:enumeration value="lun"/>        <!-- Lunda -->
+      <xs:enumeration value="luo"/>        <!-- Luo (Kenya and Tanzania) -->
+      <xs:enumeration value="lus"/>        <!-- Lushai -->
+      <xs:enumeration value="lv" />        <!-- Latvian -->
+      <xs:enumeration value="mac"/>        <!-- Macedonian -->
+      <xs:enumeration value="mad"/>        <!-- Madurese -->
+      <xs:enumeration value="mag"/>        <!-- Magahi -->
+      <xs:enumeration value="mah"/>        <!-- Marshallese -->
+      <xs:enumeration value="mai"/>        <!-- Maithili -->
+      <xs:enumeration value="mak"/>        <!-- Makasar -->
+      <xs:enumeration value="mal"/>        <!-- Malayalam -->
+      <xs:enumeration value="man"/>        <!-- Mandingo -->
+      <xs:enumeration value="mao"/>        <!-- Maori -->
+      <xs:enumeration value="map"/>        <!-- Austronesian languages -->
+      <xs:enumeration value="mar"/>        <!-- Marathi -->
+      <xs:enumeration value="mas"/>        <!-- Masai -->
+      <xs:enumeration value="may"/>        <!-- Malay -->
+      <xs:enumeration value="mdf"/>        <!-- Moksha -->
+      <xs:enumeration value="mdr"/>        <!-- Mandar -->
+      <xs:enumeration value="men"/>        <!-- Mende -->
+      <xs:enumeration value="mga"/>        <!-- "Irish -->
+      <xs:enumeration value="mg" />        <!-- Malagasy -->
+      <xs:enumeration value="mh" />        <!-- Marshallese -->
+      <xs:enumeration value="mic"/>        <!-- Mi'kmaq; Micmac -->
+      <xs:enumeration value="mi" />        <!-- Maori -->
+      <xs:enumeration value="min"/>        <!-- Minangkabau -->
+      <xs:enumeration value="mis"/>        <!-- Uncoded languages -->
+      <xs:enumeration value="mkd"/>        <!-- Macedonian -->
+      <xs:enumeration value="mkh"/>        <!-- Mon-Khmer languages -->
+      <xs:enumeration value="mk" />        <!-- Macedonian -->
+      <xs:enumeration value="mlg"/>        <!-- Malagasy -->
+      <xs:enumeration value="ml" />        <!-- Malayalam -->
+      <xs:enumeration value="mlt"/>        <!-- Maltese -->
+      <xs:enumeration value="mnc"/>        <!-- Manchu -->
+      <xs:enumeration value="mni"/>        <!-- Manipuri -->
+      <xs:enumeration value="mn" />        <!-- Mongolian -->
+      <xs:enumeration value="mno"/>        <!-- Manobo languages -->
+      <xs:enumeration value="moh"/>        <!-- Mohawk -->
+      <xs:enumeration value="mon"/>        <!-- Mongolian -->
+      <xs:enumeration value="mos"/>        <!-- Mossi -->
+      <xs:enumeration value="mri"/>        <!-- Maori -->
+      <xs:enumeration value="mr" />        <!-- Marathi -->
+      <xs:enumeration value="msa"/>        <!-- Malay -->
+      <xs:enumeration value="ms" />        <!-- Malay -->
+      <xs:enumeration value="mt" />        <!-- Maltese -->
+      <xs:enumeration value="mul"/>        <!-- Multiple languages -->
+      <xs:enumeration value="mun"/>        <!-- Munda languages -->
+      <xs:enumeration value="mus"/>        <!-- Creek -->
+      <xs:enumeration value="mwl"/>        <!-- Mirandese -->
+      <xs:enumeration value="mwr"/>        <!-- Marwari -->
+      <xs:enumeration value="mya"/>        <!-- Burmese -->
+      <xs:enumeration value="my" />        <!-- Burmese -->
+      <xs:enumeration value="myn"/>        <!-- Mayan languages -->
+      <xs:enumeration value="myv"/>        <!-- Erzya -->
+      <xs:enumeration value="nah"/>        <!-- Nahuatl languages -->
+      <xs:enumeration value="nai"/>        <!-- North American Indian languages -->
+      <xs:enumeration value="na" />        <!-- Nauru -->
+      <xs:enumeration value="nap"/>        <!-- Neapolitan -->
+      <xs:enumeration value="nau"/>        <!-- Nauru -->
+      <xs:enumeration value="nav"/>        <!-- Navajo; Navaho -->
+      <xs:enumeration value="nb" />        <!-- "BokmÃ¥l -->
+      <xs:enumeration value="nbl"/>        <!-- "Ndebele -->
+      <xs:enumeration value="nde"/>        <!-- "Ndebele -->
+      <xs:enumeration value="nd" />        <!-- "Ndebele -->
+      <xs:enumeration value="ndo"/>        <!-- Ndonga -->
+      <xs:enumeration value="nds"/>        <!-- "Low German; Low Saxon; German -->
+      <xs:enumeration value="ne" />        <!-- Nepali -->
+      <xs:enumeration value="nep"/>        <!-- Nepali -->
+      <xs:enumeration value="new"/>        <!-- Nepal Bhasa; Newari -->
+      <xs:enumeration value="ng" />        <!-- Ndonga -->
+      <xs:enumeration value="nia"/>        <!-- Nias -->
+      <xs:enumeration value="nic"/>        <!-- Niger-Kordofanian languages -->
+      <xs:enumeration value="niu"/>        <!-- Niuean -->
+      <xs:enumeration value="nld"/>        <!-- Dutch; Flemish -->
+      <xs:enumeration value="nl" />        <!-- Dutch; Flemish -->
+      <xs:enumeration value="nn" />        <!-- "Norwegian Nynorsk; Nynorsk -->
+      <xs:enumeration value="nno"/>        <!-- "Norwegian Nynorsk; Nynorsk -->
+      <xs:enumeration value="nob"/>        <!-- "BokmÃ¥l -->
+      <xs:enumeration value="nog"/>        <!-- Nogai -->
+      <xs:enumeration value="non"/>        <!-- "Norse -->
+      <xs:enumeration value="no" />        <!-- Norwegian -->
+      <xs:enumeration value="nor"/>        <!-- Norwegian -->
+      <xs:enumeration value="nqo"/>        <!-- N'Ko -->
+      <xs:enumeration value="nr" />        <!-- "Ndebele -->
+      <xs:enumeration value="nso"/>        <!-- Pedi; Sepedi; Northern Sotho -->
+      <xs:enumeration value="nub"/>        <!-- Nubian languages -->
+      <xs:enumeration value="nv" />        <!-- Navajo; Navaho -->
+      <xs:enumeration value="nwc"/>        <!-- Classical Newari; Old Newari; Classical Nepal Bhasa -->
+      <xs:enumeration value="nya"/>        <!-- Chichewa; Chewa; Nyanja -->
+      <xs:enumeration value="ny" />        <!-- Chichewa; Chewa; Nyanja -->
+      <xs:enumeration value="nym"/>        <!-- Nyamwezi -->
+      <xs:enumeration value="nyn"/>        <!-- Nyankole -->
+      <xs:enumeration value="nyo"/>        <!-- Nyoro -->
+      <xs:enumeration value="nzi"/>        <!-- Nzima -->
+      <xs:enumeration value="oci"/>        <!-- Occitan (post 1500); ProvenÃ§al -->
+      <xs:enumeration value="oc" />        <!-- Occitan (post 1500); ProvenÃ§al -->
+      <xs:enumeration value="oji"/>        <!-- Ojibwa -->
+      <xs:enumeration value="oj" />        <!-- Ojibwa -->
+      <xs:enumeration value="om" />        <!-- Oromo -->
+      <xs:enumeration value="ori"/>        <!-- Oriya -->
+      <xs:enumeration value="orm"/>        <!-- Oromo -->
+      <xs:enumeration value="or" />        <!-- Oriya -->
+      <xs:enumeration value="osa"/>        <!-- Osage -->
+      <xs:enumeration value="os" />        <!-- Ossetian; Ossetic -->
+      <xs:enumeration value="oss"/>        <!-- Ossetian; Ossetic -->
+      <xs:enumeration value="ota"/>        <!-- "Turkish -->
+      <xs:enumeration value="oto"/>        <!-- Otomian languages -->
+      <xs:enumeration value="paa"/>        <!-- Papuan languages -->
+      <xs:enumeration value="pag"/>        <!-- Pangasinan -->
+      <xs:enumeration value="pal"/>        <!-- Pahlavi -->
+      <xs:enumeration value="pam"/>        <!-- Pampanga; Kapampangan -->
+      <xs:enumeration value="pan"/>        <!-- Panjabi; Punjabi -->
+      <xs:enumeration value="pa" />        <!-- Panjabi; Punjabi -->
+      <xs:enumeration value="pap"/>        <!-- Papiamento -->
+      <xs:enumeration value="pau"/>        <!-- Palauan -->
+      <xs:enumeration value="peo"/>        <!-- "Persian -->
+      <xs:enumeration value="per"/>        <!-- Persian -->
+      <xs:enumeration value="phi"/>        <!-- Philippine languages -->
+      <xs:enumeration value="phn"/>        <!-- Phoenician -->
+      <xs:enumeration value="pi" />        <!-- Pali -->
+      <xs:enumeration value="pli"/>        <!-- Pali -->
+      <xs:enumeration value="pl" />        <!-- Polish -->
+      <xs:enumeration value="pol"/>        <!-- Polish -->
+      <xs:enumeration value="pon"/>        <!-- Pohnpeian -->
+      <xs:enumeration value="por"/>        <!-- Portuguese -->
+      <xs:enumeration value="pra"/>        <!-- Prakrit languages -->
+      <xs:enumeration value="pro"/>        <!-- "ProvenÃ§al -->
+      <xs:enumeration value="ps" />        <!-- Pushto; Pashto -->
+      <xs:enumeration value="pt" />        <!-- Portuguese -->
+      <xs:enumeration value="pus"/>        <!-- Pushto; Pashto -->
+      <xs:enumeration value="que"/>        <!-- Quechua -->
+      <xs:enumeration value="qu" />        <!-- Quechua -->
+      <xs:enumeration value="raj"/>        <!-- Rajasthani -->
+      <xs:enumeration value="rap"/>        <!-- Rapanui -->
+      <xs:enumeration value="rar"/>        <!-- Rarotongan; Cook Islands Maori -->
+      <xs:enumeration value="rm" />        <!-- Romansh -->
+      <xs:enumeration value="rn" />        <!-- Rundi -->
+      <xs:enumeration value="roa"/>        <!-- Romance languages -->
+      <xs:enumeration value="roh"/>        <!-- Romansh -->
+      <xs:enumeration value="rom"/>        <!-- Romany -->
+      <xs:enumeration value="ron"/>        <!-- Romanian; Moldavian; Moldovan -->
+      <xs:enumeration value="ro" />        <!-- Romanian; Moldavian; Moldovan -->
+      <xs:enumeration value="rum"/>        <!-- Romanian; Moldavian; Moldovan -->
+      <xs:enumeration value="run"/>        <!-- Rundi -->
+      <xs:enumeration value="rup"/>        <!-- Aromanian; Arumanian; Macedo-Romanian -->
+      <xs:enumeration value="ru" />        <!-- Russian -->
+      <xs:enumeration value="rus"/>        <!-- Russian -->
+      <xs:enumeration value="rw" />        <!-- Kinyarwanda -->
+      <xs:enumeration value="sad"/>        <!-- Sandawe -->
+      <xs:enumeration value="sag"/>        <!-- Sango -->
+      <xs:enumeration value="sah"/>        <!-- Yakut -->
+      <xs:enumeration value="sai"/>        <!-- South American Indian (Other) -->
+      <xs:enumeration value="sal"/>        <!-- Salishan languages -->
+      <xs:enumeration value="sam"/>        <!-- Samaritan Aramaic -->
+      <xs:enumeration value="san"/>        <!-- Sanskrit -->
+      <xs:enumeration value="sa" />        <!-- Sanskrit -->
+      <xs:enumeration value="sas"/>        <!-- Sasak -->
+      <xs:enumeration value="sat"/>        <!-- Santali -->
+      <xs:enumeration value="scn"/>        <!-- Sicilian -->
+      <xs:enumeration value="sco"/>        <!-- Scots -->
+      <xs:enumeration value="sc" />        <!-- Sardinian -->
+      <xs:enumeration value="sd" />        <!-- Sindhi -->
+      <xs:enumeration value="sel"/>        <!-- Selkup -->
+      <xs:enumeration value="sem"/>        <!-- Semitic languages -->
+      <xs:enumeration value="se" />        <!-- Northern Sami -->
+      <xs:enumeration value="sga"/>        <!-- "Irish -->
+      <xs:enumeration value="sgn"/>        <!-- Sign Languages -->
+      <xs:enumeration value="sg" />        <!-- Sango -->
+      <xs:enumeration value="shn"/>        <!-- Shan -->
+      <xs:enumeration value="sid"/>        <!-- Sidamo -->
+      <xs:enumeration value="sin"/>        <!-- Sinhala; Sinhalese -->
+      <xs:enumeration value="sio"/>        <!-- Siouan languages -->
+      <xs:enumeration value="si" />        <!-- Sinhala; Sinhalese -->
+      <xs:enumeration value="sit"/>        <!-- Sino-Tibetan languages -->
+      <xs:enumeration value="sk" />        <!-- Slovak -->
+      <xs:enumeration value="sla"/>        <!-- Slavic languages -->
+      <xs:enumeration value="slk"/>        <!-- Slovak -->
+      <xs:enumeration value="slo"/>        <!-- Slovak -->
+      <xs:enumeration value="sl" />        <!-- Slovenian -->
+      <xs:enumeration value="slv"/>        <!-- Slovenian -->
+      <xs:enumeration value="sma"/>        <!-- Southern Sami -->
+      <xs:enumeration value="sme"/>        <!-- Northern Sami -->
+      <xs:enumeration value="smi"/>        <!-- Sami languages -->
+      <xs:enumeration value="smj"/>        <!-- Lule Sami -->
+      <xs:enumeration value="smn"/>        <!-- Inari Sami -->
+      <xs:enumeration value="smo"/>        <!-- Samoan -->
+      <xs:enumeration value="sm" />        <!-- Samoan -->
+      <xs:enumeration value="sms"/>        <!-- Skolt Sami -->
+      <xs:enumeration value="sna"/>        <!-- Shona -->
+      <xs:enumeration value="snd"/>        <!-- Sindhi -->
+      <xs:enumeration value="snk"/>        <!-- Soninke -->
+      <xs:enumeration value="sn" />        <!-- Shona -->
+      <xs:enumeration value="sog"/>        <!-- Sogdian -->
+      <xs:enumeration value="som"/>        <!-- Somali -->
+      <xs:enumeration value="son"/>        <!-- Songhai languages -->
+      <xs:enumeration value="so" />        <!-- Somali -->
+      <xs:enumeration value="sot"/>        <!-- "Sotho -->
+      <xs:enumeration value="spa"/>        <!-- Spanish; Castilian -->
+      <xs:enumeration value="sq" />        <!-- Albanian -->
+      <xs:enumeration value="sqi"/>        <!-- Albanian -->
+      <xs:enumeration value="srd"/>        <!-- Sardinian -->
+      <xs:enumeration value="srn"/>        <!-- Sranan Tongo -->
+      <xs:enumeration value="srp"/>        <!-- Serbian -->
+      <xs:enumeration value="srr"/>        <!-- Serer -->
+      <xs:enumeration value="sr" />        <!-- Serbian -->
+      <xs:enumeration value="ssa"/>        <!-- Nilo-Saharan languages -->
+      <xs:enumeration value="ss" />        <!-- Swati -->
+      <xs:enumeration value="ssw"/>        <!-- Swati -->
+      <xs:enumeration value="st" />        <!-- "Sotho -->
+      <xs:enumeration value="suk"/>        <!-- Sukuma -->
+      <xs:enumeration value="sun"/>        <!-- Sundanese -->
+      <xs:enumeration value="sus"/>        <!-- Susu -->
+      <xs:enumeration value="su" />        <!-- Sundanese -->
+      <xs:enumeration value="sux"/>        <!-- Sumerian -->
+      <xs:enumeration value="sv" />        <!-- Swedish -->
+      <xs:enumeration value="swa"/>        <!-- Swahili -->
+      <xs:enumeration value="swe"/>        <!-- Swedish -->
+      <xs:enumeration value="sw" />        <!-- Swahili -->
+      <xs:enumeration value="syc"/>        <!-- Classical Syriac -->
+      <xs:enumeration value="syr"/>        <!-- Syriac -->
+      <xs:enumeration value="tah"/>        <!-- Tahitian -->
+      <xs:enumeration value="tai"/>        <!-- Tai languages -->
+      <xs:enumeration value="tam"/>        <!-- Tamil -->
+      <xs:enumeration value="ta" />        <!-- Tamil -->
+      <xs:enumeration value="tat"/>        <!-- Tatar -->
+      <xs:enumeration value="tel"/>        <!-- Telugu -->
+      <xs:enumeration value="tem"/>        <!-- Timne -->
+      <xs:enumeration value="ter"/>        <!-- Tereno -->
+      <xs:enumeration value="te" />        <!-- Telugu -->
+      <xs:enumeration value="tet"/>        <!-- Tetum -->
+      <xs:enumeration value="tgk"/>        <!-- Tajik -->
+      <xs:enumeration value="tgl"/>        <!-- Tagalog -->
+      <xs:enumeration value="tg" />        <!-- Tajik -->
+      <xs:enumeration value="tha"/>        <!-- Thai -->
+      <xs:enumeration value="th" />        <!-- Thai -->
+      <xs:enumeration value="tib"/>        <!-- Tibetan -->
+      <xs:enumeration value="tig"/>        <!-- Tigre -->
+      <xs:enumeration value="tir"/>        <!-- Tigrinya -->
+      <xs:enumeration value="ti" />        <!-- Tigrinya -->
+      <xs:enumeration value="tiv"/>        <!-- Tiv -->
+      <xs:enumeration value="tkl"/>        <!-- Tokelau -->
+      <xs:enumeration value="tk" />        <!-- Turkmen -->
+      <xs:enumeration value="tlh"/>        <!-- Klingon; tlhIngan-Hol -->
+      <xs:enumeration value="tli"/>        <!-- Tlingit -->
+      <xs:enumeration value="tl" />        <!-- Tagalog -->
+      <xs:enumeration value="tmh"/>        <!-- Tamashek -->
+      <xs:enumeration value="tn" />        <!-- Tswana -->
+      <xs:enumeration value="tog"/>        <!-- Tonga (Nyasa) -->
+      <xs:enumeration value="ton"/>        <!-- Tonga (Tonga Islands) -->
+      <xs:enumeration value="to" />        <!-- Tonga (Tonga Islands) -->
+      <xs:enumeration value="tpi"/>        <!-- Tok Pisin -->
+      <xs:enumeration value="tr" />        <!-- Turkish -->
+      <xs:enumeration value="tsi"/>        <!-- Tsimshian -->
+      <xs:enumeration value="tsn"/>        <!-- Tswana -->
+      <xs:enumeration value="tso"/>        <!-- Tsonga -->
+      <xs:enumeration value="ts" />        <!-- Tsonga -->
+      <xs:enumeration value="tt" />        <!-- Tatar -->
+      <xs:enumeration value="tuk"/>        <!-- Turkmen -->
+      <xs:enumeration value="tum"/>        <!-- Tumbuka -->
+      <xs:enumeration value="tup"/>        <!-- Tupi languages -->
+      <xs:enumeration value="tur"/>        <!-- Turkish -->
+      <xs:enumeration value="tut"/>        <!-- Altaic languages -->
+      <xs:enumeration value="tvl"/>        <!-- Tuvalu -->
+      <xs:enumeration value="twi"/>        <!-- Twi -->
+      <xs:enumeration value="tw" />        <!-- Twi -->
+      <xs:enumeration value="ty" />        <!-- Tahitian -->
+      <xs:enumeration value="tyv"/>        <!-- Tuvinian -->
+      <xs:enumeration value="udm"/>        <!-- Udmurt -->
+      <xs:enumeration value="uga"/>        <!-- Ugaritic -->
+      <xs:enumeration value="ug" />        <!-- Uighur; Uyghur -->
+      <xs:enumeration value="uig"/>        <!-- Uighur; Uyghur -->
+      <xs:enumeration value="ukr"/>        <!-- Ukrainian -->
+      <xs:enumeration value="uk" />        <!-- Ukrainian -->
+      <xs:enumeration value="umb"/>        <!-- Umbundu -->
+      <xs:enumeration value="und"/>        <!-- Undetermined -->
+      <xs:enumeration value="urd"/>        <!-- Urdu -->
+      <xs:enumeration value="ur" />        <!-- Urdu -->
+      <xs:enumeration value="uzb"/>        <!-- Uzbek -->
+      <xs:enumeration value="uz" />        <!-- Uzbek -->
+      <xs:enumeration value="vai"/>        <!-- Vai -->
+      <xs:enumeration value="ven"/>        <!-- Venda -->
+      <xs:enumeration value="ve" />        <!-- Venda -->
+      <xs:enumeration value="vie"/>        <!-- Vietnamese -->
+      <xs:enumeration value="vi" />        <!-- Vietnamese -->
+      <xs:enumeration value="vol"/>        <!-- VolapÃ¼k -->
+      <xs:enumeration value="vot"/>        <!-- Votic -->
+      <xs:enumeration value="vo" />        <!-- VolapÃ¼k -->
+      <xs:enumeration value="wak"/>        <!-- Wakashan languages -->
+      <xs:enumeration value="wal"/>        <!-- Walamo -->
+      <xs:enumeration value="war"/>        <!-- Waray -->
+      <xs:enumeration value="was"/>        <!-- Washo -->
+      <xs:enumeration value="wa" />        <!-- Walloon -->
+      <xs:enumeration value="wel"/>        <!-- Welsh -->
+      <xs:enumeration value="wen"/>        <!-- Sorbian languages -->
+      <xs:enumeration value="wln"/>        <!-- Walloon -->
+      <xs:enumeration value="wol"/>        <!-- Wolof -->
+      <xs:enumeration value="wo" />        <!-- Wolof -->
+      <xs:enumeration value="xal"/>        <!-- Kalmyk; Oirat -->
+      <xs:enumeration value="xho"/>        <!-- Xhosa -->
+      <xs:enumeration value="xh" />        <!-- Xhosa -->
+      <xs:enumeration value="yao"/>        <!-- Yao -->
+      <xs:enumeration value="yap"/>        <!-- Yapese -->
+      <xs:enumeration value="yid"/>        <!-- Yiddish -->
+      <xs:enumeration value="yi" />        <!-- Yiddish -->
+      <xs:enumeration value="yor"/>        <!-- Yoruba -->
+      <xs:enumeration value="yo" />        <!-- Yoruba -->
+      <xs:enumeration value="ypk"/>        <!-- Yupik languages -->
+      <xs:enumeration value="zap"/>        <!-- Zapotec -->
+      <xs:enumeration value="za" />        <!-- Zhuang; Chuang -->
+      <xs:enumeration value="zbl"/>        <!-- Blissymbols; Blissymbolics; Bliss -->
+      <xs:enumeration value="zen"/>        <!-- Zenaga -->
+      <xs:enumeration value="zgh"/>        <!-- Standard Moroccan Tamazight -->
+      <xs:enumeration value="zha"/>        <!-- Zhuang; Chuang -->
+      <xs:enumeration value="zh" />        <!-- Chinese -->
+      <xs:enumeration value="zho"/>        <!-- Chinese -->
+      <xs:enumeration value="znd"/>        <!-- Zande languages -->
+      <xs:enumeration value="zul"/>        <!-- Zulu -->
+      <xs:enumeration value="zun"/>        <!-- Zuni -->
+      <xs:enumeration value="zu" />        <!-- Zulu -->
+      <xs:enumeration value="zxx"/>        <!-- No linguistic content; Not applicable -->
+      <xs:enumeration value="zza"/>        <!-- Zaza; Dimili; Dimli; Kirdki; Kirmanjki; Zazaki -->
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

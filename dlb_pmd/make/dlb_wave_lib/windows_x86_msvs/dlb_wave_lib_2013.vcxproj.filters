@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+<Filter Include="dlb_buffer">
+<UniqueIdentifier>{e03d2b1a-ccb2-32ba-af33-7580e2022431}</UniqueIdentifier></Filter>
+<Filter Include="dlb_buffer\1.3">
+<UniqueIdentifier>{76c2bfb9-370b-3eae-b78f-b5374e69fa74}</UniqueIdentifier></Filter>
+<Filter Include="dlb_buffer\1.3\dlb_buffer">
+<UniqueIdentifier>{cfbf5eb7-283c-3aca-abc3-12db76edc526}</UniqueIdentifier></Filter>
+<Filter Include="dlb_buffer\1.3\dlb_buffer\include">
+<UniqueIdentifier>{9e837cc0-4af0-333b-ac82-cfb7a565860b}</UniqueIdentifier></Filter>
+<Filter Include="dlb_octfile">
+<UniqueIdentifier>{add2e245-63ac-3352-b3fb-aff53d51b874}</UniqueIdentifier></Filter>
+<Filter Include="dlb_octfile\1.1">
+<UniqueIdentifier>{ea3229ea-9b8d-301b-901a-6c0c1fa17ea5}</UniqueIdentifier></Filter>
+<Filter Include="dlb_octfile\1.1\dlb_octfile">
+<UniqueIdentifier>{53ee2b98-0f43-3631-a1a8-d8538e518649}</UniqueIdentifier></Filter>
+<Filter Include="dlb_octfile\1.1\dlb_octfile\include">
+<UniqueIdentifier>{828cb64c-9e40-3283-9800-634aff43bd47}</UniqueIdentifier></Filter>
+<Filter Include="dlb_octfile\1.1\dlb_octfile\src">
+<UniqueIdentifier>{8a0156c4-8495-3191-9e9b-aedc0bb46554}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave">
+<UniqueIdentifier>{31928a1c-effb-3779-9a04-abf5d55dc5e5}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6">
+<UniqueIdentifier>{a857c9b8-1566-32c0-b876-e9c26439e042}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6\dlb_wave">
+<UniqueIdentifier>{9c0116df-55a2-39c3-9225-426e3d5d5379}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6\dlb_wave\include">
+<UniqueIdentifier>{571b123e-f0f2-329a-8daf-c79b44e1dd77}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6\dlb_wave\src">
+<UniqueIdentifier>{74d237c8-aa13-35ea-8eb7-dea52d58540d}</UniqueIdentifier></Filter></ItemGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\..\dlb_octfile\1.1\dlb_octfile\src\dlb_octfile.c">
+<Filter>dlb_octfile\1.1\dlb_octfile\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_octfile\1.1\dlb_octfile\src\dlb_octfile_disk.c">
+<Filter>dlb_octfile\1.1\dlb_octfile\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_octfile\1.1\dlb_octfile\src\dlb_octfile_memory.c">
+<Filter>dlb_octfile\1.1\dlb_octfile\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_wave\1.6\dlb_wave\src\dlb_riff.c">
+<Filter>dlb_wave\1.6\dlb_wave\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_wave\1.6\dlb_wave\src\dlb_wave.c">
+<Filter>dlb_wave\1.6\dlb_wave\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_wave\1.6\dlb_wave\src\dlb_wave_float.c">
+<Filter>dlb_wave\1.6\dlb_wave\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_wave\1.6\dlb_wave\src\dlb_wave_int.c">
+<Filter>dlb_wave\1.6\dlb_wave\src</Filter></ClCompile></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\..\dlb_buffer\1.3\dlb_buffer\include\dlb_buffer.h">
+<Filter>dlb_buffer\1.3\dlb_buffer\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_octfile\1.1\dlb_octfile\include\dlb_octfile.h">
+<Filter>dlb_octfile\1.1\dlb_octfile\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_riff.h">
+<Filter>dlb_wave\1.6\dlb_wave\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_wave.h">
+<Filter>dlb_wave\1.6\dlb_wave\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_wave_float.h">
+<Filter>dlb_wave\1.6\dlb_wave\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_wave_int.h">
+<Filter>dlb_wave\1.6\dlb_wave\include</Filter></ClInclude></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup /></Project>

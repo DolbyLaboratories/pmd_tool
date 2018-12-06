@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject Keyword="Win32Proj" Name="dlb_pmd_lib" ProjectGUID="{888B31BA-E7A4-360D-978E-857D8E4C4BAC}" ProjectType="Visual C++" RootNamespace="dlb_pmd_lib" Version="8.00">
+<Platforms>
+<Platform Name="Win32" /></Platforms>
+<ToolFiles />
+<Configurations>
+<Configuration CharacterSet="1" ConfigurationType="4" IntermediateDirectory="$(ConfigurationName)\VS2005" Name="debug|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)\VS2005" WholeProgramOptimization="0">
+<Tool Name="VCPreBuildEventTool" />
+<Tool Name="VCCustomBuildTool" />
+<Tool Name="VCXMLDataGeneratorTool" />
+<Tool Name="VCWebServiceProxyGeneratorTool" />
+<Tool AdditionalIncludeDirectories="..\..\..\include;..\..\..;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\.." BasicRuntimeChecks="3" BufferSecurityCheck="1" CompileAs="0" DebugInformationFormat="3" Detect64BitPortabilityProblems="0" DisableLanguageExtensions="false" DisableSpecificWarnings="" ExceptionHandling="0" MinimalRebuild="0" Name="VCCLCompilerTool" Optimization="0" PreprocessorDefinitions="WIN32=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_LIB=1" RuntimeLibrary="3" UsePrecompiledHeader="0" WarningLevel="4" />
+<Tool Name="VCManagedResourceCompilerTool" />
+<Tool Name="VCResourceCompilerTool" />
+<Tool Name="VCPreLinkEventTool" />
+<Tool AdditionalDependencies="" AdditionalLibraryDirectories="" IgnoreDefaultLibraryNames="" LinkLibraryDependencies="0" Name="VCLibrarianTool" />
+<Tool Name="VCALinkTool" />
+<Tool Name="VCManifestTool" />
+<Tool Name="VCXDCMakeTool" />
+<Tool Name="VCBscMakeTool" />
+<Tool Name="VCFxCopTool" />
+<Tool Name="VCAppVerifierTool" />
+<Tool Name="VCWebDeploymentTool" />
+<Tool Name="VCPostBuildEventTool" /></Configuration>
+<Configuration CharacterSet="1" ConfigurationType="4" IntermediateDirectory="$(ConfigurationName)\VS2005" Name="release|Win32" OutputDirectory="$(SolutionDir)$(ConfigurationName)\VS2005" WholeProgramOptimization="1">
+<Tool Name="VCPreBuildEventTool" />
+<Tool Name="VCCustomBuildTool" />
+<Tool Name="VCXMLDataGeneratorTool" />
+<Tool Name="VCWebServiceProxyGeneratorTool" />
+<Tool AdditionalIncludeDirectories="..\..\..\include;..\..\..;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\.." BasicRuntimeChecks="0" BufferSecurityCheck="0" CompileAs="0" DebugInformationFormat="0" Detect64BitPortabilityProblems="0" DisableLanguageExtensions="false" DisableSpecificWarnings="" ExceptionHandling="0" MinimalRebuild="0" Name="VCCLCompilerTool" Optimization="2" PreprocessorDefinitions="NDEBUG=1;WIN32=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_LIB=1" RuntimeLibrary="0" UsePrecompiledHeader="0" WarningLevel="4" />
+<Tool Name="VCManagedResourceCompilerTool" />
+<Tool Name="VCResourceCompilerTool" />
+<Tool Name="VCPreLinkEventTool" />
+<Tool AdditionalDependencies="" AdditionalLibraryDirectories="" IgnoreDefaultLibraryNames="" LinkLibraryDependencies="0" Name="VCLibrarianTool" />
+<Tool Name="VCALinkTool" />
+<Tool Name="VCManifestTool" />
+<Tool Name="VCXDCMakeTool" />
+<Tool Name="VCBscMakeTool" />
+<Tool Name="VCFxCopTool" />
+<Tool Name="VCAppVerifierTool" />
+<Tool Name="VCWebDeploymentTool" />
+<Tool Name="VCPostBuildEventTool" /></Configuration></Configurations>
+<References />
+<Files>
+<Filter Name="dlb_pmd">
+<Filter Name="include">
+<File RelativePath="..\..\..\include\dlb_pmd_api.h" />
+<File RelativePath="..\..\..\include\dlb_pmd_generate.h" />
+<File RelativePath="..\..\..\include\dlb_pmd_klv.h" />
+<File RelativePath="..\..\..\include\dlb_pmd_pcm.h" />
+<File RelativePath="..\..\..\include\dlb_pmd_types.h" />
+<File RelativePath="..\..\..\include\dlb_pmd_xml.h" />
+<File RelativePath="..\..\..\include\dlb_pmd_xml_file.h" />
+<File RelativePath="..\..\..\include\dlb_pmd_xml_string.h" /></Filter>
+<Filter Name="src">
+<Filter Name="api">
+<File RelativePath="..\..\..\src\api\dlb_pmd.c" />
+<File RelativePath="..\..\..\src\api\dlb_pmd_api_read.c" />
+<File RelativePath="..\..\..\src\api\dlb_pmd_api_write.c" />
+<File RelativePath="..\..\..\src\api\dlb_pmd_equal.c" />
+<File RelativePath="..\..\..\src\api\dlb_pmd_metadata_set.c" /></Filter>
+<Filter Name="model">
+<File RelativePath="..\..\..\src\model\pmd_abd_aod.h" />
+<File RelativePath="..\..\..\src\model\pmd_aen.h" />
+<File RelativePath="..\..\..\src\model\pmd_apd.h" />
+<File RelativePath="..\..\..\src\model\pmd_apn.h" />
+<File RelativePath="..\..\..\src\model\pmd_bitstream_version.h" />
+<File RelativePath="..\..\..\src\model\pmd_channels.h" />
+<File RelativePath="..\..\..\src\model\pmd_eep.h" />
+<File RelativePath="..\..\..\src\model\pmd_error_helper.h" />
+<File RelativePath="..\..\..\src\model\pmd_esd.h" />
+<File RelativePath="..\..\..\src\model\pmd_etd.h" />
+<File RelativePath="..\..\..\src\model\pmd_hed.h" />
+<File RelativePath="..\..\..\src\model\pmd_iat.h" />
+<File RelativePath="..\..\..\src\model\pmd_idmap.h" />
+<File RelativePath="..\..\..\src\model\pmd_language.c" />
+<File RelativePath="..\..\..\src\model\pmd_language.h" />
+<File RelativePath="..\..\..\src\model\pmd_model.h" />
+<File RelativePath="..\..\..\src\model\pmd_mutex.h" />
+<File RelativePath="..\..\..\src\model\pmd_pld.h" />
+<File RelativePath="..\..\..\src\model\pmd_profile.h" />
+<File RelativePath="..\..\..\src\model\pmd_signals.h" />
+<File RelativePath="..\..\..\src\model\pmd_smpte2109.h" />
+<File RelativePath="..\..\..\src\model\pmd_types.h" />
+<File RelativePath="..\..\..\src\model\pmd_xyz.h" />
+<File RelativePath="..\..\..\src\model\pmd_xyz_set.h" /></Filter>
+<Filter Name="modules">
+<Filter Name="generate">
+<File RelativePath="..\..\..\src\modules\generate\pmd_random_generator.c" /></Filter>
+<Filter Name="klv">
+<File RelativePath="..\..\..\src\modules\klv\klv.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_abd.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_aen.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_aod.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_apd.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_apn.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_bitfield_helpers.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_container_config.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_eep.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_esd.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_esn.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_etd.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_hed.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_iat.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_pld.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_reader.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_speaker_config.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_version.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_writer.h" />
+<File RelativePath="..\..\..\src\modules\klv\klv_xyz.h" />
+<File RelativePath="..\..\..\src\modules\klv\pmd_crc32.c" />
+<File RelativePath="..\..\..\src\modules\klv\pmd_crc32.h" />
+<File RelativePath="..\..\..\src\modules\klv\pmd_klv_reader.c" />
+<File RelativePath="..\..\..\src\modules\klv\pmd_klv_writer.c" /></Filter>
+<Filter Name="pcm">
+<File RelativePath="..\..\..\src\modules\pcm\pmd_pcm_augmentor.c" />
+<File RelativePath="..\..\..\src\modules\pcm\pmd_pcm_extractor.c" />
+<File RelativePath="..\..\..\src\modules\pcm\pmd_smpte_337m.c" />
+<File RelativePath="..\..\..\src\modules\pcm\pmd_smpte_337m.h" /></Filter>
+<Filter Name="xml">
+<File RelativePath="..\..\..\src\modules\xml\pmd_xml_read_file.c" />
+<File RelativePath="..\..\..\src\modules\xml\pmd_xml_read_string.c" />
+<File RelativePath="..\..\..\src\modules\xml\pmd_xml_reader.c" />
+<File RelativePath="..\..\..\src\modules\xml\pmd_xml_write_file.c" />
+<File RelativePath="..\..\..\src\modules\xml\pmd_xml_write_string.c" />
+<File RelativePath="..\..\..\src\modules\xml\pmd_xml_writer.c" />
+<File RelativePath="..\..\..\src\modules\xml\xml_ad_id.h" />
+<File RelativePath="..\..\..\src\modules\xml\xml_cdata.h" />
+<File RelativePath="..\..\..\src\modules\xml\xml_eidr.h" />
+<File RelativePath="..\..\..\src\modules\xml\xml_hex.h" />
+<File RelativePath="..\..\..\src\modules\xml\xml_uuid.h" /></Filter></Filter></Filter></Filter>
+<Filter Name="dlb_xmllib">
+<Filter Name="1.0.4">
+<Filter Name="dlb_xml">
+<Filter Name="include">
+<File RelativePath="..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\include\dlb_xml.h" /></Filter></Filter></Filter></Filter></Files>
+<Globals /></VisualStudioProject>

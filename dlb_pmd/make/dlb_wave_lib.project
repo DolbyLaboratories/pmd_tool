@@ -1,0 +1,6 @@
+dlb_wave_lib = ProjectSpec (
+    actions=mbuild_compile_and_archive,
+    depends=[
+            ],
+    build_configuration=mbuild_standard
+)

@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+<Filter Include="dlb_pmd">
+<UniqueIdentifier>{ce4f8a46-b718-3a47-9a29-b30eb0bee44e}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\include">
+<UniqueIdentifier>{579370b4-f054-3050-9e97-fb058c837d53}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\test">
+<UniqueIdentifier>{8fde4a47-7fef-30bc-aa16-a9e60c172c27}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave">
+<UniqueIdentifier>{31928a1c-effb-3779-9a04-abf5d55dc5e5}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6">
+<UniqueIdentifier>{a857c9b8-1566-32c0-b876-e9c26439e042}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6\dlb_wave">
+<UniqueIdentifier>{9c0116df-55a2-39c3-9225-426e3d5d5379}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6\dlb_wave\include">
+<UniqueIdentifier>{571b123e-f0f2-329a-8daf-c79b44e1dd77}</UniqueIdentifier></Filter>
+<Filter Include="xerces">
+<UniqueIdentifier>{e75b11d6-8383-3d64-a46a-c8abf384eca1}</UniqueIdentifier></Filter>
+<Filter Include="xerces\xerces-c-3.2.0">
+<UniqueIdentifier>{a5878a8c-7b28-3ff6-a092-c0323780c08b}</UniqueIdentifier></Filter>
+<Filter Include="xerces\xerces-c-3.2.0\src">
+<UniqueIdentifier>{fe210c57-300e-3233-b544-f82dbb48180c}</UniqueIdentifier></Filter>
+<Filter Include="xerces\xerces-c-3.2.0\src\xercesc">
+<UniqueIdentifier>{ada1031f-f618-3e7a-953f-f658826250cb}</UniqueIdentifier></Filter>
+<Filter Include="xerces\xerces-c-3.2.0\src\xercesc\util">
+<UniqueIdentifier>{451b4555-8f0c-3c7d-bc54-aecbfe51b864}</UniqueIdentifier></Filter>
+<Filter Include="xerces\xerces-c-3.2.0\src\xercesc\util\MsgLoaders">
+<UniqueIdentifier>{0665250f-d833-3928-8867-186a34118fe4}</UniqueIdentifier></Filter>
+<Filter Include="xerces\xerces-c-3.2.0\src\xercesc\util\MsgLoaders\Win32">
+<UniqueIdentifier>{fc007519-2e31-3235-b7cc-bed00cdeb7fc}</UniqueIdentifier></Filter>
+<Filter Include="xerces\xerces-c-3.2.0\windows">
+<UniqueIdentifier>{06f53e02-11e8-3246-86d9-f727d60cd179}</UniqueIdentifier></Filter></ItemGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\test\TestKlv.cc">
+<Filter>dlb_pmd\test</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\TestMdset.cc">
+<Filter>dlb_pmd\test</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\TestModel.cc">
+<Filter>dlb_pmd\test</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\TestPcm.cc">
+<Filter>dlb_pmd\test</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\TestXml.cc">
+<Filter>dlb_pmd\test</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\XmlSchema.cc">
+<Filter>dlb_pmd\test</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\pmd_fuzz.cc">
+<Filter>dlb_pmd\test</Filter></ClCompile></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\include\dlb_pmd_api.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_generate.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_klv.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_pcm.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_types.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_xml.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_xml_file.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_riff.h">
+<Filter>dlb_wave\1.6\dlb_wave\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_wave.h">
+<Filter>dlb_wave\1.6\dlb_wave\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\stricmp.h">
+<Filter>xerces\xerces-c-3.2.0\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\strnicmp.h">
+<Filter>xerces\xerces-c-3.2.0\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\towlower.h">
+<Filter>xerces\xerces-c-3.2.0\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\towupper.h">
+<Filter>xerces\xerces-c-3.2.0\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\xercesc\util\MsgLoaders\Win32\resource.h">
+<Filter>xerces\xerces-c-3.2.0\src\xercesc\util\MsgLoaders\Win32</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\windows\config.h">
+<Filter>xerces\xerces-c-3.2.0\windows</Filter></ClInclude></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup /></Project>

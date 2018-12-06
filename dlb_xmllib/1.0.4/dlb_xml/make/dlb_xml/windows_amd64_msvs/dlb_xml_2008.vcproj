@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject Keyword="Win32Proj" Name="dlb_xml" ProjectGUID="{20895E86-0CC5-376D-A205-153F08960967}" ProjectType="Visual C++" RootNamespace="dlb_xml" Version="9.00">
+<Platforms>
+<Platform Name="x64" /></Platforms>
+<ToolFiles />
+<Configurations>
+<Configuration CharacterSet="1" ConfigurationType="4" IntermediateDirectory="$(ConfigurationName)\VS2008" Name="debug|x64" OutputDirectory="$(SolutionDir)$(ConfigurationName)\VS2008" WholeProgramOptimization="0">
+<Tool Name="VCPreBuildEventTool" />
+<Tool Name="VCCustomBuildTool" />
+<Tool Name="VCXMLDataGeneratorTool" />
+<Tool Name="VCWebServiceProxyGeneratorTool" />
+<Tool AdditionalIncludeDirectories="..\..\..\..\..\..\dlb_bitbuf\2.0;..\..\..\..\..\..\dlb_buffer\1.3;..\..\..\..\..\..\dlb_octfile\1.1;..\..\..\..;..\..\..\..\..\.." BasicRuntimeChecks="3" BufferSecurityCheck="1" CompileAs="0" DebugInformationFormat="3" Detect64BitPortabilityProblems="0" DisableLanguageExtensions="false" DisableSpecificWarnings="" ExceptionHandling="0" MinimalRebuild="0" Name="VCCLCompilerTool" Optimization="0" PreprocessorDefinitions="WIN32=1;WIN64=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_LIB=1" RuntimeLibrary="3" UsePrecompiledHeader="0" WarningLevel="4" />
+<Tool Name="VCManagedResourceCompilerTool" />
+<Tool Name="VCResourceCompilerTool" />
+<Tool Name="VCPreLinkEventTool" />
+<Tool AdditionalDependencies="" AdditionalLibraryDirectories="" IgnoreDefaultLibraryNames="" LinkLibraryDependencies="0" Name="VCLibrarianTool" />
+<Tool Name="VCALinkTool" />
+<Tool Name="VCManifestTool" />
+<Tool Name="VCXDCMakeTool" />
+<Tool Name="VCBscMakeTool" />
+<Tool Name="VCFxCopTool" />
+<Tool Name="VCAppVerifierTool" />
+<Tool Name="VCWebDeploymentTool" />
+<Tool Name="VCPostBuildEventTool" /></Configuration>
+<Configuration CharacterSet="1" ConfigurationType="4" IntermediateDirectory="$(ConfigurationName)\VS2008" Name="release|x64" OutputDirectory="$(SolutionDir)$(ConfigurationName)\VS2008" WholeProgramOptimization="1">
+<Tool Name="VCPreBuildEventTool" />
+<Tool Name="VCCustomBuildTool" />
+<Tool Name="VCXMLDataGeneratorTool" />
+<Tool Name="VCWebServiceProxyGeneratorTool" />
+<Tool AdditionalIncludeDirectories="..\..\..\..\..\..\dlb_bitbuf\2.0;..\..\..\..\..\..\dlb_buffer\1.3;..\..\..\..\..\..\dlb_octfile\1.1;..\..\..\..;..\..\..\..\..\.." BasicRuntimeChecks="0" BufferSecurityCheck="0" CompileAs="0" DebugInformationFormat="0" Detect64BitPortabilityProblems="0" DisableLanguageExtensions="false" DisableSpecificWarnings="" ExceptionHandling="0" MinimalRebuild="0" Name="VCCLCompilerTool" Optimization="2" PreprocessorDefinitions="NDEBUG=1;WIN32=1;WIN64=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_LIB=1" RuntimeLibrary="0" UsePrecompiledHeader="0" WarningLevel="4" />
+<Tool Name="VCManagedResourceCompilerTool" />
+<Tool Name="VCResourceCompilerTool" />
+<Tool Name="VCPreLinkEventTool" />
+<Tool AdditionalDependencies="" AdditionalLibraryDirectories="" IgnoreDefaultLibraryNames="" LinkLibraryDependencies="0" Name="VCLibrarianTool" />
+<Tool Name="VCALinkTool" />
+<Tool Name="VCManifestTool" />
+<Tool Name="VCXDCMakeTool" />
+<Tool Name="VCBscMakeTool" />
+<Tool Name="VCFxCopTool" />
+<Tool Name="VCAppVerifierTool" />
+<Tool Name="VCWebDeploymentTool" />
+<Tool Name="VCPostBuildEventTool" /></Configuration></Configurations>
+<References />
+<Files>
+<Filter Name="dlb_xmllib">
+<Filter Name="1.0.4">
+<Filter Name="dlb_xml">
+<Filter Name="include">
+<File RelativePath="..\..\..\include\dlb_xml.h" /></Filter>
+<Filter Name="src">
+<File RelativePath="..\..\..\src\dlb_xml.c" /></Filter></Filter></Filter></Filter></Files>
+<Globals /></VisualStudioProject>

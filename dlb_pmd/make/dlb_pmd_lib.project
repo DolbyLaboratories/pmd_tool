@@ -1,0 +1,9 @@
+dlb_pmd_lib = ProjectSpec (
+    actions=mbuild_compile_and_archive,
+    depends=[
+               'dlb_xml',
+	       'liboamdi',
+	       'libmgi'
+            ],
+    build_configuration=mbuild_standard
+)

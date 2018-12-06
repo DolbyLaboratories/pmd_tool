@@ -1,0 +1,704 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Smpte2109>
+  <ContainerConfig>
+    <SampleOffset>0</SampleOffset>
+    <DynamicTags>
+    </DynamicTags>
+  </ContainerConfig>
+  <ProfessionalMetadata version="11.0">
+    <Title>Liverpool v Chelsea 31 Jan 2017</Title>
+    <AudioSignals>
+      <AudioSignal id="1">
+        <Name>5.1 Primary SF Mic Left</Name>
+      </AudioSignal>
+      <AudioSignal id="2">
+        <Name>5. Primary SF Mic Right</Name>
+      </AudioSignal>
+      <AudioSignal id="3">
+        <Name>5.1 Primary SF Mic Center</Name>
+      </AudioSignal>
+      <AudioSignal id="4">
+        <Name>5.1 Primary SF Mic LFE</Name>
+      </AudioSignal>
+      <AudioSignal id="5">
+        <Name>5.1 Primary SF Mic Left Surround</Name>
+      </AudioSignal>
+      <AudioSignal id="6">
+        <Name>5.1 Primary SF Mic Right Surround</Name>
+      </AudioSignal>
+      <AudioSignal id="7">
+        <Name>Stereo Elevated Mic 2-S Left</Name>
+      </AudioSignal>
+      <AudioSignal id="8">
+        <Name>Stereo Elevated Mic 2-S Right</Name>
+      </AudioSignal>
+      <AudioSignal id="9">
+        <Name>Stereo Elevated Mic 2-N Left</Name>
+      </AudioSignal>
+      <AudioSignal id="10">
+        <Name>Stereo Elevated Mic 2-N Right</Name>
+      </AudioSignal>
+      <AudioSignal id="11">
+        <Name>PA Direct Feed</Name>
+      </AudioSignal>
+      <AudioSignal id="12">
+        <Name>Commentary Mic-17-T</Name>
+      </AudioSignal>
+      <AudioSignal id="13">
+        <Name>Commentary Mic-23-D</Name>
+      </AudioSignal>
+      <AudioSignal id="14">
+        <Name>Commentary Mic-07-B</Name>
+      </AudioSignal>
+    </AudioSignals>
+    <AudioElements>
+      <AudioBed id="1">
+        <Name>Center Stadium</Name>
+        <SpeakerConfig>5.1</SpeakerConfig>
+        <OutputTargets>
+          <OutputTarget id="Left">
+            <AudioSignals>
+              <ID>1</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right">
+            <AudioSignals>
+              <ID>2</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Center">
+            <AudioSignals>
+              <ID>3</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="LFE">
+            <AudioSignals>
+              <ID>4</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Left Surround">
+            <AudioSignals>
+              <ID>5</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right Surround">
+            <AudioSignals>
+              <ID>6</ID>
+            </AudioSignals>
+          </OutputTarget>
+        </OutputTargets>
+      </AudioBed>
+      <AudioBed id="2">
+        <Name>Immersive Home Team</Name>
+        <SpeakerConfig>5.1.4</SpeakerConfig>
+        <OutputTargets>
+          <OutputTarget id="Left">
+            <AudioSignals>
+              <ID source_gain_db="-0.5dB">1</ID>
+              <ID source_gain_db="-10.0dB">7</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right">
+            <AudioSignals>
+              <ID source_gain_db="-0.5dB">2</ID>
+              <ID source_gain_db="-10.0dB">8</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Center">
+            <AudioSignals>
+              <ID>3</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="LFE">
+            <AudioSignals>
+              <ID>4</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Left Surround">
+            <AudioSignals>
+              <ID source_gain_db="-0.5dB">5</ID>
+              <ID source_gain_db="-10.0dB">7</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right Surround">
+            <AudioSignals>
+              <ID source_gain_db="-0.5dB">6</ID>
+              <ID source_gain_db="-10.0dB">8</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Left Top Front">
+            <AudioSignals>
+              <ID source_gain_db="-3.0dB">7</ID>
+              <ID source_gain_db="-6.0dB">11</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right Top Front">
+            <AudioSignals>
+              <ID source_gain_db="-3.0dB">8</ID>
+              <ID source_gain_db="-6.0dB">11</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Left Top Rear">
+            <AudioSignals>
+              <ID source_gain_db="-3.0dB">7</ID>
+              <ID source_gain_db="-6.0dB">11</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right Top Rear">
+            <AudioSignals>
+              <ID source_gain_db="-3.0dB">8</ID>
+              <ID source_gain_db="-6.0dB">11</ID>
+            </AudioSignals>
+          </OutputTarget>
+        </OutputTargets>
+      </AudioBed>
+      <AudioBed id="3">
+        <Name>Immersive AwayTeam</Name>
+        <SpeakerConfig>5.1.4</SpeakerConfig>
+        <OutputTargets>
+          <OutputTarget id="Left">
+            <AudioSignals>
+              <ID source_gain_db="-0.5dB">1</ID>
+              <ID source_gain_db="-10.0dB">9</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right">
+            <AudioSignals>
+              <ID source_gain_db="-0.5dB">2</ID>
+              <ID source_gain_db="-10.0dB">10</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Center">
+            <AudioSignals>
+              <ID>3</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="LFE">
+            <AudioSignals>
+              <ID>4</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Left Surround">
+            <AudioSignals>
+              <ID source_gain_db="-0.5dB">5</ID>
+              <ID source_gain_db="-10.0dB">9</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right Surround">
+            <AudioSignals>
+              <ID source_gain_db="-0.5dB">6</ID>
+              <ID source_gain_db="-10.0dB">10</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Left Top Front">
+            <AudioSignals>
+              <ID source_gain_db="-3.0dB">9</ID>
+              <ID source_gain_db="-6.0dB">11</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right Top Front">
+            <AudioSignals>
+              <ID source_gain_db="-3.0dB">10</ID>
+              <ID source_gain_db="-6.0dB">11</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Left Top Rear">
+            <AudioSignals>
+              <ID source_gain_db="-3.0dB">9</ID>
+              <ID source_gain_db="-6.0dB">11</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right Top Rear">
+            <AudioSignals>
+              <ID source_gain_db="-3.0dB">10</ID>
+              <ID source_gain_db="-6.0dB">11</ID>
+            </AudioSignals>
+          </OutputTarget>
+        </OutputTargets>
+      </AudioBed>
+      <AudioBed id="4">
+        <Name>Streaming Stereo</Name>
+        <SpeakerConfig>2.0</SpeakerConfig>
+        <OutputTargets>
+          <OutputTarget id="Left">
+            <AudioSignals>
+              <ID source_gain_db="-4.0dB">1</ID>
+              <ID source_gain_db="-3.0dB">3</ID>
+              <ID source_gain_db="-10.0dB">5</ID>
+            </AudioSignals>
+          </OutputTarget>
+          <OutputTarget id="Right">
+            <AudioSignals>
+              <ID source_gain_db="-4.0dB">2</ID>
+              <ID source_gain_db="-3.0dB">3</ID>
+              <ID source_gain_db="-10.0dB">6</ID>
+            </AudioSignals>
+          </OutputTarget>
+        </OutputTargets>
+      </AudioBed>
+      <AudioObject id="65">
+        <Name>English Commentary</Name>
+        <Class>Dialog</Class>
+        <DynamicUpdates>False</DynamicUpdates>
+        <X_Pos>0.35</X_Pos>
+        <Y_Pos>0.00</Y_Pos>
+        <Z_Pos>0.00</Z_Pos>
+        <Size>0.00</Size>
+        <Size_3D>False</Size_3D>
+        <Diverge>True</Diverge>
+        <AudioSignal>12</AudioSignal>
+        <SourceGainDB>0.0dB</SourceGainDB>
+      </AudioObject>
+      <AudioObject id="66">
+        <Name>Spanish Commentary</Name>
+        <Class>Dialog</Class>
+        <DynamicUpdates>False</DynamicUpdates>
+        <X_Pos>0.35</X_Pos>
+        <Y_Pos>0.00</Y_Pos>
+        <Z_Pos>0.00</Z_Pos>
+        <Size>0.00</Size>
+        <Size_3D>False</Size_3D>
+        <Diverge>True</Diverge>
+        <AudioSignal>13</AudioSignal>
+        <SourceGainDB>0.0dB</SourceGainDB>
+      </AudioObject>
+      <AudioObject id="103">
+        <Name>English VDS</Name>
+        <Class>VDS</Class>
+        <DynamicUpdates>False</DynamicUpdates>
+        <X_Pos>0.50</X_Pos>
+        <Y_Pos>0.00</Y_Pos>
+        <Z_Pos>0.00</Z_Pos>
+        <Size>0.00</Size>
+        <Size_3D>False</Size_3D>
+        <Diverge>False</Diverge>
+        <AudioSignal>14</AudioSignal>
+        <SourceGainDB>0.0dB</SourceGainDB>
+      </AudioObject>
+      <AudioObject id="17">
+        <Name>PA</Name>
+        <Class>Generic</Class>
+        <!-- pretend that PA moves to test dynamic updates -->
+        <DynamicUpdates>True</DynamicUpdates>
+        <X_Pos>0.50</X_Pos>
+        <Y_Pos>0.50</Y_Pos>
+        <Z_Pos>1.00</Z_Pos>
+        <Size>0.40</Size>
+        <Size_3D>False</Size_3D>
+        <Diverge>False</Diverge>
+        <AudioSignal>11</AudioSignal>
+        <SourceGainDB>0.0dB</SourceGainDB>
+      </AudioObject>
+      <!--
+      <AudioObject id="18">
+          <Name>Sound Effects</Name>
+          <Class>Generic</Class>
+          <DynamicUpdates>False</DynamicUpdates>
+          <X_Pos>0.50</X_Pos>
+          <Y_Pos>0.50</Y_Pos>
+          <Z_Pos>0.50</Z_Pos>
+          <Size>0.30</Size>
+          <Size_3D>True</Size_3D>
+          <Diverge>False</Diverge>
+          <AudioSignals>11</AudioSignal>
+          <SourceGainDB>0.0dB</SourceGainDB>
+      </AudioObject>
+  -->
+    </AudioElements>
+    <Presentations>
+      <Presentation id="1">
+        <Name language="eng">English 5.1</Name>
+        <Name language="deu">Englisch 5.1</Name>
+        <Config>5.1 ME + D</Config>
+        <Language>eng</Language>
+        <Element>1</Element>
+        <Element>65</Element>
+      </Presentation>
+      <Presentation id="2">
+        <Name language="eng">Spanish 5.1</Name>
+        <Name language="es">Español 5.1</Name>
+        <Config>5.1 ME + D</Config>
+        <Language>spa</Language>
+        <Element>1</Element>
+        <Element>66</Element>
+      </Presentation>
+      <Presentation id="3">
+        <Name language="eng">English 5.1 + VDS</Name>
+        <Name language="ara">الإنجليزية 5.1 + VDS</Name>
+        <Config>5.1 ME + D + VDS</Config>
+        <Language>eng</Language>
+        <Element>1</Element>
+        <Element>65</Element>
+        <Element>103</Element>
+      </Presentation>
+      <Presentation id="4">
+        <Name language="eng">Home Immersive</Name>
+        <Name language="nor">hjem nedsenkende</Name>
+        <Config>5.1.4 ME</Config>
+        <Language>eng</Language>
+        <Element>2</Element>
+      </Presentation>
+      <Presentation id="5">
+        <Name language="eng">Away Immersive</Name>
+        <Name language="ja">没入型ホーム</Name>
+        <Config>5.1.4 ME</Config>
+        <Language>eng</Language>
+        <Element>3</Element>
+      </Presentation>
+      <Presentation id="6">
+        <Name language="eng">Immersive Away Team With Discrete Objects</Name>
+        <Name language="fr">Équipe immersive avec des objets discrets</Name>
+        <Config>5.1.4 ME + O</Config>
+        <Language>eng</Language>
+        <Element>3</Element>
+        <Element>17</Element>
+      </Presentation>
+    </Presentations>
+    <PresentationLoudness>
+      <Presentation>
+        <PresentationId>1</PresentationId>
+        <PracticeType dialgate="NI" correction_type="file">7</PracticeType>
+        <LoudnessRelativeGated>-15.0</LoudnessRelativeGated>
+        <LoudnessSpeechGated dialgate="Center">-101.9</LoudnessSpeechGated>
+        <Loudness3Seconds>-4.0</Loudness3Seconds>
+        <MaxLoudness3Seconds>-73.3</MaxLoudness3Seconds>
+        <TruePeak>-22.5</TruePeak>
+        <MaxTruePeak>-19.7</MaxTruePeak>
+        <ProgramBoundary offset="1393">-2</ProgramBoundary>
+        <LoudnessRange practice="0">65.4</LoudnessRange>
+        <MomentaryLoudness>-55.9</MomentaryLoudness>
+        <MaxMomentaryLoudness>-101.2</MaxMomentaryLoudness>
+        <Extension><base16>40e7102de7bce47794c20274990225343911ab58db7f4acf8f9719f8</base16></Extension>
+      </Presentation>
+    </PresentationLoudness>
+    <EncoderConfigurations>
+      <!-- Configure legacy service codecs first, codec constraints mean only one item in the Presentation_Id_List i.e. single elementary stream -->
+      <!-- Constrain configuration modes as follows: -->
+      <!--      DD+ Configuration="2.0" or "5.1" -->
+      <!--      DD+JOC Configuration="5.1.2" or "5.1.4" -->
+      <!--      Dolby E ProgramConfiguration="5.1" or "5.1.2" or "2+2+2+2" -->
+      <!-- Datarate can be specified in XML (for workflow validation) but doesn't make it into bitstream -->
+      <!-- Constrain AC3BSI/AC3ExtBSI/JocBSI metadata settings as follows: -->
+      <!--      BsMod= "Complete Main" or "Music and Effects" -->
+      <!--      CMixLev and SurMixLev are derived values from ExtBSI params -->
+      <!--      SurMod= "Not Indicated" or "Not Dolby Surround Encoded" or "Dolby Surround Encoded" -->
+      <!--      DRC Modes="None" or "Film Standard" or "Film Light" or "Music Standard" or Music Light" or "Speech" -->
+      <!--      LineMode & RFMode="None" or "Film Standard" or "Film Light" or "Music Standard" or Music Light" or "Speech" -->
+      <!--      PrefDMixMod="Not Indicated" or "LtRt Preferred" or "LoRo Preferred" -->
+      <!--      LtRtCmixLev and LoRoCmixLev="+3.0dB" or "+1.5dB" or "0.0dB" or "-1.5dB" or "-3.0dB" or -4.5dB" or -6dB" or "- "-infdB" -->
+      <!--      LtRtSurMixLev and LoRoSurMixLev="+3.0dB" or "+1.5dB" or "0.0dB" or "-1.5dB" or "-3.0dB" or -4.5dB" or -6dB" or "- "-infdB" -->
+      <!--      HMixLev = "0.0dB" -> "-30dB" -->
+      <Eac3EncodingParameters id="1">
+        <Name>English 5.1</Name>
+        <Encoder>
+          <DynrngProf>Film Light</DynrngProf>
+          <ComprProf>None</ComprProf>
+          <Surround90>On</Surround90>
+          <HMixLev>-infdB</HMixLev>
+        </Encoder>
+	<Bitstream>
+          <BsMod>Complete Main</BsMod>
+          <SurMod>Not Dolby Surround Encoded</SurMod>
+          <Dialnorm>26</Dialnorm>
+          <PrefDMixMod>LtRt</PrefDMixMod>
+          <LtRtCMixLev>-3.0dB</LtRtCMixLev>
+          <LtRtSurMixLev>-3.0dB</LtRtSurMixLev>
+          <LoRoCMixLev>-3.0dB</LoRoCMixLev>
+          <LoRoSurMixLev>-3.0dB</LoRoSurMixLev>
+        </Bitstream>
+        <DRC>
+          <Portable_Speakers_DRC_Profile>None</Portable_Speakers_DRC_Profile>
+          <Portable_Headphones_DRC_Profile>None</Portable_Headphones_DRC_Profile>
+          <Flat_Panel_DRC_Profile>None</Flat_Panel_DRC_Profile>
+          <Home_Theater_DRC_Profile>Film Light</Home_Theater_DRC_Profile>
+          <DDPlus_DRC_Profile>Film Light</DDPlus_DRC_Profile>
+        </DRC>
+        <Presentations>
+          <ID>1</ID>
+        </Presentations>
+      </Eac3EncodingParameters>
+      <Eac3EncodingParameters id="2">
+        <Name>Spanish 5.1</Name>
+        <Encoder>
+          <DynrngProf>Film Light</DynrngProf>
+          <ComprProf>None</ComprProf>
+          <Surround90>On</Surround90>
+          <HMixLev>-1.0dB</HMixLev>
+        </Encoder>
+        <Bitstream>
+          <BsMod>Complete Main</BsMod>
+          <SurMod>Not Dolby Surround Encoded</SurMod>
+          <Dialnorm>27</Dialnorm>
+          <PrefDMixMod>LtRt</PrefDMixMod>
+          <LtRtCMixLev>-3.0dB</LtRtCMixLev>
+          <LtRtSurMixLev>-3.0dB</LtRtSurMixLev>
+          <LoRoCMixLev>-3.0dB</LoRoCMixLev>
+          <LoRoSurMixLev>-3.0dB</LoRoSurMixLev>
+        </Bitstream>
+        <DRC>
+          <Portable_Speakers_DRC_Profile>None</Portable_Speakers_DRC_Profile>
+          <Portable_Headphones_DRC_Profile>None</Portable_Headphones_DRC_Profile>
+          <Flat_Panel_DRC_Profile>None</Flat_Panel_DRC_Profile>
+          <Home_Theater_DRC_Profile>Film Light</Home_Theater_DRC_Profile>
+          <DDPlus_DRC_Profile>Film Light</DDPlus_DRC_Profile>
+        </DRC>
+        <Presentations>
+          <ID>2</ID>
+          <ID>3</ID>
+        </Presentations>
+      </Eac3EncodingParameters>
+
+      <!-- Configure legacy premium (immersive) service codecs, codec supports only have one item in the Presentation_Id_List -->
+      <Eac3EncodingParameters id="3">
+        <Name>Home Immersive</Name>
+        <Encoder>
+          <DynrngProf>Film Light</DynrngProf>
+          <ComprProf>None</ComprProf>
+          <Surround90>On</Surround90>
+          <HMixLev>0.0dB</HMixLev>
+        </Encoder>
+        <Bitstream>
+          <BsMod>Complete Main</BsMod>
+          <SurMod>Not Dolby Surround Encoded</SurMod>
+          <Dialnorm>25</Dialnorm>
+          <PrefDMixMod>LtRt</PrefDMixMod>
+          <LtRtCMixLev>-3.0dB</LtRtCMixLev>
+          <LtRtSurMixLev>-3.0dB</LtRtSurMixLev>
+          <LoRoCMixLev>-3.0dB</LoRoCMixLev>
+          <LoRoSurMixLev>-3.0dB</LoRoSurMixLev>
+        </Bitstream>
+        <DRC>
+          <Portable_Speakers_DRC_Profile>None</Portable_Speakers_DRC_Profile>
+          <Portable_Headphones_DRC_Profile>None</Portable_Headphones_DRC_Profile>
+          <Flat_Panel_DRC_Profile>None</Flat_Panel_DRC_Profile>
+          <Home_Theater_DRC_Profile>Film Light</Home_Theater_DRC_Profile>
+          <DDPlus_DRC_Profile>Film Light</DDPlus_DRC_Profile>
+        </DRC>
+        <Presentations>
+          <ID>4</ID>
+        </Presentations>
+      </Eac3EncodingParameters>
+      <Eac3EncodingParameters id="4">
+        <Name>Away Immersive</Name>
+        <Encoder>
+          <DynrngProf>Film Light</DynrngProf>
+          <ComprProf>None</ComprProf>
+          <Surround90>On</Surround90>
+          <HMixLev>-30.0dB</HMixLev>
+	</Encoder>
+        <Bitstream>
+          <BsMod>Complete Main</BsMod>
+          <SurMod>Not Dolby Surround Encoded</SurMod>
+          <Dialnorm>25</Dialnorm>
+          <PrefDMixMod>LtRt</PrefDMixMod>
+          <LtRtCMixLev>-3.0dB</LtRtCMixLev>
+          <LtRtSurMixLev>-3.0dB</LtRtSurMixLev>
+          <LoRoCMixLev>-3.0dB</LoRoCMixLev>
+          <LoRoSurMixLev>-3.0dB</LoRoSurMixLev>
+        </Bitstream>
+        <DRC>
+          <Portable_Speakers_DRC_Profile>None</Portable_Speakers_DRC_Profile>
+          <Portable_Headphones_DRC_Profile>None</Portable_Headphones_DRC_Profile>
+          <Flat_Panel_DRC_Profile>None</Flat_Panel_DRC_Profile>
+          <Home_Theater_DRC_Profile>Film Light</Home_Theater_DRC_Profile>
+          <DDPlus_DRC_Profile>Film Light</DDPlus_DRC_Profile>
+        </DRC>
+        <Presentations>
+          <ID>5</ID>
+        </Presentations>
+      </Eac3EncodingParameters>
+      <!--      Configure next generation ATSC3.0 codec -->
+      <!--      The configuration might not be needed here as it's determined by the presentations to be included       -->
+      <!--      So we have to decide if this section would be used to explicitly configure/callout the AC-4 H-ESM       -->
+      <!--      We do however need something for dual ended immersive stereo, so an example payload is included         -->
+      <!--      AC4 Configuration=Auto (the encoder deduces by looking at the presentation payload and picks            -->
+      <!--      Datarate can be specified (workflow validation) but doesn't make it into the bitstream                  -->
+      <Eac3EncodingParameters id="5">
+        <Name>Mobile Delivery</Name>
+        <Encoder>
+          <DynrngProf>Film Light</DynrngProf>
+          <ComprProf>None</ComprProf>
+          <Surround90>On</Surround90>
+          <HMixLev>-30.0dB</HMixLev>
+        </Encoder>
+	<Bitstream>
+          <BsMod>Complete Main</BsMod>
+          <SurMod>Not Dolby Surround Encoded</SurMod>
+          <Dialnorm>25</Dialnorm>
+          <PrefDMixMod>LtRt</PrefDMixMod>
+          <LtRtCMixLev>-3.0dB</LtRtCMixLev>
+          <LtRtSurMixLev>-3.0dB</LtRtSurMixLev>
+          <LoRoCMixLev>-3.0dB</LoRoCMixLev>
+          <LoRoSurMixLev>-3.0dB</LoRoSurMixLev>
+        </Bitstream>
+        <DRC>
+          <Portable_Speakers_DRC_Profile>None</Portable_Speakers_DRC_Profile>
+          <Portable_Headphones_DRC_Profile>None</Portable_Headphones_DRC_Profile>
+          <Flat_Panel_DRC_Profile>None</Flat_Panel_DRC_Profile>
+          <Home_Theater_DRC_Profile>Film Light</Home_Theater_DRC_Profile>
+          <DDPlus_DRC_Profile>Film Light</DDPlus_DRC_Profile>
+        </DRC>
+        <Presentations>
+          <ID>4</ID>
+        </Presentations>
+      </Eac3EncodingParameters>
+      <Eac3EncodingParameters id="6">
+        <Name>Mobile Away</Name>
+        <Encoder>
+          <DynrngProf>Film Light</DynrngProf>
+          <ComprProf>None</ComprProf>
+          <Surround90>On</Surround90>
+          <HMixLev>-infdB</HMixLev>
+	</Encoder>
+        <Bitstream>
+          <BsMod>Complete Main</BsMod>
+          <SurMod>Not Dolby Surround Encoded</SurMod>
+          <Dialnorm>25</Dialnorm>
+          <PrefDMixMod>LtRt</PrefDMixMod>
+          <LtRtCMixLev>-3.0dB</LtRtCMixLev>
+          <LtRtSurMixLev>-3.0dB</LtRtSurMixLev>
+          <LoRoCMixLev>-3.0dB</LoRoCMixLev>
+          <LoRoSurMixLev>-3.0dB</LoRoSurMixLev>
+        </Bitstream>
+        <DRC>
+          <Portable_Speakers_DRC_Profile>None</Portable_Speakers_DRC_Profile>
+          <Portable_Headphones_DRC_Profile>None</Portable_Headphones_DRC_Profile>
+          <Flat_Panel_DRC_Profile>None</Flat_Panel_DRC_Profile>
+          <Home_Theater_DRC_Profile>Film Light</Home_Theater_DRC_Profile>
+          <DDPlus_DRC_Profile>Film Light</DDPlus_DRC_Profile>
+        </DRC>
+        <Presentations>
+          <ID>5</ID>
+        </Presentations>
+      </Eac3EncodingParameters>
+      <Eac3EncodingParameters id="7">
+        <Name>STB Package</Name>
+        <Encoder>
+          <DynrngProf>Film Light</DynrngProf>
+          <ComprProf>None</ComprProf>
+          <Surround90>On</Surround90>
+          <HMixLev>-30.0dB</HMixLev>
+        </Encoder>
+        <Bitstream>
+          <BsMod>Complete Main</BsMod>
+          <SurMod>Not Dolby Surround Encoded</SurMod>
+          <Dialnorm>25</Dialnorm>
+          <PrefDMixMod>LtRt</PrefDMixMod>
+          <LtRtCMixLev>-3.0dB</LtRtCMixLev>
+          <LtRtSurMixLev>-3.0dB</LtRtSurMixLev>
+          <LoRoCMixLev>-3.0dB</LoRoCMixLev>
+          <LoRoSurMixLev>-3.0dB</LoRoSurMixLev>
+        </Bitstream>
+        <DRC>
+          <Portable_Speakers_DRC_Profile>None</Portable_Speakers_DRC_Profile>
+          <Portable_Headphones_DRC_Profile>None</Portable_Headphones_DRC_Profile>
+          <Flat_Panel_DRC_Profile>None</Flat_Panel_DRC_Profile>
+          <Home_Theater_DRC_Profile>Film Light</Home_Theater_DRC_Profile>
+          <DDPlus_DRC_Profile>Film Light</DDPlus_DRC_Profile>
+        </DRC>
+        <Presentations>
+          <ID>1</ID>
+          <ID>2</ID>
+          <ID>3</ID>
+          <ID>6</ID>
+        </Presentations>
+      </Eac3EncodingParameters>
+      <!-- Turnaround a multi-language ED2 system stream and then
+           dispatch a selected presentations (i.e. Spanish) via Dolby E
+           satellite.
+  
+           Program description text for Dolby E programs is derived from
+           Eac3EncodingParameters Name.
+  
+           This is an example of rendering the same presentation twice
+           before re-encoding, first to 5.1 and second to stereo
+      -->
+      <ED2Turnaround id="8">
+        <Name>Spanish Satellite Contribution</Name>
+        <DolbyE>
+          <FrameRate>25</FrameRate>
+          <ProgramConfiguration>5.1+2</ProgramConfiguration>
+	  <Presentations>
+            <Presentation>
+              <ID>2</ID>
+              <Eac3EncodingParameters>2</Eac3EncodingParameters>
+            </Presentation>
+            <Presentation>
+              <ID>2</ID>
+              <Eac3EncodingParameters>2</Eac3EncodingParameters>
+            </Presentation>
+          </Presentations>
+        </DolbyE>
+      </ED2Turnaround>
+    </EncoderConfigurations>
+    <DynamicUpdate sample_time="32">
+      <ID>17</ID>
+      <X_Pos>0.50</X_Pos>
+      <Y_Pos>0.50</Y_Pos>
+      <Z_Pos>0.50</Z_Pos>
+    </DynamicUpdate>
+    <DynamicUpdate sample_time="64">
+      <ID>17</ID>
+      <X_Pos>0.50</X_Pos>
+      <Y_Pos>0.50</Y_Pos>
+      <Z_Pos>0.00</Z_Pos>
+    </DynamicUpdate>
+    <DynamicUpdate sample_time="96">
+      <ID>17</ID>
+      <X_Pos>0.00</X_Pos>
+      <Y_Pos>0.50</Y_Pos>
+      <Z_Pos>0.00</Z_Pos>
+    </DynamicUpdate>
+    <DynamicUpdate sample_time="128">
+      <ID>17</ID>
+      <X_Pos>0.00</X_Pos>
+      <Y_Pos>0.00</Y_Pos>
+      <Z_Pos>0.00</Z_Pos>
+    </DynamicUpdate>
+    <IAT>
+      <Content_ID><UUID>00123456-abcd-dead-beef-c0ffeec0ffee</UUID></Content_ID>
+      <!--
+           <Content_ID><EIDR>10.5420/0123-4567-89ab-cdef-0123</EIDR></Content_ID>
+           <Content_ID><Ad-ID>abcdefg</Ad-ID></Content_ID>
+           <Content_ID><Raw type="13">00112233445566778899aabbccddeeff</Raw></Content_ID>
+           <Content_ID><Raw type="13" encoding="base16">00112233445566778899aabbccddeeff</Raw></Content_ID>
+       -->
+      <Distribution_ID>
+        <ATSC3>
+	  <BroadcastStreamID>1</BroadcastStreamID>
+          <Major_Channel_Number>2</Major_Channel_Number>
+          <Minor_Channel_Number>3</Minor_Channel_Number>
+        </ATSC3>
+      </Distribution_ID>
+      <!--
+           <Distribution_ID><Raw type="6">lemon</Raw></Distribution_ID>
+       -->
+      <Timestamp>1234</Timestamp>
+      <Offset>32</Offset>
+      <Validity_Duration>56</Validity_Duration>
+      <User_Data><ascii>12&amp;3</ascii></User_Data>
+      <Extension><base16>457874656e73696f6e</base16></Extension>
+    </IAT>
+
+    <HeadphoneElements>
+      <HeadphoneElement id="1">
+        <Element>65</Element>
+        <HeadTrackingEnabled>True</HeadTrackingEnabled>
+        <RenderMode>0</RenderMode>
+      </HeadphoneElement>
+      <HeadphoneElement id="2">
+        <Element>66</Element>
+        <HeadTrackingEnabled>True</HeadTrackingEnabled>
+        <RenderMode>0</RenderMode>
+      </HeadphoneElement>
+      <HeadphoneElement id="3">
+        <Element>3</Element>
+        <HeadTrackingEnabled>False</HeadTrackingEnabled>
+        <RenderMode>35</RenderMode>
+        <ChannelExclusions>
+          <ID>Center</ID>
+        </ChannelExclusions>
+      </HeadphoneElement>
+    </HeadphoneElements>
+  </ProfessionalMetadata>
+</Smpte2109>

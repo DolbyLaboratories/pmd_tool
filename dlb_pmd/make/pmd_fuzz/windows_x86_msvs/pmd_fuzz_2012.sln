@@ -1,0 +1,51 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmd_fuzz", "pmd_fuzz_2012.vcxproj", "{8369623A-45F9-326A-B96E-513972A8E68C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{888B31BA-E7A4-360D-978E-857D8E4C4BAC} = {888B31BA-E7A4-360D-978E-857D8E4C4BAC}
+		{2A4DF4EE-7136-33B4-B637-60938D184F39} = {2A4DF4EE-7136-33B4-B637-60938D184F39}
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1} = {F3113CD3-1EEE-3755-88A8-9D430022FDA1}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_pmd_lib", "..\..\dlb_pmd_lib\windows_x86_msvs\dlb_pmd_lib_2012.vcxproj", "{888B31BA-E7A4-360D-978E-857D8E4C4BAC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{20895E86-0CC5-376D-A205-153F08960967} = {20895E86-0CC5-376D-A205-153F08960967}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_wave_lib", "..\..\dlb_wave_lib\windows_x86_msvs\dlb_wave_lib_2012.vcxproj", "{2A4DF4EE-7136-33B4-B637-60938D184F39}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_xml", "..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\make\dlb_xml\windows_x86_msvs\dlb_xml_2012.vcxproj", "{20895E86-0CC5-376D-A205-153F08960967}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xerces_3_2_0_lib", "..\..\..\..\xerces\xerces-c-3.2.0\make\xerces_3_2_0_lib\windows_x86_msvs\xerces_3_2_0_lib_2012.vcxproj", "{F3113CD3-1EEE-3755-88A8-9D430022FDA1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		debug|Win32 = debug|Win32
+		release|Win32 = release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.debug|Win32.ActiveCfg = debug|Win32
+		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.debug|Win32.Build.0 = debug|Win32
+		{2A4DF4EE-7136-33B4-B637-60938D184F39}.debug|Win32.ActiveCfg = debug|Win32
+		{2A4DF4EE-7136-33B4-B637-60938D184F39}.debug|Win32.Build.0 = debug|Win32
+		{8369623A-45F9-326A-B96E-513972A8E68C}.debug|Win32.ActiveCfg = debug|Win32
+		{8369623A-45F9-326A-B96E-513972A8E68C}.debug|Win32.Build.0 = debug|Win32
+		{20895E86-0CC5-376D-A205-153F08960967}.debug|Win32.ActiveCfg = debug|Win32
+		{20895E86-0CC5-376D-A205-153F08960967}.debug|Win32.Build.0 = debug|Win32
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1}.debug|Win32.ActiveCfg = debug|Win32
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1}.debug|Win32.Build.0 = debug|Win32
+		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.release|Win32.ActiveCfg = release|Win32
+		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.release|Win32.Build.0 = release|Win32
+		{2A4DF4EE-7136-33B4-B637-60938D184F39}.release|Win32.ActiveCfg = release|Win32
+		{2A4DF4EE-7136-33B4-B637-60938D184F39}.release|Win32.Build.0 = release|Win32
+		{8369623A-45F9-326A-B96E-513972A8E68C}.release|Win32.ActiveCfg = release|Win32
+		{8369623A-45F9-326A-B96E-513972A8E68C}.release|Win32.Build.0 = release|Win32
+		{20895E86-0CC5-376D-A205-153F08960967}.release|Win32.ActiveCfg = release|Win32
+		{20895E86-0CC5-376D-A205-153F08960967}.release|Win32.Build.0 = release|Win32
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1}.release|Win32.ActiveCfg = release|Win32
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1}.release|Win32.Build.0 = release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
