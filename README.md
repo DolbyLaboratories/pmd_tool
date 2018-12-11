@@ -1,7 +1,7 @@
 # pmd_tool (dlb_pmd_lib)
 # version 1.2.0
 
-pmd_tool is a common line utility that converts between
+pmd_tool is a command line utility that converts between
 the following representations of SMPTE RDD49 metadata
 
  - a human-readable XML file matching Schema in
