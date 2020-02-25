@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@
 typedef struct
 {
     pmd_element_id id;                      /**< audio element identifier */
-    uint8_t name[PMD_MAX_ELEMENT_NAME_LEN]; /**< audio element name */
+    uint8_t name[DLB_PMD_NAME_ARRAY_SIZE];  /**< audio element name */
 } pmd_aen;
     
 

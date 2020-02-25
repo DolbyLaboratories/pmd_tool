@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  **********************************************************************/
 
 /**
- * @flle dlb_pmd_compare.c
+ * @file dlb_pmd_compare.c
  * @brief implementation of model comparison, using public APIs.
  */
 
@@ -56,6 +56,22 @@
 #else
 #  define TRACE_FAIL(x) 
 #endif
+
+
+/**
+ * Defines which components of PMD should be considered
+ * during comparison.
+ */
+const uint32_t PMD_COMPARE_MASK = PMD_EQUAL_MASK_SIGNALS
+                                | PMD_EQUAL_MASK_BEDS
+                                | PMD_EQUAL_MASK_OBJECTS
+                                | PMD_EQUAL_MASK_PRESENTATIONS
+                                | PMD_EQUAL_MASK_HEADPHONES
+                                | PMD_EQUAL_MASK_NUM_ED2_SYSTEM
+                                | PMD_EQUAL_MASK_LOUDNESS
+                                | PMD_EQUAL_MASK_EAC3
+                                | PMD_EQUAL_MASK_ED2_TURNAROUNDS
+                                | PMD_EQUAL_MASK_ED2_UPDATES;
 
 /**
  * @brief helper function to provide a simple location to breakpoint
@@ -598,17 +614,24 @@ updates_equal
 
 
 dlb_pmd_success
-dlb_pmd_equal
+dlb_pmd_equal2
     (const dlb_pmd_model *m1
     ,const dlb_pmd_model *m2
     ,      dlb_pmd_bool ignore_updates
+    ,      dlb_pmd_bool ignore_names
     ,      dlb_pmd_bool minimal
     )
 {
+    if (minimal)
+    {
+        ignore_names = 1;
+        ignore_updates = 1;
+    }
+
     if (   signals_equal(m1, m2)
-        || beds_equal(m1, m2, minimal)
-        || objects_equal(m1, m2, minimal)
-        || presentations_equal(m1, m2, minimal)
+        || beds_equal(m1, m2, ignore_names)
+        || objects_equal(m1, m2, ignore_names)
+        || presentations_equal(m1, m2, ignore_names)
         || headphones_equal(m1, m2)
        )
     {
@@ -617,13 +640,13 @@ dlb_pmd_equal
     
     if (!minimal)
     {
-        if (   title_equal(m1, m2)
+        if (   (dlb_pmd_num_ed2_system(m1) && title_equal(m1, m2))
             || loudness_equal(m1, m2)
             || iat_equal(m1, m2)
             || eac3_equal(m1, m2)
             || ed2_system_equal(m1, m2)
             || ed2_turnarounds_equal(m1, m2)
-            )
+           )
         {
             return PMD_FAIL;
         }
@@ -638,4 +661,32 @@ dlb_pmd_equal
     return PMD_SUCCESS;
 }
 
+
+dlb_pmd_success
+dlb_pmd_equal3
+    (const dlb_pmd_model *m1
+    ,const dlb_pmd_model *m2
+    ,      dlb_pmd_bool ignore_names
+    ,      uint32_t components_to_check
+    )
+{
+    if (   ( (components_to_check & PMD_EQUAL_MASK_SIGNALS)         && signals_equal(m1, m2))
+        || ( (components_to_check & PMD_EQUAL_MASK_BEDS)            && beds_equal(m1, m2, ignore_names))
+        || ( (components_to_check & PMD_EQUAL_MASK_OBJECTS)         && objects_equal(m1, m2, ignore_names))
+        || ( (components_to_check & PMD_EQUAL_MASK_PRESENTATIONS)   && presentations_equal(m1, m2, ignore_names))
+        || ( (components_to_check & PMD_EQUAL_MASK_HEADPHONES)      && headphones_equal(m1, m2))
+        || ( (components_to_check & PMD_EQUAL_MASK_NUM_ED2_SYSTEM)  && (dlb_pmd_num_ed2_system(m1) && title_equal(m1, m2)))
+        || ( (components_to_check & PMD_EQUAL_MASK_LOUDNESS)        && loudness_equal(m1, m2))
+        || ( (components_to_check & PMD_EQUAL_MASK_IAT)             && iat_equal(m1, m2))
+        || ( (components_to_check & PMD_EQUAL_MASK_EAC3)            && eac3_equal(m1, m2))
+        || ( (components_to_check & PMD_EQUAL_MASK_ED2_SYSTEM)      && ed2_system_equal(m1, m2))
+        || ( (components_to_check & PMD_EQUAL_MASK_ED2_TURNAROUNDS) && ed2_turnarounds_equal(m1, m2))
+        || ( (components_to_check & PMD_EQUAL_MASK_ED2_UPDATES)     && updates_equal(m1, m2))
+       )
+    {
+        return PMD_FAIL;
+    }
+
+    return PMD_SUCCESS;
+}
 

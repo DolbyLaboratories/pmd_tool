@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -232,8 +232,7 @@ dlb_pmd_add_signal
     CHECK_INTARG(model, signal, 1, 255);
     
     idx = SIGNAL_TO_CHANNEL_INDEX(signal);
-    con = &model->profile.constraints;
-
+    con = &model->profile.constraints.max;
 
     if (pmd_signals_test(&model->signals, idx))
     {
@@ -265,7 +264,7 @@ set_profile
     ,unsigned int level         /**< [in] profile level */
     )
 {
-    if (pmd_profile_set(p, profile, level))
+    if (pmd_profile_set(p, profile, level, &model->limits))
     {
         error(model, "unknown profile/level combination: %u/%u", profile, level);
         return PMD_FAIL;
@@ -337,7 +336,7 @@ dlb_pmd_set_profile
     ,unsigned int   level
     )
 {
-    dlb_pmd_metadata_count *con;
+    dlb_pmd_metadata_count *max;
     dlb_pmd_metadata_count count;
     pmd_profile p;
 
@@ -345,17 +344,17 @@ dlb_pmd_set_profile
     CHECK_INTARG(model, profile, 0, MAX_PROFILE_NUMBER);
     CHECK_INTARG(model, level,   0, MAX_PROFILE_LEVEL);
     
-    con = &p.constraints;
+    max = &p.constraints.max;
     if (   set_profile(model, &p, profile, level)
         || dlb_pmd_count_entities(model, &count)
-        || CHECK_ENTITY  (model,  count, con, num_signals,        "signals")
-        || check_elements(model, &count, p.max_elements)
-        || CHECK_ENTITY  (model,  count, con, num_updates,        "updates")
-        || CHECK_ENTITY  (model,  count, con, num_presentations,  "presentations")
-        || CHECK_ENTITY  (model,  count, con, num_loudness,       "loudness")
-        || CHECK_ENTITY  (model,  count, con, num_eac3,           "EAC-3 encoding parameters")
-        || CHECK_ENTITY  (model,  count, con, num_ed2_turnarounds,"ED2 turnarounds")
-        || CHECK_ENTITY  (model,  count, con, num_headphone_desc, "Headphone descriptions")
+        || CHECK_ENTITY  (model,  count, max, num_signals,        "signals")
+        || check_elements(model, &count, p.constraints.max_elements)
+        || CHECK_ENTITY  (model,  count, max, num_updates,        "updates")
+        || CHECK_ENTITY  (model,  count, max, num_presentations,  "presentations")
+        || CHECK_ENTITY  (model,  count, max, num_loudness,       "loudness")
+        || CHECK_ENTITY  (model,  count, max, num_eac3,           "EAC-3 encoding parameters")
+        || CHECK_ENTITY  (model,  count, max, num_ed2_turnarounds,"ED2 turnarounds")
+        || CHECK_ENTITY  (model,  count, max, num_headphone_desc, "Headphone descriptions")
        )
     {
         return PMD_FAIL;
@@ -378,7 +377,7 @@ dlb_pmd_add_signals
     uint16_t num;
 
     FUNCTION_PROLOGUE(model);
-    limit = model->profile.constraints.num_signals;
+    limit = model->profile.constraints.max.num_signals;
     if (num_signals + model->num_signals > limit)
     {
         num_signals = limit - model->num_signals;
@@ -422,12 +421,10 @@ add_element_name
     (dlb_pmd_model *model
     ,dlb_pmd_element_id id
     ,const char *name
-    ,...
     )
 {
     pmd_aen *aen;
     uint16_t idx;
-    va_list ep;
 
     if (!pmd_string_valid(name))
     {
@@ -440,10 +437,8 @@ add_element_name
     model->num_aen += 1;
     aen->id = id;
 
-    /* vsnprintf will convert C escape codes */
-    va_start(ep, name);
-    vsnprintf((char*)aen->name, sizeof(aen->name), name, ep);
-    va_end(ep);
+    /* snprintf will convert C escape codes */
+    snprintf((char*)aen->name, sizeof(aen->name), "%s", name);
 
     pmd_idmap_insert(&model->aen_ids, id, idx);
     return PMD_SUCCESS;
@@ -461,20 +456,6 @@ dlb_pmd_add_bed
     ,int origin
     )
 {
-    static uint8_t SPEAKER_COUNTS[NUM_PMD_SPEAKER_CONFIGS] =  {2, 3, 6, 8, 10, 12, 16, 2, 2};
-    static pmd_channel_set SPEAKERS[NUM_PMD_SPEAKER_CONFIGS] =
-    {
-        PMD_CHANNELSET_STEREO,
-        PMD_CHANNELSET_3_0,
-        PMD_CHANNELSET_5_1,
-        PMD_CHANNELSET_5_1_2,
-        PMD_CHANNELSET_5_1_4,
-        PMD_CHANNELSET_7_1_4,
-        PMD_CHANNELSET_9_1_6,
-        PMD_CHANNELSET_STEREO,
-        PMD_CHANNELSET_STEREO,
-    };
-    
     unsigned int limit;    
     pmd_element *e;
     pmd_channel_metadata *cmd;
@@ -482,13 +463,59 @@ dlb_pmd_add_bed
     unsigned int bit;
     unsigned int i;
     uint16_t idx;
+    static uint8_t SPEAKER_COUNTS[NUM_PMD_SPEAKER_CONFIGS] =  {0};
+    static pmd_channel_set SPEAKERS[NUM_PMD_SPEAKER_CONFIGS] = {0};
+    int cfg_idx = (int)(cfg);
+
+    switch (cfg)
+    {
+        case DLB_PMD_SPEAKER_CONFIG_2_0:        /* fall through */
+        case DLB_PMD_SPEAKER_CONFIG_PORTABLE:   /* fall through */
+        case DLB_PMD_SPEAKER_CONFIG_HEADPHONE:           
+            SPEAKER_COUNTS[cfg_idx] = 2;
+            SPEAKERS[cfg_idx] = PMD_CHANNELSET_STEREO;
+            break;
+
+        case DLB_PMD_SPEAKER_CONFIG_3_0:
+            SPEAKER_COUNTS[cfg_idx] = 3;
+            SPEAKERS[cfg_idx] = PMD_CHANNELSET_3_0;
+            break;
+
+        case DLB_PMD_SPEAKER_CONFIG_5_1:
+            SPEAKER_COUNTS[cfg_idx] = 6;
+            SPEAKERS[cfg_idx] = PMD_CHANNELSET_5_1;
+            break;
+
+        case DLB_PMD_SPEAKER_CONFIG_5_1_2:
+            SPEAKER_COUNTS[cfg_idx] = 8;
+            SPEAKERS[cfg_idx] = PMD_CHANNELSET_5_1_2;
+            break;
+
+        case DLB_PMD_SPEAKER_CONFIG_5_1_4:
+            SPEAKER_COUNTS[cfg_idx] = 10;
+            SPEAKERS[cfg_idx] = PMD_CHANNELSET_5_1_4;
+            break;
+
+        case DLB_PMD_SPEAKER_CONFIG_7_1_4:
+            SPEAKER_COUNTS[cfg_idx] = 12;
+            SPEAKERS[cfg_idx] = PMD_CHANNELSET_7_1_4;
+            break;
+
+        case DLB_PMD_SPEAKER_CONFIG_9_1_6:
+            SPEAKER_COUNTS[cfg_idx] = 16;
+            SPEAKERS[cfg_idx] = PMD_CHANNELSET_9_1_6;
+            break;
+
+        default:
+            break;
+    }
     
     FUNCTION_PROLOGUE(model);
     CHECK_INTARG(model, id, 1, DLB_PMD_MAX_AUDIO_ELEMENTS);
 
     assert(first_signal > 0);
 
-    limit = model->profile.max_elements;
+    limit = model->profile.constraints.max_elements;
 
     /* check whether the ID has already been claimed */
     if (pmd_idmap_lookup(&model->element_ids, id, &idx))
@@ -508,7 +535,7 @@ dlb_pmd_add_bed
     {
         uint16_t oidx;
         pmd_element *oe;
-        if (!pmd_idmap_lookup(&model->element_ids, origin, &oidx))
+        if (!pmd_idmap_lookup(&model->element_ids, (dlb_pmd_element_id)origin, &oidx))
         {
             error(model, "bed %u original element id %d not found", id, origin);
             return PMD_FAIL;
@@ -560,7 +587,9 @@ dlb_pmd_add_bed
     }
     else
     {
-        return add_element_name(model, id, "Bed %u", id);
+        char tmp[256];
+        snprintf(tmp, sizeof(tmp), "Bed %u", id);
+        return add_element_name(model, id, tmp);
     }
 }
 
@@ -583,7 +612,7 @@ dlb_pmd_set_bed
     FUNCTION_PROLOGUE(model);
     CHECK_PTRARG(model, bed);
 
-    limit = model->profile.max_elements;
+    limit = model->profile.constraints.max_elements;
 
     /* check whether the ID has already been claimed */
     if (pmd_idmap_lookup(&model->element_ids, bed->id, &idx))
@@ -679,7 +708,7 @@ dlb_pmd_add_object
     FUNCTION_PROLOGUE(model);
     CHECK_INTARG(model, id, 1, DLB_PMD_MAX_AUDIO_ELEMENTS);
 
-    limit = model->profile.max_elements;
+    limit = model->profile.constraints.max_elements;
     
     assert(signal > 0);
 
@@ -703,8 +732,8 @@ dlb_pmd_add_object
     e->hed_idx = 0xffff;
     omd = &e->md.object;
     if (!encode_coordinate(model, x, &omd->x)) return PMD_FAIL;
-    if (!encode_coordinate(model, y, &omd->y)) return PMD_FAIL;
-    if (!encode_coordinate(model, z, &omd->z)) return PMD_FAIL;
+    if (!encode_coordinate(model, diverge ? 1.0f : y, &omd->y)) return PMD_FAIL;
+    if (!encode_coordinate(model, diverge ? 0.0f : z, &omd->z)) return PMD_FAIL;
     if (!encode_size(model, size, &omd->size)) return PMD_FAIL;
     if (!encode_gain(model, gain, &omd->gain)) return PMD_FAIL;
     omd->oclass = cls;
@@ -721,7 +750,9 @@ dlb_pmd_add_object
     }
     else
     {
-        return add_element_name(model, id, "Object %u", id);
+        char tmp[256];
+        snprintf(tmp, sizeof(tmp), "Object %u", id);
+        return add_element_name(model, id, tmp);
     }
 }
 
@@ -741,7 +772,7 @@ dlb_pmd_set_object
     FUNCTION_PROLOGUE(model);
     CHECK_PTRARG(model, object);
 
-    limit = model->profile.max_elements;
+    limit = model->profile.constraints.max_elements;
     /* check whether the ID has already been claimed */
     if (pmd_idmap_lookup(&model->element_ids, object->id, &idx))
     {
@@ -808,7 +839,7 @@ dlb_pmd_add_presentation
     FUNCTION_PROLOGUE(model);
     CHECK_INTARG(model, id, 1, DLB_PMD_MAX_PRESENTATIONS);
 
-    limit = model->profile.constraints.num_presentations;
+    limit = model->profile.constraints.max.num_presentations;
 
     if (pmd_idmap_lookup(&model->apd_ids, id, &idx))
     {
@@ -872,7 +903,7 @@ dlb_pmd_set_presentation
     CHECK_PTRARG(model, p);
     CHECK_INTARG(model, p->id, 1, DLB_PMD_MAX_PRESENTATIONS);
 
-    limit = model->profile.constraints.num_presentations;
+    limit = model->profile.constraints.max.num_presentations;
     if (pmd_idmap_lookup(&model->apd_ids, p->id, &idx))
     {
         pres = &model->apd_list[idx];
@@ -901,8 +932,7 @@ dlb_pmd_set_presentation
 
     if (p->num_names >= DLB_PMD_MAX_PRESENTATION_NAMES)
     {
-        error(model, "too many presentation names for presentation %u",
-              p->id);
+        error(model, "too many presentation names for presentation %u", p->id);
         return PMD_FAIL;
     }
 
@@ -977,7 +1007,13 @@ dlb_pmd_add_update
     FUNCTION_PROLOGUE(model);
     CHECK_INTARG(model, id, 1, DLB_PMD_MAX_AUDIO_ELEMENTS);
 
-    limit = model->profile.constraints.num_updates;
+    if (time < 5)
+    {
+        error(model, "update times less than 5 are ignored");
+        return PMD_SUCCESS;
+    }
+
+    limit = model->profile.constraints.max.num_updates;
     if (!pmd_idmap_lookup(&model->element_ids, id, &idx))
     {
         error(model, "object %u does not exist", id);
@@ -1029,7 +1065,7 @@ dlb_pmd_set_update
     CHECK_INTARG(model, u->id, 1, DLB_PMD_MAX_AUDIO_ELEMENTS);
     CHECK_INTARG(model, u->sample_offset, 0, DLB_PMD_MAX_UPDATE_TIME);
 
-    limit = model->profile.constraints.num_updates;
+    limit = model->profile.constraints.max.num_updates;
     if (!pmd_idmap_lookup(&model->element_ids, u->id, &idx))
     {
         error(model, "object %u does not exist", u->id);
@@ -1093,7 +1129,7 @@ dlb_pmd_add_eac3_encoding_parameters
     FUNCTION_PROLOGUE(model);
     CHECK_INTARG(model, id, 1, 255);
 
-    limit = model->profile.constraints.num_eac3;
+    limit = model->profile.constraints.max.num_eac3;
     
     if (pmd_idmap_lookup(&model->eep_ids, (uint16_t)id, &idx))
     {
@@ -1278,7 +1314,7 @@ dlb_pmd_set_eac3
     CHECK_PTRARG(model, eac3);
     CHECK_INTARG(model, eac3->id, 1, 255);
 
-    limit = model->profile.constraints.num_eac3;
+    limit = model->profile.constraints.max.num_eac3;
     if (pmd_idmap_lookup(&model->eep_ids, (uint16_t)eac3->id, &idx))
     {
         eep = &model->eep_list[idx];
@@ -1366,7 +1402,7 @@ dlb_pmd_add_etd
     FUNCTION_PROLOGUE(model);
     CHECK_INTARG(model, id, 1, 255);
 
-    limit = model->profile.constraints.num_ed2_turnarounds;
+    limit = model->profile.constraints.max.num_ed2_turnarounds;
     if (pmd_idmap_lookup(&model->etd_ids, (uint16_t)id, &idx))
     {
         error(model, "ED2 turnaround id %u already in use", id);
@@ -1559,7 +1595,7 @@ dlb_pmd_set_ed2_turnaround
     CHECK_PTRARG(model, etd);
     CHECK_INTARG(model, etd->id, 1, 255);
 
-    limit = model->profile.constraints.num_ed2_turnarounds;
+    limit = model->profile.constraints.max.num_ed2_turnarounds;
     if (pmd_idmap_lookup(&model->etd_ids, (uint16_t)etd->id, &idx))
     {
         e = &model->etd_list[idx];
@@ -1650,16 +1686,20 @@ dlb_pmd_iat_add
     ,uint64_t       timestamp
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
 
-    memset(&model->iat, '\0', sizeof(model->iat));
-
-    model->iat.options = PMD_IAT_PRESENT;
-    model->iat.timestamp = timestamp;
-    model->iat.user_data_size = 0;
-    model->iat.extension_size = 0;
-    model->iat.content_id_size = 0;
-    model->iat.distribution_id_size = 0;
+    iat = model->iat;
+    if (!iat) return PMD_FAIL;
+    
+    memset(iat, '\0', sizeof(*iat));
+    iat->options = PMD_IAT_PRESENT;
+    iat->timestamp = timestamp;
+    iat->user_data_size = 0;
+    iat->extension_size = 0;
+    iat->content_id_size = 0;
+    iat->distribution_id_size = 0;
     return PMD_SUCCESS;
 }
 
@@ -1670,22 +1710,25 @@ dlb_pmd_iat_content_id_uuid
     ,const char    *uuid
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
 
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
     }
     
-    if (!read_uuid(uuid, model->iat.content_id))
+    if (!read_uuid(uuid, iat->content_id))
     {
         error(model, "Error: could not parse UUID: \"%s\"", uuid);
         return PMD_FAIL;
     }
     
-    model->iat.content_id_size = 16;
-    model->iat.content_id_type = PMD_IAT_CONTENT_ID_UUID;
+    iat->content_id_size = 16;
+    iat->content_id_type = PMD_IAT_CONTENT_ID_UUID;
     return PMD_SUCCESS;
 }
 
@@ -1696,21 +1739,25 @@ dlb_pmd_iat_content_id_eidr
     ,const char    *eidr
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
     }
     
-    if (!read_eidr(eidr, model->iat.content_id))
+    if (!read_eidr(eidr, iat->content_id))
     {
         error(model, "Error: could not parse EIDR: \"%s\"", eidr);
         return PMD_FAIL;
     }
 
-    model->iat.content_id_size = 12;
-    model->iat.content_id_type = PMD_IAT_CONTENT_ID_EIDR;
+    iat->content_id_size = 12;
+    iat->content_id_type = PMD_IAT_CONTENT_ID_EIDR;
     return PMD_SUCCESS;
 }
 
@@ -1721,19 +1768,23 @@ dlb_pmd_iat_content_id_ad_id
     ,const char    *ad_id
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
     }
-    if (!read_ad_id(ad_id, model->iat.content_id))
+    if (!read_ad_id(ad_id, iat->content_id))
     {
         error(model, "Error: could not parse Ad-ID: \"%s\"", ad_id);
         return PMD_FAIL;
     }
-    model->iat.content_id_size = (uint8_t)strlen(ad_id);
-    model->iat.content_id_type = PMD_IAT_CONTENT_ID_AD_ID;
+    iat->content_id_size = (uint8_t)strlen(ad_id);
+    iat->content_id_type = PMD_IAT_CONTENT_ID_AD_ID;
     return PMD_SUCCESS;
 }
 
@@ -1746,8 +1797,12 @@ dlb_pmd_iat_content_id_raw
     ,uint8_t                *data
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
@@ -1757,15 +1812,15 @@ dlb_pmd_iat_content_id_raw
         error(model, "Error: content Id length too long: %u", len);
         return PMD_FAIL;
     }
-    if (type > 0x1e || type < 3)
+    if ((int)type > 0x1e || (int)type < 3)
     {
         error(model, "Error: raw content id type incorrect (3-0x1e): %u", type);
         return PMD_FAIL;
     }
 
-    model->iat.content_id_size = (uint8_t)len;
-    model->iat.content_id_type = type;
-    memcpy(model->iat.content_id, data, len);
+    iat->content_id_size = (uint8_t)len;
+    iat->content_id_type = type;
+    memcpy(iat->content_id, data, len);
     return PMD_SUCCESS;
 }
 
@@ -1778,8 +1833,12 @@ dlb_pmd_iat_distribution_id_atsc3
     ,uint16_t       minno
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
@@ -1794,13 +1853,13 @@ dlb_pmd_iat_distribution_id_atsc3
         error(model, "Error: minor channel number %u too large (0-1023)", minno);
         return PMD_FAIL;
     }
-    model->iat.distribution_id_type = 0;
-    model->iat.distribution_id_size = 5;
-    model->iat.distribution_id[0] = (bsid >> 8) & 0xff;
-    model->iat.distribution_id[1] = bsid & 0xff;
-    model->iat.distribution_id[2] = 0xf0 | ((majno >> 6) & 0x0f);
-    model->iat.distribution_id[3] = ((majno & 0x3f) << 2) | ((minno >> 8) & 0x3);
-    model->iat.distribution_id[4] = (minno & 0xff);
+    iat->distribution_id_type = 0;
+    iat->distribution_id_size = 5;
+    iat->distribution_id[0] = (bsid >> 8) & 0xff;
+    iat->distribution_id[1] = bsid & 0xff;
+    iat->distribution_id[2] = 0xf0 | ((majno >> 6) & 0x0f);
+    iat->distribution_id[3] = ((majno & 0x3f) << 2) | ((minno >> 8) & 0x3);
+    iat->distribution_id[4] = (minno & 0xff);
     return PMD_SUCCESS;
 }
 
@@ -1813,8 +1872,12 @@ dlb_pmd_iat_distribution_id_raw
     ,uint8_t *data
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
@@ -1824,14 +1887,14 @@ dlb_pmd_iat_distribution_id_raw
         error(model, "Error: distribution id length too long: %u", len);
         return PMD_FAIL;
     }
-    if (type > 6 || type < 1)
+    if ((int)type > 6 || (int)type < 1)
     {
         error(model, "Error: raw distribution id type incorrect (1-6): %u", type);
         return PMD_FAIL;
     }
-    model->iat.distribution_id_size = (uint8_t)len;
-    model->iat.distribution_id_type = type;
-    memcpy(model->iat.distribution_id, data, len);
+    iat->distribution_id_size = (uint8_t)len;
+    iat->distribution_id_type = type;
+    memcpy(iat->distribution_id, data, len);
     return PMD_SUCCESS;
 }
 
@@ -1842,17 +1905,20 @@ dlb_pmd_iat_set_offset
     ,uint16_t       offset
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
     CHECK_INTARG(model, offset, 0, (1u<<11)-1);
 
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
     }
     
-    model->iat.options |= PMD_IAT_OFFSET_PRESENT;
-    model->iat.offset = offset;
+    iat->options |= PMD_IAT_OFFSET_PRESENT;
+    iat->offset = offset;
     return PMD_SUCCESS;
 }
 
@@ -1863,17 +1929,20 @@ dlb_pmd_iat_set_validity_duration
     ,uint16_t       vdur
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
     CHECK_INTARG(model, vdur, 0, (1<<11)-1);
 
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
     }
     
-    model->iat.options |= PMD_IAT_VALIDITY_DUR_PRESENT;
-    model->iat.validity_duration = vdur;
+    iat->options |= PMD_IAT_VALIDITY_DUR_PRESENT;
+    iat->validity_duration = vdur;
     return PMD_SUCCESS;
 }
 
@@ -1885,9 +1954,12 @@ dlb_pmd_iat_set_user_data
     ,uint8_t       *data
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
 
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
@@ -1897,8 +1969,8 @@ dlb_pmd_iat_set_user_data
         error(model, "IAT user data too long");
         return PMD_FAIL;
     }
-    model->iat.user_data_size = (uint8_t)size;
-    memcpy(model->iat.user_data, data, size);
+    iat->user_data_size = (uint8_t)size;
+    memcpy(iat->user_data, data, size);
     return PMD_SUCCESS;
 }
 
@@ -1910,9 +1982,12 @@ dlb_pmd_iat_set_extension
     ,uint8_t       *data
     )
 {
+    pmd_iat *iat;
+
     FUNCTION_PROLOGUE(model);
 
-    if (!(model->iat.options & PMD_IAT_PRESENT))
+    iat = model->iat;
+    if (!iat || !(iat->options & PMD_IAT_PRESENT))
     {
         error(model, "Error: IAT not present");
         return PMD_FAIL;
@@ -1923,8 +1998,8 @@ dlb_pmd_iat_set_extension
         return PMD_FAIL;
     }
 
-    model->iat.extension_size = (uint8_t)size;
-    memcpy(model->iat.extension_data, data, size);
+    iat->extension_size = (uint8_t)size;
+    memcpy(iat->extension_data, data, size);
     return PMD_SUCCESS;
 }
 
@@ -1935,14 +2010,22 @@ dlb_pmd_set_iat
     ,dlb_pmd_identity_and_timing *iat
     )
 {
+    pmd_iat *miat;
+
     FUNCTION_PROLOGUE(model);
     CHECK_PTRARG(model, iat);
 
-    memset(&model->iat, '\0', sizeof(model->iat));
+    miat = model->iat;
+    if (!miat)
+    {
+        error(model, "IAT not included in model constraint");
+        return PMD_FAIL;
+    }
 
+    memset(miat, '\0', sizeof(*miat));
     if (iat)
     {
-        model->iat.options = PMD_IAT_PRESENT;
+        miat->options = PMD_IAT_PRESENT;
         
         if (iat->content_id.size)
         {
@@ -1952,9 +2035,9 @@ dlb_pmd_set_iat
                 return PMD_FAIL;
             }
             
-            model->iat.content_id_size = (uint8_t)iat->content_id.size;
-            model->iat.content_id_type = iat->content_id.type;
-            memcpy(model->iat.content_id, iat->content_id.data, iat->content_id.size);
+            miat->content_id_size = (uint8_t)iat->content_id.size;
+            miat->content_id_type = iat->content_id.type;
+            memcpy(miat->content_id, iat->content_id.data, iat->content_id.size);
         }
         
         if (iat->distribution_id.size)
@@ -1965,21 +2048,21 @@ dlb_pmd_set_iat
                 return PMD_FAIL;
             }
             
-            model->iat.distribution_id_size = (uint8_t)iat->distribution_id.size;
-            model->iat.distribution_id_type = iat->distribution_id.type;
-            memcpy(model->iat.distribution_id, iat->distribution_id.data,
+            miat->distribution_id_size = (uint8_t)iat->distribution_id.size;
+            miat->distribution_id_type = iat->distribution_id.type;
+            memcpy(miat->distribution_id, iat->distribution_id.data,
                    iat->distribution_id.size);
         }
-        model->iat.timestamp = iat->timestamp;
+        miat->timestamp = iat->timestamp;
         if (iat->offset.present)
         {
-            model->iat.options |= PMD_IAT_OFFSET_PRESENT;
-            model->iat.offset = iat->offset.offset;
+            miat->options |= PMD_IAT_OFFSET_PRESENT;
+            miat->offset = iat->offset.offset;
         }
         if (iat->validity_duration.present)
         {
-            model->iat.options |= PMD_IAT_VALIDITY_DUR_PRESENT;
-            model->iat.validity_duration = iat->validity_duration.vdur;
+            miat->options |= PMD_IAT_VALIDITY_DUR_PRESENT;
+            miat->validity_duration = iat->validity_duration.vdur;
         }
         
         if (iat->user_data.size)
@@ -1989,9 +2072,8 @@ dlb_pmd_set_iat
                 error(model, "IAT user data size too large");
                 return PMD_FAIL;
             }
-            model->iat.user_data_size = (uint8_t)iat->user_data.size;
-            memcpy(model->iat.user_data, iat->user_data.data,
-                   model->iat.user_data_size);
+            miat->user_data_size = (uint8_t)iat->user_data.size;
+            memcpy(miat->user_data, iat->user_data.data, miat->user_data_size);
         }
         
         if (iat->extension.size)
@@ -2002,8 +2084,8 @@ dlb_pmd_set_iat
                 error(model, "IAT extension size too large");
                 return PMD_FAIL;
             }
-            model->iat.extension_size = (uint8_t)bytes;
-            memcpy(model->iat.extension_data, iat->extension.data, bytes);
+            miat->extension_size = (uint8_t)bytes;
+            memcpy(miat->extension_data, iat->extension.data, bytes);
         }
     }
     return PMD_SUCCESS;
@@ -2044,7 +2126,7 @@ dlb_pmd_set_loudness
     FUNCTION_PROLOGUE(model);
     CHECK_PTRARG(model, p);
 
-    limit = model->profile.constraints.num_loudness;
+    limit = model->profile.constraints.max.num_loudness;
     if (!pmd_idmap_lookup(&model->apd_ids, p->presid, &presidx))
     {
         error(model, "presentation %u does not exist", p->presid);
@@ -2067,7 +2149,7 @@ dlb_pmd_set_loudness
         error(model, "Unknown loudness practice type: %u", p->loud_prac_type);
         return PMD_FAIL;
     }
-    pld->lpt = p->loud_prac_type;
+    pld->lpt = (pmd_loudness_practice)p->loud_prac_type;
 
     if (p->loudcorr_type > PMD_PLD_CORRECTION_REALTIME)
     {
@@ -2075,7 +2157,7 @@ dlb_pmd_set_loudness
         return PMD_FAIL;
     }
     pld->options |= PMD_PLD_OPT_LOUDCORR_TYPE;
-    pld->corrty = p->loudcorr_type;
+    pld->corrty = (pmd_correction_type)p->loudcorr_type;
 
     if (p->b_loudcorr_gating)
     {
@@ -2085,7 +2167,7 @@ dlb_pmd_set_loudness
             return PMD_FAIL;
         }
         pld->options |= PMD_PLD_OPT_LOUDCORR_DIALGATE;
-        pld->dpt = p->loudcorr_gating;
+        pld->dpt = (pmd_dialgate_practice)p->loudcorr_gating;
     }
 
     if (p->b_loudrelgat)
@@ -2100,7 +2182,7 @@ dlb_pmd_set_loudness
         if (VERIFY_LUFS(model, p->loudspchgat, "speech-gated loudness")) return PMD_FAIL;
         pld->options |= PMD_PLD_OPT_LOUDSPCHGAT;
         pld->lsg = pmd_encode_lufs(p->loudspchgat);
-        pld->sdpt = p->loudspch_gating;
+        pld->sdpt = (pmd_dialgate_practice)p->loudspch_gating;
     }
 
     if (p->b_loudstrm3s)
@@ -2168,7 +2250,7 @@ dlb_pmd_set_loudness
 
         pld->options |= PMD_PLD_OPT_LRA;
         pld->lra = pmd_encode_lra(p->lra);
-        pld->lrap = p->lra_prac_type;
+        pld->lrap = (pmd_loudness_range_practice)p->lra_prac_type;
     }
 
     if (p->b_loudmntry)
@@ -2205,7 +2287,13 @@ dlb_pmd_set_ed2_system
     FUNCTION_PROLOGUE(model);
     CHECK_PTRARG(model, sys);
     
-    esd = &model->esd;
+    esd = model->esd;
+    if (!esd)
+    {
+        error(model, "ED2 system excluded from current model constraints");
+        return PMD_FAIL;
+    }
+           
     memset(esd, '\0', sizeof(*esd));
 
     esd->count = sys->count;
@@ -2294,7 +2382,7 @@ dlb_pmd_set_headphone_element
     FUNCTION_PROLOGUE(model);
     CHECK_PTRARG(model, hed);
 
-    limit = model->profile.constraints.num_headphone_desc;
+    limit = model->profile.constraints.max.num_headphone_desc;
     if (!pmd_idmap_lookup(&model->element_ids, hed->audio_element_id, &idx))
     {
         error(model, "headphone audio element id %u does not exist",
@@ -2326,4 +2414,5 @@ dlb_pmd_set_headphone_element
     target->channel_mask = hed->channel_mask;
     return PMD_SUCCESS;
 }
+
 

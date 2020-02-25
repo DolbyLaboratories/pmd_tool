@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,6 @@
 #ifndef KLV_CONTAINER_CONFIG_INC_H_
 #define KLV_CONTAINER_CONFIG_INC_H_
 
-#include "klv_writer.h"
 #include "klv_reader.h"
 
 
@@ -119,7 +118,7 @@ klv_container_config_read
     {
         if (*r->rp != KLV_CONTAINER_CONFIG_VERSION)
         {
-            klv_reader_error_at(r, "Wrong container config version.  Found %u, expected %u\n",
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, NULL, "Wrong container config version.  Found %u, expected %u\n",
                                 *r->rp, KLV_CONTAINER_CONFIG_VERSION);
             return 1;
         }
@@ -133,7 +132,7 @@ klv_container_config_read
     {
         unsigned int taglen;
         unsigned int localtag;
-        if (klv_read_ber_value(r, &localtag, &taglen))
+        if (klv_read_ber_value(r, &localtag, &taglen, NULL))
         {
             return 1;
         }
@@ -145,8 +144,8 @@ klv_container_config_read
 
         if (count > PMD_MAX_DYNAMIC_TAGS)
         {
-            klv_reader_error_at(r, "Too many dynamic tags (%u), only %u supported\n", count,
-                                PMD_MAX_DYNAMIC_TAGS);
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, NULL, "Too many dynamic tags (%d), only %d supported\n",
+                                count, PMD_MAX_DYNAMIC_TAGS);
             return 1;
         }
         payload_length -= taglen + KLV_UNIVERSAL_LABEL_SIZE;

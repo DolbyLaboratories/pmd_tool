@@ -48,7 +48,7 @@
 <CompileAs>Default</CompileAs>
 <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
 <DisableSpecificWarnings />
-<ExceptionHandling />
+<ExceptionHandling>Sync</ExceptionHandling>
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>Disabled</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -72,7 +72,7 @@
 <CompileAs>Default</CompileAs>
 <DebugInformationFormat />
 <DisableSpecificWarnings />
-<ExceptionHandling />
+<ExceptionHandling>Sync</ExceptionHandling>
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>MaxSpeed</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -89,7 +89,6 @@
 <ProjectReference>
 <LinkLibraryDependencies>false</LinkLibraryDependencies></ProjectReference></ItemDefinitionGroup>
 <ItemGroup>
-<ClCompile Include="..\..\..\src\gtest-all.cc" />
 <ClCompile Include="..\..\..\src\gtest-death-test.cc" />
 <ClCompile Include="..\..\..\src\gtest-filepath.cc" />
 <ClCompile Include="..\..\..\src\gtest-port.cc" />

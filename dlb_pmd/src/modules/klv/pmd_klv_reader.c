@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -78,26 +78,34 @@ klv_read_iat_key
     (klv_reader *r
     ,dlb_pmd_model *model
     ,unsigned int len
+    ,dlb_pmd_payload_status_record *read_status
     )
 {
-    if (model->iat.options & PMD_IAT_PRESENT)
+    pmd_iat *iat = model->iat;
+
+    if (!iat)
+    {
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status, "model constraints exclude IAT\n");
+        return 1;
+    }
+    
+    if (iat->options & PMD_IAT_PRESENT)
     {
         if (model->iat_read_this_frame)
         {
-            klv_reader_error_at(r, "Only one IAT allowed per frame\n");
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status, "Only one IAT allowed per frame\n");
             return 1;
         }
         /* otherwise, reset IAT ready to be overwritten */
-        memset(&model->iat, '\0', sizeof(model->iat));
+        memset(iat, '\0', sizeof(*iat));
     }
-
-    if (klv_iat_read(r, len, &model->iat))
+    
+    if (klv_iat_read(r, len, iat, read_status))
     {
-        klv_reader_error(r, "decoding IAT\n");
         return 1; /* decode error */
     }
-
-    model->iat.options |= PMD_IAT_PRESENT;
+    
+    iat->options |= PMD_IAT_PRESENT;
     model->iat_read_this_frame = 1;
     return 0;
 }
@@ -156,8 +164,11 @@ int                           /** @return 0 on success, 1 on failure */
 klv_read_local_keys
     (klv_reader *r
     ,dlb_pmd_model *model
+    ,dlb_pmd_payload_set_status *read_status
     )
 {
+    int final_status = 0;
+    dlb_pmd_payload_status_record *payload_set_status = (read_status != NULL) ? &read_status->payload_set_status : NULL;
     unsigned int remaining = (unsigned int)(r->end - r->rp);
     unsigned int lenlen;
     unsigned int taglen;
@@ -168,20 +179,27 @@ klv_read_local_keys
 
     while (remaining > 4)
     {
-        if (klv_read_ber_value(r, &tag, &taglen))
+        int ber_status;
+
+        ber_status = klv_read_ber_value(r, &tag, &taglen, payload_set_status);
+        if (ber_status)
         {
-            klv_reader_error_at(r, "Could not read BER-encoded tag\n");
+            return 1;
+        }
+
+        ber_status = klv_read_ber_value(r, &len, &lenlen, payload_set_status);
+        if (ber_status)
+        {
             return 1;
         }
         
-        if (   klv_read_ber_value(r, &len, &lenlen)
-            || remaining < (taglen + lenlen + len))
+        if (remaining < (taglen + lenlen + len))
         {
             /* This may happen when trying to parse padding bytes at the end
              * of the buffer: we must pad up to a multiple of 10 */
             if (remaining > 9)
             {
-                klv_reader_error_at(r, "Unexpected padding at end of buffer\n");
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_ERROR, payload_set_status, "Unexpected padding at end of buffer\n");
                 return 1;
             }
             remaining = 0;
@@ -194,6 +212,10 @@ klv_read_local_keys
         }
         else
         {
+            dlb_pmd_payload_status_record *current_status_record = NULL;
+            dlb_pmd_bool show_ok = PMD_TRUE;
+            int read_result = 0;
+
             switch (tag)
             {
             case KLV_PMD_LOCAL_TAG_CONFIG:
@@ -203,165 +225,188 @@ klv_read_local_keys
                     TRACE((" failed\n"));
                     return 1;
                 }
-                TRACE((" OK\n"));
                 break;
 
             case KLV_PMD_LOCAL_TAG_SYNC:
                 /* sync payload wraps a sequence of tags. We want to
                  * ignore Sync info, but parse the nested tags */
                 len = 0;
+                show_ok = PMD_FALSE;
                 break;
                 
             case KLV_PMD_LOCAL_TAG_CRC:
                 /* ignore: we will already have processed this (if it
                  * was the final payload) */
+                /* DO set the read_status flag */
+                if (read_status)
+                {
+                    read_status->has_crc_payload = PMD_TRUE;
+                }
+                show_ok = PMD_FALSE;
                 break;
                 
             case KLV_PMD_LOCAL_TAG_VERSION:
                 TRACE(("    read bitstream version..."));
-                if (klv_version_read(r, len, model))
+                if (read_status)
                 {
-                    TRACE((" failed\n"));
-                    return 1;
+                    read_status->has_ver_payload = PMD_TRUE;
+                    current_status_record = &read_status->ver_payload_status;
                 }
-                TRACE((" OK\n"));
+                read_result = klv_version_read(r, len, model, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_AUDIO_BED_DESC:
                 TRACE(("    read beds...\n"));
-                if (klv_abd_read(r, len))
+                if (read_status)
                 {
-                    TRACE(("    failed\n"));
-                    return 1;
+                    read_status->has_abd_payload = PMD_TRUE;
+                    current_status_record = &read_status->abd_payload_status;
                 }
-                TRACE(("    OK\n"));
+                read_result = klv_abd_read(r, len, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_AUDIO_OBJECT_DESC:
                 TRACE(("    read objects...\n"));
-                if (klv_aod_read(r, len))
+                if (read_status)
                 {
-                    TRACE(("    failed\n"));
-                    return 1;
+                    read_status->has_aod_payload = PMD_TRUE;
+                    current_status_record = &read_status->aod_payload_status;
                 }
-                TRACE(("    OK\n"));
+                read_result = klv_aod_read(r, len, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_AUDIO_PRESENTATION_DESC:
                 TRACE(("    read presentations...\n"));
-                if (klv_apd_read(r, len))
+                if (read_status)
                 {
-                    TRACE((" failed\n"));
-                    return 1;
+                    read_status->has_apd_payload = PMD_TRUE;
+                    current_status_record = &read_status->apd_payload_status;
                 }
-                TRACE((" OK\n"));
+                read_result = klv_apd_read(r, len, current_status_record);
                 break;                
 
             case KLV_PMD_LOCAL_TAG_AUDIO_PRESENTATION_NAMES:
                 TRACE(("    read presentation names...\n"));
-                if (klv_apn_read(r, len))
+                if (read_status)
                 {
-                    TRACE(("    failed\n"));
-                    return 1;
+                    read_status->has_apn_payload = PMD_TRUE;
+                    current_status_record = &read_status->apn_payload_status;
                 }
-                TRACE(("    OK\n"));
+                read_result = klv_apn_read(r, len, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_AUDIO_ELEMENT_NAMES:
                 TRACE(("    read element names...\n"));
-                if (klv_aen_read(r, len))
+                if (read_status)
                 {
-                    TRACE((" failed\n"));
-                    return 1;
+                    read_status->has_aen_payload = PMD_TRUE;
+                    current_status_record = &read_status->aen_payload_status;
                 }
-                TRACE((" OK\n"));
+                read_result = klv_aen_read(r, len, current_status_record);
                 break;
 
 
             case KLV_PMD_LOCAL_TAG_ED2_SUBSTREAM_DESC:
                 TRACE(("    read ED2 substream description...\n"));
-                if (klv_esd_read(r, len, &model->esd))
+                if (read_status)
                 {
-                    TRACE((" failed\n"));
-                    return 1;
+                    read_status->has_esd_payload = PMD_TRUE;
+                    current_status_record = &read_status->esd_payload_status;
                 }
+                read_result = klv_esd_read(r, len, model->esd, current_status_record);
                 model->esd_present = 1;
-                TRACE((" OK\n"));
                 break;
 
-            case KLV_PMD_LOCAL_TAG_ED2_SUBSTREAM_NAME:
+            case KLV_PMD_LOCAL_TAG_ED2_SUBSTREAM_NAMES:
                 TRACE(("    read ED2 substream names...\n"));
-                if (klv_esn_read(r, len))
+                if (read_status)
                 {
-                    TRACE(("   failed\n"));
-                    return 1;
+                    read_status->has_esn_payload = PMD_TRUE;
+                    current_status_record = &read_status->esn_payload_status;
                 }
-                TRACE(("   OK\n"));
+                read_result = klv_esn_read(r, len, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_EAC3_ENCODING_PARAMETERS:
                 TRACE(("    read EAC3 encoding parameters...\n"));
-                if (klv_eep_read(r, len))
+                if (read_status)
                 {
-                    TRACE(("    failed\n"));
-                    return 1;
+                    read_status->has_eep_payload = PMD_TRUE;
+                    current_status_record = &read_status->eep_payload_status;
                 }
-                TRACE(("    OK\n"));
+                read_result = klv_eep_read(r, len, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_DYNAMIC_UPDATES:
                 TRACE(("    read dynamic update...\n"));
-                if (klv_xyz_read(r, len))
+                if (read_status && read_status->xyz_payload_count <= read_status->xyz_payload_count_max)
                 {
-                    TRACE((" failed\n"));
-                    return 1;
+                    current_status_record = &read_status->xyz_payload_status[read_status->xyz_payload_count++];
                 }
-                TRACE((" OK\n"));
+                read_result = klv_xyz_read(r, len, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_IAT:
                 TRACE(("    read IAT...\n"));
-                if (klv_read_iat_key(r, model, len))
+                if (read_status)
                 {
-                    TRACE((" failed\n"));
-                    return 1;
+                    read_status->has_iat_payload = PMD_TRUE;
+                    current_status_record = &read_status->iat_payload_status;
                 }
-                TRACE((" OK\n"));
+                read_result = klv_read_iat_key(r, model, len, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_PRES_LOUDNESS_DESC:
                 TRACE(("    read PLD...\n"));
-                if (klv_pld_read(r, len))
+                if (read_status)
                 {
-                    TRACE((" failed\n"));
-                    return 1;
+                    read_status->has_pld_payload = PMD_TRUE;
+                    current_status_record = &read_status->pld_payload_status;
                 }
-                TRACE((" OK\n"));
+                read_result = klv_pld_read(r, len, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_ED2_TURNAROUND_DESC:
                 TRACE(("    read ED2 turnaround descriptor...\n"));
-                if (klv_etd_read(r, len))
+                if (read_status)
                 {
-                    TRACE((" failed\n"));
-                    return 1;
+                    read_status->has_etd_payload = PMD_TRUE;
+                    current_status_record = &read_status->etd_payload_status;
                 }
-                TRACE((" OK\n"));
+                read_result = klv_etd_read(r, len, current_status_record);
                 break;
 
             case KLV_PMD_LOCAL_TAG_HEADPHONE_ELEMENT_DESC:
                 TRACE(("    read headphone element descriptor...\n"));
-                if (klv_hed_read(r, len))
+                if (read_status)
                 {
-                    TRACE((" failed\n"));
-                    return 1;
+                    read_status->has_hed_payload = PMD_TRUE;
+                    current_status_record = &read_status->hed_payload_status;
                 }
-                TRACE((" OK\n"));
+                read_result = klv_hed_read(r, len, current_status_record);
                 break;
 
             default:
                 TRACE(("    skip unsupported payload %02x\n", tag));
+                show_ok = PMD_FALSE;
                 break;
+            }
+
+            if (read_result)
+            {
+                TRACE((" failed\n"));
+                if (read_status)
+                {
+                    final_status = 1;
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+            else if (show_ok)
+            {
+                TRACE((" OK\n"));
             }
         }
         
@@ -377,33 +422,47 @@ klv_read_local_keys
     {
         pmd_signals_copy(&model->signals, &r->signals);
     }
+    if (final_status && read_status && !read_status->payload_set_status.payload_status)
+    {
+        read_status->payload_set_status.payload_status = DLB_PMD_PAYLOAD_STATUS_ERROR;
+        strncpy(read_status->payload_set_status.error_description, "Error reading KLV", DLB_PMD_PAYLOAD_ERROR_DESCRIPTION_MAX);
+    }
     /* only succeed (return 0) if we've read everything */
-    return remaining != 0;
+    return final_status || (remaining != 0);
 }
 
 
 int
 dlb_klvpmd_read_payload
-    (uint8_t            *buffer
-    ,size_t              length
-    ,dlb_pmd_model      *model
-    ,int                 new_frame
-    ,uint8_t            *sindex
+    (uint8_t                    *buffer
+    ,size_t                      length
+    ,dlb_pmd_model              *model
+    ,int                         new_frame
+    ,uint8_t                    *sindex
+    ,dlb_pmd_payload_set_status *read_status
     )
 {
     klv_reader r;
+    int cb_res = 0;
     int res;
+
+    if (read_status)
+    {
+        dlb_pmd_clear_payload_set_status(read_status);
+        read_status->new_frame = new_frame;
+    }
 
     pmd_mutex_lock(&model->lock);
 
     r.stream_index = sindex ? *sindex : 0;
 
     res =  klv_reader_init(&r, new_frame, model, buffer, length)
-        || klv_read_local_keys(&r, model);
+        || klv_read_local_keys(&r, model, read_status);
 
     if (!res && !model->version_avail)
     {
-        klv_reader_error_at(&r, "No version payload found\n");
+        dlb_pmd_payload_status_record *payload_set_status = (read_status != NULL) ? &read_status->payload_set_status : NULL;
+        klv_reader_error_at(&r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, payload_set_status, "No version payload found\n");
         res = 1;
     }
 
@@ -413,7 +472,12 @@ dlb_klvpmd_read_payload
     {
         *sindex = r.stream_index;
     }
+
+    if (read_status && read_status->callback != NULL)
+    {
+        cb_res = (*read_status->callback)(read_status);
+    }
     
-    return res;
+    return (cb_res || res);
 }
 

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@ __pragma(warning(disable:4244))
 
 /**
  * @brief Marsaglia's Keep It Simple Stupid (KISS) Pseudo Random
- * Number Generator, dervied from algorithm listed in a 2003 usenet
+ * Number Generator, derived from an algorithm listed in a 2003 usenet
  * posting.  Period of 2^124, not suitable for crypto!
  *
  * http://mathforum.org/kb/thread.jspa?forumID=226&threadID=541450&messageID=1643078
@@ -204,6 +204,47 @@ static const utf8_range codes[3] =
  * @brief total number of legal unicode characters for random generation
  */
 #define TOTAL_CODES (RANGE_SIZE(0) + RANGE_SIZE(1) + RANGE_SIZE(2))
+
+
+/**
+ * @brief generate a random printable ASCII string
+ *
+ * we simply generate random bytes in the range 32 - 127 (' ' to '~')
+ */
+static
+void
+prng_ascii
+    (prng *p            /**< [in] prng structure */
+    ,uint8_t *array     /**< [in] place to store string */
+    ,size_t size        /**< [in] capacity of #array */
+    )
+{
+    memset(array, '\0', size);
+    if (size > 1)
+    {
+        int length = (int)(prng_next(p) % (size-1));
+        uint8_t *end = array + length;
+
+        while (array < end)
+        {
+            char c = (char)(prng_next(p) % ('~' - ' ')) + ' ';
+
+            /* work around printf escape characters */
+            if (c == '%' || c == '\\')
+            {
+                if (array+1 < end)
+                {
+                    *array++ = c;
+                }
+                else
+                {
+                    c = '\0';
+                }
+            }
+            *array++ = c;
+        }
+    }
+}
 
 
 /**

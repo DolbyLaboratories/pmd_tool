@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file TestXmlWriter.hh
+ * @brief utility for writing XML strings to be ingested
+ */
+
 #include "dlb_pmd_xml_string.h"
 #include "TestModel.hh"
 #include <cstring>
@@ -43,7 +48,8 @@ class XMLTestWriter
   public:
 
     XMLTestWriter()
-        : capacity_(sizeof(mem_))
+        : error_line_(0)
+        , capacity_(sizeof(mem_))
         , wp_(mem_)
         , len_(0)
         , errp_(error_message_)
@@ -58,7 +64,8 @@ class XMLTestWriter
         memset(error_message_, '\0', sizeof(error_message_));
         errp_ = error_message_;
         error_capacity_ = sizeof(error_message_)-1;
-        return !dlb_xmlpmd_string_read(mem_, len_, m, error_callback_, this, &error_line_);
+        return !dlb_xmlpmd_string_read(mem_, len_, m, DLB_PMD_XML_STRICT,
+                                       error_callback_, this, &error_line_);
     }
 
     const char *error()

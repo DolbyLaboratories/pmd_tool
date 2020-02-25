@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  **********************************************************************/
 
 /**
- * @flle dlb_pmd_generate.h
+ * @file dlb_pmd_generate.h
  * @brief Generate a random model
  */
 
@@ -78,6 +78,10 @@ dlb_pmd_generate_random
                                         */
     ,unsigned int seed               /**< [in] seed for internal Pseudo-random
                                       * number generator; use 0 for a random seed.
+                                      */
+    ,dlb_pmd_bool ascii_strings      /**< [in] if 1, only generate ASCII printable strings */
+    ,dlb_pmd_bool sadm               /**< [in] if 1, restrict to generating for
+                                      * dlb-serial ADM modesl
                                       */
     );
 

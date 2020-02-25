@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -150,10 +150,10 @@ klv_iat_write
     unsigned int e = 0;  /* extension data size */
     size_t payload_size;
     uint8_t *wp = w->wp;
-    pmd_iat *iat = &model->iat;
+    pmd_iat *iat = model->iat;
 
     *written = PMD_FALSE;
-    if (iat->options & PMD_IAT_PRESENT)
+    if (iat && (iat->options & PMD_IAT_PRESENT))
     {
         c = iat->content_id_size;
         d = iat->distribution_id_size;
@@ -172,7 +172,10 @@ klv_iat_write
 	    set_(wp, IAT1_VERSION, v);
 	    if (v == 3)
 	    {
-	        /* placeholder in case version is ever 3 */
+	        /* placeholder in case code is ever changed to allow version to be 3.
+                 * coverity will complain because this is dead code, but it is here
+                 * for future-proofing
+                 */
                 set_(wp, IAT1_EXTENDED_VERSION, 0);
 	    }
             set_(wp, IAT1_B_CONTENT_ID(v),   c != 0);
@@ -230,13 +233,15 @@ klv_iat_write
  * @brief extract an IAT from serialized form
  */
 static inline
-int                              /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_iat_read
-    (klv_reader *r               /**< [in] KLV buffer to read */
-    ,int payload_length          /**< [in] bytes in IAT payload */
-    ,pmd_iat *iat                /**< [in] IAT to populate */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in IAT payload */
+    ,pmd_iat *iat                               /**< [in] IAT to populate */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
+    dlb_pmd_payload_status ps;
     unsigned int v = 0;  /* version */
     unsigned int c = 0;  /* content id size */
     unsigned int d = 0;  /* distribution id size */
@@ -256,49 +261,71 @@ klv_iat_read
     v = get_(rp, IAT1_VERSION);
     if (v != 0)
     {
-        klv_reader_error_at(r, "incorrect IAT version %u\n", v);
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status, "Incorrect IAT version %u\n", v);
         return 1;
     }
+
     if (get_(rp, IAT1_B_CONTENT_ID(v)))
     {
-        iat->content_id_type     = get_(rp, IAT1_CONTENT_ID_TYPE(v));
-        iat->content_id_size = c = get_(rp, IAT1_CONTENT_ID_SIZE_M1(v))+1;
-        geta_(rp, IAT1_CONTENT_ID(v), c*8, iat->content_id);
+        iat->content_id_type = get_(rp, IAT1_CONTENT_ID_TYPE(v));
+        ps = pmd_validate_encoded_iat_content_id_type(iat->content_id_type);
+        if ((ps != DLB_PMD_PAYLOAD_STATUS_OK) && (ps != DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED)) /* Allow reserved */
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid IAT content id type %u\n", (unsigned int)iat->content_id_type);
+            return 1;
+        }
+
+        iat->content_id_size = c = get_(rp, IAT1_CONTENT_ID_SIZE_M1(v))+1;      /* No validation necessary */
+        geta_(rp, IAT1_CONTENT_ID(v), c*8, iat->content_id);                    /* No validation necessary */
     }
+
     if (get_(rp, IAT2_B_DISTRIBUTION_ID(v,c)))
     {
-        iat->distribution_id_type     = get_(rp, IAT2_DISTRIBUTION_ID_TYPE(v,c));
-        iat->distribution_id_size = d = get_(rp, IAT2_DISTRIBUTION_ID_SIZE_M1(v,c))+1;
-        geta_(rp, IAT2_DISTRIBUTION_ID(v,c), d*8, iat->distribution_id);
+        iat->distribution_id_type = get_(rp, IAT2_DISTRIBUTION_ID_TYPE(v, c));
+        ps = pmd_validate_encoded_iat_distribution_id_type(iat->distribution_id_type);
+        if ((ps != DLB_PMD_PAYLOAD_STATUS_OK) && (ps != DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED)) /* Allow reserved */
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid IAT distribution id type %u\n", (unsigned int)iat->distribution_id_type);
+            return 1;
+        }
+
+        iat->distribution_id_size = d = get_(rp, IAT2_DISTRIBUTION_ID_SIZE_M1(v,c))+1;  /* No validation necessary */
+        geta_(rp, IAT2_DISTRIBUTION_ID(v,c), d*8, iat->distribution_id);                /* No validation necessary */
     }
-    iat->timestamp = get_(rp, IAT3_TIMESTAMP(v,c,d));
+
+    iat->timestamp = get_(rp, IAT3_TIMESTAMP(v,c,d));                           /* No validation necessary */
+
     if (get_(rp, IAT3_B_OFFSET(v,c,d)))
     {
         o = 1;
         iat->options |= PMD_IAT_OFFSET_PRESENT;
-        iat->offset = get_(rp, IAT3_OFFSET(v,c,d));
+        iat->offset = get_(rp, IAT3_OFFSET(v,c,d));                             /* No validation necessary */
     }
+
     if (get_(rp, IAT4_B_VALIDITY_DURATION(v,c,d,o)))
     {
         p = 1;
         iat->options |= PMD_IAT_VALIDITY_DUR_PRESENT;
-        iat->validity_duration = get_(rp, IAT4_VALIDITY_DURATION(v,c,d,o));
+        iat->validity_duration = get_(rp, IAT4_VALIDITY_DURATION(v,c,d,o));     /* No validation necessary */
     }
+
     if (get_(rp, IAT5_B_USER_DATA(v,c,d,o,p)))
     {
-        iat->user_data_size = u = get_(rp, IAT5_USER_DATA_SIZE_M1(v,c,d,o,p))+1;
-        geta_(rp, IAT5_USER_DATA(v,c,d,o,p), u*8, iat->user_data);
+        iat->user_data_size = u = get_(rp, IAT5_USER_DATA_SIZE_M1(v,c,d,o,p))+1;    /* No validation necessary */
+        geta_(rp, IAT5_USER_DATA(v,c,d,o,p), u*8, iat->user_data);                  /* No validation necessary */
     }
+
     if (get_(rp, IAT6_B_EXTENSION(v,c,d,o,p,u)))
     {
-        iat->extension_size = e = get_(rp, IAT6_EXTENSION_SIZE_M1(v,c,d,o,p,u))+1;
-        geta_(rp, IAT6_EXTENSION_DATA(v,c,d,o,p,u), e*8, iat->extension_data);
+        iat->extension_size = e = get_(rp, IAT6_EXTENSION_SIZE_M1(v,c,d,o,p,u))+1;  /* No validation necessary */
+        geta_(rp, IAT6_EXTENSION_DATA(v,c,d,o,p,u), e*8, iat->extension_data);      /* No validation necessary */
     }
 
     payload_size = (IAT_PAYLOAD_BITS(v,c,d,o,p,u,e)+7)/8;
     if (payload_size != payload_length)
     {
-        klv_reader_error_at(r, "IAT payload size (%d) != payload length (%d)\n",
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status,
+                            "IAT payload size (%d) != payload length (%d)\n",
                             payload_size, payload_length);
         return 1;
     }

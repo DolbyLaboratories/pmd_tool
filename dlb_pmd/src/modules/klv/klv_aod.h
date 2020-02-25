@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -84,8 +84,8 @@ klv_aod_write
         unsigned int bo = 0;  /* start bit offset for current bed */
         pmd_object_metadata *omd;
         
-        e = &model->element_list[model->obj_write_index];
-        for (ei = model->obj_write_index; ei < model->num_elements; ++ei, ++e)
+        e = &model->element_list[model->write_state.obj_write_index];
+        for (ei = model->write_state.obj_write_index; ei < model->num_elements; ++ei, ++e)
         {
             if (PMD_MODE_OBJECT == e->mode)
             {
@@ -115,12 +115,12 @@ klv_aod_write
                 wp += (bo + AOD_PAYLOAD_BITS) / 8;
                 bo = (bo + AOD_PAYLOAD_BITS) % 8;
                 w->wp = wp;
-                model->aod_written += 1;
+                model->write_state.aod_written += 1;
 
                 TRACE(("        AOD: %u\n", e->id));
             }
         }
-        model->obj_write_index = ei;
+        model->write_state.obj_write_index = ei;
         if (bo)
         {
             w->wp += 1;
@@ -134,10 +134,11 @@ klv_aod_write
  * @brief extract an audio object from serialized form
  */
 static inline
-int                          /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_aod_read
-    (klv_reader *r           /**< [in] KLV buffer to read */
-    ,int payload_length      /**< [in] bytes in audio objects payload */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in audio objects payload */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
     dlb_pmd_model *model = r->model;
@@ -152,12 +153,23 @@ klv_aod_read
 
     while (rp < end - 8)
     {
+        dlb_pmd_payload_status ps;
+
         id = (pmd_element_id)get_(rp, AOD_ID(bo));
+        ps = pmd_validate_audio_element_id(id);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid audio element id %u for object\n",
+                                (unsigned int)id);
+            return 1;
+        }
         if (!pmd_idmap_lookup(r->element_ids, id, &idx))
         {
-            if (model->num_elements == MAX_AUDIO_ELEMENTS)
+            if (model->num_elements == r->model->profile.constraints.max_elements
+                || (model->num_elements - model->num_abd) == (int)r->model->profile.constraints.max.num_objects
+                )
             {
-                klv_reader_error_at(r, "No space for AOD element in model\n");
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status, "No space for AOD element in model\n");
                 return 1; 
             }            
 
@@ -183,7 +195,47 @@ klv_aod_read
         omd->diverge         = (pmd_bool)    get_(rp, AOD_DIVERGE(bo));
         omd->gain            = (pmd_gain)    get_(rp, AOD_GAIN(bo));
         src                  = (unsigned int)get_(rp, AOD_SRC(bo));
-        omd->source          = (uint8_t)src - 1;
+
+        if (omd->oclass == PMD_CLASS_RESERVED)
+        {
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status,
+                                "Invalid object class %u for audio object %u\n",
+                                (unsigned int)omd->oclass, (unsigned int)id);
+            return 1;
+        }
+
+        ps = pmd_validate_encoded_position(omd->x);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid encoded x position value %u for audio object %u\n",
+                                (unsigned int)omd->x, (unsigned int)id);
+            return 1;
+        }
+        ps = pmd_validate_encoded_position(omd->y);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid encoded y position value %u for audio object %u\n",
+                                (unsigned int)omd->y, (unsigned int)id);
+            return 1;
+        }
+        ps = pmd_validate_encoded_position(omd->z);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid encoded z position value %u for audio object %u\n",
+                                (unsigned int)omd->z, (unsigned int)id);
+            return 1;
+        }
+
+        /* We don't need to validate size or gain (or booleans), all possible bitstream values are good */
+
+        ps = pmd_validate_source(src);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid source %u for object %u\n",
+                                src, (unsigned int)id);
+            return 1;
+        }
+        omd->source = (uint8_t)src - 1;
 
         if (src > 0 && !pmd_signals_test(&r->signals, omd->source))
         {

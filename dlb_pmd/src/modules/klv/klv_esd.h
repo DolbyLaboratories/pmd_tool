@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -115,26 +115,68 @@ klv_esd_write
  * @brief extract an ED2 stream description from serialized form
  */
 static inline
-int                                    /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_esd_read
-    (klv_reader *r                     /**< [in] KLV buffer to read */
-    ,int payload_length                /**< [in] bytes in presentation payload */
-    ,pmd_esd *esys
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in presentation payload */
+    ,pmd_esd *esys                              /**< [out] ESD record to populate */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
+    dlb_pmd_frame_rate frame_rate;
     pmd_ed2_stream_description *pesd;
     uint8_t *rp = r->rp;
     uint8_t index;
 
-    if (payload_length != ESD_PAYLOAD_BYTES) return 1;
+    if (esys == NULL)
+    {
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status,
+                            "Processing ESD payload, but no ESD record in model\n");
+        return 1;
+    }
 
-    esys->count       = get_(rp, ESD_STREAM_COUNT) + 1;
-    esys->rate        = get_(rp, ESD_STREAM_RATE) - 1;
+    if (payload_length != ESD_PAYLOAD_BYTES)
+    {
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status,
+                            "ESD payload length %d is incorrect, correct value is %d\n",
+                            payload_length, (int)ESD_PAYLOAD_BYTES);
+        return 1;
+    }
 
-    index             = get_(rp, ESD_STREAM_INDEX);
+    esys->count = get_(rp, ESD_STREAM_COUNT) + 1;
+    /* No need to validate count, all bitstream values are valid */
+
+    frame_rate = get_(rp, ESD_STREAM_RATE);
+    if (frame_rate == 0)
+    {
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED, read_status,
+                            "ESD payload frame rate 0 is reserved\n");
+        return 1;
+    }
+    esys->rate = frame_rate - 1;
+    if (esys->rate > DLB_PMD_FRAMERATE_LAST_ED2)
+    {
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status,
+                            "ESD payload frame rate %d is out of range\n",
+                            (int)esys->rate);
+        return 1;
+    }
+
+    index = get_(rp, ESD_STREAM_INDEX);
+    /* No need to validate count, all bitstream values are valid */
     pesd = &esys->streams[index];
-    pesd->config      = get_(rp, ESD_STREAM_CONFIG);
+
+    pesd->config = get_(rp, ESD_STREAM_CONFIG);
+    if (pesd->config > PMD_DE_PGMCFG_LAST)
+    {
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status,
+                            "ESD payload Dolby E stream config %d is out of range\n",
+                            (int)pesd->config);
+        return 1;
+    }
+
     pesd->compression = get_(rp, ESD_STREAM_COMP);
+    /* Don't validate, value is mysterious... */
 
     esys->streams_read |= (1u << index);
 

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  **********************************************************************/
 
 /**
- * @flle dlb_pmd_metadata_set.c
+ * @file dlb_pmd_metadata_set.c
  * @brief implementation of API to read/write metadata sets
  */
 
@@ -700,11 +700,14 @@ dlb_pmd_ingest_metadata_set
     /* add signals based on objects and bed ids */
     for (i = 0; i < count->num_beds; ++i)
     {
-        for (j = 0; j < mdset->beds[i].num_sources; ++j)
+        if (mdset->beds[i].bed_type == PMD_BED_ORIGINAL)
         {
-            if (!pmd_signals_test(&model->signals, mdset->beds[i].sources[j].source - 1))
+            for (j = 0; j < mdset->beds[i].num_sources; ++j)
             {
-                pmd_signals_add(&model->signals, mdset->beds[i].sources[j].source - 1);
+                if (!pmd_signals_test(&model->signals, mdset->beds[i].sources[j].source - 1))
+                {
+                    pmd_signals_add(&model->signals, mdset->beds[i].sources[j].source - 1);
+                }
             }
         }
     }

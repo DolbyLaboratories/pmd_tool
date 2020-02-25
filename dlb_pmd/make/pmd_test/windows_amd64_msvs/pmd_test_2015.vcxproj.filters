@@ -5,6 +5,12 @@
 <UniqueIdentifier>{ce4f8a46-b718-3a47-9a29-b30eb0bee44e}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\include">
 <UniqueIdentifier>{579370b4-f054-3050-9e97-fb058c837d53}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\include\sadm">
+<UniqueIdentifier>{b7c16b3b-5a5f-3038-82d2-7e90afa13190}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\os">
+<UniqueIdentifier>{32391cfd-1734-3849-8b13-9f5d6a72de97}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\os\windows">
+<UniqueIdentifier>{af411029-f157-3754-b785-137048dda2ea}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\test">
 <UniqueIdentifier>{8fde4a47-7fef-30bc-aa16-a9e60c172c27}</UniqueIdentifier></Filter>
 <Filter Include="dlb_wave">
@@ -40,6 +46,8 @@
 <Filter Include="xerces\xerces-c-3.2.0\windows">
 <UniqueIdentifier>{06f53e02-11e8-3246-86d9-f727d60cd179}</UniqueIdentifier></Filter></ItemGroup>
 <ItemGroup>
+<ClCompile Include="..\..\..\os\windows\pmd_ctrl_c.c">
+<Filter>dlb_pmd\os\windows</Filter></ClCompile>
 <ClCompile Include="..\..\..\test\TestKlv.cc">
 <Filter>dlb_pmd\test</Filter></ClCompile>
 <ClCompile Include="..\..\..\test\TestMdset.cc">
@@ -47,6 +55,8 @@
 <ClCompile Include="..\..\..\test\TestModel.cc">
 <Filter>dlb_pmd\test</Filter></ClCompile>
 <ClCompile Include="..\..\..\test\TestPcm.cc">
+<Filter>dlb_pmd\test</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\TestSadm.cc">
 <Filter>dlb_pmd\test</Filter></ClCompile>
 <ClCompile Include="..\..\..\test\TestXml.cc">
 <Filter>dlb_pmd\test</Filter></ClCompile>
@@ -93,6 +103,10 @@
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_types.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_xml.h">
@@ -101,6 +115,18 @@
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\os\pmd_os.h">
+<Filter>dlb_pmd\os</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_riff.h">
 <Filter>dlb_wave\1.6\dlb_wave\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_wave.h">

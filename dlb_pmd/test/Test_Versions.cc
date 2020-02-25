@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,18 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_Versions.cc
+ * @brief version number testing
+ *
+ * Test that we can set the version numbers correctly in PMD.  Note
+ * that in normal use, the version numbers are hard-coded by the
+ * version of the dlb_pmd_lib library.
+ *
+ * This test breaks the rules to make sure that version testing is
+ * correct.
+ */
+
 extern "C"
 {
 #include "dlb_pmd_api.h"    
@@ -43,7 +55,11 @@ extern dlb_pmd_bool global_testing_version_numbers;
 #include "TestModel.hh"
 #include "gtest/gtest.h"
 
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_VERSIONS_TESTS
 
+
+#ifndef DISABLE_VERSIONS_TESTS
 class VersionTest: public ::testing::TestWithParam<std::tr1::tuple<int, int> >
 {
 public:
@@ -112,3 +128,4 @@ INSTANTIATE_TEST_CASE_P(PMD, VersionTest,
            testing::Combine(testing::Range(0, 256),
                             testing::Range(TestModel::FIRST_TEST_TYPE,
                                            TestModel::LAST_TEST_TYPE+1)));
+#endif

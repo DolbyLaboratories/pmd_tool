@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_EEP.cc
+ * @brief Test EAC3 Encoding Parameters payload transmits correctly
+ */
+
 #include "dlb_pmd_api.h"    
 
 extern "C"
@@ -43,6 +48,19 @@ extern "C"
 
 #include "TestModel.hh"
 #include "gtest/gtest.h"
+
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_EEP_TESTS
+
+static
+dlb_pmd_dialnorm
+make_dialnorm
+    (unsigned int enumval
+    )
+{
+    unsigned int dn = (enumval % DLB_PMD_MAX_DIALNORM) + DLB_PMD_MIN_DIALNORM;  // This works with current values...
+    return (dlb_pmd_dialnorm)dn;
+}
 
 static
 dlb_pmd_success
@@ -76,7 +94,7 @@ generate_eac3_encoding_parameters
         if (dlb_pmd_eep_add_bitstream_params(m, id,
                                              (dlb_pmd_bsmod)(enumval % PMD_NUM_BSMOD),
                                              (dlb_pmd_surmod)(enumval % PMD_NUM_DSURMOD),
-                                             (dlb_pmd_dialnorm)enumval,
+                                             make_dialnorm(enumval),
                                              (dlb_pmd_prefdmix)(enumval % PMD_NUM_PREFDMIX),
                                              (dlb_pmd_cmixlev)(enumval % PMD_NUM_CMIX_LEVEL),
                                              (dlb_pmd_surmixlev)(enumval % PMD_NUM_SURMIX_LEVEL),
@@ -134,6 +152,7 @@ generate_eac3_encoding_parameters
 }
 
 
+#ifndef DISABLE_EEP_TESTS
 class EEP_PayloadTest: public ::testing::TestWithParam<std::tr1::tuple<int, int, int, int> > {};
 
 TEST_P(EEP_PayloadTest, payload_testing)
@@ -185,5 +204,4 @@ INSTANTIATE_TEST_CASE_P(PMD_EEP, EEP_PayloadTest,
                                          testing::Range(0, 32),// e
                                          testing::Range(TestModel::FIRST_TEST_TYPE,
                                                         TestModel::LAST_TEST_TYPE+1)));
-
-
+#endif

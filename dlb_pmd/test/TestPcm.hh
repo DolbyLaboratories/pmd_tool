@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file TestPcm.hh
+ * @brief encapsulate PCM read/write testing
+ */
+
 extern "C"
 {
 #include "dlb_pmd_api.h"
@@ -48,17 +53,17 @@ public:
 
     static void run(TestModel& m1, const char *testname, int param,
                     bool single_frame, dlb_pmd_frame_rate fr, bool single_channel,
-                    bool minimal, bool match, bool apply_updates,
-                    unsigned int num_skip_samples);
+                    bool minimal, bool nonames, bool match, bool apply_updates,
+                    bool sadm, unsigned int num_skip_samples);
 
 private:
 
     TestPcm(dlb_pmd_frame_rate fr, bool check_updates);
     ~TestPcm();
 
-    dlb_pmd_success write(bool ispair, dlb_klvpmd_universal_label ul, dlb_pmd_model *m);
+    dlb_pmd_success write(bool ispair, dlb_klvpmd_universal_label ul, dlb_pmd_model *m, bool sadm);
     dlb_pmd_success validate();
-    dlb_pmd_success read(dlb_pmd_model *m, unsigned int num_skip_samples);
+    dlb_pmd_success read(dlb_pmd_model *m, unsigned int num_skip_samples, unsigned int *num_frames);
     void dump(const char *filename);
 
     bool verify_preamble_(uint32_t pa, uint32_t pb, uint32_t pc, uint32_t pd, unsigned int maxbits);

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -188,6 +188,31 @@ pmd_signals_count
     }
     return count;
 }
+
+
+/**
+ * @brief remove one signal set from another
+ *
+ * Note that it only removes elements that are common to both
+ * signal and subtrahend
+ */
+static inline
+void
+pmd_signals_subtract
+    (pmd_signals *signals
+    ,pmd_signals *subtrahend
+    )
+{
+    unsigned int i;
+    for (i = 0; i != sizeof(signals->sigbitmap); ++i)
+    {
+        uint8_t byte = signals->sigbitmap[i];
+        uint8_t mask = byte & subtrahend->sigbitmap[i];
+        signals->sigbitmap[i] = byte - mask;
+    }
+}
+
+
 
 
 #endif /* PMD_SIGNALS_INC_ */

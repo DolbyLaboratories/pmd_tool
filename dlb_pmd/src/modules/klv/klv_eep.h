@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -178,8 +178,8 @@ klv_eep_write
         uint8_t *wp = w->wp;
         unsigned int bo = 0;  /* start bit offset */
         
-        eep = &model->eep_list[model->eep_written];
-        for (i = model->eep_written; i != model->num_eep; ++i)
+        eep = &model->eep_list[model->write_state.eep_written];
+        for (i = model->write_state.eep_written; i != model->num_eep; ++i)
         {
             unsigned int b = (eep->options & PMD_EEP_BITSTREAM_PRESENT) ? 1 : 0;
             unsigned int e = (eep->options & PMD_EEP_ENCODER_PRESENT) ? 1 : 0;
@@ -254,9 +254,33 @@ klv_eep_write
         {
             w->wp += 1;
         }
-        model->eep_written = i;
+        model->write_state.eep_written = i;
     }
     return 0;
+}
+
+
+/**
+ * @brief validate an encoded surround downmix level
+ */
+static inline
+dlb_pmd_payload_status          /** @return validation status */
+klv_encoded_surmix_level_validate
+    (unsigned int level         /**< [in] PMD compression mode value */
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (level > PMD_CMIX_LEVEL_LAST)    /* YES we are using a center mix level constant! */
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+    else if (level < KLV_SURMIX_OFFSET)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+
+    return status;
 }
 
 
@@ -264,10 +288,11 @@ klv_eep_write
  * @brief extract eac3 encoding parameters blocks from serialized form
  */
 static inline
-int                                /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_eep_read
-    (klv_reader *r                 /**< [in] KLV buffer to read */
-    ,int payload_length            /**< [in] bytes in presentation payload */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in presentation payload */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
     pmd_eep *eep;
@@ -282,17 +307,24 @@ klv_eep_read
 
     while (r->rp < end-1)
     {
+        dlb_pmd_payload_status ps;
         unsigned int n = 0;
         unsigned int e = 0;
         unsigned int b = 0;
         unsigned int d = 0;
 
         id = (uint16_t)get_(rp, EEP1_ID(bo));
+        ps = validate_pmd_eep_id(id);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid value %u used for EAC3 parameters ID\n", id);
+            return 1;
+        }
         if (!pmd_idmap_lookup(r->eep_ids, id, &idx))
         {
-            if (model->num_eep >= MAX_EAC3_ENCODING_PARAMETERS)
+            if (model->num_eep >= r->model->profile.constraints.max.num_eac3)
             {
-                klv_reader_error_at(r, "No space for EEP payload in model\n");
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status, "No space for EEP payload in model\n");
                 return 1;
             }            
 
@@ -301,6 +333,7 @@ klv_eep_read
             model->num_eep += 1;
         }
         TRACE(("        %u\n", id));
+
         eep = &model->eep_list[idx];
         eep->options  = 0;
         eep->id       = id;
@@ -310,42 +343,141 @@ klv_eep_read
         {
             e = 1;
             eep->options |= PMD_EEP_ENCODER_PRESENT;
+
             eep->dynrng_prof = get_(rp, EEP1_DYNRNG_PROF(bo));
-            eep->compr_prof  = get_(rp, EEP1_COMPR_PROF(bo));
-            eep->surround90  = (pmd_bool)get_(rp, EEP1_SURROUND_90(bo));
-            eep->hmixlev     = (unsigned char)get_(rp, EEP1_HMIXLEV(bo));
+            ps = validate_pmd_compression_mode(eep->dynrng_prof);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid dynamic range profile %u\n",
+                                    (unsigned int)id, (unsigned int)eep->dynrng_prof);
+                return 1;
+            }
+
+            eep->compr_prof = get_(rp, EEP1_COMPR_PROF(bo));
+            ps = validate_pmd_compression_mode(eep->compr_prof);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid compression profile %u\n",
+                                    (unsigned int)id, (unsigned int)eep->compr_prof);
+                return 1;
+            }
+
+            eep->surround90 = (pmd_bool)get_(rp, EEP1_SURROUND_90(bo)); /* all possible bitstream values are valid */
+            eep->hmixlev = (unsigned char)get_(rp, EEP1_HMIXLEV(bo));   /* all possible bitstream values are valid */
         }
+
         if (get_(rp, EEP2_B_BITSTREAM(bo,e)))
         {
+            unsigned int level;
+
             b = 1;
             eep->options |= PMD_EEP_BITSTREAM_PRESENT;
-            eep->bsmod         = get_(rp, EEP2_BSMOD(bo,e));
-            eep->dsurmod       = get_(rp, EEP2_SURMOD(bo,e));
-            eep->dialnorm      = (pmd_dialogue_norm)get_(rp, EEP2_DIALNORM(bo,e));
-            eep->dmixmod       = get_(rp, EEP2_PREF_DMIXMOD(bo,e));
-            eep->ltrtcmixlev   = get_(rp, EEP2_LTRT_CMIXLEV(bo,e));
-            eep->ltrtsurmixlev = get_(rp, EEP2_LTRT_SURMIXLEV(bo,e))-KLV_SURMIX_OFFSET;
-            eep->lorocmixlev   = get_(rp, EEP2_LORO_CMIXLEV(bo,e));
-            eep->lorosurmixlev = get_(rp, EEP2_LORO_SURMIXLEV(bo,e))-KLV_SURMIX_OFFSET;
+
+            eep->bsmod = get_(rp, EEP2_BSMOD(bo,e));                    /* all possible bitstream values are valid */
+
+            eep->dsurmod = get_(rp, EEP2_SURMOD(bo, e));
+            ps = validate_pmd_surround_mode(eep->dsurmod);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid Dolby surround mode %u\n",
+                                    (unsigned int)id, (unsigned int)eep->dsurmod);
+                return 1;
+            }
+
+            eep->dialnorm = (pmd_dialogue_norm)get_(rp, EEP2_DIALNORM(bo, e));
+            ps = validate_pmd_dialogue_norm(eep->dialnorm);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid dialnorm %u\n",
+                                    (unsigned int)id, (unsigned int)eep->dialnorm);
+                return 1;
+            }
+
+            eep->dmixmod     = get_(rp, EEP2_PREF_DMIXMOD(bo,e));       /* all possible bitstream values are valid */
+            eep->ltrtcmixlev = get_(rp, EEP2_LTRT_CMIXLEV(bo,e));       /* all possible bitstream values are valid */
+
+            level = get_(rp, EEP2_LTRT_SURMIXLEV(bo, e));
+            ps = klv_encoded_surmix_level_validate(level);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid ltrtsurmixlev %u\n",
+                                    (unsigned int)id, level);
+                return 1;
+            }
+            eep->ltrtsurmixlev = (pmd_surmix_level)(level - KLV_SURMIX_OFFSET);
+
+            eep->lorocmixlev = get_(rp, EEP2_LORO_CMIXLEV(bo,e));       /* all possible bitstream values are valid */
+
+            level = get_(rp, EEP2_LORO_SURMIXLEV(bo, e));
+            ps = klv_encoded_surmix_level_validate(level);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid lorosurmixlev %u\n",
+                                    (unsigned int)id, level);
+                return 1;
+            }
+            eep->lorosurmixlev = (pmd_surmix_level)(level - KLV_SURMIX_OFFSET);
         }
+
         if (get_(rp, EEP3_B_DRC(bo,e,b)))
         {
             d = 1;
             eep->options |= PMD_EEP_DRC_PRESENT;
-            eep->drc_port_spkr   = get_(rp, EEP3_DRC_PORT_SPKR(bo,e,b));
-            eep->drc_port_hphone = get_(rp, EEP3_DRC_PORT_HPHN(bo,e,b));
-            eep->drc_flat_panl   = get_(rp, EEP3_DRC_PORT_FLAT(bo,e,b));
-            eep->drc_home_thtr   = get_(rp, EEP3_DRC_PORT_HTHR(bo,e,b));
-            eep->drc_ddplus      = get_(rp, EEP3_DRC_PORT_DDPL(bo,e,b));
+
+            eep->drc_port_spkr = get_(rp, EEP3_DRC_PORT_SPKR(bo, e, b));
+            ps = validate_pmd_compression_mode(eep->drc_port_spkr);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid portable speaker DRC profile %u\n",
+                                    (unsigned int)id, (unsigned int)eep->drc_port_spkr);
+                return 1;
+            }
+
+            eep->drc_port_hphone = get_(rp, EEP3_DRC_PORT_HPHN(bo, e, b));
+            ps = validate_pmd_compression_mode(eep->drc_port_hphone);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid portable headphone DRC profile %u\n",
+                                    (unsigned int)id, (unsigned int)eep->drc_port_hphone);
+                return 1;
+            }
+
+            eep->drc_flat_panl = get_(rp, EEP3_DRC_PORT_FLAT(bo, e, b));
+            ps = validate_pmd_compression_mode(eep->drc_flat_panl);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid flat panel DRC profile %u\n",
+                                    (unsigned int)id, (unsigned int)eep->drc_flat_panl);
+                return 1;
+            }
+
+            eep->drc_home_thtr = get_(rp, EEP3_DRC_PORT_HTHR(bo, e, b));
+            ps = validate_pmd_compression_mode(eep->drc_home_thtr);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid home theater DRC profile %u\n",
+                                    (unsigned int)id, (unsigned int)eep->drc_home_thtr);
+                return 1;
+            }
+
+            eep->drc_ddplus = get_(rp, EEP3_DRC_PORT_DDPL(bo, e, b));
+            ps = validate_pmd_compression_mode(eep->drc_ddplus);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "EAC3 parameters %u has invalid Dolby Digital Plus DRC profile %u\n",
+                                    (unsigned int)id, (unsigned int)eep->drc_ddplus);
+                return 1;
+            }
         }
 
         presid = (unsigned int)get_(rp, EEP4_PRESLIST(bo,e,b,d,0));
-        while (0 != presid)
+        while (DLB_PMD_RESERVED_PRESENTATION_ID != presid)
         {
             if (!pmd_idmap_lookup(r->apd_ids, presid, &idx))
             {
-                klv_reader_error_at(r, "EEP %d refers to uknown presentation id %d\n",
-                                    id, presid);
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status,
+                                    "EEP %u refers to unknown presentation id %u\n",
+                                    (unsigned int)id, presid);
                 return 1;
             }
 

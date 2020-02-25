@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,6 @@
 #ifndef KLV_VERSION_H_
 #define KLV_VERSION_H_
 
-#include "klv_writer.h"
 #include "klv_reader.h"
 
 
@@ -76,11 +75,12 @@ klv_version_write
  * @brief read bitstream version tag
  */
 static inline
-int                              /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_version_read
-    (klv_reader *r               /**< [in] KLV buffer to read */
-    ,int payload_length          /**< [in] bytes in presentation payload */
-    ,dlb_pmd_model *model        /**< [in] PMD model */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in presentation payload */
+    ,dlb_pmd_model *model                       /**< [in] PMD model */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
     if (payload_length != 2)
@@ -95,7 +95,11 @@ klv_version_read
         {
             if (model->version_maj != r->rp[0])
             {
-                klv_reader_error_at(r, "Incompatible bitstream versions: "
+                if (read_status)
+                {
+                    read_status->payload_status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+                }
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status, "Incompatible bitstream versions: "
                                     "found %d.%d, expected %d.x\n",
                                     r->rp[0], r->rp[1], model->version_maj);
                 return 1;
@@ -104,7 +108,11 @@ klv_version_read
         
         if (r->rp[0] != PMD_BITSTREAM_VERSION_MAJOR)
         {
-            klv_reader_error_at(r, "Incoming bitstream has version %u.%u,"
+            if (read_status)
+            {
+                read_status->payload_status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+            }
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status, "Incoming bitstream has version %u.%u,"
                                 " which is incompatible with current supported version %u.xxx\n",
                                 r->rp[0], r->rp[1], PMD_BITSTREAM_VERSION_MAJOR);
             return 1;

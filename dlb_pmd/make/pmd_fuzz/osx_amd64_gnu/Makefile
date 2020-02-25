@@ -4,30 +4,36 @@ BASE=../../../../
 TMP=$(BASE)
 .PRECIOUS: %/..
 %/..:; @test $(dir $(basename $(@D))) | mkdir -p $(dir $(basename $(@D)))
+CC = gcc
+CCDEP = $(CC)
+CFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
+CFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CXX = g++
 CXXDEP = $(CXX)
 CXXFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall -std=c++11
 CXXFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall -std=c++11
 DEFINES_debug = -DHAVE_CONFIG_H=1 -DXERCES_BUILDING_LIBRARY=1
 DEFINES_release = -DHAVE_CONFIG_H=1 -DNDEBUG=1 -DXERCES_BUILDING_LIBRARY=1
-INCLUDES = -I$(BASE)dlb_bitbuf/2.0 -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd -I$(BASE)dlb_wave/1.6 -I$(BASE). -I$(BASE). -I$(BASE)xerces/xerces-c-3.2.0/osx -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/FileManagers -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/MsgLoaders/MsgCatalog -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/MutexManagers -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/NetAccessors/Curl -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/NetAccessors/MacOSURLAccessCF -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/NetAccessors/Socket -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/Transcoders/MacOSUnicodeConverter -I$(BASE)xerces/xerces-c-3.2.0/src -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/dom/impl -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/dom -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/framework -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/framework/psvi -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/internal -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/parsers -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/sax -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/sax2 -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/MsgLoaders/InMemory -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/NetAccessors -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/regx -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/validators/DTD -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/validators/common -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/validators/datatype -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/validators/schema/identity -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/validators/schema -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/xinclude
+INCLUDES = -I$(BASE)dlb_bitbuf/2.0 -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd -I$(BASE)dlb_wave/1.6 -I$(BASE). -I$(BASE). -I$(BASE)xerces/xerces-c-3.2.0/osx -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/FileManagers -I$(BASE)xerces/xerces-c-3.2.0/src
 LD = $(CXX)
 LDFLAGS_debug = -dead_strip -m64
 LDFLAGS_release = -dead_strip -O2 -m64
 LDLIBS = -lpthread -lpthread -lcurl -Wl,-framework -Wl,CoreServices
 
 
-INPUTS_LINK_debug = $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_debug.o $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_debug.o $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_debug.o\
+INPUTS_LINK_debug = $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_fuzz_osx_amd64_gnu_debug.o $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_debug.o $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_debug.o $(TMP)dlb_pmd/test/TestSadm.pmd_fuzz_osx_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/test/TestXml.pmd_fuzz_osx_amd64_gnu_debug.o $(TMP)dlb_pmd/test/XmlSchema.pmd_fuzz_osx_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/test/pmd_fuzz.pmd_fuzz_osx_amd64_gnu_debug.o
-INPUTS_LINK_release = $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_release.o $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_release.o $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_release.o\
+INPUTS_LINK_release = $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_fuzz_osx_amd64_gnu_release.o $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_release.o $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_release.o $(TMP)dlb_pmd/test/TestSadm.pmd_fuzz_osx_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/test/TestXml.pmd_fuzz_osx_amd64_gnu_release.o $(TMP)dlb_pmd/test/XmlSchema.pmd_fuzz_osx_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/test/pmd_fuzz.pmd_fuzz_osx_amd64_gnu_release.o
 
-DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_debug.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_gnu/xerces_3_2_0_lib_debug.a
-DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_release.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_gnu/xerces_3_2_0_lib_release.a
+DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_debug.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_gnu/xerces_3_2_0_lib_debug.a
+DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_release.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_gnu/xerces_3_2_0_lib_release.a
 
 default: pmd_fuzz_debug pmd_fuzz_release
 
@@ -37,20 +43,30 @@ pmd_fuzz_debug: $(INPUTS_LINK_debug) $(DEP_PROJ_LINK_debug)
 pmd_fuzz_release: $(INPUTS_LINK_release) $(DEP_PROJ_LINK_release)
 	$(LD) $(LDFLAGS_release) -o $@ $+ $(LDLIBS)
 
+$(TMP)%.pmd_fuzz_osx_amd64_gnu_debug.o: $(BASE)%.c | $(TMP)%/..
+	$(CCDEP) -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CC) $(CFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
+
 $(TMP)%.pmd_fuzz_osx_amd64_gnu_debug.o: $(BASE)%.cc | $(TMP)%/..
 	$(CXXDEP) -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
 	$(CXX) $(CXXFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
+
+$(TMP)%.pmd_fuzz_osx_amd64_gnu_release.o: $(BASE)%.c | $(TMP)%/..
+	$(CCDEP) -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CC) $(CFLAGS_release) $(DEFINES_release) $(INCLUDES) -o $@ $<
 
 $(TMP)%.pmd_fuzz_osx_amd64_gnu_release.o: $(BASE)%.cc | $(TMP)%/..
 	$(CXXDEP) -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
 	$(CXX) $(CXXFLAGS_release) $(DEFINES_release) $(INCLUDES) -o $@ $<
 
-CLEAN_COMPILE_debug = $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_debug.d $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_debug.d $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_debug.d\
+CLEAN_COMPILE_debug = $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_fuzz_osx_amd64_gnu_debug.d $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_debug.d $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_debug.d $(TMP)dlb_pmd/test/TestSadm.pmd_fuzz_osx_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/test/TestXml.pmd_fuzz_osx_amd64_gnu_debug.d $(TMP)dlb_pmd/test/XmlSchema.pmd_fuzz_osx_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/test/pmd_fuzz.pmd_fuzz_osx_amd64_gnu_debug.d
-CLEAN_COMPILE_release = $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_release.d $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_release.d $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_release.d\
+CLEAN_COMPILE_release = $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_fuzz_osx_amd64_gnu_release.d $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_release.d $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_release.d $(TMP)dlb_pmd/test/TestSadm.pmd_fuzz_osx_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/test/TestXml.pmd_fuzz_osx_amd64_gnu_release.d $(TMP)dlb_pmd/test/XmlSchema.pmd_fuzz_osx_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/test/pmd_fuzz.pmd_fuzz_osx_amd64_gnu_release.d
 
@@ -63,6 +79,7 @@ clean: cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_gnu cleanself
+	$(MAKE) -C $(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu cleanself
 
 cleanself:
 	$(RM) $(CLEAN_COMPILE_debug)
@@ -85,17 +102,21 @@ help:
 	@echo " cleandeps"
 	@echo " help"
 
+include $(wildcard $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_fuzz_osx_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/test/TestSadm.pmd_fuzz_osx_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestXml.pmd_fuzz_osx_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/test/XmlSchema.pmd_fuzz_osx_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/test/pmd_fuzz.pmd_fuzz_osx_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_fuzz_osx_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestKlv.pmd_fuzz_osx_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestMdset.pmd_fuzz_osx_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestModel.pmd_fuzz_osx_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestPcm.pmd_fuzz_osx_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/test/TestSadm.pmd_fuzz_osx_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/test/TestXml.pmd_fuzz_osx_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/test/XmlSchema.pmd_fuzz_osx_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/test/pmd_fuzz.pmd_fuzz_osx_amd64_gnu_release.d)
@@ -107,7 +128,9 @@ $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_release.a \
 $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_debug.a \
 $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_release.a \
 $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_gnu/xerces_3_2_0_lib_debug.a \
-$(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_gnu/xerces_3_2_0_lib_release.a: %.a: FORCE
+$(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_gnu/xerces_3_2_0_lib_release.a \
+$(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu/zlib_debug.a \
+$(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu/zlib_release.a: %.a: FORCE
 	$(MAKE) -C $(@D) $(@F)
 
 

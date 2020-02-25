@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,16 @@ typedef dlb_pmd_content_id_type pmd_iat_content_id_type;
 typedef dlb_pmd_distribution_id_type pmd_iat_distribution_id_type;
 
 
+#define PMD_IAT_CONTENT_ID_RESERVED_FIRST (0x03)
+#define PMD_IAT_CONTENT_ID_RESERVED_LAST (0x1e)
+#define PMD_IAT_CONTENT_ID_UNSPECIFIED (0x1f)
+
+
+#define PMD_IAT_DISTRIBUTION_ID_RESERVED_FIRST (0x01)
+#define PMD_IAT_DISTRIBUTION_ID_RESERVED_LAST (0x06)
+#define PMD_IAT_DISTRIBUTION_ID_UNSPECIFIED (0x07)
+
+
 /**
  * @brief type of PMD IAT
  */
@@ -127,7 +137,58 @@ pmd_iat_init
     (pmd_iat *iat
     )
 {
-    memset(iat, '\0', sizeof(*iat));
+    if (iat)
+    {
+        memset(iat, '\0', sizeof(*iat));
+    }
+}
+    
+
+/**
+ * @brief Validate the encoded value of an IAT content id type
+ */
+static inline
+dlb_pmd_payload_status
+pmd_validate_encoded_iat_content_id_type
+    (pmd_iat_content_id_type id
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (id >= PMD_IAT_CONTENT_ID_RESERVED_FIRST && id <= PMD_IAT_CONTENT_ID_RESERVED_LAST)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+    else if (id > PMD_IAT_CONTENT_ID_UNSPECIFIED)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+
+    return status;
+}
+    
+
+/**
+ * @brief Validate the encoded value of an IAT distribution id type
+ */
+static inline
+dlb_pmd_payload_status
+pmd_validate_encoded_iat_distribution_id_type
+    (pmd_iat_distribution_id_type id
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (id >= PMD_IAT_DISTRIBUTION_ID_RESERVED_FIRST && id <= PMD_IAT_DISTRIBUTION_ID_RESERVED_LAST)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+    else if (id > PMD_IAT_DISTRIBUTION_ID_UNSPECIFIED)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+
+    return status;
 }
 
 

@@ -5,6 +5,12 @@
 <UniqueIdentifier>{ce4f8a46-b718-3a47-9a29-b30eb0bee44e}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\include">
 <UniqueIdentifier>{579370b4-f054-3050-9e97-fb058c837d53}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\include\sadm">
+<UniqueIdentifier>{b7c16b3b-5a5f-3038-82d2-7e90afa13190}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\os">
+<UniqueIdentifier>{32391cfd-1734-3849-8b13-9f5d6a72de97}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\os\windows">
+<UniqueIdentifier>{af411029-f157-3754-b785-137048dda2ea}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\src">
 <UniqueIdentifier>{3ce9222a-c67b-325e-ae27-246b81be2bdd}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\src\api">
@@ -19,6 +25,10 @@
 <UniqueIdentifier>{f2e766a0-4f1a-3403-b2e7-b2aca01824d6}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\src\modules\pcm">
 <UniqueIdentifier>{22224d23-a4a7-31b5-a793-9d9deabdb8b4}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\src\modules\sadm">
+<UniqueIdentifier>{68933ec3-f0bc-379d-a7e8-6ebf814fb8df}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\src\modules\sadm\sadm">
+<UniqueIdentifier>{c08dad25-368d-3381-a5cd-19c9f581ac3e}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\src\modules\xml">
 <UniqueIdentifier>{75cfda71-180c-32b8-a327-728248715ce0}</UniqueIdentifier></Filter>
 <Filter Include="dlb_xmllib">
@@ -28,8 +38,16 @@
 <Filter Include="dlb_xmllib\1.0.4\dlb_xml">
 <UniqueIdentifier>{ec54b9f7-79ca-3210-b04c-ca684129f4ca}</UniqueIdentifier></Filter>
 <Filter Include="dlb_xmllib\1.0.4\dlb_xml\include">
-<UniqueIdentifier>{96eafc49-ebe7-3bb3-8da3-9b1bc05a13fe}</UniqueIdentifier></Filter></ItemGroup>
+<UniqueIdentifier>{96eafc49-ebe7-3bb3-8da3-9b1bc05a13fe}</UniqueIdentifier></Filter>
+<Filter Include="zlib">
+<UniqueIdentifier>{76502233-dbc5-3511-a0ce-193c451a7809}</UniqueIdentifier></Filter>
+<Filter Include="zlib\1.2.11">
+<UniqueIdentifier>{4414fd87-039d-3150-8c54-673075e3fc35}</UniqueIdentifier></Filter>
+<Filter Include="zlib\1.2.11\zlib-1.2.11">
+<UniqueIdentifier>{e5460bde-8f9d-32a8-85c0-c103fd4cf597}</UniqueIdentifier></Filter></ItemGroup>
 <ItemGroup>
+<ClCompile Include="..\..\..\os\windows\pmd_ctrl_c.c">
+<Filter>dlb_pmd\os\windows</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\api\dlb_pmd.c">
 <Filter>dlb_pmd\src\api</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\api\dlb_pmd_api_read.c">
@@ -56,6 +74,42 @@
 <Filter>dlb_pmd\src\modules\pcm</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\modules\pcm\pmd_smpte_337m.c">
 <Filter>dlb_pmd\src\modules\pcm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\idmap.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_generator.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_ingester.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_read_file.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_read_string.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_reader.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_file.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_string.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_writer.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_model.c">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_read_file.c">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_read_string.c">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_reader.c">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_write_file.c">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_write_string.c">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_writer.c">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\idrefs.c">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\lookup3.c">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_read_file.c">
 <Filter>dlb_pmd\src\modules\xml</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_read_string.c">
@@ -77,6 +131,10 @@
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_types.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_xml.h">
@@ -85,6 +143,20 @@
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\os\pmd_os.h">
+<Filter>dlb_pmd\os</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\api\dlb_pmd_api_version.h">
+<Filter>dlb_pmd\src\api</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\model\pmd_abd_aod.h">
 <Filter>dlb_pmd\src\model</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\model\pmd_aen.h">
@@ -115,8 +187,6 @@
 <Filter>dlb_pmd\src\model</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\model\pmd_model.h">
 <Filter>dlb_pmd\src\model</Filter></ClInclude>
-<ClInclude Include="..\..\..\src\model\pmd_mutex.h">
-<Filter>dlb_pmd\src\model</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\model\pmd_pld.h">
 <Filter>dlb_pmd\src\model</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\model\pmd_profile.h">
@@ -125,12 +195,16 @@
 <Filter>dlb_pmd\src\model</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\model\pmd_smpte2109.h">
 <Filter>dlb_pmd\src\model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\model\pmd_strings.h">
+<Filter>dlb_pmd\src\model</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\model\pmd_types.h">
 <Filter>dlb_pmd\src\model</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\model\pmd_xyz.h">
 <Filter>dlb_pmd\src\model</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\model\pmd_xyz_set.h">
 <Filter>dlb_pmd\src\model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\generate\prng_kiss.h">
+<Filter>dlb_pmd\src\modules\generate</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\klv\klv.h">
 <Filter>dlb_pmd\src\modules\klv</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\klv\klv_abd.h">
@@ -173,8 +247,28 @@
 <Filter>dlb_pmd\src\modules\klv</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\klv\pmd_crc32.h">
 <Filter>dlb_pmd\src\modules\klv</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\pcm\pmd_bitstream.h">
+<Filter>dlb_pmd\src\modules\pcm</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\pcm\pmd_smpte_337m.h">
 <Filter>dlb_pmd\src\modules\pcm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\pcm\sadm_bitstream_decoder.h">
+<Filter>dlb_pmd\src\modules\pcm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\pcm\sadm_bitstream_encoder.h">
+<Filter>dlb_pmd\src\modules\pcm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\sadm\idmap.h">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_sadm_generator.h">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_sadm_ingester.h">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\sadm\sadm\idrefs.h">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\sadm\sadm\lookup3.h">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\sadm\sadm\memstuff.h">
+<Filter>dlb_pmd\src\modules\sadm\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\xml\parser_tagstack.h">
+<Filter>dlb_pmd\src\modules\xml</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\xml\xml_ad_id.h">
 <Filter>dlb_pmd\src\modules\xml</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\xml\xml_cdata.h">
@@ -186,7 +280,11 @@
 <ClInclude Include="..\..\..\src\modules\xml\xml_uuid.h">
 <Filter>dlb_pmd\src\modules\xml</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\include\dlb_xml.h">
-<Filter>dlb_xmllib\1.0.4\dlb_xml\include</Filter></ClInclude></ItemGroup>
+<Filter>dlb_xmllib\1.0.4\dlb_xml\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\zlib\1.2.11\zlib-1.2.11\zconf.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\zlib\1.2.11\zlib-1.2.11\zlib.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude></ItemGroup>
 <ItemGroup />
 <ItemGroup />
 <ItemGroup />

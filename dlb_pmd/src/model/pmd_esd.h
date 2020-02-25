@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,8 +37,8 @@
 #define PMD_ED2_STREAM_DESCRIPTION_H
 
 /**
- * @file pmd_edt.h
- * @brief internal represenation of ED2 stream description payload information
+ * @file pmd_esd.h
+ * @brief internal representation of ED2 stream description payload information
  *
  * ED2 is built on top of Dolby E which can carry a maximum of 8 PCM
  * channels.  Modern object-audio streams are larger, often 16

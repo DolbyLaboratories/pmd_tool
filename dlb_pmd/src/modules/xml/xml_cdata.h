@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,11 +35,11 @@
 
 /**
  * @file xml_cdata.h
- * @brief helper functions to generate/parse XML character arraysn
+ * @brief helper functions to generate/parse XML character arrays
  *
- * Sometimes we need to write a character array, or an array of bytes. 
+ * Sometimes we need to write a character array, or an array of bytes.
  *
- * This may require escaping characters, or binary encoding. 
+ * This may require escaping characters, or binary encoding.
  */
 
 #ifndef PMD_XML_CDATA_H_
@@ -59,7 +59,7 @@ encode_cdata
     (const uint8_t *input /**< [in] array of bytes to write */
     ,size_t insize        /**< [in] size of input array */
     ,char *output         /**< [out] destination string, we assume it has been
-                            *        zero'd out before this function is invoked. */
+                            *        zeroed out before this function is invoked. */
     ,size_t *outsize      /**< [in/out] in = capacity of destination string
                            *            out = size of generated string, or 0
                            *            if original array is printable as is
@@ -121,14 +121,14 @@ encode_cdata
     else if (escape)
     {
         const uint8_t *c = input;
-        
+
         if (linesize > *outsize) return 1;
 
         for (i = 0 ; i != insize; ++i, ++c)
         {
             /* note that we need to double-escape characters so that
-	         * when the write_line function invokes snprintf, the
-	         * escapes will not be lost */
+             * when the write_line function invokes snprintf, the
+             * escapes will not be lost */
             switch (*c)
             {
             case '&':  memcpy(output, "&amp;", 5); output += 5; break;
@@ -198,7 +198,7 @@ read_cdata
                 {
                     *out++ = '>';
                     text += 3;
-                }        
+                }
                 else
                 {
                     return 1;
@@ -232,6 +232,3 @@ read_cdata
 
 
 #endif /* PMD_XML_CDATA_H_ */
-
-
-

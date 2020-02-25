@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,13 +33,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_Characters.cc
+ * @brief character encoding tests
+ *
+ * Check that we can encode and decode PMD strings in XML properly
+ */
+
 #include "dlb_pmd_api.h"    
 
 #include "TestXmlWriter.hh"
 #include "TestModel.hh"
 #include "gtest/gtest.h"
 
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_CHARACTER_TESTS
 
+
+#ifndef DISABLE_CHARACTER_TESTS
 /**
  * @brief write a unicode character to buffer
  */
@@ -127,7 +138,14 @@ TEST(CharacterTest, test_ampersand_chars)
     }
     else
     {
-        m.test(TestModel::TEST_XML, "XML_Ampersand_Codes", 1);
+        try
+        {
+            m.test(TestModel::TEST_XML, "XML_Ampersand_Codes", 1);
+        }
+        catch (TestModel::failure& f)
+        {
+            ADD_FAILURE() << f.msg;
+        }
     }
 }
 
@@ -300,7 +318,14 @@ TEST(CharacterTest, good_unicode_parse_strings1)
         }
         else
         {
-            m.test(TestModel::TEST_XML, "XML_Good_Unicodes1", 1);
+            try
+            {
+                m.test(TestModel::TEST_XML, "XML_Good_Unicodes1", 1);
+            }
+            catch (TestModel::failure& f)
+            {
+                ADD_FAILURE() << f.msg;
+            }
         }
     }
 }
@@ -321,7 +346,14 @@ TEST(CharacterTest, good_unicode_parse_strings2)
         }
         else
         {
-            m.test(TestModel::TEST_XML, "XML_Good_Unicodes2", 1);
+            try
+            {
+                m.test(TestModel::TEST_XML, "XML_Good_Unicodes2", 1);
+            }
+            catch (TestModel::failure& f)
+            {
+                ADD_FAILURE() << f.msg;
+            }
         }
     }
 }
@@ -342,7 +374,14 @@ TEST(CharacterTest, good_unicode_parse_strings3)
         }
         else
         {
-            m.test(TestModel::TEST_XML, "XML_Good_Unicodes3", 1);
+            try
+            {
+                m.test(TestModel::TEST_XML, "XML_Good_Unicodes3", 1);
+            }
+            catch (TestModel::failure& f)
+            {
+                ADD_FAILURE() << f.msg;
+            }
         }
     }
 }
@@ -395,3 +434,4 @@ TEST(CharacterTest, bad_unicode_test_strings3)
         }
     }
 }
+#endif

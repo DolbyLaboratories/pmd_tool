@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -84,7 +84,7 @@ __pragma(warning(disable:4127))
  * @def MAX_STRING_SIZE
  * @brief max string size
  */
-#define MAX_STRING_SIZE (64)
+#define MAX_STRING_SIZE DLB_PMD_NAME_ARRAY_SIZE
 
 
 /**
@@ -130,6 +130,7 @@ struct parser
     unsigned int lineno;           /**< current XML file line number */
 
     dlb_pmd_model *model;          /**< current model */
+    dlb_pmd_bool  strict;          /**< strict checking of presentation config fields? */
 
     unsigned int atsc3_channel_bsid;   /**< placeholder for parsing ATSC3 IAT distribution ids */
     unsigned int atsc3_channel_majno;  /**< placeholder for parsing ATSC3 IAT distribution ids */
@@ -163,6 +164,9 @@ struct parser
     dlb_pmd_presentation presentation;
     dlb_pmd_element_id elements[DLB_PMD_MAX_PRESENTATION_ELEMENTS];
     unsigned int presentation_contents[PMD_CLASS_RESERVED];
+    dlb_pmd_bool presentation_config_objects_present;
+    dlb_pmd_bool presentation_config_cm_me_present;
+    dlb_pmd_bool presentation_config_cm;
     dlb_pmd_loudness loudness;
     dlb_pmd_eac3 eac3;
     dlb_pmd_ed2_turnaround etd;
@@ -200,7 +204,7 @@ errmsg
  * @brief after parsing an AudioSignal tag, add the specified signal to the model
  */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_signal_to_model
     (parser *p
     )
@@ -236,7 +240,7 @@ new_bed
  * @brief after parsing an AudioBed tag, add the specified bed to the model
  */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_bed_to_model
     (parser *p
     )
@@ -265,8 +269,12 @@ new_object
 }
 
 
+/**
+ * @brief parser pop action to insert object into model once an entire AudioObject
+ * tag has been written
+ */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_object_to_model
     (parser *p
     )
@@ -295,6 +303,8 @@ new_presentation
     p->presentation.elements = p->elements;
     p->current_presentation_id = 0;
     memset(p->presentation_contents, '\0', sizeof(p->presentation_contents));
+    p->presentation_config_objects_present = 0;
+    p->presentation_config_cm_me_present = 0;
 }
 
 
@@ -302,7 +312,7 @@ new_presentation
  * @brief after parsing a Presentation tag, add the specified presentation struct to the model
  */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_presentation_to_model
     (parser *p
     )
@@ -320,6 +330,7 @@ add_presentation_to_model
     if (pres->config < DLB_PMD_SPEAKER_CONFIG_PORTABLE)
     {
         unsigned int actual_presentation_contents[PMD_CLASS_RESERVED];
+        dlb_pmd_bool actual_objects_present = 0;
         unsigned int i;
         
         /* step 1: compute the actual presentation content */
@@ -331,22 +342,37 @@ add_presentation_to_model
             if (!dlb_pmd_object_lookup(p->model, pres->elements[i], &object))
             {
                 actual_presentation_contents[object.object_class] += 1;
+                actual_objects_present = 1;
             }
         }
         
-        /* step 2: compare against the contents listed in the presentation_config
-         * string by the #decode_presentation_config function */
-        for (i = 0; i != PMD_CLASS_RESERVED; ++i)
+        if (actual_objects_present && !p->presentation_config_objects_present)
         {
-            if (p->presentation_contents[i] != actual_presentation_contents[i])
+            errmsg(p, "%s: presentation %u contains objects,"
+                      "but the presentation config string does not",
+                   p->strict ? "Error" : "Warning",
+                   pres->id);
+            if (p->strict)
             {
-                errmsg(p, "presentation config string specifies %u %s objects, "
-                       " but presentation %u has %u",
-                       p->presentation_contents[i],
-                       object_class_names[i],
-                       pres->id,
-                       actual_presentation_contents[i]);
                 return 1;
+            }
+        }
+        else
+        {
+            /* step 2: compare against the contents listed in the presentation_config
+             * string by the #decode_presentation_config function */
+            for (i = 0; i != PMD_CLASS_RESERVED; ++i)
+            {
+                if (p->presentation_contents[i] != actual_presentation_contents[i])
+                {
+                    errmsg(p, "presentation config string specifies %u %s objects, "
+                           " but presentation %u has %u",
+                           p->presentation_contents[i],
+                           object_class_names[i],
+                           pres->id,
+                           actual_presentation_contents[i]);
+                    return 1;
+                }
             }
         }
     }
@@ -377,7 +403,7 @@ new_loudness
  * @brief after parsing a PresentationLoudness tag, add the specified loudness struct to the model
  */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_loudness_to_model
     (parser *p
     )
@@ -410,7 +436,7 @@ new_eac3
  * @brief after parsing an Eac3EncodingParameters tag, add the specified struct to the model
  */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_eac3_to_model
     (parser *p
     )
@@ -474,7 +500,7 @@ new_de_turnaround
  * @brief after parsing an ED2Turnaround tag, add the specified ED2 turnaround struct to the model
  */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_ed2_turnaround_to_model
     (parser *p
     )
@@ -507,7 +533,7 @@ new_update
  * @brief after parsing a DynamicUpdate tag, add the specified update struct to the model
  */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_update_to_model
     (parser *p
     )
@@ -538,7 +564,7 @@ new_iat
  * @brief after parsing an IAT tag, add the specified IAT struct to the model
  */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_iat_to_model
     (parser *p
     )
@@ -570,7 +596,7 @@ new_headphone
  * @brief after parsing a HeadphoneElement tag, add the specified headphone struct to the model
  */
 static
-int
+dlb_pmd_success            /** @return 1 on failures, 0 on success */
 add_headphone_to_model
     (parser *p
     )
@@ -1178,6 +1204,19 @@ decode_coordinate
 
 
 /**
+ * @brief helper function to check if text represents -inf dB.
+ */
+static inline
+pmd_bool
+text_is_minf_db
+    (const char *text
+    )
+{
+    return !strcasecmp(text, "-infdB");
+}
+
+
+/**
  * @brief parse the string for a PMD gain value
  */
 static 
@@ -1196,7 +1235,7 @@ decode_gain
         return 0;
     }
 
-    if (!strcasecmp(text, "-infdB"))
+    if (text_is_minf_db(text))
     {
         *gain = -INFINITY;
         return 1;
@@ -1206,6 +1245,11 @@ decode_gain
     if (*gain < -25.0f || *gain > 6.0f || endp == text)
     {
         errmsg(p, "Invalid gain: \"%s\"",  text);
+        return 0;
+    }
+    if (strcasecmp(endp, "dB"))
+    {
+        errmsg(p, "Invalid gain: \"%s\" (missing 'dB' suffix)", text);
         return 0;
     }
     return 1;
@@ -1312,10 +1356,20 @@ decode_speaker_config
     ,dlb_pmd_speaker_config *cfg  /**< [out] channel speaker config */
     )
 {
-    static const char *sc[] = { "2.0", "3.0", "5.1", "5.1.2", "5.1.4", "7.1.4", "9.1.6",
-                                "Portable Speaker", "Portable Headphone" };
+    static const char *sc[] =
+    {
+        "2.0",                  /* 0 */
+        "3.0",                  /* 1 */
+        "5.1",                  /* 2 */
+        "5.1.2",                /* 3 */
+        "5.1.4",                /* 4 */
+        "7.1.4",                /* 5 */
+        "9.1.6",                /* 6 */
+        "Portable Speaker",     /* 7 */
+        "Portable Headphone"    /* 8 */
+    };
     int res;
-    
+
     if (NULL == text)
     {
         errmsg(p, "Malformed tag");
@@ -1346,7 +1400,7 @@ decode_presentation_config
 {
     char tmp[32];
     char num_obj_str[32];
-    size_t len = strlen(text);
+    size_t len;
 
     unsigned int num_digits = 0;
     unsigned int digit_string_int = 0;
@@ -1361,6 +1415,7 @@ decode_presentation_config
         return 0;
     }
 
+    len = strlen(text);
     /* check for Portable Speakers/Headphones */
     for (i = 0; i != len; ++i)
     {
@@ -1376,7 +1431,6 @@ decode_presentation_config
 
     if (i < (int)sizeof(tmp))
     {
-        char tmp[32];
         strncpy(tmp, text, i);
         tmp[i] = '\0';
         if (!decode_speaker_config(p, tmp, cfg))
@@ -1392,15 +1446,15 @@ decode_presentation_config
         {   
             if (!strncasecmp(tmp, "ME", tmp_iterator))
             {
+                p->presentation_config_cm_me_present = 1;
+                p->presentation_config_cm = 0;
                 break;
             }
             else if (!strncasecmp(tmp, "CM", tmp_iterator))
             {
+                p->presentation_config_cm_me_present = 1;
+                p->presentation_config_cm = 1;
                 break;
-            }
-            else
-            {
-                return 0;
             }
         }
         tmp[tmp_iterator] = text[i];
@@ -1434,6 +1488,7 @@ decode_presentation_config
             {
                 memset(tmp, '\0', sizeof(tmp));
                 p->presentation_contents[PMD_CLASS_DIALOG] += digit_string_int;
+                p->presentation_config_objects_present = 1;
                 num_digits = 0;
                 tmp_iterator = 0;
                 continue;
@@ -1442,6 +1497,7 @@ decode_presentation_config
             {
                 memset(tmp, '\0', sizeof(tmp));
                 p->presentation_contents[PMD_CLASS_VDS] += digit_string_int;
+                p->presentation_config_objects_present = 1;
                 num_digits = 0;
                 tmp_iterator = 0;
                 continue;
@@ -1450,6 +1506,7 @@ decode_presentation_config
             {
                 memset(tmp, '\0', sizeof(tmp));
                 p->presentation_contents[PMD_CLASS_VOICEOVER] += digit_string_int;
+                p->presentation_config_objects_present = 1;
                 num_digits = 0;
                 tmp_iterator = 0;
                 continue;
@@ -1458,6 +1515,7 @@ decode_presentation_config
             {
                 memset(tmp, '\0', sizeof(tmp));
                 p->presentation_contents[PMD_CLASS_GENERIC] += digit_string_int;
+                p->presentation_config_objects_present = 1;
                 num_digits = 0;
                 tmp_iterator = 0;
                 continue;
@@ -1466,6 +1524,7 @@ decode_presentation_config
             {
                 memset(tmp, '\0', sizeof(tmp));
                 p->presentation_contents[PMD_CLASS_SUBTITLE] += digit_string_int;
+                p->presentation_config_objects_present = 1;
                 num_digits = 0;
                 tmp_iterator = 0;
                 continue;
@@ -1474,6 +1533,7 @@ decode_presentation_config
             {
                 memset(tmp, '\0', sizeof(tmp));
                 p->presentation_contents[PMD_CLASS_EMERGENCY_ALERT] += digit_string_int;
+                p->presentation_config_objects_present = 1;
                 num_digits = 0;
                 tmp_iterator = 0;
                 continue;
@@ -1482,6 +1542,7 @@ decode_presentation_config
             {
                 memset(tmp, '\0', sizeof(tmp));
                 p->presentation_contents[PMD_CLASS_EMERGENCY_INFO] += digit_string_int;
+                p->presentation_config_objects_present = 1;
                 num_digits = 0;
                 tmp_iterator = 0;
                 continue;
@@ -1895,7 +1956,7 @@ decode_cmixlev
     }
     
     v = strtod(text, &endp);
-    if (!strcmp(text, "-infdB"))
+    if (text_is_minf_db(text))
     {
         *mixlev = PMD_CMIX_LEVEL_MINF;
         return 1;
@@ -1940,7 +2001,7 @@ decode_surmixlev
     }
     
     v = strtod(text, &endp);
-    if (!strcmp(text, "-infdB"))
+    if (text_is_minf_db(text))
     {
         *mixlev = PMD_SURMIX_LEVEL_MINF;
         return 1;
@@ -1981,7 +2042,7 @@ decode_hmixlev
         return 0;
     }
     
-    if (!strcmp(text, "-infdB"))
+    if (text_is_minf_db(text))
     {
         *hmixlev = 31;
         return 1;
@@ -2673,7 +2734,7 @@ decode_pld_practype
         errmsg(p, "Error: unknown loudness practice type \"%s\"", text);
         return 0;
     }
-    p->loudness.loud_prac_type = (pmd_loudness_practice)res;
+    p->loudness.loud_prac_type = (dlb_pmd_loudness_practice)res;
     return 1;
 }
 
@@ -2700,7 +2761,7 @@ decode_pld_lufs
     }
 
     f = strtod(text, &endp);
-    if (f < -102.4 || f > 102.3 || endp == text)
+    if (f < DLB_PMD_LUFS_MIN || f > DLB_PMD_LUFS_MAX || endp == text)
     {
         errmsg(p, "Invalid LUFS value \"%s\" in field %s",  text, field);
         return 0;
@@ -2899,7 +2960,7 @@ decode_pld_lra
     }
 
     f = strtod(text, &endp);
-    if (f < 0.0 || f > 102.3 || endp == text)
+    if (f < DLB_PMD_LU_MIN || f > DLB_PMD_LU_MAX || endp == text)
     {
         errmsg(p, "Invalid LRA value \"%s\"",  text);
         return 0;
@@ -3542,16 +3603,16 @@ attribute_callback
     {
         if (!strcasecmp(tag, "Tag"))
         {
-            unsigned int tag;
+            unsigned int localtag;
             int pos;
-            if (1 != sscanf(value, "%x%n", &tag, &pos)
-                || tag > 255
+            if (1 != sscanf(value, "%x%n", &localtag, &pos)
+                || localtag > 255
                 || value[pos] != '\0')
             {
                 errmsg(p, "incorrect Local Tag format \"%s\"", value);
                 return 1;
             }
-            p->current_dynamic_tag = tag;
+            p->current_dynamic_tag = localtag;
             return 0;
         }
         else if (!strcasecmp(tag, "OutputTarget"))
@@ -3662,7 +3723,7 @@ attribute_callback
                 errmsg(p, "Unknown dialgate value \"%s\" in %s tag", value, tag);
                 return 1;
             }
-            p->loudness.loudspch_gating = (pmd_dialgate_practice)idx;
+            p->loudness.loudspch_gating = (dlb_pmd_dialgate_practice)idx;
             return 0;
         }
     }
@@ -3706,12 +3767,12 @@ attribute_callback
         {
             if (!strcasecmp(value, "file"))
             {
-                p->loudness.loudcorr_type = PMD_CORRTY_FILE_BASED;
+                p->loudness.loudcorr_type = PMD_PLD_CORRECTION_FILE_BASED;
                 return 0;
             }
             if (!strcasecmp(value, "realtime"))
             {
-                p->loudness.loudcorr_type = PMD_CORRTY_REALTIME;
+                p->loudness.loudcorr_type = PMD_PLD_CORRECTION_REALTIME;
                 return 0;
             }
             errmsg(p, "Unknown loudness correction type \"%s\"\n", value);
@@ -3803,6 +3864,7 @@ dlb_xmlpmd_parse
     ,dlb_xmlpmd_error_callback ecb
     ,void *cbarg
     ,dlb_pmd_model *model
+    ,dlb_pmd_bool strict
     )
 {
     dlb_pmd_success res = PMD_SUCCESS;
@@ -3822,6 +3884,7 @@ dlb_xmlpmd_parse
     p.source_gain_db = 0.0f;
     p.profile_number = 0;
     p.profile_level = 0;
+    p.strict = strict;
 
     model->version_avail = 0;
     model->version_maj = 0xff;

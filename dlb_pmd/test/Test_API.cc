@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_API.cc
+ * @brief Test PMD API functions
+ *
+ * @todo: flesh this out more comprehensively
+ */
+
 #include "dlb_pmd_api.h"    
 #include "src/model/pmd_model.h"
 
@@ -41,6 +48,9 @@
 #include "gtest/gtest.h"
 
 #include <math.h>
+
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_API_TESTS
 
 class PMD_APITest: public ::testing::TestWithParam<std::tr1::tuple<int, int> > {};
 class PMD_SignalAPITest: public PMD_APITest
@@ -145,6 +155,7 @@ class PMD_SignalAPITest: public PMD_APITest
 };
 
 
+#ifndef DISABLE_API_TESTS
 TEST_P(PMD_SignalAPITest, signals)
 {
     unsigned int num = std::tr1::get<0>(GetParam());
@@ -230,8 +241,8 @@ TEST_P(PMD_SignalAPITest, signals)
     {
         dlb_pmd_signal_iterator si;
         dlb_pmd_signal sig;
-        unsigned int count = 0;
 
+        count = 0;
         if (dlb_pmd_signal_iterator_init(&si, m))
         {
             ADD_FAILURE() << "Could not initialize signal iterator " << dlb_pmd_error(m);
@@ -276,4 +287,390 @@ INSTANTIATE_TEST_CASE_P(PMD_API, PMD_SignalAPITest,
                         testing::Combine(testing::Range(1, 255),
                                          testing::Range(TestModel::FIRST_TEST_TYPE,
                                                         TestModel::LAST_TEST_TYPE+1)));
+
+
+TEST(PMD_API_Constrained, signals)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 1; i != DLB_PMD_MAX_SIGNALS; ++i)
+    {
+        constraints.max.num_signals = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz < prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+    
+TEST(PMD_API_Constrained, elements)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 1; i != DLB_PMD_MAX_AUDIO_ELEMENTS; ++i)
+    {
+        constraints.max_elements = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz <= prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+
+TEST(PMD_API_Constrained, beds)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 1; i != DLB_PMD_MAX_AUDIO_ELEMENTS; ++i)
+    {
+        constraints.max.num_beds = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz < prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+
+TEST(PMD_API_Constrained, objects)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 1; i != DLB_PMD_MAX_AUDIO_ELEMENTS; ++i)
+    {
+        constraints.max.num_objects = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz < prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+
+TEST(PMD_API_Constrained, presentations)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 1; i != DLB_PMD_MAX_PRESENTATIONS; ++i)
+    {
+        constraints.max.num_presentations = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz <= prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+
+TEST(PMD_API_Constrained, updates)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 0; i != DLB_PMD_MAX_UPDATES; ++i)
+    {
+        constraints.max.num_updates = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz <= prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+
+TEST(PMD_API_Constrained, loudness)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 0; i != DLB_PMD_MAX_PRESENTATIONS; ++i)
+    {
+        constraints.max.num_loudness = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz <= prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+
+TEST(PMD_API_Constrained, iat)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 0; i != 2; ++i)
+    {
+        constraints.max.num_iat = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz <= prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+
+TEST(PMD_API_Constrained, eac3)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 0; i != DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS; ++i)
+    {
+        constraints.max.num_eac3 = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz <= prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+
+TEST(PMD_API_Constrained, etd)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 0; i != DLB_PMD_MAX_ED2_TURNAROUNDS; ++i)
+    {
+        constraints.max.num_ed2_turnarounds = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz <= prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+
+
+TEST(PMD_API_Constrained, hed)
+{
+    dlb_pmd_model_constraints constraints;
+    size_t max = dlb_pmd_query_mem();
+    size_t prev= 0;
+    size_t sz;
+    unsigned int i;
+
+    constraints.max_elements            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max_presentation_names  = MAX_PRESENTATION_NAMES;
+    constraints.max.num_signals         = DLB_PMD_MAX_SIGNALS;
+    constraints.max.num_beds            = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_objects         = DLB_PMD_MAX_AUDIO_ELEMENTS;
+    constraints.max.num_updates         = DLB_PMD_MAX_UPDATES;
+    constraints.max.num_presentations   = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_loudness        = DLB_PMD_MAX_PRESENTATIONS;
+    constraints.max.num_iat             = 1;
+    constraints.max.num_eac3            = DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS;
+    constraints.max.num_ed2_system      = 1;
+    constraints.max.num_ed2_turnarounds = DLB_PMD_MAX_ED2_TURNAROUNDS;
+    constraints.max.num_headphone_desc  = DLB_PMD_MAX_HEADPHONE;
+
+    for (i = 0; i != DLB_PMD_MAX_HEADPHONE; ++i)
+    {
+        constraints.max.num_headphone_desc = i;
+        sz = dlb_pmd_query_mem_constrained(&constraints);    
+        if (sz <= prev || sz > max)
+        {
+            ADD_FAILURE() << "query_mem_constrained failure";
+        }
+        prev = sz;
+    }
+}
+#endif
 

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@
 #include "dlb_pmd_api.h"
 
 /**
- * @brief languge code, ISO 639-1 or ISO 639-2
+ * @brief language code, ISO 639-1 or ISO 639-2
  *
  * internally, 2-char language codes are stored as if they
  * were 3-char string arrays, and 3-char language codes as if
@@ -57,15 +57,6 @@
  */
 typedef uint32_t pmd_langcode;
 
-
-/**
- * @brief test whether a 2- or 3-character language code is legal
- */
-pmd_bool                /** @return 1 if legal code, 0 otherwise */
-pmd_check_iso639
-    (pmd_langcode code  /**< [in] 2 or 3-character language code to check */
-    );
-    
 
 /**
  * @brief convert an ascii string to an ISO 639-1 or ISO 639-2 code

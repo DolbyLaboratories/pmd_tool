@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,6 @@
 #ifndef KLV_PLD_H_
 #define KLV_PLD_H_
 
-#include "pmd_apd.h"
 #include "pmd_idmap.h"
 #include "klv_writer.h"
 #include "klv_reader.h"
@@ -208,8 +207,8 @@ klv_pld_write
         unsigned int tmp;
         pmd_apd *pres = w->model->apd_list;
 
-        pld = &model->pld_list[model->pld_written];
-        for (j = model->pld_written; j != model->num_pld; ++j, ++pld)
+        pld = &model->pld_list[model->write_state.pld_written];
+        for (j = model->write_state.pld_written; j != model->num_pld; ++j, ++pld)
         {
             unsigned int payload_bits = klv_pld_payload_bits(pld);
             unsigned long o = pld->options;
@@ -251,7 +250,7 @@ klv_pld_write
             {
                 SET_2(wp, 1, 1);                  /* b_prgmbndy */
                 tmp = labs(pld->prgmbndy);
-                for (i = 0; i != tmp; ++i)
+                for (i = 1; i < tmp; ++i)
                 {
                     SET_2(wp, 1, 0); 
                 }
@@ -320,7 +319,7 @@ klv_pld_write
             
             TRACE(("        PLD: %u\n", pld->presid));
         }
-        model->pld_written = j;
+        model->write_state.pld_written = j;
         w->wp = wp;
         if (bo)
         {
@@ -335,10 +334,11 @@ klv_pld_write
  * @brief extract presentation loudness from serialized form
  */
 static inline
-int                                /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_pld_read
-    (klv_reader *r                 /**< [in] KLV buffer to read */
-    ,int payload_length            /**< [in] bytes in presentation payload */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in presentation payload */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
     dlb_pmd_model *model = r->model;
@@ -352,89 +352,128 @@ klv_pld_read
     unsigned int tmp;
     uint16_t idx;
     
-    while (rp < end-1)
+    while (rp < end-1)      /* TODO: is this correct for "bytes remain"? */
     {
-        if (model->num_pld == MAX_PRESENTATIONS)
+        dlb_pmd_payload_status ps;
+
+        /* Validate the ID, and check that it refers to a known presentation */
+        id = (pmd_presentation_id)GET_2(rp, PLD_PRESID);
+        ps = pmd_validate_presentation_id(id);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
         {
-            klv_reader_error_at(r, "No space for PLD payload in model\n");
+            klv_reader_error_at(r, ps, read_status, "PLD payload %u has invalid presentation id %u\n",
+                                (unsigned int)(model->num_pld + 1), (unsigned int)id);
             return 1;
         }
-        idx = (uint16_t)model->num_apd;
-        pld = &model->pld_list[model->num_pld];
-        model->num_pld += 1;
-
-        id = (pmd_presentation_id)GET_2(rp, PLD_PRESID);
-        if (!id)
-        {
-            break;
-        }
-
         if (!pmd_idmap_lookup(r->apd_ids, id, &idx))
         {
             /* presentation does not exist */
-            klv_reader_error_at(r, "PLD payload %d refers to uknown presentation %d\n",
-                                model->num_pld, id);
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status,
+                                "PLD payload %u refers to unknown presentation %u\n",
+                                (unsigned int)(model->num_pld + 1), (unsigned int)id);
             return 1;
         }
-        pld->presid = idx;
+
+        /* Does the model have room? */
+        if (model->num_pld >= model->profile.constraints.max.num_loudness)
+        {
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status,
+                                "No space for PLD payload %u in model\n",
+                                (unsigned int)(model->num_pld + 1));
+            return 1;
+        }
+
+        /* Clear the next PLD record in the model */
+        idx = model->num_pld;
+        pld = &model->pld_list[model->num_pld];
+        memset(pld, '\0', sizeof(*pld));
+        model->num_pld += 1;
+        pld->presid = idx;      /* idx seems to be correct, although the name would imply id is correct... */
       
+        /* Field-by-field validation */
         TRACE(("        Loudness (Presentation %u)\n", id));
         tmp = (unsigned int)GET_2(rp, PLD_VERSION_LEN);
-        if (0 != tmp)
+        if (PLD_VERSION != tmp)
         {
-            klv_reader_error_at(r, "PLD payload %d has bad bitstream version: %d (0 expected)\n",
-                                model->num_pld, tmp);
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status,
+                                "PLD payload %u has invalid bitstream version %u (%u expected)\n",
+                                (unsigned int)model->num_pld, tmp, (unsigned int)PLD_VERSION);
             return 1;
         }
+
         pld->lpt = GET_2(rp, PLD_PRACTYPE);
-        if (0 != pld->lpt)
+        ps = validate_pmd_loudness_practice(pld->lpt);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status,
+                                "PLD payload %u has invalid loudness practice type %u\n",
+                                (unsigned int)model->num_pld, (unsigned int)pld->lpt);
+            return 1;
+        }
+        if (PMD_LPT_NI != pld->lpt)
         {
             if (GET_2(rp, 1))
             {
                 pld->options |= PMD_PLD_OPT_LOUDCORR_DIALGATE;
-                pld->dpt = GET_2(rp, PLD_DIALGATE);
+                pld->dpt = GET_2(rp, PLD_DIALGATE);                         /* No validation needed */
             }
             pld->options |= PMD_PLD_OPT_LOUDCORR_TYPE;
-            pld->corrty = GET_2(rp, PLD_CORRTYPE);
+            pld->corrty = GET_2(rp, PLD_CORRTYPE);                          /* No validation needed */
         }
 
-        GET_IF(rp, PMD_PLD_OPT_LOUDRELGAT,     PLD_LOUDVAL, pld->lrg);
-        GET_IF(rp, PMD_PLD_OPT_LOUDSPCHGAT,    PLD_LOUDVAL, pld->lsg);
+        GET_IF(rp, PMD_PLD_OPT_LOUDRELGAT,     PLD_LOUDVAL, pld->lrg);      /* No validation needed */
+        GET_IF(rp, PMD_PLD_OPT_LOUDSPCHGAT,    PLD_LOUDVAL, pld->lsg);      /* No validation needed */
         if (pld->options & PMD_PLD_OPT_LOUDSPCHGAT)
         {
             pld->sdpt = GET_2(rp, PLD_DIALGATE);
         }
-        GET_IF(rp, PMD_PLD_OPT_LOUDSTRM3S,     PLD_LOUDVAL, pld->l3g);
-        GET_IF(rp, PMD_PLD_OPT_MAX_LOUDSTRM3S, PLD_LOUDVAL, pld->l3g_max);
-        GET_IF(rp, PMD_PLD_OPT_TRUEPK,         PLD_LOUDVAL, pld->tpk);
-        GET_IF(rp, PMD_PLD_OPT_MAX_TRUEPK,     PLD_LOUDVAL, pld->tpk_max);
+        GET_IF(rp, PMD_PLD_OPT_LOUDSTRM3S,     PLD_LOUDVAL, pld->l3g);      /* No validation needed */
+        GET_IF(rp, PMD_PLD_OPT_MAX_LOUDSTRM3S, PLD_LOUDVAL, pld->l3g_max);  /* No validation needed */
+        GET_IF(rp, PMD_PLD_OPT_TRUEPK,         PLD_LOUDVAL, pld->tpk);      /* No validation needed */
+        GET_IF(rp, PMD_PLD_OPT_MAX_TRUEPK,     PLD_LOUDVAL, pld->tpk_max);  /* No validation needed */
 
         if (GET_2(rp, 1))
         {
             /* pgmbndy */
             pld->options |= PMD_PLD_OPT_PRGMBNDY;
-            pld->prgmbndy = 0;
+            pld->prgmbndy = 1;          /* This must start at 1 to match spec */
 
             while (!GET_2(rp, 1))
             {
-                pld->prgmbndy += 1;
+                pld->prgmbndy += 1;     /* NOTE: spec says pld->prgmbndy <<= 1, apparently we are saving the exponent, not the value */
             }
             if (!GET_2(rp, 1)) /* b_end_or_start */
             {
                 pld->prgmbndy *= -1;
             }
-            GET_IF(rp, PMD_PLD_OPT_PRGMBNDY_OFFSET, PLD_OFFSET, pld->prgmbndy_offset);
+            ps = validate_pmd_programme_boundary(pld->prgmbndy);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status,
+                                    "PLD payload %u has invalid programme boundary %u\n",
+                                    (unsigned int)model->num_pld, (unsigned int)pld->prgmbndy);
+                return 1;
+            }
+            GET_IF(rp, PMD_PLD_OPT_PRGMBNDY_OFFSET, PLD_OFFSET, pld->prgmbndy_offset);  /* No validation needed */
         }
             
-        GET_IF(rp, PMD_PLD_OPT_LRA,            PLD_LRA,      pld->lra);
+        GET_IF(rp, PMD_PLD_OPT_LRA,            PLD_LRA,      pld->lra);     /* No validation needed */
         if (pld->options & PMD_PLD_OPT_LRA)
         {
             pld->lrap = GET_2(rp, PLD_LRA_PTYPE);
+            ps = validate_pmd_loudness_range_practice(pld->lrap);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status,
+                                    "PLD payload %u has invalid loudness range practice %u\n",
+                                    (unsigned int)model->num_pld, (unsigned int)pld->lrap);
+                return 1;
+            }
         }
-        GET_IF(rp, PMD_PLD_OPT_LOUDMNTRY,      PLD_LOUDVAL,  pld->ml);
-        GET_IF(rp, PMD_PLD_OPT_MAX_LOUDMNTRY,  PLD_LOUDVAL,  pld->ml_max);
+        GET_IF(rp, PMD_PLD_OPT_LOUDMNTRY,      PLD_LOUDVAL,  pld->ml);      /* No validation needed */
+        GET_IF(rp, PMD_PLD_OPT_MAX_LOUDMNTRY,  PLD_LOUDVAL,  pld->ml_max);  /* No validation needed */
 
-        /* extension */
+        /* extension (no validation) */
         if (GET_2(rp, 1))
         {
             pld->options |= PMD_PLD_OPT_EXTENSION;

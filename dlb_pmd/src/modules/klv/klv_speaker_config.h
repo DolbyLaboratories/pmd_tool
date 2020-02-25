@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,14 @@
 #ifndef KLV_SPEAKER_CONFIG_H_
 #define KLV_SPEAKER_CONFIG_H_
 
+#include "dlb_pmd_types.h"
+
+#define KLV_SPEAKER_CONFIG_RESERVED_FIRST (0x07)
+#define KLV_SPEAKER_CONFIG_RESERVED_LAST (0x1c)
+#define KLV_SPEAKER_CONFIG_NOT_INDICATED (0x1f)
+#define KLV_SPEAKER_CONFIG_LAST KLV_SPEAKER_CONFIG_NOT_INDICATED
+#define KLV_SPEAKER_CONFIG_DIFF (KLV_SPEAKER_CONFIG_RESERVED_LAST - KLV_SPEAKER_CONFIG_RESERVED_FIRST + 1)
+
 /**
  * @brief encode a speaker config to its bitstream
  */
@@ -45,11 +53,14 @@ klv_encode_speaker_config
     (dlb_pmd_speaker_config cfg      /**< [in] PMD speaker config */
     )
 {
-    if (cfg < DLB_PMD_SPEAKER_CONFIG_PORTABLE)
+    unsigned int encoded_cfg = cfg;
+
+    if (cfg > DLB_PMD_SPEAKER_CONFIG_9_1_6)
     {
-        return (unsigned int)cfg;
+        encoded_cfg += KLV_SPEAKER_CONFIG_DIFF;
     }
-    return (unsigned int)cfg + 22;
+
+    return encoded_cfg;
 }
 
 
@@ -57,24 +68,52 @@ klv_encode_speaker_config
  * @brief decode a speaker config encoded bitstream value
  */
 static inline
-pmd_bool                         /** @return 1 on success, 0 otherwise */
+pmd_bool                         /** @return PMD_TRUE on success, PMD_FALSE otherwise */
 klv_decode_speaker_config
-    (unsigned int bscfg          /**< [in] bitstream value */
+    (unsigned int bscfg          /**< [in]  bitstream value */
     ,dlb_pmd_speaker_config *cfg /**< [out] decoded bitstream */
     )
 {
-    if (bscfg < DLB_PMD_SPEAKER_CONFIG_PORTABLE)
+    pmd_bool ok = PMD_FALSE;
+
+    if (cfg != NULL)
     {
-        *cfg = (dlb_pmd_speaker_config)bscfg;
-        return 1;
+        if (bscfg < KLV_SPEAKER_CONFIG_RESERVED_FIRST)
+        {
+            *cfg = (dlb_pmd_speaker_config)bscfg;
+            ok = PMD_TRUE;
+        }
+        else if (bscfg > KLV_SPEAKER_CONFIG_RESERVED_LAST && bscfg < KLV_SPEAKER_CONFIG_NOT_INDICATED)
+        {
+            *cfg = (dlb_pmd_speaker_config)(bscfg - KLV_SPEAKER_CONFIG_DIFF);
+            ok = PMD_TRUE;
+        }
     }
-    if (bscfg > 28)
-    {
-        *cfg = (dlb_pmd_speaker_config)(bscfg - 22);
-        return 1;
-    }
-    return 0;    
+
+    return ok;    
 }
 
+/**
+ * @brief validate a speaker config value
+ */
+static inline
+dlb_pmd_payload_status              /** @return validation status */
+klv_speaker_config_validate
+    (dlb_pmd_speaker_config config  /**< [in] PMD speaker config */
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (config > KLV_SPEAKER_CONFIG_LAST)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+    else if (config >= KLV_SPEAKER_CONFIG_RESERVED_FIRST && config <= KLV_SPEAKER_CONFIG_RESERVED_LAST)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+
+    return status;
+}
 
 #endif /* KLV_SPEAKER_CONFIG_H_ */

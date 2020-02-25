@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -72,7 +72,7 @@ klv_aen_write
 {
     if (klv_write_local_key_opened(w))
     {
-        pmd_aen *e = &model->aen_list[model->aen_written];
+        pmd_aen *e = &model->aen_list[model->write_state.aen_written];
         uint8_t *wp = w->wp;
         unsigned int i;
         unsigned int bo = 0;
@@ -81,7 +81,7 @@ klv_aen_write
         int len;
         int j;
     
-        for (i = model->aen_written; i != model->num_elements; ++i)
+        for (i = model->write_state.aen_written; i != model->num_elements; ++i)
         {
             name = e->name;
             len = (int)strlen((char*)name);
@@ -117,7 +117,7 @@ klv_aen_write
             }
             ++e;
         }
-        model->aen_written = i;
+        model->write_state.aen_written = i;
         if (bo)
         {
             w->wp += 1;
@@ -131,10 +131,11 @@ klv_aen_write
  * @brief extract element names from serialized form
  */
 static inline
-int                                /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_aen_read
-    (klv_reader *r                 /**< [in] KLV buffer to read */
-    ,int payload_length            /**< [in] bytes in presentation payload */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in presentation payload */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
     uint8_t *rp = r->rp;
@@ -143,10 +144,10 @@ klv_aen_read
     uint16_t eid;
     uint16_t idx;
     uint8_t *name = NULL;
-    uint8_t *name_end = NULL;
     unsigned int bo = 0;
     unsigned int name_bits;
     unsigned int len;
+    unsigned int max_len;
     uint8_t c;
     
     while (rp < end-2)
@@ -170,15 +171,18 @@ klv_aen_read
         e->id = eid;
         name = e->name;
         memset(name, '\0', sizeof(e->name));
-        name_end = name + sizeof(e->name) - 1;
 
         len = 0;
+        max_len = sizeof(e->name);
         c = (uint8_t)get_(rp, AEN_CHARVAL(bo,len));
         while (rp < end && c != 0)
         {
-            if (name == name_end)
+            if (len >= max_len)
             {
-                klv_reader_error_at(r, "AEN string too long\n");
+                /* string too long! error */
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status,
+                                    "Too many characters (%u) in name for audio element %u\n",
+                                    len, (unsigned int)eid);
                 return 1;
             }
             name[len] = c;

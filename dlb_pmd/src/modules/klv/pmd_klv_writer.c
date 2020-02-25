@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -108,7 +108,7 @@ klv_write_hed_key
    ,dlb_pmd_model *model      /**< [in] source model */
    )
 {
-    if (model->hed_written != model->num_hed)
+    if (model->write_state.hed_written != model->num_hed)
     {
         if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_HEADPHONE_ELEMENT_DESC)
             || klv_hed_write(w, model)
@@ -133,9 +133,9 @@ klv_write_iat_key
 {
     pmd_bool written;
 
-    if (!model->iat_written)
+    if (model->iat && !model->write_state.iat_written)
     {
-        if (model->iat.options & PMD_IAT_PRESENT)
+        if (model->iat->options & PMD_IAT_PRESENT)
         {
             if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_IAT)
                 || klv_iat_write(w, model, &written)
@@ -143,7 +143,7 @@ klv_write_iat_key
             {
                 return 1;
             }
-            model->iat_written = written;
+            model->write_state.iat_written = written;
         }
     }
     return 0;
@@ -162,15 +162,15 @@ klv_write_esd_key
 {
     pmd_bool written = PMD_FALSE;
     
-    if (model->esd_present && model->esd_written == w->sindex)
+    if (model->esd && model->esd_present && model->write_state.esd_written == w->sindex)
     {
         if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_ED2_SUBSTREAM_DESC)
-            || klv_esd_write(w, &model->esd, &written)
+            || klv_esd_write(w, model->esd, &written)
             || klv_write_local_close(w))
         {
             return 1;
         }
-        model->esd_written = (w->sindex+1) % model->esd.count;
+        model->write_state.esd_written = (w->sindex+1) % model->esd->count;
     }
     return 0;
 }
@@ -186,10 +186,17 @@ klv_write_esn_key
    ,dlb_pmd_model *model      /**< [in] source model */
    )
 {
-    if (!(model->esn_bitmap & (1ul << w->sindex)))
+    unsigned int sindex = w->sindex;
+
+    if (sindex == DLB_PMD_NO_ED2_STREAM_INDEX)
     {
-        if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_ED2_SUBSTREAM_NAME)
-            || klv_esn_write(w, model)
+        sindex = 0;
+    }
+    
+    if (!(model->write_state.esn_bitmap & (1ul << sindex)))
+    {
+        if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_ED2_SUBSTREAM_NAMES)
+            || klv_esn_write(w, model, sindex)
             || klv_write_local_close(w))
         {
             return 1;
@@ -209,7 +216,7 @@ klv_write_apn_key
    ,dlb_pmd_model *model      /**< [in] source model */
    )
 {
-    if (!pmd_apn_list_iterator_done(&model->apni))
+    if (!pmd_apn_list_iterator_done(&model->write_state.apni))
     {
         if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_AUDIO_PRESENTATION_NAMES)
             || klv_apn_write(w, model)
@@ -235,7 +242,7 @@ klv_write_eep_key
    ,dlb_pmd_model *model      /**< [in] source model */
    )
 {
-    if (model->eep_written < model->num_eep)
+    if (model->write_state.eep_written < model->num_eep)
     {
         if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_EAC3_ENCODING_PARAMETERS)
             || klv_eep_write(w, model)
@@ -261,7 +268,7 @@ klv_write_etd_key
    ,dlb_pmd_model *model      /**< [in] source model */
    )
 {
-    if (model->etd_written < model->num_etd)
+    if (model->write_state.etd_written < model->num_etd)
     {
         if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_ED2_TURNAROUND_DESC)
             || klv_etd_write(w, model)
@@ -287,7 +294,7 @@ klv_write_pld_key
    ,dlb_pmd_model *model      /**< [in] source model */
    )
 {
-    if (model->pld_written < model->num_pld)
+    if (model->write_state.pld_written < model->num_pld)
     {
         if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_PRES_LOUDNESS_DESC)
             || klv_pld_write(w, model)
@@ -303,7 +310,7 @@ klv_write_pld_key
 /**
  * @brief write all element names to KLV format
  *
- * @todo: distribute these accross blocks depending how much
+ * @todo: distribute these across blocks depending how much
  * space we have left after IAT and dynamic updates
  */
 static inline
@@ -313,7 +320,7 @@ klv_write_aen_key
    ,dlb_pmd_model *model      /**< [in] source model */
    )
 {
-    if (model->aen_written < model->num_elements)
+    if (model->write_state.aen_written < model->num_elements)
     {
         if (   klv_write_local_open(w, KLV_PMD_LOCAL_TAG_AUDIO_ELEMENT_NAMES)
             || klv_aen_write(w, model)
@@ -343,35 +350,45 @@ klv_write_mtx0
     /* make sure we have cycled through all different types of
      * optional payloads before starting again
      */
-    if (0 == block_number)
+    if (0 == block_number || DLB_PMD_NO_ED2_STREAM_INDEX == block_number)
     {
         /* beds, objects and presentations are all that is needed to render,
          * so they can be reset even when the other payloads haven't completely
          * been sent */
-        model->abd_written = 0;
-        model->aod_written = 0;
-        model->apd_written = 0;
-        model->hed_written = 0;
-        model->bed_write_index = 0;
-        model->obj_write_index = 0;
-        model->iat_written = 0;
-        model->esd_written = 0;
+        model->write_state.abd_written = 0;
+        model->write_state.aod_written = 0;
+        model->write_state.apd_written = 0;
+        model->write_state.hed_written = 0;
+        model->write_state.bed_write_index = 0;
+        model->write_state.obj_write_index = 0;
+        model->write_state.iat_written = 0;
+        model->write_state.esd_written = 0;
 
-        if (   model->num_eep == model->eep_written
-            && model->num_etd == model->etd_written
-            && model->esd.count == model->esn_written
-            && model->num_pld == model->pld_written
-            && pmd_apn_list_iterator_done(&model->apni)
-            && model->num_elements == model->aen_written
+        if (   model->num_eep == model->write_state.eep_written
+            && model->num_etd == model->write_state.etd_written
+            && (!model->esd || (model->esd->count == model->write_state.esn_written))
+            && model->num_pld == model->write_state.pld_written
+            && pmd_apn_list_iterator_done(&model->write_state.apni)
+            && model->num_elements == model->write_state.aen_written
           )
         {
-            model->pld_written = 0;
-            model->aen_written = 0;
-            model->eep_written = 0;
-            model->etd_written = 0;
-            model->esn_written = 0;
-            model->esn_bitmap  = 0;
-            pmd_apn_list_iterator_init(&model->apni, &model->apn_list);
+            model->write_state.pld_written = 0;
+            model->write_state.eep_written = 0;
+            model->write_state.etd_written = 0;
+            model->write_state.apn_written = 0;
+            model->write_state.aen_written = 0;
+            model->write_state.esn_written = 0;
+            model->write_state.esn_bitmap  = 0;
+        }
+
+        if (   0 == model->write_state.eep_written
+            && 0 == model->write_state.etd_written
+            && 0 == model->write_state.pld_written
+            && 0 == model->write_state.apn_written
+            && 0 == model->write_state.aen_written
+           )
+        {
+            pmd_apn_list_iterator_init(&model->write_state.apni, &model->apn_list);
         }
     }
 
@@ -420,27 +437,33 @@ klv_write_block
    ,unsigned int blockno      /**< [in] PCM block number 'within video frame' */
    )
 {
-    (void)blockno; /* use this to write appropriate updates */
-
-    return klv_write_mtx0(w, model, blockno)
-        || klv_write_hed_key(w, model)
-        || klv_write_iat_key(w, model)
-        || klv_write_xyz_key(w, model, blockno*5, (blockno+1)*5)
-        || klv_write_eep_key(w, model)
-        || klv_write_etd_key(w, model)
-        || klv_write_pld_key(w, model)
-        || klv_write_apn_key(w, model)
-        || klv_write_esn_key(w, model)
-        || klv_write_aen_key(w, model);
+    if (0 == blockno)
+    {
+        return klv_write_mtx0(w, model, blockno)
+            || klv_write_hed_key(w, model);
+    }
+    else
+    {
+        return klv_write_mtx0(w, model, blockno)
+            || klv_write_hed_key(w, model)
+            || klv_write_iat_key(w, model)
+            || klv_write_xyz_key(w, model, blockno*5, (blockno+1)*5)
+            || klv_write_eep_key(w, model)
+            || klv_write_etd_key(w, model)
+            || klv_write_pld_key(w, model)
+            || klv_write_apn_key(w, model)
+            || klv_write_esn_key(w, model)
+            || klv_write_aen_key(w, model);
+    } 
 }
 
 
-int
+unsigned int
 dlb_klvpmd_min_block_size
     (void
     )
 {
-    int size = UNIVERSAL_KEY_SIZE
+    unsigned int size = UNIVERSAL_KEY_SIZE
         + 4 /* length field */
         + 4 /* min container config payload */
         + 4 /* version field */
@@ -499,39 +522,64 @@ dlb_klvpmd_write_all
 
     pmd_mutex_lock(&model->lock);    
 
-    if (!sindex)
+    if (0 == sindex || DLB_PMD_NO_ED2_STREAM_INDEX == sindex)
     {
-        model->bed_write_index = 0;
-        model->obj_write_index = 0;
-        model->abd_written = 0;
-        model->aod_written = 0;
-        model->apd_written = 0;
-        model->hed_written = 0;
-        model->pld_written = 0;
-        model->aen_written = 0;
-        model->eep_written = 0;
-        model->esn_written = 0;
-        model->esn_bitmap  = 0;
-        model->etd_written = 0;
-        pmd_xyz_set_init(&model->xyz_written);
-        pmd_apn_list_iterator_init(&model->apni, &model->apn_list);
+        model->write_state.bed_write_index = 0;
+        model->write_state.obj_write_index = 0;
+        model->write_state.abd_written = 0;
+        model->write_state.aod_written = 0;
+        model->write_state.apd_written = 0;
+        model->write_state.hed_written = 0;
+        model->write_state.iat_written = 0;
+        model->write_state.esd_written = 0;
+
+        if (   DLB_PMD_NO_ED2_STREAM_INDEX == sindex
+            || (model->num_eep == model->write_state.eep_written
+                && model->num_etd == model->write_state.etd_written
+                && (!model->esd || (model->esd->count == model->write_state.esn_written))
+                && model->num_pld == model->write_state.pld_written
+                && pmd_apn_list_iterator_done(&model->write_state.apni)
+                && model->num_elements == model->write_state.aen_written
+               )
+           )
+        {
+            model->write_state.pld_written = 0;
+            model->write_state.eep_written = 0;
+            model->write_state.etd_written = 0;
+            model->write_state.apn_written = 0;
+            model->write_state.aen_written = 0;
+            model->write_state.esn_written = 0;
+            model->write_state.esn_bitmap  = 0;
+        }
+
+        if (0 == model->write_state.eep_written
+            && 0 == model->write_state.etd_written
+            && 0 == model->write_state.pld_written
+            && 0 == model->write_state.apn_written
+            && 0 == model->write_state.aen_written
+           )
+        {
+            pmd_apn_list_iterator_init(&model->write_state.apni, &model->apn_list);
+        }
+        pmd_xyz_set_init(&model->write_state.xyz_written);
     }
     
-    if (model->esd.count > 1)
+    if (model->esd && model->esd->count > 1)
     {
-        TRACE(("ED2: SUBSTREAM %u/%u\n", sindex, model->esd.count));
-        TRACE(("    esd_written: %u\n", model->esd_written));
-        TRACE(("    iat_written: %u\n", model->iat_written));
-        TRACE(("    abd_written: %u\n", model->abd_written));
-        TRACE(("    aod_written: %u\n", model->aod_written));
-        TRACE(("    apd_written: %u\n", model->apd_written));
-        TRACE(("    hed_written: %u\n", model->hed_written));
-        TRACE(("    pld_written: %u\n", model->pld_written));
-        TRACE(("    aen_written: %u\n", model->aen_written));
-        TRACE(("    eep_written: %u\n", model->eep_written));
-        TRACE(("    etd_written: %u\n", model->etd_written));
-        TRACE(("    esn_written: %u\n", model->esn_written));
-        TRACE(("    xyz_written: %u\n", model->xyz_written.bitmap[0]));
+        TRACE(("ED2: SUBSTREAM %u/%u\n", sindex, model->esd ? model->esd->count : 0));
+        TRACE(("    esd_written: %u\n", model->write_state.esd_written));
+        TRACE(("    iat_written: %u\n", model->write_state.iat_written));
+        TRACE(("    abd_written: %u\n", model->write_state.abd_written));
+        TRACE(("    aod_written: %u\n", model->write_state.aod_written));
+        TRACE(("    apd_written: %u\n", model->write_state.apd_written));
+        TRACE(("    hed_written: %u\n", model->write_state.hed_written));
+        TRACE(("    pld_written: %u\n", model->write_state.pld_written));
+        TRACE(("    aen_written: %u\n", model->write_state.apn_written));
+        TRACE(("    aen_written: %u\n", model->write_state.aen_written));
+        TRACE(("    eep_written: %u\n", model->write_state.eep_written));
+        TRACE(("    etd_written: %u\n", model->write_state.etd_written));
+        TRACE(("    esn_written: %u\n", model->write_state.esn_written));
+        TRACE(("    xyz_written: %u\n", model->write_state.xyz_written.bitmap[0]));
     }   
 
     klv_writer_init(&w, model, sindex, buffer, capacity, ul);
@@ -558,5 +606,3 @@ dlb_klvpmd_write_all
     pmd_mutex_unlock(&model->lock);
     return res;
 }
-
-

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -208,7 +208,7 @@ dlb_pmd_num_iat
     )
 {
     FUNCTION_PROLOGUE(model);
-    return (model->iat.options & PMD_IAT_PRESENT) != 0;
+    return model->iat && ((model->iat->options & PMD_IAT_PRESENT) != 0);
 }
 
 
@@ -668,11 +668,11 @@ populate_api_presentation
     {
         pmd_apd_iterator pi;
         const pmd_element *e;
-        unsigned int i;
+        unsigned int j;
 
         pmd_apd_iterator_init(&pi, p);
         
-        for (i = 0; i != api->num_elements; ++i)
+        for (j = 0; j != api->num_elements; ++j)
         {
             unsigned int idx;
             if (!pmd_apd_iterator_next(&pi, &idx))
@@ -680,7 +680,7 @@ populate_api_presentation
                 return PMD_FAIL;
             }
             e = &model->element_list[idx];
-            presentation_element_insert(api->elements, i, e->id);
+            presentation_element_insert(api->elements, j, e->id);
         }
         return PMD_SUCCESS;
     }
@@ -769,14 +769,14 @@ populate_api_loudness
     
     p = &model->apd_list[pld->presid];
     loudness->presid = p->id;
-    loudness->loud_prac_type = pld->lpt;
+    loudness->loud_prac_type = (dlb_pmd_loudness_practice)pld->lpt;
     if (loudness->loud_prac_type != 0)
     {
         if (options & PMD_PLD_OPT_LOUDCORR_DIALGATE)
         {
             loudness->b_loudcorr_gating = 1;
-            loudness->loudcorr_gating = pld->dpt;
-            loudness->loudcorr_type = pld->corrty;
+            loudness->loudcorr_gating = (dlb_pmd_dialgate_practice)pld->dpt;
+            loudness->loudcorr_type = (dlb_pmd_correction_type)pld->corrty;
         }
     }
     if (options & PMD_PLD_OPT_LOUDRELGAT)
@@ -788,7 +788,7 @@ populate_api_loudness
     {
         loudness->b_loudspchgat = 1;
         loudness->loudspchgat = pmd_decode_lufs(pld->lsg);
-        loudness->loudspch_gating = pld->sdpt;
+        loudness->loudspch_gating = (dlb_pmd_dialgate_practice)pld->sdpt;
     }
     if (options & PMD_PLD_OPT_LOUDSTRM3S)
     {
@@ -824,7 +824,7 @@ populate_api_loudness
     {
         loudness->b_lra = 1;
         loudness->lra = pmd_decode_lra(pld->lra);
-        loudness->lra_prac_type = pld->lrap;
+        loudness->lra_prac_type = (dlb_pmd_loudness_range_practice)pld->lrap;
     }
     if (options & PMD_PLD_OPT_LOUDMNTRY)
     {
@@ -932,7 +932,7 @@ dlb_pmd_iat_lookup
     CHECK_PTRARG(model, api);
 
     memset(api, '\0', sizeof(*api));
-    iat = &model->iat;
+    iat = model->iat;
 
     if (iat->options & PMD_IAT_PRESENT)
     {
@@ -1208,7 +1208,7 @@ dlb_pmd_ed2_system_lookup
 
     if (model->esd_present)
     {
-        const pmd_esd *esd = &model->esd;
+        const pmd_esd *esd = model->esd;
         unsigned int i;
         memset(api, '\0', sizeof(*api));
         api->count = esd->count;

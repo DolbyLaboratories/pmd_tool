@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+<Filter Include="zlib">
+<UniqueIdentifier>{76502233-dbc5-3511-a0ce-193c451a7809}</UniqueIdentifier></Filter>
+<Filter Include="zlib\1.2.11">
+<UniqueIdentifier>{4414fd87-039d-3150-8c54-673075e3fc35}</UniqueIdentifier></Filter>
+<Filter Include="zlib\1.2.11\zlib-1.2.11">
+<UniqueIdentifier>{e5460bde-8f9d-32a8-85c0-c103fd4cf597}</UniqueIdentifier></Filter></ItemGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\zlib-1.2.11\adler32.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\compress.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\crc32.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\deflate.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\gzclose.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\gzlib.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\gzread.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\gzwrite.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\infback.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\inffast.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\inflate.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\inftrees.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\trees.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\uncompr.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile>
+<ClCompile Include="..\..\..\zlib-1.2.11\zutil.c">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClCompile></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\zlib-1.2.11\crc32.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\deflate.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\gzguts.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\inffast.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\inffixed.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\inflate.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\inftrees.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\trees.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\zconf.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\zlib.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude>
+<ClInclude Include="..\..\..\zlib-1.2.11\zutil.h">
+<Filter>zlib\1.2.11\zlib-1.2.11</Filter></ClInclude></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup /></Project>

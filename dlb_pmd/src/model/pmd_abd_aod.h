@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,18 @@
 #include <assert.h>
 #include <stdlib.h>
 
+ /* Object position */
+#define PMD_OBJECT_POSITION_MIN (-1.0f)
+#define PMD_OBJECT_POSITION_MAX (1.0f)
+
+ /*  Object position encoding*/
+#define PMD_OBJECT_POSITION_ENC_RESERVED (0)
+#define PMD_OBJECT_POSITION_ENC_MAX (0x3ff)
+
+ /* Object size */
+#define PMD_OBJECT_SIZE_MIN (0.0f)
+#define PMD_OBJECT_SIZE_MAX (1.0f)
+
 /**
  * @file pmd_abd_aod.h
  * @brief models of audio element beds and objects (ABD and AOD) data stucture 
@@ -79,7 +91,7 @@
  * Track index 0 is the 1st PCM channel, usually Left.
  * Track index 1 is the 2nd PCM channel, often Right, sometimes Center.
  *
- * A track index is independent of any a-priori undertanding of the
+ * A track index is independent of any a-priori understanding of the
  * content of the channel.  For example, the incoming PCM may be
  * legacy channel-based 5.1, in which case track 0 will mean "Left".
  * Alternatively, the incoming PCM could be entirely object based, in
@@ -89,18 +101,110 @@ typedef uint8_t pmd_track_index;
 
 
 /**
+ * @brief helper function to validate audio element ID
+ */
+static inline
+dlb_pmd_payload_status
+pmd_validate_audio_element_id
+    (dlb_pmd_element_id id
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (id == DLB_PMD_RESERVED_ELEMENT_ID)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+    else if (id > DLB_PMD_MAX_ELEMENT_ID)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief helper function to validate presentation ID
+ */
+static inline
+dlb_pmd_payload_status
+pmd_validate_presentation_id
+    (dlb_pmd_presentation_id id
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (id == DLB_PMD_RESERVED_PRESENTATION_ID)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+    else if (id > DLB_PMD_MAX_PRESENTATION_ID)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+
+    return status;
+}
+
+
+/**
  * @brief represent object position
  *
- * An object position is specified in the range -1.0 - 1.0.  For
- * x-coordinate, -1.0 means 'left' and 1.0 means 'right'.  For
- * y-coordinate, -1.0 means 'front' and 1.0 means 'back'.  For
- * z-coordinate, -1.0 means 'floor', 0.0 means 'horizon' and 1.0 means
+ * An object position is specified in the range -1.0 - 1.0.
+ * For x-coordinate, -1.0 means 'left' and 1.0 means 'right'.
+ * For y-coordinate, -1.0 means 'back' and 1.0 means 'front'.
+ * For z-coordinate, -1.0 means 'floor', 0.0 means 'horizon' and 1.0 means
  * 'ceiling'
  *
  * These are represented as an unsigned short in the range 1 - 0x3ff,
  * in units of 1.0/1024.  (i.e., 10 bits.)
  */
 typedef unsigned short pmd_position;
+
+
+/**
+ * @brief helper function to validate encoded position
+ */
+static inline
+dlb_pmd_payload_status
+pmd_validate_encoded_position
+    (pmd_position pos
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (pos == PMD_OBJECT_POSITION_ENC_RESERVED)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+    else if (pos > PMD_OBJECT_POSITION_ENC_MAX)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief helper function to validate position
+ */
+static inline
+dlb_pmd_payload_status
+pmd_validate_position
+    (float pos
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (pos < PMD_OBJECT_POSITION_MIN || pos > PMD_OBJECT_POSITION_MAX)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+
+    return status;
+}
 
 
 /**
@@ -134,7 +238,7 @@ pmd_encode_position
  * @brief represent object size
  *
  * The size indicates how 'wide' the field of an object might be
- * (i.e., it determines whether it needs to be rendered accross
+ * (i.e., it determines whether it needs to be rendered across
  * multiple speaker positions, and if so how many).
  *
  * Range: 0 - 31,
@@ -142,6 +246,26 @@ pmd_encode_position
  *    and 31 means entire field.
  */
 typedef unsigned short pmd_size;
+
+
+/**
+* @brief helper function to validate size
+*/
+static inline
+dlb_pmd_payload_status
+pmd_validate_size
+    (float size
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (size < PMD_OBJECT_SIZE_MIN || size > PMD_OBJECT_SIZE_MAX)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+
+    return status;
+}
 
 
 /**
@@ -236,6 +360,30 @@ pmd_gain_to_db
 
 
 /**
+ * @brief helper function to validate "source" (track)
+ */
+static inline
+dlb_pmd_payload_status
+pmd_validate_source
+    (uint32_t src
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (src < DLB_PMD_MIN_SIGNAL_ID)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+    else if (src > DLB_PMD_MAX_SIGNAL_ID)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+
+    return status;
+}
+
+
+/**
  * @brief audio object 'object-mode' metadata
  *
  * Note - divergence only makes sense for tracks that contain dialog.
@@ -310,13 +458,6 @@ typedef enum
 
 #define PMD_MIN_OBJ_ID (1)
 #define PMD_MAX_OBJ_ID (4095)
-
-
-/**
- * @def PMD_MAX_ELEMENT_NAME_LEN
- * @brief maximum length of an element name
- */
-#define PMD_MAX_ELEMENT_NAME_LEN DLB_PMD_MAX_NAME_LENGTH
 
 
 /**

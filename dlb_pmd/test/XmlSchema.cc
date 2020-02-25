@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/* derived from the public-domain load_grammar_sax.cpp by Boris Kolpackov */
+
 #include <string>
 #include <memory>   // std::auto_ptr
 #include <cstddef>  // std::size_t
@@ -53,7 +55,7 @@
 #include <xercesc/framework/MemBufInputSource.hpp>
 
 #include "XmlSchema.hh"
-#include "dlb_pmd_3_2_0_xsd.h"
+#include "dlb_pmd_3_2_1_xsd.h"
 
 using namespace std;
 using namespace xercesc;
@@ -150,39 +152,39 @@ private:
 
     auto_ptr<SAX2XMLReader> create_parser (XMLGrammarPool* pool)
     {
-        auto_ptr<SAX2XMLReader> parser (
+        auto_ptr<SAX2XMLReader> p (
             pool ? XMLReaderFactory::createXMLReader (XMLPlatformUtils::fgMemoryManager,
                                                       pool)
                  : XMLReaderFactory::createXMLReader ());
         
         // Commonly useful configuration.
         //
-        parser->setFeature (XMLUni::fgSAX2CoreNameSpaces, true);
-        parser->setFeature (XMLUni::fgSAX2CoreNameSpacePrefixes, true);
-        parser->setFeature (XMLUni::fgSAX2CoreValidation, true);
+        p->setFeature (XMLUni::fgSAX2CoreNameSpaces, true);
+        p->setFeature (XMLUni::fgSAX2CoreNameSpacePrefixes, true);
+        p->setFeature (XMLUni::fgSAX2CoreValidation, true);
         
         // Enable validation.
         //
-        parser->setFeature (XMLUni::fgXercesSchema, true);
-        parser->setFeature (XMLUni::fgXercesSchemaFullChecking, true);
-        parser->setFeature (XMLUni::fgXercesValidationErrorAsFatal, true);
+        p->setFeature (XMLUni::fgXercesSchema, true);
+        p->setFeature (XMLUni::fgXercesSchemaFullChecking, true);
+        p->setFeature (XMLUni::fgXercesValidationErrorAsFatal, true);
         
         // Use the loaded grammar during parsing.
         //
-        parser->setFeature (XMLUni::fgXercesUseCachedGrammarInParse, true);
+        p->setFeature (XMLUni::fgXercesUseCachedGrammarInParse, true);
         
         // Don't load schemas from any other source (e.g., from XML document's
         // xsi:schemaLocation attributes).
         //
-        parser->setFeature (XMLUni::fgXercesLoadSchema, false);
+        p->setFeature (XMLUni::fgXercesLoadSchema, false);
         
         // Xerces-C++ 3.1.0 is the first version with working multi import
         // support.
         //
 #if _XERCES_VERSION >= 30100
-        parser->setFeature (XMLUni::fgXercesHandleMultipleImports, true);
+        p->setFeature (XMLUni::fgXercesHandleMultipleImports, true);
 #endif
-        return parser;
+        return p;
     }
 
 
@@ -195,8 +197,7 @@ public:
         , valid(false)
     {
         parser->setErrorHandler(&eh);
-        xercesc::MemBufInputSource schemabuf(_________include_dlb_pmd_3_2_0_xsd,
-                                             _________include_dlb_pmd_3_2_0_xsd_len,
+        xercesc::MemBufInputSource schemabuf(dlb_pmd_3_2_1_xsd, dlb_pmd_3_2_1_xsd_len,
                                              "PMD schema");
         if (parser->loadGrammar(schemabuf, Grammar::SchemaGrammarType, true))
         {

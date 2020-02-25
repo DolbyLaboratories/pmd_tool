@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@
 #define ESN_CHARVAL                               4,     8
 
 #define ESN_BITS(len) ((4+((len)+1)*8))
+#define ESN_BYTES(len) ((ESN_BITS(len) + 7)/8)
 
 /**
  * @brief write an ED2 stream name to the KLV output stream
@@ -62,29 +63,30 @@ int            /** @return 0 on success, 1 on error */
 klv_esn_write
     (klv_writer *w            /**< [in] KLV writer */
     ,dlb_pmd_model *model     /**< [in] PMD model */
+    ,unsigned int sindex      /**< [in] stream index */
     )
 {
-    if (klv_write_local_key_opened(w))
+    if (model->esd && klv_write_local_key_opened(w))
     {
         size_t payload_bytes;
-        char name[64];
+        char name[DLB_PMD_TITLE_SIZE];
         uint8_t *wp = w->wp;
         size_t len;
         size_t j;
         
-        if (!strcmp((char*)model->title, "Untitled"))
+        if (!strcmp((char*)model->title, PMD_UNTITLED_MODEL_TITLE))
         {
-            snprintf(name, sizeof(name), "Stream [%u/%u]", w->sindex+1,
-                     model->esd.count);
+            snprintf(name, sizeof(name), "Stream [%u/%u]", sindex+1,
+                     model->esd->count);
         }
         else
         {
             snprintf(name, sizeof(name), "%s [%u/%u]", model->title,
-                     w->sindex+1, model->esd.count);
+                     sindex+1, model->esd->count);
         }
             
         len = strlen(name);
-        payload_bytes = (ESN_BITS(len)+7)/8;
+        payload_bytes = ESN_BYTES(len);
         if (klv_writer_space(w) < payload_bytes)
         {
             /* it's not an error to fail to write payload if there is no
@@ -95,16 +97,16 @@ klv_esn_write
         }
         TRACE(("        ESN: %s\n", name));
         memset(wp, '\0', payload_bytes);
-        set_(wp, ESN_STREAM_IDX, w->sindex);
+        set_(wp, ESN_STREAM_IDX, sindex);
         for (j = 0; j != len; ++j)
         {
             set_(wp, ESN_CHARVAL, name[j]);
             ++wp;
         }
-        set_(wp, ESN_CHARVAL, 0);  /* add null terminator */
-	++wp; 
-        model->esn_written += 1;
-        model->esn_bitmap |= (1ul << w->sindex);
+        set_(wp, ESN_CHARVAL, 0);  /* add null terminator (possibly redundant!) */
+        ++wp; 
+        model->write_state.esn_written += 1;
+        model->write_state.esn_bitmap |= (1ul << sindex);
         w->wp = wp+1; /* make sure final nibble is written */
     }
     return 0;
@@ -115,30 +117,38 @@ klv_esn_write
  * @brief extract E stream names from serialized form
  */
 static inline
-int                                /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_esn_read
-    (klv_reader *r                 /**< [in] KLV buffer to read */
-    ,int payload_length            /**< [in] bytes in ESN payload */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in ESN payload */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
+    /**
+     * This does not conform to the current PMD spec, it reads but one name...  which
+     * is compatible with how we are writing the payload, but is not compliant with the spec.
+     * HOWEVER, the effect is to just skip over the remaining stream index records, so we
+     * are likely OK.
+     */
+
     uint8_t *rp = r->rp;
     uint8_t *end = rp + payload_length;
     uint8_t *name = NULL;
     uint8_t *name_end = NULL;
     uint8_t c = 1;
     
+    (void)read_status;
+
     memset(r->model->title, '\0', sizeof(r->model->title));
     name = r->model->title;
     name_end = name + sizeof(r->model->title) - 1;
     while (rp < end && c != 0)
     {
-        if (name == name_end)
+        if (name < name_end)    /* Truncate extra-long sADM names */
         {
-            klv_reader_error_at(r, "ESD string too long\n");
-            return 1;
+            c = get_(rp, ESN_CHARVAL);
+            *name++ = c;
         }
-        c = get_(rp, ESN_CHARVAL);
-        *name++ = c;
         ++rp;
     }
     
@@ -147,6 +157,7 @@ klv_esn_read
         TRACE(("        %s\n", r->model->title));
 
         /* now walk backwards to remove the [%u/%u] part */
+        /* TODO: this looks buggy - what if there is not a [%u/%u] part? */
         while (*name != ' ' && name >= r->model->title)
         {
             --name;
@@ -158,7 +169,7 @@ klv_esn_read
         *name = '\0';
     }
     
-    r->rp = end;
+    r->rp = end;    /* skip remainder of the payload */
     return 0;
 }
 

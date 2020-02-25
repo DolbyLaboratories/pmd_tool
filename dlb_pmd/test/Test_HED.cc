@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_HED.cc
+ * @brief Test Headphone Element Description payload transmits correctly
+ */
+
 #include "PrngKiss.hh"
 #include "TestModel.hh"
 
@@ -40,6 +45,9 @@
 #include "src/model/pmd_model.h"
 
 #include "gtest/gtest.h"
+
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_HED_TESTS
 
 /**
  * @brief number of channels in each different speaker config
@@ -57,6 +65,7 @@ static const unsigned int BED_SIZES[ NUM_PMD_SPEAKER_CONFIGS ] =
     2   /* portable headphones */
 };
 
+#ifndef DISABLE_HED_TESTS
 class PayloadTest: public ::testing::TestWithParam<std::tr1::tuple<int, int> > {};
 
 TEST_P(PayloadTest, payload_testing)
@@ -117,5 +126,6 @@ INSTANTIATE_TEST_CASE_P(PMD_HED, PayloadTest,
                         testing::Combine(testing::Range(0, 128),
                                          testing::Range(TestModel::FIRST_TEST_TYPE,
                                                         TestModel::LAST_TEST_TYPE+1)));
+#endif
 
 

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -70,6 +70,34 @@ __pragma(warning(disable:4244))
  * @brief number of bits in a 32-bit word
  */
 #define WORD32_BITS (32)
+
+
+/**
+ * @def MIN(a,b)
+ * @brief return minimum of a and b
+ */
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+
+
+/**
+ * @brief table of speaker counts for PMD speaker configs
+ */
+static unsigned int SPEAKER_CONFIG_COUNT[NUM_PMD_SPEAKER_CONFIGS] =
+{
+    2, 3, 6, 8, 10, 12, 16, 2, 2
+};
+
+
+static unsigned int SPEAKER_CONFIG_CHANNELS[NUM_PMD_SPEAKER_CONFIGS][16] =
+{
+    /* 2.0 */     { 1,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 },
+    /* 3.0 */     { 1,  2,  3,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 },
+    /* 5.1 */     { 1,  2,  3,  4,  5,  6,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 },
+    /* 5.1.2 */   { 1,  2,  3,  4,  5,  6, 11, 12,  0,  0,  0,  0,  0,  0,  0,  0 },
+    /* 5.1.4 */   { 1,  2,  3,  4,  5,  6,  9, 10, 13, 14,  0,  0,  0,  0,  0,  0 },
+    /* 7.1.4 */   { 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 13, 14,  0,  0,  0,  0 },
+    /* 9.1.6 */   { 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16 },
+};
 
 
 /**
@@ -278,12 +306,20 @@ generate_rand_bytes
 static
 void
 generate_text
-    (generator *g   /**< [in] generator */
-    ,uint8_t   *s   /**< [in] array to populate */
-    ,size_t     size /**< [in] capacity of array */
+    (generator *g       /**< [in] generator */
+    ,uint8_t   *s       /**< [in] array to populate */
+    ,size_t     size    /**< [in] capacity of array */
+    ,dlb_pmd_bool ascii /**< [in] restrict alphabet to ascii printable? */
     )
 {
-    prng_utf8(&g->kiss, s, size);
+    if (ascii)
+    {
+        prng_ascii(&g->kiss, s, size);
+    }
+    else
+    {
+        prng_utf8(&g->kiss, s, size);
+    }
 }
 
 
@@ -492,7 +528,6 @@ generate_next_citizen
     }
     /* shouldn't get here */
     abort();
-    return 0;
 }
 
 
@@ -727,7 +762,38 @@ generate_sigs
     return 0;
 }
 
-    
+
+/**
+ * @brief return number of speakers in a speaker config
+ *
+ * used when determining the sources available for a derived bed.
+ */
+static
+unsigned int
+num_speakers
+    (dlb_pmd_speaker_config cfg
+    )
+{
+    unsigned int num = 0;
+
+    switch (cfg)
+    {
+        case DLB_PMD_SPEAKER_CONFIG_PORTABLE:
+        case DLB_PMD_SPEAKER_CONFIG_HEADPHONE:
+        case DLB_PMD_SPEAKER_CONFIG_2_0:       num = 2;     break;
+        case DLB_PMD_SPEAKER_CONFIG_3_0:       num = 3;     break;
+        case DLB_PMD_SPEAKER_CONFIG_5_1:       num = 6;     break;
+        case DLB_PMD_SPEAKER_CONFIG_5_1_2:     num = 8;     break;
+        case DLB_PMD_SPEAKER_CONFIG_5_1_4:     num = 10;    break;
+        case DLB_PMD_SPEAKER_CONFIG_7_1_4:     num = 12;    break;
+        case DLB_PMD_SPEAKER_CONFIG_9_1_6:     num = 16;    break;
+        default: abort();
+    }
+
+    return num;
+}
+
+
 /**
  * @brief genearate the required random beds and add to the model
  */
@@ -737,33 +803,62 @@ generate_beds
     (generator *g
     ,dlb_pmd_model *model
     ,unsigned int count
+    ,dlb_pmd_bool ascii
+    ,dlb_pmd_bool sadm
     )
 {
     dlb_pmd_source sources[DLB_PMD_MAX_BED_SOURCES];
+    unsigned int source_limit;
     dlb_pmd_bed bed;
+
     unsigned int i;
     unsigned int j;
 
     for (i = 0; i < count; ++i)
     {
+        source_limit = PMD_NUM_SPEAKERS;
         memset(sources, '\0', sizeof(sources));
         memset(&bed, '\0', sizeof(bed));
 
-        bed.id          = g->bed_ids[i];
-        bed.config      = (dlb_pmd_speaker_config)generate_uint(g, NUM_PMD_SPEAKER_CONFIGS);
-        bed.bed_type    = (dlb_pmd_bed_type)(i > 0 && generate_bool(g));
-        bed.source_id   = generate_bed_selection(g, bed.bed_type, i);
-        bed.num_sources = 1 + generate_uint(g, DLB_PMD_MAX_BED_SOURCES);
-
+        bed.id     = g->bed_ids[i];
         bed.sources = sources;
-        for (j = 0; j < bed.num_sources; ++j)
+        if (sadm)
         {
-            bed.sources[j].target = (dlb_pmd_speaker)(1 + generate_uint(g, PMD_NUM_SPEAKERS-1));
-            bed.sources[j].source = generate_signal_selection(g);            
-            bed.sources[j].gain   = generate_gain(g);
+            bed.config = (dlb_pmd_speaker_config)generate_uint(g, DLB_PMD_SPEAKER_CONFIG_9_1_6);
+            bed.num_sources = SPEAKER_CONFIG_COUNT[bed.config];
+            bed.bed_type = PMD_BED_ORIGINAL;
+            bed.source_id = 0;
+
+            for (j = 0; j < bed.num_sources; ++j)
+            {
+                bed.sources[j].target = (dlb_pmd_speaker)SPEAKER_CONFIG_CHANNELS[bed.config][j];
+                bed.sources[j].source = generate_signal_selection(g);            
+                bed.sources[j].gain   = 0.0f;  /* no bed gains in dlb-sADM */
+            }
+        }
+        else
+        {
+            bed.config = (dlb_pmd_speaker_config)generate_uint(g, NUM_PMD_SPEAKER_CONFIGS);
+            bed.bed_type    = (dlb_pmd_bed_type)(i > 0 && generate_bool(g));
+            bed.source_id   = generate_bed_selection(g, bed.bed_type, i);
+            bed.num_sources = 1 + generate_uint(g, DLB_PMD_MAX_BED_SOURCES);
+
+            if (PMD_BED_DERIVED == bed.bed_type)
+            {
+                dlb_pmd_bed bedorg;
+                dlb_pmd_bed_lookup(model, bed.source_id, &bedorg, DLB_PMD_MAX_BED_SOURCES, sources);
+                source_limit = num_speakers(bedorg.config);
+            }
+
+            for (j = 0; j < bed.num_sources; ++j)
+            {
+                bed.sources[j].target = (dlb_pmd_speaker)(1 + generate_uint(g, source_limit-1));
+                bed.sources[j].source = generate_signal_selection(g);            
+                bed.sources[j].gain   = generate_gain(g);
+            }
         }
 
-        generate_text(g, (uint8_t*)bed.name, DLB_PMD_MAX_NAME_LENGTH);
+        generate_text(g, (uint8_t*)bed.name, DLB_PMD_MAX_NAME_LENGTH, ascii);
         if (dlb_pmd_set_bed(model, &bed))
         {
             return 1;
@@ -782,42 +877,120 @@ generate_objs
     (generator *g
     ,dlb_pmd_model *model
     ,unsigned int count
+    ,dlb_pmd_bool ascii
+    ,dlb_pmd_bool sadm
     )
 {
     dlb_pmd_element_id *dynobjs = g->dynamic_object_ids;
     dlb_pmd_object obj;
     unsigned int i;
 
-
     for (i = 0; i < count; ++i)
     {
         memset(&obj, '\0', sizeof(obj));
 
         obj.id              = g->object_ids[i];
-        obj.object_class    = generate_uint(g, (unsigned int)PMD_CLASS_RESERVED);
         obj.x               = generate_float(g, -1.0f, 1.0f);
         obj.y               = generate_float(g, -1.0f, 1.0f);
         obj.z               = generate_float(g, -1.0f, 1.0f);
-        obj.size            = generate_float(g,  0.0f, 1.0f);
-        obj.size_3d         = generate_bool(g);
-        obj.diverge         = generate_bool(g);
         obj.source          = generate_signal_selection(g);
         obj.source_gain     = generate_gain(g);
 
-        /* has this already been tagged as a dynamic object? */
-        while (*dynobjs && *dynobjs > obj.id)
+        if (sadm)
         {
-            ++dynobjs;
+            obj.object_class    = generate_uint(g, (unsigned int)PMD_CLASS_EMERGENCY_INFO);
+            obj.size            = 0.0f;
+            obj.size_3d         = 0;
+            obj.diverge         = 0;
+            obj.dynamic_updates = 0;
         }
-        
-        obj.dynamic_updates = (*dynobjs == obj.id);
-        generate_text(g, (uint8_t*)obj.name, DLB_PMD_MAX_NAME_LENGTH);
+        else
+        {
+            obj.object_class    = generate_uint(g, (unsigned int)PMD_CLASS_RESERVED);
+            obj.size            = generate_float(g,  0.0f, 1.0f);
+            obj.size_3d         = generate_bool(g);
+            obj.diverge         = generate_bool(g);
+
+            /* has this already been tagged as a dynamic object? */
+            while (*dynobjs && *dynobjs > obj.id)
+            {
+                ++dynobjs;
+            }
+            obj.dynamic_updates = (*dynobjs == obj.id);
+        }
+        generate_text(g, (uint8_t*)obj.name, DLB_PMD_MAX_NAME_LENGTH, ascii);
         if (dlb_pmd_set_object(model, &obj))
         {
             return 1;
         }
     }
     return 0;
+}
+
+
+/**
+ * @brief trim the presentation to meet requirements for sADM
+ *
+ * In Dolby Serial ADM, we restict presentations to consist of exactly
+ * one bed, and then set the presentation's config to match that of
+ * that bed.
+ */
+static
+dlb_pmd_success                  /** @return 0 on success, 1 on failure */
+prune_sadm_presentation
+    (dlb_pmd_model *model        /**< [in] PMD model */
+    ,dlb_pmd_presentation *pres  /**< [in] newly generated presentation to prune */
+    )
+{
+    dlb_pmd_source sources[DLB_PMD_MAX_BED_SOURCES];
+    dlb_pmd_bool found_sadm_bed = 0; 
+    dlb_pmd_bed bed;
+    unsigned int count = pres->num_elements;
+    unsigned int i;
+    unsigned int elements_to_move;
+
+    for (i = 0; i < count; ++i)
+    {
+        if (!dlb_pmd_bed_lookup(model, pres->elements[i], &bed, DLB_PMD_MAX_BED_SOURCES, sources))
+        {
+            if (found_sadm_bed)
+            {
+                /* throw this one away: set it to 0 for cleanup later */
+                pres->elements[i] = 0;
+                pres->num_elements -= 1;
+            }
+            else
+            {
+                found_sadm_bed = 1;
+                pres->config = bed.config;
+            }
+        }
+    }
+
+    if (!found_sadm_bed)
+    {
+        /* This was an object-only presentation anyway, which we don't support.
+         * Don't add it to the model */
+        return PMD_FAIL;
+    }
+    else
+    {
+        /* working backwards from the end, remove the empty spaces */
+        elements_to_move = (pres->elements[count-1] > 0);
+        for (i = count-2; i < ~0u; --i)
+        {
+            if ((pres->elements[i] == 0) && elements_to_move)
+            {
+                memmove(&pres->elements[i], &pres->elements[i+1],
+                        sizeof(pres->elements[i]) * elements_to_move);
+            }
+            else
+            {
+                elements_to_move += 1;
+            }
+        }
+        return PMD_SUCCESS;
+    }
 }
 
 
@@ -830,20 +1003,28 @@ generate_pres
     (generator *g
     ,dlb_pmd_model *model
     ,unsigned int count
+    ,dlb_pmd_bool ascii
+    ,dlb_pmd_bool sadm
     )
 {
     dlb_pmd_element_id elements[DLB_PMD_MAX_PRESENTATION_ELEMENTS];
     dlb_pmd_presentation presentation;
+    unsigned int max_names = model->limits.max_presentation_names;
     unsigned int total_elements = g->num_beds + g->num_objects;
     unsigned int i;
     unsigned int j;
 
+    /* each presentation must have at least one name */
+    assert(max_names >= count);
+    max_names -= count;  /* reserve one name per presentation */
     for (i = 0; i < count; ++i)
     {
         unsigned int element_limit = g->num_beds + g->num_objects;
-        if (element_limit > DLB_PMD_MAX_PRESENTATION_NAMES)
+        unsigned int name_limit;
+        
+        if (element_limit > DLB_PMD_MAX_PRESENTATION_ELEMENTS)
         {
-            element_limit = DLB_PMD_MAX_PRESENTATION_NAMES;
+            element_limit = DLB_PMD_MAX_PRESENTATION_ELEMENTS;
         }
 
         memset(&presentation, '\0', sizeof(presentation));
@@ -852,7 +1033,20 @@ generate_pres
         presentation.id           = g->presentation_ids[i];
         presentation.num_elements = 1 + generate_uint(g, element_limit-1);
         presentation.elements     = elements;
-        presentation.num_names    = 1 + generate_uint(g, DLB_PMD_MAX_PRESENTATION_NAMES-1);
+        presentation.num_names    = 1;
+
+        presentation.config = (dlb_pmd_speaker_config)generate_uint(g, NUM_PMD_SPEAKER_CONFIGS);
+
+        name_limit = DLB_PMD_MAX_PRESENTATION_NAMES;
+        if (name_limit > max_names)
+        {
+            name_limit = max_names;
+        }
+        if (name_limit)
+        {
+            presentation.num_names    = 1 + generate_uint(g, name_limit-1);
+            max_names -= (presentation.num_names - 1);
+        }
 
         generate_language(g, &presentation.audio_language);
         generate_random_population(g, total_elements, presentation.num_elements);
@@ -872,15 +1066,18 @@ generate_pres
             {
                 abort();
             }
-            generate_text(g, (uint8_t*)presentation.names[j].text, DLB_PMD_MAX_NAME_LENGTH);
+            generate_text(g, (uint8_t*)presentation.names[j].text, DLB_PMD_MAX_NAME_LENGTH, ascii);
         }
 
-        if (dlb_pmd_set_presentation(model, &presentation))
+        if (!sadm || !prune_sadm_presentation(model, &presentation))
         {
-            return 1;
+            if (dlb_pmd_set_presentation(model, &presentation))
+            {
+                return PMD_FAIL;
+            }
         }
     }
-    return 0;
+    return PMD_SUCCESS;
 }
 
 
@@ -893,7 +1090,7 @@ generate_lufs
     (generator *g
     )
 {
-    return generate_float(g, -102.3f, 0.0f);
+    return generate_float(g, DLB_PMD_LUFS_MIN, DLB_PMD_LUFS_MAX);
 }
 
 
@@ -906,7 +1103,7 @@ generate_lu
     (generator *g
     )
 {
-    return generate_float(g, 0.0f, 102.3f);
+    return generate_float(g, DLB_PMD_LU_MIN, DLB_PMD_LU_MAX);
 }
 
 
@@ -1349,75 +1546,93 @@ check_count
 dlb_pmd_success
 dlb_pmd_generate_random
     (dlb_pmd_model          *model
-    ,dlb_pmd_metadata_count *counts
+    ,dlb_pmd_metadata_count *countsin
     ,unsigned int            seed
+    ,dlb_pmd_bool            ascii_strings
+    ,dlb_pmd_bool            sadm
     )
 {
-    unsigned int update_limit;
-    unsigned int hed_limit;
+    dlb_pmd_metadata_count *limits;
+    dlb_pmd_metadata_count counts;    
+    dlb_pmd_success result;
+    unsigned int entity_limit;
+    generator *g;
     char title[128];
-    generator g;
-    
+
     FUNCTION_PROLOGUE(model);
-    CHECK_PTRARG(model, counts);
+    CHECK_PTRARG(model, countsin);
     
-    generator_init(&g, &seed);
+    counts = *countsin;
+    if (sadm)
+    {
+        /* restrict random counts to beds, objects, presentations only */
+        counts.num_loudness = 0;
+        counts.num_iat = 0;
+        counts.num_eac3 = 0;
+        counts.num_ed2_turnarounds = 0;
+        counts.num_headphone_desc = 0;
+    }
+
+    g = malloc(sizeof(generator));
+    generator_init(g, &seed);
 
     snprintf(title, sizeof(title), "Randomly generated from seed %u", seed);
 
-    check_count(&g.kiss, &counts->num_signals,         1, DLB_PMD_MAX_SIGNALS);
-    check_count(&g.kiss, &counts->num_beds,            0, DLB_PMD_MAX_AUDIO_ELEMENTS);
-    check_count(&g.kiss, &counts->num_objects,         0, DLB_PMD_MAX_AUDIO_ELEMENTS - counts->num_beds);
-    if (0 == counts->num_beds && 0 == counts->num_objects)
+    limits = &model->limits.max;
+
+    check_count(&g->kiss, &counts.num_signals,         1, limits->num_signals);
+
+    entity_limit = MIN(model->limits.max_elements, limits->num_beds);
+    check_count(&g->kiss, &counts.num_beds,            0, entity_limit);
+
+    entity_limit = MIN(model->limits.max_elements - counts.num_beds, limits->num_objects);
+    check_count(&g->kiss, &counts.num_objects,         0, entity_limit);
+    if (0 == counts.num_beds && 0 == counts.num_objects)
     {
-        if (generate_bool(&g))
+        if (generate_bool(g))
         {
-            counts->num_beds = 1;
+            counts.num_beds = 1;
         }
         else
         {
-            counts->num_objects = 1;
+            counts.num_objects = 1;
         }
     }
 
-    generate_signal_ids(&g, counts->num_signals);
-    generate_element_ids(&g, counts->num_beds, counts->num_objects);
+    generate_signal_ids(g, counts.num_signals);
+    generate_element_ids(g, counts.num_beds, counts.num_objects);
 
-    update_limit = g.num_dynamic_objects * 64;
-    if (update_limit > DLB_PMD_MAX_UPDATES)
-    {
-        update_limit = DLB_PMD_MAX_UPDATES;
-    }
+    entity_limit = MIN(g->num_dynamic_objects * 64, limits->num_updates);
+    check_count(&g->kiss, &counts.num_updates,         0, entity_limit);
+    check_count(&g->kiss, &counts.num_presentations,   1, limits->num_presentations);
 
-    check_count(&g.kiss, &counts->num_updates,         0, update_limit);
-    check_count(&g.kiss, &counts->num_presentations,   1, DLB_PMD_MAX_PRESENTATIONS);
-    check_count(&g.kiss, &counts->num_loudness,        0, counts->num_presentations);
-    check_count(&g.kiss, &counts->num_eac3,            0, DLB_PMD_MAX_EAC3_ENCODING_PARAMETERS);
-    check_count(&g.kiss, &counts->num_ed2_turnarounds, 0, DLB_PMD_MAX_ED2_TURNAROUNDS);
-    check_count(&g.kiss, &counts->num_iat,             0, 1);
+    entity_limit = MIN(counts.num_presentations, limits->num_loudness);
+    check_count(&g->kiss, &counts.num_loudness,        0, entity_limit);
+    check_count(&g->kiss, &counts.num_eac3,            0, limits->num_eac3);
+    check_count(&g->kiss, &counts.num_ed2_turnarounds, 0, limits->num_ed2_turnarounds);
+    check_count(&g->kiss, &counts.num_iat,             0, limits->num_iat);
 
-    hed_limit = counts->num_beds + counts->num_objects;
-    if (hed_limit > DLB_PMD_MAX_HEADPHONE)
-    {
-        hed_limit = DLB_PMD_MAX_HEADPHONE;
-    }
-    check_count(&g.kiss, &counts->num_headphone_desc,  0, hed_limit);
+    entity_limit = MIN(counts.num_beds + counts.num_objects, limits->num_headphone_desc);
+    check_count(&g->kiss, &counts.num_headphone_desc,  0, entity_limit);
 
-    generate_presentation_ids(&g, counts->num_presentations);
-    generate_eep_ids(&g, counts->num_eac3);
-    generate_etd_ids(&g, counts->num_ed2_turnarounds);
+    generate_presentation_ids(g, counts.num_presentations);
+    generate_eep_ids(g, counts.num_eac3);
+    generate_etd_ids(g, counts.num_ed2_turnarounds);
 
-    return dlb_pmd_set_title(model, title)    
-        || generate_sigs(&g, model, counts->num_signals)
-        || generate_beds(&g, model, counts->num_beds)
-        || generate_objs(&g, model, counts->num_objects)
-        || generate_pres(&g, model, counts->num_presentations)
-        || generate_pld (&g, model, counts->num_loudness)
-        || generate_eep (&g, model, counts->num_eac3)
-        || generate_etd (&g, model, counts->num_ed2_turnarounds)
-        || generate_xyz (&g, model, counts->num_updates)
-        || generate_hed (&g, model, counts->num_headphone_desc)
-        || generate_iat (&g, model, counts->num_iat)
+    result = dlb_pmd_set_title(model, title)    
+        || generate_sigs(g, model, counts.num_signals)
+        || generate_beds(g, model, counts.num_beds, ascii_strings, sadm)
+        || generate_objs(g, model, counts.num_objects, ascii_strings, sadm)
+        || generate_pres(g, model, counts.num_presentations, ascii_strings, sadm)
+        || generate_pld (g, model, counts.num_loudness)
+        || generate_eep (g, model, counts.num_eac3)
+        || generate_etd (g, model, counts.num_ed2_turnarounds)
+        || generate_xyz (g, model, counts.num_updates)
+        || generate_hed (g, model, counts.num_headphone_desc)
+        || generate_iat (g, model, counts.num_iat)
         ;
+
+    free(g);
+    return result;
 }
 

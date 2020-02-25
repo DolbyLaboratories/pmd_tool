@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_PresentationConfig.cc
+ * @brief Test that bad presentation configs are caught
+ */
+
 #include "dlb_pmd_api.h"
 #include "dlb_pmd_xml_string.h"
 #include "dlb_pmd_generate.h"
@@ -45,6 +50,9 @@ extern "C"
 #include "gtest/gtest.h"
 
 #include <sstream>
+
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_PRESENTATION_CONFIG_TESTS
 
 
 /**
@@ -130,7 +138,7 @@ test_bad_config
     std::string bad = pmdxml;
     bad.replace(pos, len, bad_config);
                 
-    if (!dlb_xmlpmd_string_read((const char*)bad.data(), bad.length(),  m2,
+    if (!dlb_xmlpmd_string_read((const char*)bad.data(), bad.length(), m2, DLB_PMD_XML_STRICT,
                                 NULL, NULL, NULL))
     {
         /* we succeeded parsing a dodgy presentation config */
@@ -221,6 +229,7 @@ find_presentation_config
 }
 
 
+#ifndef DISABLE_PRESENTATION_CONFIG_TESTS
 class PresentationConfigTest: public ::testing::TestWithParam<int> {};
 
 
@@ -245,7 +254,7 @@ TEST_P(PresentationConfigTest, presentation_config_string)
     counts.num_objects       = num_objs;
     counts.num_presentations = 1;
 
-    if (dlb_pmd_generate_random(m, &counts, seed))
+    if (dlb_pmd_generate_random(m, &counts, seed, 0, 0))
     {
         ADD_FAILURE() << "Could not generate random model";        
     }
@@ -306,5 +315,6 @@ TEST_P(PresentationConfigTest, presentation_config_string)
 
 INSTANTIATE_TEST_CASE_P(PMD_PresentationConfig, PresentationConfigTest,
                         testing::Range(1, DLB_PMD_MAX_AUDIO_ELEMENTS));
+#endif
 
 

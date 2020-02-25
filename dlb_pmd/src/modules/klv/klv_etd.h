@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@
 #define KLV_ETD_H_
 
 #include "pmd_etd.h"
+#include "pmd_eep.h"
 #include "pmd_idmap.h"
 #include "klv_writer.h"
 #include "klv_reader.h"
@@ -161,8 +162,8 @@ klv_etd_write
         unsigned int i;
         uint8_t *wp = w->wp;
         
-        etd = &model->etd_list[model->etd_written];
-        for (i = model->etd_written; i != model->num_etd; ++i)
+        etd = &model->etd_list[model->write_state.etd_written];
+        for (i = model->write_state.etd_written; i != model->num_etd; ++i)
         {
             unsigned int ed2    = etd->ed2_presentations;
             unsigned int de     = etd->de_presentations;
@@ -239,7 +240,7 @@ klv_etd_write
         {
             w->wp += 1;
         }
-        model->etd_written = i;
+        model->write_state.etd_written = i;
         return w->wp == w->buffer;
     }
     return 0;
@@ -250,10 +251,11 @@ klv_etd_write
  * @brief extract an ED2 Turnaround from serialized form
  */
 static inline
-int                              /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_etd_read
-    (klv_reader *r               /**< [in] KLV buffer to read */
-    ,int payload_length          /**< [in] bytes in presentation payload */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in presentation payload */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
     dlb_pmd_model *model = r->model;
@@ -271,90 +273,177 @@ klv_etd_read
     
     while (r->rp < end-1)
     {
+        dlb_pmd_payload_status ps;
+        uint8_t frame_rate;
+
         id = get_(rp, ETD1_ID(bo));
+        ps = pmd_validate_ed2_turnaround_id(id);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status,
+                                "ETD payload %u has invalid id %u\n",
+                                (unsigned int)(model->num_etd + 1u), (unsigned int)id);
+            return 1;
+        }
+
         if (!pmd_idmap_lookup(r->etd_ids, id, &idx))
         {
-            if (model->num_etd == MAX_ED2_TURNAROUNDS)
+            if (model->num_etd == model->profile.constraints.max.num_ed2_turnarounds)
             {
-                klv_reader_error_at(r, "No space for ETD payload in model\n");
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status,
+                                    "No space for ETD payload %u in model\n",
+                                    (unsigned int)(model->num_etd + 1u));
                 return 1;
             }
-
-            idx = (uint16_t)model->num_etd;
+            idx = model->num_etd;
             pmd_idmap_insert(r->etd_ids, id, idx);
             model->num_etd += 1;
         }
         TRACE(("        %u\n", id));
         etd = &model->etd_list[idx];
+        memset(etd, 0, sizeof(*etd));
 
-        etd->id = id;
+        etd->id = (ed2_turnaround_id)id;
         etd->ed2_presentations = 0;
         etd->de_presentations = 0;
 
         ed2 = 0;
         de = 0;
 
+        /* ED2 part */
         if (get_(rp, ETD1_B_ED2(bo)))
         {
-            etd->ed2_framerate = klv_decode_frame_rate(get_(rp, ETD1_ED2_FRAME_RATE(bo)));
-            presid = get_(rp, ETD1_ED2_PRESID(bo, ed2));
-            eepid = get_(rp, ETD1_ED2_EEPID(bo, ed2));
-            while (0 != presid)
+            frame_rate = get_(rp, ETD1_ED2_FRAME_RATE(bo));
+            ps = validate_pmd_encoded_ed2_frame_rate(frame_rate);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
             {
+                klv_reader_error_at(r, ps, read_status,
+                                    "ETD %u has invalid ED2 stream frame rate %u\n",
+                                    (unsigned int)id, (unsigned int)frame_rate);
+                return 1;
+            }
+            etd->ed2_framerate = klv_decode_frame_rate(frame_rate);
+
+            while (1)
+            {
+                presid = get_(rp, ETD1_ED2_PRESID(bo, ed2));        /* No validation needed, reserved value is good here */
+                eepid = get_(rp, ETD1_ED2_EEPID(bo, ed2));
+                if (presid == DLB_PMD_RESERVED_PRESENTATION_ID)
+                {
+                    break;
+                }
+
+                if (ed2 >= PMD_ETD_MAX_PRESENTATIONS)
+                {
+                    klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status,
+                                        "ETD %u has too many presentations (%u) in ED2 part\n",
+                                        (unsigned int)id, ed2 + 1u);
+                    return 1;
+                }
+
+                ps = validate_pmd_eep_id(id);
+                if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+                {
+                    klv_reader_error_at(r, ps, read_status,
+                                        "ETD %u has invalid EEP id %u in ED2 part\n",
+                                        (unsigned int)id, (unsigned int)eepid);
+                    return 1;
+                }
+
                 if (!pmd_idmap_lookup(r->apd_ids, presid, &idx))
                 {
-                    klv_reader_error_at(r, "ETD %d refers to uknown presentation %d "
-                                        "parsing ED2 turnaround\n",
-                                        id, presid);
+                    klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status,
+                                        "ETD %u refers to unknown presentation %u in ED2 part\n",
+                                        (unsigned int)id, (unsigned int)presid);
                     return 1;
                 }
                 etd->ed2_turnaround[ed2].presid = idx;
+
                 if (!pmd_idmap_lookup(r->eep_ids, eepid, &idx))
                 {
-                    klv_reader_error_at(r, "ETD %d refers to uknown EEP payload %d "
-                                        "parsing ED2 turnaround\n",
-                                        id, eepid);
+                    klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status,
+                                        "ETD %u refers to unknown EEP payload %u in ED2 part\n",
+                                        (unsigned int)id, (unsigned int)eepid);
                     return 1;
                 }
                 etd->ed2_turnaround[ed2].eepid = idx;
-
                 ++ed2;
-                presid = get_(rp, ETD1_ED2_PRESID(bo,ed2));
-                eepid = get_(rp, ETD1_ED2_EEPID(bo,ed2));
             }
         }
         etd->ed2_presentations = ed2;
 
+        /* Dolby E part */
         if (get_(rp, ETD2_B_DE(bo,ed2)))
         {
-            etd->de_framerate = klv_decode_frame_rate(get_(rp, ETD2_DE_FRAME_RATE(bo,ed2)));
-            etd->pgm_config = get_(rp, ETD2_DE_PGM_CONFIG(bo,ed2));
-            presid = get_(rp, ETD2_DE_PRESID(bo,ed2,de));
-            eepid = get_(rp, ETD2_DE_EEPID(bo,ed2,de));
-            while (0 != presid)
+            frame_rate = get_(rp, ETD2_DE_FRAME_RATE(bo, ed2));
+            ps = validate_pmd_encoded_ed2_frame_rate(frame_rate);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
             {
+                klv_reader_error_at(r, ps, read_status,
+                                    "ETD %u has invalid Dolby E stream frame rate %u\n",
+                                    (unsigned int)id, (unsigned int)frame_rate);
+                return 1;
+            }
+            etd->de_framerate = klv_decode_frame_rate(frame_rate);
+
+            etd->pgm_config = get_(rp, ETD2_DE_PGM_CONFIG(bo,ed2));
+            ps = validate_pmd_dolby_e_program_config(etd->pgm_config);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status,
+                                    "ETD %u has invalid Dolby E program config %u\n",
+                                    (unsigned int)id, (unsigned int)etd->pgm_config);
+                return 1;
+            }
+
+            while (1)
+            {
+                presid = get_(rp, ETD2_DE_PRESID(bo, ed2, de));     /* No validation needed, reserved value is good here */
+                eepid = get_(rp, ETD2_DE_EEPID(bo, ed2, de));
+                if (presid == DLB_PMD_RESERVED_PRESENTATION_ID)
+                {
+                    break;
+                }
+
+                if (de >= PMD_ETD_MAX_PRESENTATIONS)
+                {
+                    klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status,
+                                        "ETD %u has too many presentations (%u) in Dolby E part\n",
+                                        (unsigned int)id, ed2 + 1u);
+                    return 1;
+                }
+
+                ps = validate_pmd_eep_id(id);
+                if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+                {
+                    klv_reader_error_at(r, ps, read_status,
+                                        "ETD %u has invalid EEP id %u in Dolby E part\n",
+                                        (unsigned int)id, (unsigned int)eepid);
+                    return 1;
+                }
+
                 if (!pmd_idmap_lookup(r->apd_ids, presid, &idx))
                 {
-                    klv_reader_error_at(r, "ETD %d refers to uknown presentation %d "
-                                        "parsing DE turnaround\n",
-                                        id, presid);
+                    klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status,
+                                        "ETD %u refers to unknown presentation %u in Dolby E part\n",
+                                        (unsigned int)id, (unsigned int)presid);
                     return 1;
                 }
                 etd->de_turnaround[de].presid = idx;
+
                 if (!pmd_idmap_lookup(r->eep_ids, eepid, &idx))
                 {
-                    klv_reader_error_at(r, "ETD %d refers to uknown EEP payload %d "
-                                        "parsing DE turnaround\n",
-                                        id, eepid);
+                    klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status,
+                                        "ETD %u refers to unknown EEP payload %u in Dolby E part\n",
+                                        (unsigned int)id, (unsigned int)eepid);
                     return 1;
                 }
                 etd->de_turnaround[de].eepid = idx;
                 ++de;
-                presid = get_(rp, ETD2_DE_PRESID(bo,ed2,de));
-                eepid = get_(rp, ETD2_DE_EEPID(bo,ed2,de));
             }
             etd->de_presentations = de;
         }
+
         payload_bits = ETD_PAYLOAD_BITS(ed2,de);
         rp += (bo + payload_bits) / 8;
         bo = (bo + payload_bits) % 8;

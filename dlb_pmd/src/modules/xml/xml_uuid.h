@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 
 /**
  * @file xml_uuid.h
- * @brief helper function to write/parse UUIDs 
+ * @brief helper function to write/parse UUIDs
  *
  * A UUID is 32-hex digits written in the following format:
  *

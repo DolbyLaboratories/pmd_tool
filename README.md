@@ -1,11 +1,11 @@
 # pmd_tool (dlb_pmd_lib)
-# version 1.2.0
+# version 1.7.1
 
 pmd_tool is a command line utility that converts between
 the following representations of SMPTE RDD49 metadata
 
- - a human-readable XML file matching Schema in
-   dlb_pmd/include/dlb_pmd_3_2_0.xsd
+ - a human-readable XML file matching the schema in
+   dlb_pmd/include/dlb_pmd_3_2_1.xsd
 
  - a serialized binary payload
 
@@ -15,8 +15,9 @@ the following representations of SMPTE RDD49 metadata
 The tool is built around the dlb_pmd_lib library, whose API can be
 found in dlb_pmd/include. The purpose of this code is to help speed
 development of software and products that use SMPTE RDD49 for audio
-metadata carriage in professional applications. For more information
-about see the PMD application guide included with this code.
+metadata carriage in professional applications.
+
+For more information see the release notes.
 
 ## Getting Started
 
@@ -25,57 +26,68 @@ running on your local machine for development and testing purposes.
 
 ### Folder Structure
 
-- README.md         This file.
+- **README.md** This file.
 
-- dlb_bitbuf/       A component which provides sequential access
-                    to single or multiple bits in a bitstream.
+- **ReleaseNotes.md** Release notes.
 
-- dlb_buffer/       Buffer management component
+- **LICENSE** Terms of use.
 
-- dlb_octfile/      This component defines a wrapper around the
-                    stdio FILE type which allows file operations
-                    to work on octets, rather than chars.
-                    On platforms where CHAR_BIT is >8, the top
-                    bits in each char will be zero padded.
+- **dlb_bitbuf/** A component which provides sequential access
+  to single or multiple bits in a bitstream.
 
-- dlb_pmd/          Main front-end application and core conversion
-                    modules
+- **dlb_buffer/** Buffer management component.
 
-- dlb_wave/         Component providing read/write to Microsoft
-                    audio WAV format
+- **dlb_octfile/** This component defines a wrapper around the stdio
+  FILE type which allows file operations to work on octets, rather than chars.
+  On platforms where CHAR_BIT is >8, the top bits in each char will be zero padded.
 
-- dlb_xmllib/       XML parser
+- **dlb_pmd/** Main front-end applications and core conversion modules.
 
-- googletest/       C++ test framework from Google
+- **dlb_socket/** Cross-platform socket component.
 
-- xerces/    	    Another XML parser used by the test framework
+- **dlb_wave/** Component providing read/write to Microsoft (broadcast) audio WAV format.
+
+- **dlb_xmllib/** XML parser.
+
+- **googletest/** C++ test framework from Google.
+
+- **libui/** Cross-platform GUI library.
+
+- **portaudio/** Portable real-time audio library.
+
+- **xerces/** Another XML parser used by the test framework.
+
+- **zlib/** General purpose compression library.
 
 
 ### Prerequisites
 
 For Linux and OSX, the library and tool can be built using GNU
-makefiles For windows, both GNU makefiles and visual studio projects
-are provided. For all platforms, both 32- and 64-bit targets are
-supported.
+makefiles. For windows, Visual Studio 2015 projects and solutions
+are provided. For all platforms, 64-bit targets are supported.
+For Linux, 32-bit platforms are supported.
 
 ### Build instructions
 
 #### Using the GNU makefiles
 
 Use the makefiles located in dlb_pmd/make/pmd_tool. Go to the
-appropriate directory and run GNU make. Note that the Windows GNU
-makefiles are written to use gcc style arguments not the Microsoft
-compiler. These require Cygwin, MinGW or similar.
+appropriate directory and run GNU make. Release and debug executables
+are created in the same directory as the makefile.
 
-Release and debug executables are created in the same directory as the
-makefile.
+#### Using Microsoft Visual Studio (on Windows)
 
-#### Using the Microsoft Visual Studio (on Windows)
-
-Go to either the 32 bit or 64 bit the Windows MSVS directories under
-dlb_pmd/make/pmd_tool. In MSVS, open the solution file (.sln) that
-matches the version of MSVS that you are using. Select build solution
+Go to the 64 bit Windows MSVS directory under dlb_pmd/make/pmd_tool.
+In Visual Studio 2015, open the solution file (.sln).  Select build solution
 in MSVS.
+
+Alternatively, run msbuild from the Windows command line:
+
+```
+>call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\vsvars32.bat"
+>msbuild pmd_tool_2015.sln /property:Configuration=debug
+>msbuild pmd_tool_2015.sln /property:Configuration=release
+```
 
 ## Running the tool
 
@@ -100,7 +112,8 @@ models and tests that serialization/deserialization works correctly.
 
 ## Release Notes
 
-See the [Release Notes](ReleaseNotes.md) file for details
+See the [Release Notes](ReleaseNotes.md) file for details, including
+information on additional applications and features.
 
 ## License
 

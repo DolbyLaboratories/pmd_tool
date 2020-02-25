@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_PLD.cc
+ * @brief Test Presentation Loudness payload transmits correctly
+ */
+
 #include "dlb_pmd_api.h"    
 #include "src/model/pmd_model.h"
 
@@ -40,10 +45,14 @@
 #include "TestModel.hh"
 #include "gtest/gtest.h"
 
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_PLD_TESTS
 
-#define LUFS(i) ((dlb_pmd_lufs)(((i) & 0x3ff) * -0.1f))
+
+#define LUFS(i) ((dlb_pmd_lufs)(((float)(((i) & 0x3ff)) - 1024.0f) / 10.0f))
 #define LRA(i) ((dlb_pmd_lu)(((i) & 0x3ff) * 0.1f))
 
+#ifndef DISABLE_PLD_TESTS
 class PLD_FloatTest: public ::testing::TestWithParam<std::tr1::tuple<int, int> > {};
 class PLD_OptionsTest: public ::testing::TestWithParam<std::tr1::tuple<int, int, int> > {};
 
@@ -96,7 +105,14 @@ TEST_P(PLD_FloatTest, float_testing)
     }
     else
     {
-        m.test(t, "Loudness_floating_point_test", i);
+        try
+        {
+            m.test(t, "Loudness_floating_point_test", i);
+        }
+        catch (TestModel::failure& f)
+        {
+            ADD_FAILURE() << f.msg;
+        }
     }
 }
 
@@ -120,6 +136,9 @@ TEST_P(PLD_FloatTest, float_testing)
  */
 static void populate_loudness_payload(dlb_pmd_loudness *pld, unsigned int options, unsigned int e)
 {
+    static const unsigned int NUM_VALID_PRAC_TYPES =
+        (PMD_PLD_LOUDNESS_PRACTICE_CONSUMER_LEVELLER + 1) - (PMD_PLD_LOUDNESS_PRACTICE_RESERVED_13 - PMD_PLD_LOUDNESS_PRACTICE_RESERVED_05 + 1);
+
     PrngKiss prng;
     prng.seed(options * e);
     
@@ -130,8 +149,17 @@ static void populate_loudness_payload(dlb_pmd_loudness *pld, unsigned int option
     }
     
     pld->presid = 1;
-    pld->loud_prac_type = (dlb_pmd_loudness_practice)(e%16);
-    if (pld->loud_prac_type != 0)
+    pld->loud_prac_type = (dlb_pmd_loudness_practice)(e%NUM_VALID_PRAC_TYPES);
+    if (pld->loud_prac_type == PMD_PLD_LOUDNESS_PRACTICE_RESERVED_05)
+    {
+        pld->loud_prac_type = PMD_PLD_LOUDNESS_PRACTICE_MANUAL;
+    }
+    else if (pld->loud_prac_type == PMD_PLD_LOUDNESS_PRACTICE_RESERVED_06)
+    {
+        pld->loud_prac_type = PMD_PLD_LOUDNESS_PRACTICE_CONSUMER_LEVELLER;
+    }
+
+    if (pld->loud_prac_type != PMD_PLD_LOUDNESS_PRACTICE_NOT_INDICATED)
     {
         if (options & PMD_PLD_OPT_LOUDCORR_DIALGATE)
         {
@@ -175,7 +203,7 @@ static void populate_loudness_payload(dlb_pmd_loudness *pld, unsigned int option
     if (options & PMD_PLD_OPT_PRGMBNDY)
     {
         pld->b_prgmbndy = 1;
-        pld->prgmbndy = ((prng.next() % 9)+1) * (e%1?1:-1);
+        pld->prgmbndy = ((prng.next() % 9)+1) * (e%2?1:-1);
     }
     if (options & PMD_PLD_OPT_PRGMBNDY_OFFSET)
     {
@@ -186,7 +214,7 @@ static void populate_loudness_payload(dlb_pmd_loudness *pld, unsigned int option
     {
         pld->b_lra = 1;
         pld->lra = LRA(prng.next());
-        pld->lra_prac_type = (dlb_pmd_loudness_range_practice)(e%1);
+        pld->lra_prac_type = (dlb_pmd_loudness_range_practice)(e%2);
     }
     if (options & PMD_PLD_OPT_LOUDMNTRY)
     {
@@ -256,8 +284,11 @@ INSTANTIATE_TEST_CASE_P(PMD_PLD, PLD_FloatTest,
                                          testing::Range(TestModel::FIRST_TEST_TYPE,
                                                         TestModel::LAST_TEST_TYPE+1)));
 
+#ifdef REALLY_LONG_TEST_OK
 INSTANTIATE_TEST_CASE_P(PMD_PLD, PLD_OptionsTest,
-                        testing::Combine(testing::Range(0, 1<<14),
+                        testing::Combine(testing::Range(0, 1<<14),  // TODO: 8G memory allocation...
                                          testing::Range(0, 8),
                                          testing::Range(TestModel::FIRST_TEST_TYPE,
                                                         TestModel::LAST_TEST_TYPE+1)));
+#endif
+#endif

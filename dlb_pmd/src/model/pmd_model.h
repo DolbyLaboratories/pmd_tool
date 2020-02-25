@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,11 +42,11 @@
 #define PMD_MODEL_H_
 
 #if defined(_MSC_VER) 
-#  if !defined(inline)
-#    define inline __inline
-#  endif
 #  if _MSC_VER < 1900
 #    define snprintf _snprintf
+#    if !defined(inline)
+#      define inline __inline
+#    endif
 #  endif
 #endif
 
@@ -54,7 +54,7 @@
 #include "pmd_strings.h"
 #include "pmd_signals.h"
 #include "pmd_xyz_set.h"
-#include "pmd_mutex.h"
+#include "pmd_os.h"
 #include "pmd_idmap.h"
 
 #include "pmd_smpte2109.h"
@@ -62,7 +62,6 @@
 #include "pmd_aen.h"
 #include "pmd_apd.h"
 #include "pmd_apn.h"
-#include "pmd_apd.h"
 #include "pmd_eep.h"
 #include "pmd_esd.h"
 #include "pmd_etd.h"
@@ -98,6 +97,50 @@
 #define MAX_UPDATE_TIME ((1<<MAX_UPDATE_BITS)-1)
 
 
+ /**
+ * @def PMD_UNTITLED_MODEL_TITLE
+ * @brief default value for an untitled model's title
+ * @note don't use this value for actual model titles!
+ */
+#define PMD_UNTITLED_MODEL_TITLE "\t\t\tUntitled\t\t\t"
+
+
+ /**
+ * @brief model write state
+ */
+typedef struct
+{
+    /**
+     * Information on how much has been written
+     *
+     * In PCM workflows, we have to distribute the various payloads
+     * over successive blocks, if there is not enough space to put
+     * them all in the first block.
+     */
+    unsigned int    esd_written;        /**< Number of ESD streams written (used to make sure we write
+                                         *   the next one in correct order */
+    pmd_bool        iat_written;        /**< Has IAT been written this frame? */
+    unsigned int    abd_written;        /**< How many Audio Bed descriptions have been written? */
+    unsigned int    aod_written;        /**< How many Audio Object descriptions have been written? */
+    unsigned int    bed_write_index;    /**< index of next bed to write */
+    unsigned int    obj_write_index;    /**< index of next object to write */
+    unsigned int    apd_written;        /**< How many Audio Presentation descriptions have been written? */
+    unsigned int    pld_written;        /**< How many Presentation Loudness descriptions have been written? */
+    unsigned int    eep_written;        /**< How many EAC3 encoder parameter structs have been written? */
+    unsigned int    etd_written;        /**< How many ED2 turnaround descriptions have been written? */
+    unsigned int    hed_written;        /**< How many headphone descriptions have been written? */
+    pmd_xyz_set     xyz_written;        /**< Which XYZ payloads have been written? */
+
+    unsigned int    apn_written;        /**< How many presentation names have been written? */
+    unsigned int    aen_written;        /**< How many element names have been written? */
+    unsigned int    esn_written;        /**< How many ED2 stream names have been written? */
+    unsigned int    esn_bitmap;         /**< Which ED2 substreams have written their name? */
+
+    pmd_apn_list_iterator apni;         /**< presentation name iterator */
+
+} pmd_model_write_state;
+
+
 /**
  * @brief main model
  */
@@ -113,7 +156,8 @@ struct dlb_pmd_model
     uint8_t version_maj;        /**< if available, bitstream major version number */
     uint8_t version_min;        /**< if available, bitstream minor version number */
 
-    pmd_profile profile;        /**< profile constraints, if any */
+    dlb_pmd_model_constraints limits; /**< max entities allowed */
+    pmd_profile profile;              /**< profile constraints, if any */
 
     uint16_t num_signals;
     uint16_t num_elements;
@@ -129,24 +173,23 @@ struct dlb_pmd_model
     pmd_bool esd_present;               /**< True only for ED2 encoding */
 
     pmd_signals signals;
-    pmd_element element_list[MAX_AUDIO_ELEMENTS];
-    pmd_apd apd_list[MAX_PRESENTATIONS];
-    pmd_pld pld_list[MAX_PRESENTATIONS];
-    pmd_iat iat;
+    pmd_element *element_list;
+    pmd_apd *apd_list;
+    pmd_pld *pld_list;
+    pmd_iat *iat;
     pmd_bool iat_read_this_frame;
     
     /**
      * audio object updates are expected to be ordered temporally, i.e.,
      * earlier updates first.
      */
-    pmd_xyz xyz_list[MAX_UPDATES];
+    pmd_xyz *xyz_list;
     pmd_apn_list apn_list;
-    pmd_aen aen_list[MAX_AUDIO_ELEMENTS];
-
-    pmd_eep eep_list[MAX_EAC3_ENCODING_PARAMETERS];
-    pmd_etd etd_list[MAX_ED2_TURNAROUNDS];
-    pmd_esd esd;
-    pmd_hed hed_list[DLB_PMD_MAX_HEADPHONE];
+    pmd_aen *aen_list;
+    pmd_eep *eep_list;
+    pmd_etd *etd_list;
+    pmd_esd *esd;
+    pmd_hed *hed_list;
 
     /**
      * Information keeping track of what has been read
@@ -156,33 +199,16 @@ struct dlb_pmd_model
     pmd_idmap eep_ids;        /**< converts eac3 encoding parameter id attrs to array indices */
     pmd_idmap etd_ids;        /**< converts ED2 turnarounds id attrs to array indices */
     pmd_idmap aen_ids;        /**< converts element id to element name array index */
-   
-    /**
-     * Now some information on how much has been written
-     *
-     * In PCM workflows, we have to distribute the various payloads
-     * over successive blocks, if there is not enough space to put
-     * them all in the first block.
-     */
-    unsigned int esd_written;   /**< Number of ESD streams written (used to make sure we write
-                                  * the next one in correct order */
-    pmd_bool iat_written;       /**< Has IAT been written this frame? */
-    unsigned int abd_written;   /**< How many Audio Bed descriptions have been written? */
-    unsigned int aod_written;   /**< How many Audio Object descriptions have been written? */
-    unsigned int bed_write_index; /**< index of next bed to write */
-    unsigned int obj_write_index; /**< index of next object to write */
-    unsigned int apd_written;   /**< How many Audio Presentation descriptions have been written? */
-    unsigned int pld_written;   /**< How many Presentation Loudness descriptions have been written? */
-    unsigned int aen_written;   /**< How many element names have been written? */
-    unsigned int eep_written;   /**< How many EAC3 encoder parameter structs have been written? */
-    unsigned int etd_written;   /**< How many ED2 turnaround descriptions have been written? */
-    unsigned int esn_written;   /**< How many ED2 stream names have been written? */
-    unsigned int esn_bitmap;    /**< Which ED2 substreams have written their name? */
-    unsigned int hed_written;   /**< How many headphone descriptions have been written? */
-    pmd_xyz_set  xyz_written;   /**< Which XYZ payloads have been written? */
-    pmd_smpte2109 smpte2109;    /**< SMPTE 2109 specific information */
 
-    pmd_apn_list_iterator apni; /**< presentation name iterator */
+    /**
+     * Information on how much has been written
+     */
+    pmd_model_write_state write_state;
+
+    /**
+     * SMPTE 2109
+     */
+    pmd_smpte2109 smpte2109;    /**< SMPTE 2109 specific information */
 };
 
 
@@ -218,14 +244,14 @@ pmd_model_new_frame
      * signal/object/presentation identifier (internally,
      * it is the index into the required array)
      */
-    memset(model->element_list, '\xff', sizeof(model->element_list));
-    memset(model->xyz_list, '\xff', sizeof(model->xyz_list));
+    memset(model->element_list, '\xff', sizeof(*model->element_list) * model->limits.max_elements);
+    memset(model->xyz_list, '\xff', sizeof(*model->xyz_list) * model->limits.max.num_updates);
 
-    pmd_iat_init(&model->iat);
+    pmd_iat_init(model->iat);
 
-    model->iat_written = 0;
-    model->esd_written = 0;
-    pmd_xyz_set_init(&model->xyz_written);
+    model->write_state.iat_written = 0;
+    model->write_state.esd_written = 0;
+    pmd_xyz_set_init(&model->write_state.xyz_written);
 
     pmd_smpte2109_init(&model->smpte2109);
 }
@@ -242,21 +268,25 @@ pmd_model_init
 {
     pmd_model_new_frame(model);
 
-    pmd_profile_init(&model->profile);
+    pmd_profile_init(&model->profile, &model->limits);
 
-    snprintf((char*)model->title, sizeof(model->title), "Untitled");
+    snprintf((char*)model->title, sizeof(model->title), PMD_UNTITLED_MODEL_TITLE);
 
-    memset(&model->esd, 0, sizeof(model->esd));
-    model->esd.count = 1;
+    model->esd_present = 0;
+    if (model->limits.max.num_ed2_system)
+    {
+        memset(model->esd, '\0', sizeof(*model->esd));
+        model->esd->count = 1;
+    }
 
-    memset(model->eep_list, '\xff', sizeof(model->eep_list));
-    memset(model->etd_list, '\xff', sizeof(model->etd_list));
-    memset(model->apd_list, '\xff', sizeof(model->apd_list));
+    memset(model->eep_list, '\xff', sizeof(*model->eep_list) * model->limits.max.num_eac3);
+    memset(model->etd_list, '\xff', sizeof(*model->etd_list) * model->limits.max.num_ed2_turnarounds);
+    memset(model->apd_list, '\xff', sizeof(*model->apd_list) * model->limits.max.num_presentations);
 
     model->num_eep = 0;
     model->num_etd = 0;
     model->num_aen = 0;
-    pmd_apn_list_init(&model->apn_list);
+    pmd_apn_list_init(&model->apn_list, model->limits.max_presentation_names);
 
     pmd_idmap_init(&model->element_ids);
     pmd_idmap_init(&model->apd_ids);
@@ -264,22 +294,23 @@ pmd_model_init
     pmd_idmap_init(&model->etd_ids);
     pmd_idmap_init(&model->aen_ids);
 
-    model->bed_write_index = 0;
-    model->obj_write_index = 0;
-    model->abd_written = 0;
-    model->aod_written = 0;
-    model->apd_written = 0;
-    model->pld_written = 0;
-    model->aen_written = 0;
-    model->eep_written = 0;
-    model->esn_written = 0;
-    model->esn_bitmap  = 0;
-    model->etd_written = 0;
-    model->esd_present = 0;
-    model->hed_written = 0;
-    pmd_xyz_set_init(&model->xyz_written);
+    model->write_state.bed_write_index = 0;
+    model->write_state.obj_write_index = 0;
+    model->write_state.abd_written = 0;
+    model->write_state.aod_written = 0;
+    model->write_state.apd_written = 0;
+    model->write_state.pld_written = 0;
+    model->write_state.eep_written = 0;
+    model->write_state.etd_written = 0;
+    model->write_state.hed_written = 0;
+    pmd_xyz_set_init(&model->write_state.xyz_written);
 
-    pmd_apn_list_iterator_init(&model->apni, &model->apn_list);
+    model->write_state.apn_written = 0;
+    model->write_state.aen_written = 0;
+    model->write_state.esn_written = 0;
+    model->write_state.esn_bitmap = 0;
+
+    pmd_apn_list_iterator_init(&model->write_state.apni, &model->apn_list);
 }
 
 
@@ -296,9 +327,7 @@ pmd_model_add_update
     ,pmd_xyz *new_update       /**< [in] update to add */
     )
 {
-    pmd_xyz *updates = model->xyz_list;
-
-    if (model->num_xyz < MAX_UPDATES)
+    if (model->num_xyz < model->limits.max.num_updates)
     {
         /* perform binary chop to find insertion point */
         unsigned int time;
@@ -308,7 +337,7 @@ pmd_model_add_update
         while (pos != end)
         {
             mid = (pos + end)/2;
-            time = updates[mid].time;
+            time = model->xyz_list[mid].time;
             if      (time == new_update->time) break;
             else if (time > new_update->time) end = mid;
             else pos = mid + 1;
@@ -317,10 +346,10 @@ pmd_model_add_update
         /* pos will now point to an insertion point */
         if (pos < model->num_xyz)
         {
-            memmove(&updates[pos+1], &updates[pos],
-                    sizeof(pmd_xyz) * (model->num_xyz-pos));
+            unsigned int count = model->num_xyz - pos;
+            memmove(&model->xyz_list[pos+1], &model->xyz_list[pos], sizeof(pmd_xyz) * count);
         }
-        updates[pos] = *new_update;
+        model->xyz_list[pos] = *new_update;
         model->num_xyz += 1;
         return 0;
     }

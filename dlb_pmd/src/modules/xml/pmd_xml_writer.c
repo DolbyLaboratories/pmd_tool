@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@
 #include <assert.h>
 
 
-#if defined(_MSC_VER) 
+#if defined(_MSC_VER)
 #  if !defined(PRIu64)
 #    define PRIu64 "I64u"
 #endif
@@ -169,14 +169,14 @@ write_line
 
     va_start(ap, str);
     len = vsnprintf(line, sizeof(line), str, ap);
-    va_end(ap);    
+    va_end(ap);
     linesize = len + 2 + (TABSIZE * w->indent);
 
     if (w->pos + linesize >= w->end)
     {
         char *buf;
         size_t capacity;
-        
+
         if (!w->getbuf(w->cbarg, w->pos, &buf, &capacity))
         {
             printf("Could not get buffer\n");
@@ -219,7 +219,7 @@ write_string
     uint8_t encoded_string[1024];
     uint8_t attribute[64];
 
-    const uint8_t *send = str + strlen((char*)str);
+    const uint8_t *send;
     uint8_t *wp = encoded_string;
     uint8_t *wend = wp + sizeof(encoded_string);
 
@@ -228,6 +228,7 @@ write_string
         return 0;
     }
 
+    send = str + strlen((char*)str);
     memset(encoded_string, '\0', sizeof(encoded_string));
     memset(attribute, '\0', sizeof(attribute));
     if (lang)
@@ -287,7 +288,7 @@ write_name
  * @brief type of function that can be iteratively applied
  *
  * Functions of this type can be passed to the #write_foreach function
- * to be applied to each entry in an array.  However, because C does 
+ * to be applied to each entry in an array.  However, because C does
  * not have generic polymorhism (i.e., C++ templates), and has to use
  * void* to represent polymorphic types, the function must return the
  * size of the object, to tell #write_foreach how many bytes to advance
@@ -354,7 +355,7 @@ write_dynamic_tags
     const pmd_smpte2109 *smpte2109 = &w->model->smpte2109;
     const pmd_dynamic_tag *dtag = smpte2109->dynamic_tags;
     unsigned int i;
-    
+
     if (write_line(w, "<DynamicTags>")) return 1;
     if (write_indent(w)) return 1;
     for (i = 0; i != smpte2109->num_dynamic_tags; ++i)
@@ -428,11 +429,11 @@ write_professional_metadata
     {
         snprintf(profile_num_string, sizeof(profile_num_string), " profile_number=\"%u\"",
                  p->profile_number);
-    
+
         snprintf(profile_level_string, sizeof(profile_level_string), "profile_level=\"%u\"",
                  p->profile_level);
     }
-    
+
     return write_line(w, "<ProfessionalMetadata version=\"%u.%u\"%s%s>", vmaj, vmin,
                       profile_num_string, profile_level_string);
 }
@@ -583,7 +584,7 @@ speaker_exists
     )
 {
     unsigned int i;
-    
+
     for (i = 0; i != num_tracks; ++i)
     {
         if (trackmd[i].target == speaker)
@@ -611,7 +612,7 @@ write_speaker_signals
     )
 {
     unsigned int i;
-    
+
     for (i = 0; i != num_tracks; ++i)
     {
         if (trackmd[i].target == speaker)
@@ -640,7 +641,7 @@ write_speaker_signals
     }
     return 0;
 }
-    
+
 
 static const char *speakernames[PMD_NUM_SPEAKERS] =
 {
@@ -648,8 +649,8 @@ static const char *speakernames[PMD_NUM_SPEAKERS] =
     "Left", "Right", "Center", "LFE",
     "Left Surround", "Right Surround",
     "Left Rear Surround", "Right Rear Surround",
-    "Left Top Front", "Right Top Front", 
-    "Left Top Middle", "Right Top Middle", 
+    "Left Top Front", "Right Top Front",
+    "Left Top Middle", "Right Top Middle",
     "Left Top Rear", "Right Top Rear",
     "Left Front Wide", "Right Front Wide"
 };
@@ -667,10 +668,10 @@ write_output_targets
     )
 {
     pmd_speaker i;
-    
+
     if (write_line(w, "<OutputTargets>")) return 1;
     if (write_indent(w)) return 1;
-    
+
     for (i = 0; i != PMD_NUM_SPEAKERS; ++i)
     {
         if (speaker_exists(i, trackmd, num_tracks))
@@ -723,7 +724,7 @@ write_audio_bed_iterator
     }
     return sizeof(*e);
 }
-    
+
 
 /**
  * @brief #write_iterator function to write generic-object-mode pmd_audio_object structs
@@ -740,17 +741,17 @@ write_generic_object_iterator
     if (   write_line(w, "<AudioObject id=\"%u\">", e->id)
         || write_indent(w)
         || write_name(w, name)
-        || write_class(w, e->md.object.oclass) 
-        || write_boolean(w, "DynamicUpdates", e->md.object.dynamic_updates) 
-        || write_coordinate(w, "X_Pos", e->md.object.x) 
-        || write_coordinate(w, "Y_Pos", e->md.object.y) 
-        || write_coordinate(w, "Z_Pos", e->md.object.z) 
-        || write_size(w, e->md.object.size) 
-        || write_boolean(w, "Size_3D", e->md.object.size_vertical) 
-        || write_boolean(w, "Diverge", e->md.object.diverge) 
-        || write_line(w, "<AudioSignal>%u</AudioSignal>", e->md.object.source+1) 
-        || write_gain(w, "SourceGainDB", e->md.object.gain) 
-        || write_outdent(w) 
+        || write_class(w, e->md.object.oclass)
+        || write_boolean(w, "DynamicUpdates", e->md.object.dynamic_updates)
+        || write_coordinate(w, "X_Pos", e->md.object.x)
+        || write_coordinate(w, "Y_Pos", e->md.object.y)
+        || write_coordinate(w, "Z_Pos", e->md.object.z)
+        || write_size(w, e->md.object.size)
+        || write_boolean(w, "Size_3D", e->md.object.size_vertical)
+        || write_boolean(w, "Diverge", e->md.object.diverge)
+        || write_line(w, "<AudioSignal>%u</AudioSignal>", e->md.object.source+1)
+        || write_gain(w, "SourceGainDB", e->md.object.gain)
+        || write_outdent(w)
         || write_line(w, "</AudioObject>")
       )
     {
@@ -771,7 +772,7 @@ write_bed_element_iterator
     )
 {
     pmd_element *e = (pmd_element *)arg;
-    
+
     if (e->mode == PMD_MODE_CHANNEL)
     {
         return write_audio_bed_iterator(w, e);
@@ -791,7 +792,7 @@ write_obj_element_iterator
     )
 {
     pmd_element *e = (pmd_element *)arg;
-    
+
     if (e->mode == PMD_MODE_OBJECT)
     {
         return write_generic_object_iterator(w, e);
@@ -874,15 +875,15 @@ generate_presentation_config_string
     unsigned int object_counts[PMD_CLASS_RESERVED];
     unsigned int num_obj = 0;
     unsigned int idx;
-    
-    pmd_apd_iterator pi;    
+
+    pmd_apd_iterator pi;
     pmd_apd_iterator_init(&pi, pres);
     memset(object_counts, '\0', sizeof(object_counts));
 
     while (pmd_apd_iterator_next(&pi, &idx))
     {
         if (model->element_list[idx].mode == PMD_MODE_OBJECT)
-        {            
+        {
             const pmd_object_metadata *objmd = &model->element_list[idx].md.object;
             object_counts[objmd->oclass] += 1;
             ++num_obj;
@@ -987,9 +988,9 @@ write_presentation_iterator
     char cfg[128];
     unsigned int idx;
     unsigned int i;
-    
+
     generate_presentation_config_string(p, w->model, cfg, sizeof(cfg));
-    
+
     if (   write_line(w, "<Presentation id=\"%u\">", p->id)
         || write_indent(w)
        )
@@ -1016,14 +1017,14 @@ write_presentation_iterator
             }
         }
     }
-    
+
     if (   write_line(w, "<Config>%s</Config>", cfg)
         || write_language(w, "Language", p->pres_lang))
     {
         error(w->model, "failed to write presentation %u\n", p->id);
         return 0;
     }
-    
+
     pmd_apd_iterator_init(&pi, p);
     while (pmd_apd_iterator_next(&pi, &idx))
     {
@@ -1088,19 +1089,19 @@ write_loudness_practice_type
     {
         "file", "realtime"
     };
-    
+
     if (pld->lpt != 0)
     {
         char attributes1[64];
         char attributes2[64];
         attributes1[0] = '\0';
         attributes2[0] = '\0';
-        
+
         if (pld->options & PMD_PLD_OPT_LOUDCORR_DIALGATE)
         {
             snprintf(attributes1, sizeof(attributes1), " dialgate=\"%s\"", dialgate[pld->dpt]);
         }
-        
+
         snprintf(attributes2, sizeof(attributes2), " correction_type=\"%s\"", corrty[pld->corrty]);
         return write_line(w, "<PracticeType%s%s>%s</PracticeType>",
                           attributes1, attributes2, lptname[pld->lpt]);
@@ -1287,7 +1288,7 @@ static inline
 int                                 /** @return 0 on success, 1 on failure */
 write_loudness_extension
     (writer *w                      /**< [in] writer state */
-    ,pmd_pld *pld /**< [in] loudness information */
+    ,pmd_pld *pld                   /**< [in] loudness information */
     )
 {
     if (pld->options & PMD_PLD_OPT_EXTENSION)
@@ -1295,7 +1296,7 @@ write_loudness_extension
         char tmp[sizeof(pld->extension) * 2+1];
         size_t tmpsize = sizeof(tmp);
         char attribute[64];
-        pmd_bool hex = 0;        
+        pmd_bool hex = 0;
 
         attribute[0] = '\0';
         if (pld->extension_bits & 0x7)
@@ -1303,7 +1304,7 @@ write_loudness_extension
             snprintf(attribute, sizeof(attribute), " bits=\"%u\"",
                      pld->extension_bits);
         }
-        
+
         memset(tmp, '\0', sizeof(tmp));
         if (encode_cdata(pld->extension, (pld->extension_bits + 7)/8, tmp, &tmpsize, &hex))
         {
@@ -1333,7 +1334,6 @@ write_loudness_iterator
     const dlb_pmd_model *model = w->model;
     pmd_pld *pld = (pmd_pld*)arg;
 
-    
     if (   write_line(w, "<Presentation>")
         || write_indent(w)
         || write_line(w, "<PresentationId>%u</PresentationId>",
@@ -1349,7 +1349,7 @@ write_loudness_iterator
         || write_loudness_extension(w, pld)
         || write_outdent(w)
         || write_line(w, "</Presentation>")
-       )           
+       )
     {
         error(w->model, "failed to write presentation loudness for presentation %u\n",
               model->apd_list[pld->presid].id);
@@ -1523,7 +1523,7 @@ write_bsmod
 
 /**
  * @brief write dsurmod value
- */          
+ */
 static
 int                                       /** @return 0 on success, 1 on failure */
 write_dsurmod
@@ -1543,7 +1543,7 @@ write_dsurmod
 
 /**
  * @brief write DRC Compression standard
- */          
+ */
 static
 int                                       /** @return 0 on success, 1 on failure */
 write_compr
@@ -1567,7 +1567,7 @@ write_compr
 
 /**
  * @brief write preferred downmix mode
- */          
+ */
 static
 int                                       /** @return 0 on success, 1 on failure */
 write_dmixmod
@@ -1588,7 +1588,7 @@ write_dmixmod
 
 /**
  * @brief write center downmix scaling level
- */          
+ */
 static
 int                                       /** @return 0 on success, 1 on failure */
 write_cmixlev
@@ -1610,11 +1610,11 @@ write_cmixlev
     default:                  return 1;
     }
 }
-            
+
 
 /**
  * @brief write surround downmix scaling level
- */          
+ */
 static
 int                                       /** @return 0 on success, 1 on failure */
 write_surmixlev
@@ -1637,7 +1637,7 @@ write_surmixlev
 
 /**
  * @brief write height mixing level
- */          
+ */
 static
 int                                       /** @return 0 on success, 1 on failure */
 write_hmixlev
@@ -1746,7 +1746,7 @@ write_presentation_id_iterator
 {
     pmd_presentation_id pres_idx = *(pmd_presentation_id*)arg;
     const dlb_pmd_model *model = w->model;
-    
+
     if (pres_idx >= model->num_apd)
     {
         error(w->model, "illegal model: no such presentation: %u", pres_idx);
@@ -1762,8 +1762,8 @@ write_presentation_id_iterator
 
 
 /**
- * @brief write optional eac3 encoding parmeters presentation list 
- */ 
+ * @brief write optional eac3 encoding parmeters presentation list
+ */
 static
 int                                     /** @return 0 on success, 1 on failure */
 write_optional_eep_presentation_list
@@ -2015,7 +2015,7 @@ write_update_iterator
 {
     const pmd_element *element_list = w->model->element_list;
     pmd_xyz *u = (pmd_xyz*)arg;
-    
+
     if (   write_line(w, "<DynamicUpdate sample_time=\"%u\">", u->time*32)
         || write_indent(w)
         || write_line(w, "<ID>%u</ID>", element_list[u->obj_idx].id)
@@ -2075,7 +2075,7 @@ write_iat_content_id
             assert(iat->content_id_size == 16);
             write_uuid(iat->content_id, tmp);
             return write_line(w, "<Content_ID><UUID>%s</UUID></Content_ID>", tmp);
-            
+
         case PMD_IAT_CONTENT_ID_EIDR:
             assert(iat->content_id_size == 12);
             write_eidr(iat->content_id, tmp);
@@ -2116,7 +2116,7 @@ write_iat_distribution_id_atsc3
     uint16_t bsid = ((uint16_t)id[0])<<8 | id[1];
     uint16_t maj  = (((uint16_t)id[2] & 0x0f)<<6) | ((id[3] >> 2) & 0x3f);
     uint16_t min  = (((uint16_t)id[3] & 0x03)<<8) | id[4];
-            
+
     return write_line(w, "<Distribution_ID>")
         || write_indent(w)
         || write_line(w, "<ATSC3>")
@@ -2155,7 +2155,7 @@ write_iat_distribution_id
             /* ATSC3 channel id is fixed at 40 bits */
             assert(iat->distribution_id_size == 5);
             return write_iat_distribution_id_atsc3(w, iat);
-            
+
         default:
             if (encode_cdata(iat->distribution_id,
                              iat->distribution_id_size,
@@ -2250,7 +2250,7 @@ write_iat_user_data
         {
             return 1;
         }
-        
+
         return write_line(w, "<User_Data><%s>%s</%s></User_Data>",
                           hex ? "base16" : "ascii",
                           tmp,
@@ -2303,7 +2303,7 @@ write_iat
     ,const pmd_iat *iat             /**< [in] IAT structure to write */
     )
 {
-    if (iat->options & PMD_IAT_PRESENT)
+    if (iat && (iat->options & PMD_IAT_PRESENT))
     {
         return write_line(w, "<IAT>")
             || write_indent(w)
@@ -2331,7 +2331,7 @@ dlb_xmlpmd_write
 {
     dlb_pmd_success res = PMD_SUCCESS;
     writer w;
-    
+
     pmd_mutex_lock((pmd_mutex*)&model->lock);
     error_reset(model);
 
@@ -2353,17 +2353,17 @@ dlb_xmlpmd_write
         || write_presentation_loudness(&w, model->pld_list, model->num_pld)
         || write_encoder_configs(&w, model)
         || write_audio_updates(&w, model->xyz_list, model->num_xyz)
-        || write_iat(&w, &model->iat)
+        || write_iat(&w, model->iat)
         || write_headphone_descriptions(&w, model->hed_list, model->num_hed)
         || write_outdent(&w)
-        || write_line(&w, "</ProfessionalMetadata>") 
+        || write_line(&w, "</ProfessionalMetadata>")
         || write_outdent(&w)
-        || write_line(&w, "</Smpte2109>") 
+        || write_line(&w, "</Smpte2109>")
       )
     {
         res = PMD_FAIL;
     }
-    
+
     writer_finish(&w);
 
     pmd_mutex_unlock((pmd_mutex*)&model->lock);

@@ -42,7 +42,7 @@
 <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='release|x64'">false</LinkIncremental></PropertyGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\include;..\..\..;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\include;..\..\..;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\sadm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
 <BufferSecurityCheck>true</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
@@ -66,7 +66,7 @@
 <LinkLibraryDependencies>false</LinkLibraryDependencies></ProjectReference></ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\include;..\..\..;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\include;..\..\..;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\sadm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>Default</BasicRuntimeChecks>
 <BufferSecurityCheck>false</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
@@ -89,6 +89,7 @@
 <ProjectReference>
 <LinkLibraryDependencies>false</LinkLibraryDependencies></ProjectReference></ItemDefinitionGroup>
 <ItemGroup>
+<ClCompile Include="..\..\..\os\windows\pmd_ctrl_c.c" />
 <ClCompile Include="..\..\..\src\api\dlb_pmd.c" />
 <ClCompile Include="..\..\..\src\api\dlb_pmd_api_read.c" />
 <ClCompile Include="..\..\..\src\api\dlb_pmd_api_write.c" />
@@ -102,6 +103,24 @@
 <ClCompile Include="..\..\..\src\modules\pcm\pmd_pcm_augmentor.c" />
 <ClCompile Include="..\..\..\src\modules\pcm\pmd_pcm_extractor.c" />
 <ClCompile Include="..\..\..\src\modules\pcm\pmd_smpte_337m.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\idmap.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_generator.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_ingester.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_read_file.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_read_string.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_reader.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_file.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_string.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_writer.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_model.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_read_file.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_read_string.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_reader.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_write_file.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_write_string.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_writer.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\idrefs.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\lookup3.c" />
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_read_file.c" />
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_read_string.c" />
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_reader.c" />
@@ -113,10 +132,19 @@
 <ClInclude Include="..\..\..\include\dlb_pmd_generate.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_klv.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_types.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_xml.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_file.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h" />
+<ClInclude Include="..\..\..\os\pmd_os.h" />
+<ClInclude Include="..\..\..\src\api\dlb_pmd_api_version.h" />
 <ClInclude Include="..\..\..\src\model\pmd_abd_aod.h" />
 <ClInclude Include="..\..\..\src\model\pmd_aen.h" />
 <ClInclude Include="..\..\..\src\model\pmd_apd.h" />
@@ -132,14 +160,15 @@
 <ClInclude Include="..\..\..\src\model\pmd_idmap.h" />
 <ClInclude Include="..\..\..\src\model\pmd_language.h" />
 <ClInclude Include="..\..\..\src\model\pmd_model.h" />
-<ClInclude Include="..\..\..\src\model\pmd_mutex.h" />
 <ClInclude Include="..\..\..\src\model\pmd_pld.h" />
 <ClInclude Include="..\..\..\src\model\pmd_profile.h" />
 <ClInclude Include="..\..\..\src\model\pmd_signals.h" />
 <ClInclude Include="..\..\..\src\model\pmd_smpte2109.h" />
+<ClInclude Include="..\..\..\src\model\pmd_strings.h" />
 <ClInclude Include="..\..\..\src\model\pmd_types.h" />
 <ClInclude Include="..\..\..\src\model\pmd_xyz.h" />
 <ClInclude Include="..\..\..\src\model\pmd_xyz_set.h" />
+<ClInclude Include="..\..\..\src\modules\generate\prng_kiss.h" />
 <ClInclude Include="..\..\..\src\modules\klv\klv.h" />
 <ClInclude Include="..\..\..\src\modules\klv\klv_abd.h" />
 <ClInclude Include="..\..\..\src\modules\klv\klv_aen.h" />
@@ -161,13 +190,25 @@
 <ClInclude Include="..\..\..\src\modules\klv\klv_writer.h" />
 <ClInclude Include="..\..\..\src\modules\klv\klv_xyz.h" />
 <ClInclude Include="..\..\..\src\modules\klv\pmd_crc32.h" />
+<ClInclude Include="..\..\..\src\modules\pcm\pmd_bitstream.h" />
 <ClInclude Include="..\..\..\src\modules\pcm\pmd_smpte_337m.h" />
+<ClInclude Include="..\..\..\src\modules\pcm\sadm_bitstream_decoder.h" />
+<ClInclude Include="..\..\..\src\modules\pcm\sadm_bitstream_encoder.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\idmap.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_sadm_generator.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_sadm_ingester.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\sadm\idrefs.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\sadm\lookup3.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\sadm\memstuff.h" />
+<ClInclude Include="..\..\..\src\modules\xml\parser_tagstack.h" />
 <ClInclude Include="..\..\..\src\modules\xml\xml_ad_id.h" />
 <ClInclude Include="..\..\..\src\modules\xml\xml_cdata.h" />
 <ClInclude Include="..\..\..\src\modules\xml\xml_eidr.h" />
 <ClInclude Include="..\..\..\src\modules\xml\xml_hex.h" />
 <ClInclude Include="..\..\..\src\modules\xml\xml_uuid.h" />
-<ClInclude Include="..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\include\dlb_xml.h" /></ItemGroup>
+<ClInclude Include="..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\include\dlb_xml.h" />
+<ClInclude Include="..\..\..\..\zlib\1.2.11\zlib-1.2.11\zconf.h" />
+<ClInclude Include="..\..\..\..\zlib\1.2.11\zlib-1.2.11\zlib.h" /></ItemGroup>
 <ItemGroup />
 <ItemGroup />
 <ItemGroup />
@@ -175,6 +216,9 @@
 <ItemGroup>
 <ProjectReference Include="..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\make\dlb_xml\windows_amd64_msvs\dlb_xml_2015.vcxproj">
 <Project>{20895E86-0CC5-376D-A205-153F08960967}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\zlib\1.2.11\make\zlib\windows_amd64_msvs\zlib_2015.vcxproj">
+<Project>{76502233-DBC5-3511-A0CE-193C451A7809}</Project>
 <ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference></ItemGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 <ImportGroup Label="ExtensionTargets" /></Project>
