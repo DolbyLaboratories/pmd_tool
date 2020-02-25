@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,8 @@
 
 #include "dlb_pmd_api.h"
 #include <stdio.h>
+#include <string.h>
+
 
 /**
  * @def MAX_AUDIO_ELEMENTS
@@ -112,14 +114,20 @@
 
 
 /**
+ * @def MAX_PRESENTATION_NAMES
+ * @brief max allowed presentation names
+ */
+#define MAX_PRESENTATION_NAMES (MAX_PRESENTATIONS * DLB_PMD_MAX_PRESENTATION_NAMES)
+
+
+/**
  * @brief represent profile information in a model
  */
 typedef struct
 {
-    uint16_t profile_number;               /**< current profile number, 0 for none */
-    uint16_t profile_level;                /**< current profile level, 0 for none */
-    unsigned int max_elements;             /**< max number of beds + objects */
-    dlb_pmd_metadata_count constraints;    /**< repurpose count struct to mean 'max' count */
+    unsigned int profile_number;           /**< current profile number, 0 for none */
+    unsigned int profile_level;            /**< current profile level, 0 for none */
+    dlb_pmd_model_constraints constraints; /**< model entity constraints */
 } pmd_profile;
     
 
@@ -128,23 +136,46 @@ typedef struct
  */
 static inline
 void
-pmd_profile_init
-    (pmd_profile *p          /**< [in] profile struct to initialize */
+pmd_profile_max
+    (pmd_profile *p               /**< [in] profile struct to initialize */
     )
 {
-    p->profile_number                 = 0;
-    p->profile_level                  = 0;
-    p->max_elements                   = MAX_AUDIO_ELEMENTS;
-    p->constraints.num_signals        = DLB_PMD_MAX_SIGNALS;
-    p->constraints.num_beds           = MAX_AUDIO_ELEMENTS;
-    p->constraints.num_objects        = MAX_AUDIO_ELEMENTS;
-    p->constraints.num_updates        = MAX_UPDATES;
-    p->constraints.num_presentations  = MAX_PRESENTATIONS;
-    p->constraints.num_loudness       = MAX_PRESENTATIONS;
-    p->constraints.num_iat            = 1;
-    p->constraints.num_eac3           = MAX_EAC3_ENCODING_PARAMETERS;
-    p->constraints.num_ed2_turnarounds= MAX_ED2_TURNAROUNDS;
-    p->constraints.num_headphone_desc = DLB_PMD_MAX_HEADPHONE;
+    p->constraints.max_elements           = MAX_AUDIO_ELEMENTS;
+    p->constraints.max_presentation_names = MAX_PRESENTATION_NAMES;
+    p->constraints.max.num_signals        = DLB_PMD_MAX_SIGNALS;
+    p->constraints.max.num_beds           = MAX_AUDIO_ELEMENTS;
+    p->constraints.max.num_objects        = MAX_AUDIO_ELEMENTS;
+    p->constraints.max.num_updates        = MAX_UPDATES;
+    p->constraints.max.num_presentations  = MAX_PRESENTATIONS;
+    p->constraints.max.num_loudness       = MAX_PRESENTATIONS;
+    p->constraints.max.num_iat            = 1;
+    p->constraints.max.num_ed2_system     = 1;
+    p->constraints.max.num_eac3           = MAX_EAC3_ENCODING_PARAMETERS;
+    p->constraints.max.num_ed2_turnarounds= MAX_ED2_TURNAROUNDS;
+    p->constraints.max.num_headphone_desc = DLB_PMD_MAX_HEADPHONE;
+}
+
+
+/**
+ * @brief initialize/reset profile constraints
+ */
+static inline
+void
+pmd_profile_init
+    (pmd_profile *p               /**< [in] profile struct to initialize */
+    ,dlb_pmd_model_constraints *c /**< [in] max model constraints */
+    )
+{
+    p->profile_number = 0;
+    p->profile_level  = 0;
+    if (c)
+    {
+        p->constraints = *c;
+    }
+    else
+    {
+        pmd_profile_max(p);
+    }
 }
 
 
@@ -152,15 +183,18 @@ pmd_profile_init
  * @brief set a profile 0 constraint
  */
 static inline
-dlb_pmd_success                  /** @return 0 if successful, 1 otherwise */
+dlb_pmd_success                     /** @return 0 if successful, 1 otherwise */
 pmd_profile_0_set
-    (pmd_profile *p              /**< [in] profile struct to set */
-    ,unsigned int profile_level  /**< [in] profile level */
+    (pmd_profile *p                 /**< [in] profile struct to set */
+    ,unsigned int profile_level     /**< [in] profile level */
+    ,dlb_pmd_model_constraints *max /**< [in] max model constraints */
     )
 {
     if (0 == profile_level)
     {
-        pmd_profile_init(p);
+        pmd_profile_init(p, max);
+        p->profile_number = 0;
+        p->profile_level = profile_level;
         return PMD_SUCCESS;
     }
     return PMD_FAIL;
@@ -171,44 +205,61 @@ pmd_profile_0_set
  * @brief set a profile 1 constraint
  */
 static inline
-dlb_pmd_success                  /** @return 0 if successful, 1 otherwise */
+dlb_pmd_success                     /** @return 0 if successful, 1 otherwise */
 pmd_profile_1_set
-    (pmd_profile *p              /**< [in] profile struct to set */
-    ,unsigned int profile_level  /**< [in] profile level */
+    (pmd_profile *p                 /**< [in] profile struct to set */
+    ,unsigned int profile_level     /**< [in] profile level */
+    ,dlb_pmd_model_constraints *max /**< [in] max model constraints */
     )
 {
+    pmd_profile candidate;
+
     switch (profile_level)
     {
         case 1:
-            pmd_profile_init(p);
-            p->max_elements                  = 10;
-            p->constraints.num_signals       = 16;
-            p->constraints.num_beds          = 10;
-            p->constraints.num_objects       = 10;
-            p->constraints.num_presentations = 8;
-            return PMD_SUCCESS;
+            pmd_profile_init(&candidate, max);
+            candidate.constraints.max_elements          = 10;
+            candidate.constraints.max.num_signals       = 16;
+            candidate.constraints.max.num_beds          = 10;
+            candidate.constraints.max.num_objects       = 10;
+            candidate.constraints.max.num_presentations = 8;
+            break;
 
         case 2:
-            pmd_profile_init(p);
-            p->max_elements                  = 20;
-            p->constraints.num_signals       = 16;
-            p->constraints.num_beds          = 20;
-            p->constraints.num_objects       = 20;
-            p->constraints.num_presentations = 16;
-            return PMD_SUCCESS;
+            pmd_profile_init(&candidate, max);
+            candidate.constraints.max_elements          = 20;
+            candidate.constraints.max.num_signals       = 16;
+            candidate.constraints.max.num_beds          = 20;
+            candidate.constraints.max.num_objects       = 20;
+            candidate.constraints.max.num_presentations = 16;
+            break;
 
         case 3:
-            pmd_profile_init(p);
-            p->max_elements                  = 50;
-            p->constraints.num_signals       = 16;
-            p->constraints.num_beds          = 50;
-            p->constraints.num_objects       = 50;
-            p->constraints.num_presentations = 48;
-            return PMD_SUCCESS;
+            pmd_profile_init(&candidate, max);
+            candidate.constraints.max_elements          = 50;
+            candidate.constraints.max.num_signals       = 16;
+            candidate.constraints.max.num_beds          = 50;
+            candidate.constraints.max.num_objects       = 50;
+            candidate.constraints.max.num_presentations = 48;
+            break;
 
         default:
             return PMD_FAIL;
     }
+
+    if (   candidate.constraints.max_elements    > max->max_elements
+        || candidate.constraints.max.num_signals > max->max.num_signals
+        || candidate.constraints.max.num_beds    > max->max.num_beds
+        || candidate.constraints.max.num_objects > max->max.num_objects
+        || candidate.constraints.max.num_presentations > max->max.num_presentations)
+    {
+        /* profile too large for the model's memory constraints */
+        return PMD_FAIL;
+    }
+    memmove(&p->constraints, &candidate.constraints, sizeof(candidate.constraints));
+    p->profile_number = 1;
+    p->profile_level = profile_level;
+    return PMD_SUCCESS;
 }
 
 
@@ -221,12 +272,13 @@ pmd_profile_set
     (pmd_profile *p              /**< [in] profile struct to set */
     ,unsigned int profile_number /**< [in] profile number */
     ,unsigned int profile_level  /**< [in] profile level */
+    ,dlb_pmd_model_constraints *max /**< [in] max model constraints */
     )
 {
     switch (profile_number)
     {
-        case 0:   return pmd_profile_0_set(p, profile_level);
-        case 1:   return pmd_profile_1_set(p, profile_level);
+        case 0:   return pmd_profile_0_set(p, profile_level, max);
+        case 1:   return pmd_profile_1_set(p, profile_level, max);
         default:  return 1;
     }
 }

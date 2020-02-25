@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
+
+/**
+ * @file TestXml.cc
+ * @brief encapsulate XML read/write testing
+ */
 
 extern "C"
 {
@@ -121,6 +126,7 @@ void TestXml::run(TestModel& m1, const char *testname, int param, bool match)
 TestXml::TestXml()
     : mem_(0)
     , size_(0)
+    , error_line_(0)
 {
     size_= MAX_XML_SIZE;
     mem_ = new uint8_t[size_];
@@ -180,7 +186,8 @@ dlb_pmd_success TestXml::validate()
 
 dlb_pmd_success TestXml::read(TestModel& m)
 {
-    return dlb_xmlpmd_string_read((const char*)mem_, size_, m, error_callback, this, &error_line_)
+    return dlb_xmlpmd_string_read((const char*)mem_, size_, m, DLB_PMD_XML_STRICT,
+                                  error_callback, this, &error_line_)
         ? (dlb_pmd_success)PMD_FAIL
         : (dlb_pmd_success)PMD_SUCCESS;
 }

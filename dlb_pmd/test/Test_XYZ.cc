@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,13 +33,22 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_XYZ.cc
+ * @brief Test Dynamic updates
+ */
+
 #include "src/model/pmd_model.h"
 #include "dlb_pmd_api.h"    
 
 #include "TestModel.hh"
 #include "gtest/gtest.h"
 
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_XYZ_TESTS
 
+
+#ifndef DISABLE_XYZ_TESTS
 class UpdateTest1: public ::testing::TestWithParam<int> {};
 class UpdateTest2: public ::testing::TestWithParam<int> {};
 
@@ -101,10 +110,15 @@ add_updates
     float increment = 1.0f / num_updates;
     float x = 0.0f;
 
-    unsigned int num_blocks = (frame_length - GUARDBAND) / 160;
-    num_updates = num_blocks * (160 / 32);
+    /* no updates in 1st block */
+    if (t <= TestModel::TEST_PCM_CHAN_12000)
+    {
+        unsigned int num_blocks = ((frame_length - GUARDBAND) / 160);
+        num_updates = num_blocks * (160 / 32);
+    }
 
-    for (time = 1; time < num_updates; ++time)
+    /* skip 1st block */
+    for (time = 1+(160/32); time < num_updates; ++time)
     {
         x += increment;
         if (dlb_pmd_add_update(m, obj, time, x, x, x)) return 1;
@@ -141,7 +155,14 @@ TEST_P(UpdateTest1, payload_testing)
     }
     else
     {
-        m.test(t, "PCM_Dynamic_Update_test1", (int)t, false);
+        try
+        {
+            m.test(t, "PCM_Dynamic_Update_test1", (int)t, false);
+        }
+        catch (TestModel::failure& f)
+        {
+            ADD_FAILURE() << f.msg;
+        }
     }
 }
 
@@ -179,12 +200,19 @@ TEST_P(UpdateTest2, payload_testing)
     }
     else
     {
-        if (t > TestModel::TEST_KLV)
+        try
         {
-            /* shouldn't match if you don't apply updates to original model */
-            m.negtest(t, "PCM_Dynamic_Update_test2a", (int)t, false);
+            if (t > TestModel::TEST_KLV)
+            {
+                /* shouldn't match if you don't apply updates to original model */
+                m.negtest(t, "PCM_Dynamic_Update_test2a", (int)t, false);
+            }
+            m.test(t, "PCM_Dynamic_Update_test2b", (int)t, true);
         }
-        m.test(t, "PCM_Dynamic_Update_test2b", (int)t, true);
+        catch (TestModel::failure& f)
+        {
+            ADD_FAILURE() << f.msg;
+        }
     }
 }
 
@@ -192,5 +220,6 @@ TEST_P(UpdateTest2, payload_testing)
 INSTANTIATE_TEST_CASE_P(PMD_XYZ, UpdateTest2,
                         testing::Range(TestModel::FIRST_TEST_TYPE,
                                        TestModel::LAST_TEST_TYPE+1));
+#endif
 
 

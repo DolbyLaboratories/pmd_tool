@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_Smpte2109.cc
+ * @brief test SMPTE 2109 functionality
+ */
+
 extern "C"
 {
 #include "dlb_pmd_api.h"    
@@ -48,7 +53,10 @@ extern dlb_pmd_bool global_testing_version_numbers;
 #include "TestModel.hh"
 #include "gtest/gtest.h"
 
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_SMPTE_2109_TESTS
 
+#ifndef DISABLE_SMPTE_2109_TESTS
 class SampleOffsetsTest: public ::testing::TestWithParam<std::tr1::tuple<int, int> > {};
 
 TEST_P(SampleOffsetsTest, sample_offset)
@@ -79,7 +87,14 @@ TEST_P(SampleOffsetsTest, sample_offset)
     }
     else
     {
-        m.test(t, "SMPTE_2109_sample_offset", i);
+        try
+        {
+            m.test(t, "SMPTE_2109_sample_offset", i);
+        }
+        catch (TestModel::failure& f)
+        {
+            ADD_FAILURE() << f.msg;
+        }
     }
     global_testing_version_numbers = 0;
 }
@@ -101,7 +116,7 @@ TEST_P(DynamicTagsTest1, dynamic_tags_1)
 
     uint16_t i = (uint16_t)ii;
     uint16_t j;
-    uint16_t limit = 16;
+    uint16_t limit = 12;
     dlb_pmd_element_id bed;
     dlb_pmd_presentation_id pres;
 
@@ -133,7 +148,14 @@ TEST_P(DynamicTagsTest1, dynamic_tags_1)
             }
         }
         m.skip_pcm_samples(i);
-        m.test(t, "Dynamic_Tags_1", i);
+        try
+        {
+            m.test(t, "Dynamic_Tags_1", i);
+        }
+        catch (TestModel::failure& f)
+        {
+            ADD_FAILURE() << f.msg;
+        }
     }
 }
 
@@ -194,23 +216,30 @@ TEST_P(DynamicTagsTest2, dynamic_tags_2)
         m1.pcm_single_frame();
 
         /* now add an update, which will be ignored by retagging */
-        if (dlb_pmd_add_update(m1, o1, 1, 0.1f, 0.1f, 0.1f))
+        if (dlb_pmd_add_update(m1, o1, 5, 0.1f, 0.1f, 0.1f))
         {
             ADD_FAILURE() << "Could not add retagging victim";
         }
         else
         {
             /* dynamic retagging is a property of KLV translation */
-            switch(t)
+            try
             {
-                case TestModel::TEST_XML:
-                case TestModel::TEST_MDSET:
-                    m1.test(t, "Dynamic_Tags_2", i);
-                    break;
-                default:
-                    m1.negtest(t, "Dynamic_Tags_2", i);
-                    m2.test(t, "Dynamic_Tags_2", i+2);
-                    break;
+                switch(t)
+                {
+                    case TestModel::TEST_XML:
+                    case TestModel::TEST_MDSET:
+                        m1.test(t, "Dynamic_Tags_2", i);
+                        break;
+                    default:
+                        m1.negtest(t, "Dynamic_Tags_2", i);
+                        m2.test(t, "Dynamic_Tags_2", i+2);
+                        break;
+                }
+            } 
+            catch (TestModel::failure& f)
+            {
+                ADD_FAILURE() << f.msg;
             }
         }
     }
@@ -222,5 +251,6 @@ INSTANTIATE_TEST_CASE_P(PMD_Smpte2109, DynamicTagsTest2,
            testing::Combine(testing::Range(0, 2),
                             testing::Range(TestModel::FIRST_TEST_TYPE,
                                            TestModel::LAST_TEST_TYPE+1)));
+#endif
 
 

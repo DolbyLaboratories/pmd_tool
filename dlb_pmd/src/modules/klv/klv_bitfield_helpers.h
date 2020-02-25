@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -138,7 +138,7 @@ get_
         len -= intra_byte_len;
     }
 
-    TRACEBITS(("%"PRId64"\n", val));
+    TRACEBITS(("%" PRId64 "\n", val));
     return val;
 }
     

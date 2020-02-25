@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
+
+/**
+ * @file TestPcm.cc
+ * @brief encapsulate PCM read/write testing
+ */
 
 extern "C"
 {
@@ -94,18 +99,19 @@ namespace
 
 void TestPcm::run(TestModel& m, const char *testname, int param,
                   bool single_frame, dlb_pmd_frame_rate fr,
-                  bool single_channel, bool minimal, bool match,
-                  bool apply_updates, unsigned int num_skip_samples)
+                  bool single_channel, bool minimal, bool nonames, bool match,
+                  bool apply_updates, bool sadm, unsigned int num_skip_samples)
 {
     dlb_klvpmd_universal_label ul = (dlb_klvpmd_universal_label)(param & 1);
     TestPcm pcm(fr, single_frame);    
     const char *errmsg = NULL;
+    unsigned int num_frames;
     TestModel m1;
     TestModel m2;
     TestModel m3;
 
     m1 = m;
-    if (pcm.write(!single_channel, ul, m1))
+    if (pcm.write(!single_channel, ul, m1, sadm))
     {
         errmsg = "could not write PCM";
     }
@@ -113,21 +119,21 @@ void TestPcm::run(TestModel& m, const char *testname, int param,
     {
         errmsg = "PCM isn't valid";
     }
-    else if (pcm.read(m2, num_skip_samples))
+    else if (pcm.read(m2, num_skip_samples, &num_frames))
     {
         errmsg = "Failed to read PCM file";
     }
-    else if (apply_updates && m.apply_updates())
+    else if (apply_updates && num_frames && m.apply_updates(fr, num_frames-1))
     {
         errmsg = "Failed to apply updates";
     }
-    else if ((dlb_pmd_success)match == dlb_pmd_equal(m, m2, !single_frame, minimal))
+    else if ((dlb_pmd_success)match == dlb_pmd_equal2(m, m2, !single_frame, nonames, minimal))
     {
         errmsg = match
             ? "Model mismatch after PCM write and read"
             : "Models shouldn't match after PCM write and read, but do";
     }
-    else if (pcm.write(!single_channel, ul, m2))
+    else if (pcm.write(!single_channel, ul, m2, sadm))
     {
         errmsg = "could not write PCM2";
     }
@@ -135,11 +141,15 @@ void TestPcm::run(TestModel& m, const char *testname, int param,
     {
         errmsg = "PCM2 isn't valid";
     }
-    else if (pcm.read(m3, num_skip_samples))
+    else if (pcm.read(m3, num_skip_samples, &num_frames))
     {
         errmsg = "Failed to read PCM2 file";
     }
-    else if ((dlb_pmd_success)match == dlb_pmd_equal(m, m3, !single_frame, minimal))
+    else if (apply_updates && num_frames && m.apply_updates(fr, num_frames-1))
+    {
+        errmsg = "Failed to apply updates again";
+    }
+    else if ((dlb_pmd_success)match == dlb_pmd_equal2(m, m3, !single_frame, nonames, minimal))
     {
         errmsg = match
             ? "Model mismatch after PCM2 write and read"
@@ -150,10 +160,11 @@ void TestPcm::run(TestModel& m, const char *testname, int param,
     {
         std::string error = errmsg;
         char name[128];
-        snprintf(name, sizeof(name), "test_%s_%u_%s_%s_klv.wav",
+        snprintf(name, sizeof(name), "test_%s_%u_%s_%s_%s.wav",
                  testname, param,
                  TestModel::FRAME_RATE_NAMES[(int)fr],
-                 single_channel ? "channel" : "pair");
+                 single_channel ? "channel" : "pair",
+                 sadm ? "sadm" : "klv");
         pcm.dump(name);
         error += ": ";
         error += name;
@@ -192,8 +203,10 @@ TestPcm::~TestPcm()
 }
 
     
-dlb_pmd_success TestPcm::write(bool ispair, dlb_klvpmd_universal_label ul, dlb_pmd_model *m)
+dlb_pmd_success TestPcm::write(bool ispair, dlb_klvpmd_universal_label ul, dlb_pmd_model *m,
+                               bool sadm)
 {
+    dlb_pmd_model_constraints limits;
     dlb_pcmpmd_augmentor *aug;
     uint32_t *channeldata;
     unsigned int chan = ispair ? 0 : 1;
@@ -203,13 +216,15 @@ dlb_pmd_success TestPcm::write(bool ispair, dlb_klvpmd_universal_label ul, dlb_p
     char *mem;
     size_t num_samples = num_samples_;
     size_t read;
-
-    sz = dlb_pcmpmd_augmentor_query_mem();
+    
+    dlb_pmd_get_constraints(m, &limits);
+    sz = dlb_pcmpmd_augmentor_query_mem2(sadm, &limits);
     mem = new char[sz];
 
     ispair_ = ispair;
     /* note, for testing, we always want to mark the 160-sample blocks with NULL databursts */
-    dlb_pcmpmd_augmentor_init(&aug, m, mem, fr_, ul, 1, NUM_CHANNELS, NUM_CHANNELS, ispair, chan);
+    dlb_pcmpmd_augmentor_init2(&aug, m, mem, fr_, ul, 1, NUM_CHANNELS, NUM_CHANNELS, ispair, chan,
+                               sadm);
     vsync_timer_init(&vt, fr_, 0);
 
     video_sync = 0;
@@ -250,7 +265,11 @@ dlb_pmd_success TestPcm::validate()
     /* The validator simply looks for occurrences of the SMPTE 337m preambles
      * at locations it expects:
      *  - At each video frame boundary, after the guardband
-     *  - Thereafter at every 160-sample block, until no more can be fitted into
+     *  - first block is 160-samples less guardband (32)
+     *  - last block in frame is also 160-samples less guardband (32)
+     *      (which means that the total guardband around the video sync point
+     *      is 64 samples)
+     *  - otherwise, every 160-sample block, until no more can be fitted into
      *    the video frame.
      */
     static const int NC = NUM_CHANNELS;
@@ -264,8 +283,9 @@ dlb_pmd_success TestPcm::validate()
     {
         uint32_t *b = pcm + GUARDBAND_SAMPLES * NUM_CHANNELS;
         size_t frame_length = VF_SPACING[fr_][vfpos];
-        num_blocks = (frame_length - GUARDBAND_SAMPLES) / PMD_BLOCK_SAMPLES;
+        num_blocks = frame_length / PMD_BLOCK_SAMPLES;
 
+        bool block_0 = true;
         while (num_blocks)
         {
             if (ispair_)
@@ -286,7 +306,14 @@ dlb_pmd_success TestPcm::validate()
             }
 
             b += PMD_BLOCK_SAMPLES * NC;
+            if (block_0)
+            {
+                /* first block has GUARDBAND fewer samples */
+                b -= GUARDBAND_SAMPLES * NC;
+            }
+
             --num_blocks;
+            block_0 = false;
         }
 
         pcm += frame_length * NUM_CHANNELS;
@@ -297,8 +324,12 @@ dlb_pmd_success TestPcm::validate()
 }
 
 
-dlb_pmd_success TestPcm::read(dlb_pmd_model *m, unsigned int num_skip_samples)
+dlb_pmd_success TestPcm::read(dlb_pmd_model *m, unsigned int num_skip_samples,
+                              unsigned int *num_frames)
 {
+    dlb_pmd_success success;
+    dlb_pmd_payload_set_status status;
+    dlb_pmd_model_constraints limits;
     dlb_pcmpmd_extractor *ext;
     unsigned int chan = ispair_ ? 0 : 1;
     uint32_t *channeldata;
@@ -306,29 +337,32 @@ dlb_pmd_success TestPcm::read(dlb_pmd_model *m, unsigned int num_skip_samples)
     size_t read;
     size_t sz;
     char *mem;
-    vsync_timer vt;
-    size_t video_sync;
     
-    sz = dlb_pcmpmd_extractor_query_mem();
+    dlb_pmd_get_constraints(m, &limits);
+    sz = dlb_pcmpmd_extractor_query_mem2(1, &limits);
     mem = new char[sz];
     channeldata = mem_;
     num_samples = num_samples_;
 
-    dlb_pcmpmd_extractor_init(&ext, mem, fr_, chan, NUM_CHANNELS, ispair_, m);
+    success = dlb_pmd_initialize_payload_set_status(&status, NULL, 0);
+    if (success != PMD_SUCCESS)
+    {
+        return success;
+    }
+    dlb_pcmpmd_extractor_init2(&ext, mem, fr_, chan, NUM_CHANNELS, ispair_, m, &status, 1);
 
-    vsync_timer_init(&vt, fr_, 0);
     channeldata = mem_;
+
+    *num_frames = (unsigned int)((float)num_samples / FRAME_SIZES[fr_]);
 
     /* testing random access by skipping samples */
     channeldata += NUM_CHANNELS * (num_skip_samples);
     num_samples -= num_skip_samples;
-    vsync_timer_add_samples(&vt, num_skip_samples);
 
     while (num_samples)
     {
         read = num_samples < BLOCK_SIZE ? num_samples : BLOCK_SIZE;
-        video_sync = vsync_timer_add_samples(&vt, read);
-        dlb_pcmpmd_extract(ext, channeldata, read, video_sync);
+        dlb_pcmpmd_extract2(ext, channeldata, read, NULL, NULL, NULL);
         channeldata += NUM_CHANNELS * read;
         num_samples -= read;
     }

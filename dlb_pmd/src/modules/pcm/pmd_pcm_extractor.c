@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,14 @@
 #include "pmd_model.h"
 #include "pmd_error_helper.h"
 #include "pmd_smpte_337m.h"
+#include "sadm_bitstream_decoder.h"
+
+#ifdef _MSC_VER
+#  define PRIu64 "I64u"
+#  define PRId64 "I64"
+#else
+#  include <inttypes.h>
+#endif
 
 //#define TRACE_BLOCKS
 #ifdef TRACE_BLOCKS
@@ -60,32 +68,86 @@
 #  define TRACE(x)
 #endif
 
+#define EXTRACT_BLOCK_SIZE (32)
 
 /**
- * @brief internal state of PCM augmentor
+ * @brief internal state of PCM extractor
  */
 struct dlb_pcmpmd_extractor
 {
-    dlb_pmd_model *model;       /**< source model */
-    uint8_t  klvbuf[MAX_DATA_BYTES_PAIR+6]; /**< current KLV block */
-    uint8_t *klvp;              /**< current read pointer of klvbuf */
-    size_t klvsize;             /**< bytes remaining in block */
+    dlb_pmd_model       *model;                     /**< source model */
+    uint8_t              klv_buf[MAX_DATA_BYTES];   /**< current KLV block */
 
-    pmd_s337m s337m;            /**< SMPTE 337m wrapping state */
+    pmd_s337m            s337m;                     /**< SMPTE 337m wrapping state */
 
-    dlb_pmd_frame_rate rate;    /**< video frame rate */
-    size_t numchannels;         /**< number of channels of PCM */
-    unsigned int klvchan;       /**< channel to extract klv from */
-    dlb_pmd_bool klvpair;       /**< KLV is a pair! */
-    unsigned int maxblock;      /**< maximum number of blocks for frame rate */
-    unsigned int block;         /**< current block number */
-    unsigned int unused;        /**< number of samples unused at end of frame */
-    size_t remaining;           /**< samples remaining in block */
-    dlb_pmd_bool new_frame;     /**< next block to be decoded is a new frame */
-    dlb_pmd_bool sync;          /**< waiting to find first frame */
-    size_t sample_count;        /**< total number of samples decoded */
+    dlb_pmd_frame_rate   rate;                      /**< video frame rate */
+    size_t               channel_count;             /**< number of channels of PCM */
+    unsigned int         klv_chan;                  /**< channel to extract klv from */
+    dlb_pmd_bool         klv_pair;                  /**< KLV is a pair! */
+    unsigned int         block_count;               /**< maximum number of blocks for frame rate */
+    unsigned int         max_block_num;             /**< block_count - 1 */
+    unsigned int         cur_block_num;             /**< current block number */
+    dlb_pmd_bool         new_frame;                 /**< next block to be decoded is a new frame */
+    dlb_pmd_bool         waiting;                   /**< waiting to find first frame */
+    dlb_pmd_bool         no_vsync;                  /**< no external vsync given; try to work it out */
+    size_t               sample_count;              /**< total number of samples decoded */
+    size_t               prev_pa;                   /**< sample count of previously found PA, or NO_PA_FOUND */
+    size_t               frame_start;               /**< sample count of start of current frame, or NO_PA_FOUND */
+
+    dlb_pcmpmd_new_frame         callback;
+    void                        *cbarg;
+    dlb_pmd_bool                 sadm;
+    sadm_bitstream_decoder      *sdec;
+
+    dlb_pmd_payload_set_status  *payload_set_status;
 };
-     
+
+
+/**
+ * @brief callback function to handle PA found from s337m unwrapper
+ *
+ * We keep track of PA offsets: whenever the difference between
+ * successive PA sample positions exceeds the start of the PCM+PMD
+ * block size (160 samples), then the second PA must be the PA
+ * position of the first PMD block of a new frame.
+ */
+void
+found_pa
+    (void   *cb_arg
+    ,size_t  pa_found
+    )
+{
+    if (cb_arg != NULL)
+    {
+        dlb_pcmpmd_extractor *ext = (dlb_pcmpmd_extractor *)cb_arg;
+        size_t pa_pos = ext->sample_count + pa_found;
+        size_t pa_diff = pa_pos - ext->prev_pa;
+        dlb_pmd_bool long_block = pa_diff > DLB_PCMPMD_BLOCK_SIZE;
+
+        TRACE(("pa_pos = %" PRIu64
+               " (prev_pa: %" PRIu64 " pa_diff: %" PRIu64 ")\n",
+               (uint64_t)pa_pos, (uint64_t)ext->prev_pa, (uint64_t)pa_diff));
+
+        if (long_block)
+        {
+            ext->frame_start = pa_pos - GUARDBAND;
+            TRACE(("new frame detected....%" PRIu64 "\n", (uint64_t)ext->frame_start));
+            ext->new_frame = PMD_TRUE;
+            if (ext->no_vsync && ext->callback)
+            {
+                ext->cur_block_num = ext->max_block_num;
+                ext->callback(ext->cbarg);
+            }
+            ext->cur_block_num = 0;
+        }
+        else
+        {
+            ext->cur_block_num++;
+        }
+        ext->prev_pa = pa_pos;
+    }
+}
+
 
 /**
  * @brief callback for SMPTE 337m wrapper to get next block
@@ -98,41 +160,61 @@ pcm_next_block
 {
     dlb_pcmpmd_extractor *ext = (dlb_pcmpmd_extractor*)s337m->nextarg;
     int res = 1;
-
+    
     if (0 != s337m->data)
     {
         /* we have extracted data from SMPTE 337m stream. Now decode it */
-        size_t datasize = s337m->data - ext->klvbuf;
+        size_t datasize = s337m->data - ext->klv_buf;
         int new_frame = ext->new_frame;
+        dlb_pmd_bool ok = 0;
         ext->new_frame = 0;
         res = !new_frame;
 
         /* neither init time nor callback with 0 data */
-        if (!dlb_klvpmd_read_payload(ext->klvbuf, datasize, ext->model, new_frame, NULL))
+        if (s337m->sadm)
         {
-            /* somehow raise a callback if something changes */
+            ok = !sadm_bitstream_decoder_decode(ext->sdec, ext->klv_buf, datasize, ext->model);
+            s337m->framelen = pmd_s337m_min_frame_size(ext->rate);
         }
+        else 
+        {
+            ok = !dlb_klvpmd_read_payload(ext->klv_buf, datasize, ext->model, new_frame, NULL, ext->payload_set_status);
+            s337m->framelen = DLB_PCMPMD_BLOCK_SIZE;
+        }
+
+        (void)ok;
+        TRACE(("block %s\n", ok ? "decoded OK" : "failed to decode"));
     }
-    
-    memset(ext->klvbuf, '\0', sizeof(ext->klvbuf));
-    s337m->databits = 8 * sizeof(ext->klvbuf);
-    s337m->data = ext->klvbuf;
-    s337m->framelen = DLB_PCMPMD_BLOCK_SIZE;
+    else
+    {
+        /* The bitstream may be either sADM or PMD, so default for larger */
+        s337m->framelen = pmd_s337m_min_frame_size(ext->rate);
+    }
+
+    memset(ext->klv_buf, '\0', sizeof(ext->klv_buf));
+    s337m->databits = 8 * sizeof(ext->klv_buf);
+    s337m->data = ext->klv_buf;
     return res;
 }
 
 
 size_t
-dlb_pcmpmd_extractor_query_mem
-    (void
+dlb_pcmpmd_extractor_query_mem2
+    (dlb_pmd_bool sadm
+    ,dlb_pmd_model_constraints *limits
     )
 {
-    return sizeof(struct dlb_pcmpmd_extractor);
+    size_t sz = sizeof(struct dlb_pcmpmd_extractor);
+    if (sadm)
+    {
+        sz += sadm_bitstream_decoder_query_mem(limits);
+    }
+    return sz;
 }
 
 
 void
-dlb_pcmpmd_extractor_init
+dlb_pcmpmd_extractor_init2
     (dlb_pcmpmd_extractor **extptr
     ,void *mem
     ,dlb_pmd_frame_rate rate
@@ -140,48 +222,59 @@ dlb_pcmpmd_extractor_init
     ,unsigned int stride
     ,dlb_pmd_bool ispair
     ,dlb_pmd_model *model
+    ,dlb_pmd_payload_set_status *status
+    ,dlb_pmd_bool sadm
     )
 {
     dlb_pcmpmd_extractor *ext = mem;
     unsigned int vfsize;   /** video frame size in samples */
 
-    memset(mem, '\0', sizeof(dlb_pcmpmd_extractor));
+    memset(mem, 0, sizeof(dlb_pcmpmd_extractor));
 
     *extptr = ext;
     ext->model = model;
     ext->rate = rate;
-    ext->block = ~0u;
-    ext->new_frame = 1;
-    ext->sync = 1;
+    ext->new_frame = PMD_TRUE;
+    ext->waiting = PMD_TRUE;
 
     vfsize = pmd_s337m_min_frame_size(rate);
-    vfsize -= GUARDBAND;
 
-    ext->maxblock = vfsize / DLB_PCMPMD_BLOCK_SIZE;
-    ext->numchannels = stride;
-    ext->block = 0;
-    ext->remaining = DLB_PCMPMD_BLOCK_SIZE + GUARDBAND;
-    /* compute unused space at end of frame */
-    ext->unused = vfsize - (ext->maxblock * DLB_PCMPMD_BLOCK_SIZE);
+    ext->block_count = vfsize / DLB_PCMPMD_BLOCK_SIZE;
+    ext->max_block_num = ext->block_count - 1;
+    ext->channel_count = stride;
+    ext->prev_pa = NO_PA_FOUND;
+    ext->payload_set_status = status;
+    ext->sadm = sadm;
 
-    if (ext->numchannels < 2) abort();
-    if (ext->numchannels & 1) abort();
+    if (ispair && ((ext->channel_count < 2) || (ext->channel_count & 1)))
+    {
+        abort();
+    }
 
-    ext->klvpair = ispair;
-    ext->klvchan = chan;
+    ext->klv_pair = ispair;
+    ext->klv_chan = chan;
     if (chan >= stride)
     {
         if (ispair)
         {
-            ext->klvchan = stride - 2;
+            ext->klv_chan = stride - 2;
         }
         else
         {
-            ext->klvchan = stride - 1;
+            ext->klv_chan = stride - 1;
         }
     }
 
-    pmd_s337m_init(&ext->s337m, stride, pcm_next_block, ext, ext->klvpair, ext->klvchan, 0);
+    if (sadm)
+    {
+        dlb_pmd_model_constraints limits;
+        dlb_pmd_get_constraints(model, &limits);
+        sadm_bitstream_decoder_init(&limits, (void*)(ext+1), &ext->sdec);
+    }
+
+    pmd_s337m_init(&ext->s337m, stride, pcm_next_block, ext, ext->klv_pair, ext->klv_chan, 0, 0);
+    ext->s337m.pa_found_cb = found_pa;
+    ext->s337m.pa_found_cb_arg = ext;
 }
 
     
@@ -199,7 +292,7 @@ dlb_pcmpmd_extractor_finish
  * accurate track of how long before a new frame is due
  */
 static inline
-void
+dlb_pmd_bool                     /* @return 1 if a new frame was encountered, else 0*/
 extract_block
     (dlb_pcmpmd_extractor *ext
     ,uint32_t **pcm
@@ -210,34 +303,25 @@ extract_block
     uint32_t *end = *pcm + num_samples * ext->s337m.stride;
 
     TRACE(("EXTRACTOR: read block @%u %u/%u (%u/%u)\n",
-           ext->sample_count, ext->block, ext->maxblock,
-           num_samples, ext->remaining));
+           (unsigned)ext->sample_count, ext->cur_block_num, ext->max_block_num,
+           (unsigned)num_samples, (unsigned)DLB_PCMPMD_BLOCK_SIZE));
 
-    ext->sample_count += num_samples;
     ext->s337m.vsync_offset = *video_sync;
+    ext->s337m.pa_found = NO_PA_FOUND;
     pmd_s337m_unwrap(&ext->s337m, *pcm, end);
-    *video_sync -= ext->remaining;
-    *pcm = end;
-
-    if (num_samples >= ext->remaining)
+    
+    if (ext->no_vsync)
     {
-        ext->remaining = DLB_PCMPMD_BLOCK_SIZE;
-        ext->block += 1;
-        if (ext->block == ext->maxblock)
-        {
-            TRACE((".... new frame expected .... \n"));
-            ext->block = 0;
-            ext->new_frame = 1;
-        }
-        else if (ext->block == ext->maxblock - 1)
-        {
-            ext->remaining += ext->unused + GUARDBAND;
-        }
+        /* TODO: This is communicating PA position with respect to the block of samples, is that what we want? */
+        *video_sync = ext->s337m.pa_found;
     }
     else
     {
-        ext->remaining -= num_samples;
+        *video_sync -= num_samples;
     }
+    ext->sample_count += num_samples;
+    *pcm = end;
+    return ext->new_frame;
 }
 
 
@@ -249,37 +333,93 @@ dlb_pcmpmd_extract
     ,size_t video_sync
     )
 {
+    size_t remaining = num_samples;
+
     error_reset(ext->model);
 
-    pcm += ext->klvchan;
-    if (ext->sync)
+    ext->no_vsync = 0;
+    pcm += ext->klv_chan;
+    if (ext->waiting)
     {
-        if (video_sync > num_samples)
+        if (video_sync > remaining)
         {
-            return 0;
+            return PMD_SUCCESS;
         }
         else
         {
-            ext->sync = 0;
-            pcm += video_sync * ext->numchannels;
-            num_samples -= video_sync;
+            ext->waiting = 0;
+            pcm += video_sync * ext->channel_count;
+            remaining -= video_sync;
             video_sync = 0;
         }
     }
 
-    /* add a block at a time to keep track of where in the frame we are */
-    while (num_samples > ext->remaining)
+    while (remaining > EXTRACT_BLOCK_SIZE)
     {
-        num_samples -= ext->remaining;
-        extract_block(ext, &pcm, ext->remaining, &video_sync);
+        (void)extract_block(ext, &pcm, EXTRACT_BLOCK_SIZE, &video_sync);
+        remaining -= EXTRACT_BLOCK_SIZE;
     }
     
-    if (num_samples)
+    if (remaining)
     {
-        extract_block(ext, &pcm, num_samples, &video_sync);
+        (void)extract_block(ext, &pcm, remaining, &video_sync);
+        /* remaining = 0; */
     }
 
     /* return 0 (success) if there is no error */
     return ext->model->error[0] != '\0';
 }
 
+
+dlb_pmd_success
+dlb_pcmpmd_extract2
+    (dlb_pcmpmd_extractor *ext
+    ,uint32_t             *pcm
+    ,size_t                num_samples
+    ,dlb_pcmpmd_new_frame  callback
+    ,void                 *cbarg
+    ,size_t               *video_sync
+    )
+{
+    size_t processed = 0;
+    size_t remaining = num_samples;
+    size_t vs;
+
+    ext->callback = callback;
+    ext->cbarg = cbarg;
+
+    vs = (ext->prev_pa == NO_PA_FOUND) ? 0 : NO_PA_FOUND;
+    error_reset(ext->model);
+    pcm += ext->klv_chan;
+    ext->no_vsync = 1;
+
+    /* add a block at a time to keep track of where in the frame we are */
+    while (remaining > EXTRACT_BLOCK_SIZE)
+    {
+        remaining -= EXTRACT_BLOCK_SIZE;
+        if (extract_block(ext, &pcm, EXTRACT_BLOCK_SIZE, &vs))
+        {
+            if (vs != NO_PA_FOUND && video_sync != NULL)
+            {
+                *video_sync = vs + processed;
+            }
+        }
+        processed += EXTRACT_BLOCK_SIZE;
+    }
+    
+    if (remaining)
+    {
+        if (extract_block(ext, &pcm, remaining, &vs))
+        {
+            if (vs != NO_PA_FOUND && video_sync != NULL)
+            {
+                *video_sync = vs + processed;
+            }
+            /* processed += remaining; */
+            /* remaining = 0; */
+        }
+    }
+
+    /* return 0 (success) if there is no error */
+    return ext->model->error[0] != '\0';
+}

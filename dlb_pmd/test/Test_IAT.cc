@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_IAT.cc
+ * @brief Test Identity and Timing payload transmits correctly
+ */
+
 #include "PrngKiss.hh"
 #include "TestModel.hh"
 
@@ -41,6 +46,9 @@
 #include "dlb_pmd_api.h"    
 
 #include "gtest/gtest.h"
+
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_IAT_TESTS
 
 
 class IAT_PayloadTest: public ::testing::TestWithParam<std::tr1::tuple<int, int, int, int> > {};
@@ -274,6 +282,7 @@ add_iat_extension
 }
 
 
+#ifndef DISABLE_IAT_TESTS
 /* IAT options:
  *   - content_id,              1
  *   - distribution_id,         2
@@ -291,11 +300,8 @@ TEST_P(IAT_PayloadTest, payload_testing)
 
     TestModel m;
     dlb_pmd_element_id ignore;
-    uint8_t tmp[256];
     PrngKiss prng;
     prng.seed(options);
-
-    memset(tmp, '\0', sizeof(tmp));
 
     if (   m.populate(&ignore)
         || dlb_pmd_set_title(m, "IAT testing")
@@ -312,11 +318,18 @@ TEST_P(IAT_PayloadTest, payload_testing)
     }
     else
     {
-        char tmp[128];
+        static const size_t TMP_SIZE = 128;
+        char tmp[TMP_SIZE];
+
+        tmp[TMP_SIZE - 1] = '\0';
         snprintf(tmp, sizeof(tmp), "IAT_option%d_test%d_full%d", options, e, full);
         m.skip_pcm_samples(options * e + full);
         try
         {
+            if (t >= TestModel::TEST_PCM_PAIR_11988)
+            {
+                m.ignore_name_checking();
+            }
             m.test(t, tmp, options+e);
         }
         catch (TestModel::failure& f)
@@ -333,4 +346,5 @@ INSTANTIATE_TEST_CASE_P(PMD_IAT, IAT_PayloadTest,
                                          testing::Range(0, 2),
                                          testing::Range(TestModel::FIRST_TEST_TYPE,
                                                         TestModel::LAST_TEST_TYPE+1)));
+#endif
 

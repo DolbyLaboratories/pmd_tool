@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -132,7 +132,6 @@ klv_write_ber
     }
 #endif
     abort();
-    return 0;
 }
 
 
@@ -271,7 +270,7 @@ klv_writer_init
  * @brief finish writer, send final data to be written
  */
 static inline
-int                  /** @return number of bytes written */
+unsigned int         /** @return number of bytes written */
 klv_writer_finish
    (klv_writer *w    /**< [in] writer abstraction */
    )
@@ -325,7 +324,7 @@ klv_writer_finish
      */
     vlen2 = ((vlen + 9)/10) * 10;
     memset(w->wp, '\0', vlen2 - vlen);
-    return (int)vlen2;
+    return (unsigned int)vlen2;
 }
 
 

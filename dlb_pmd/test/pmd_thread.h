@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ typedef void *(*pmd_thread_func)(void *arg);
 #if defined(_MSC_VER)
 #include <windows.h>
 
-#if !defined(inline)
+#if _MSC_VER < 1900 && !defined(inline)
 #  define inline __inline
 #endif
 

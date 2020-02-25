@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -83,6 +83,30 @@ typedef enum
 
 
 /**
+ * @brief validate a loudness practice value
+ */
+static inline
+dlb_pmd_payload_status              /** @return validation status */
+validate_pmd_loudness_practice
+    (pmd_loudness_practice practice /**< [in] PMD loudness practice value */
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (practice > PMD_LPT_CONSUMER_LEVELLER)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+    else if (practice > PMD_LPT_FREETV && practice < PMD_LPT_MANUAL)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+
+    return status;
+}
+
+
+/**
  * @brief enumerate known dialog gating practice methods
  */
 typedef enum
@@ -144,7 +168,7 @@ pmd_encode_lufs
     (float lufs
     )
 {
-    return 1024 + (unsigned int)floor(lufs * 10.0f + 0.5f);
+    return 1024 + (unsigned int)floorf(lufs * 10.0f + 0.5f);
 }
 
 
@@ -215,6 +239,36 @@ typedef signed short pmd_programme_boundary;
 
 
 /**
+ * Valid program boundary exponent values
+ */
+#define PMD_PROGRAMME_BOUNDARY_NEG_MIN (-9)
+#define PMD_PROGRAMME_BOUNDARY_NEG_MAX (-1)
+#define PMD_PROGRAMME_BOUNDARY_POS_MIN (1)
+#define PMD_PROGRAMME_BOUNDARY_POS_MAX (9)
+
+
+/**
+ * @brief validate a programme boundary value
+ */
+static inline
+dlb_pmd_payload_status          /** @return validation status */
+validate_pmd_programme_boundary
+(pmd_programme_boundary bndry   /**< [in] PMD loudness practice value */
+)
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+
+    if ((bndry >= PMD_PROGRAMME_BOUNDARY_NEG_MIN && bndry <= PMD_PROGRAMME_BOUNDARY_NEG_MAX) ||
+        (bndry >= PMD_PROGRAMME_BOUNDARY_POS_MIN && bndry <= PMD_PROGRAMME_BOUNDARY_POS_MAX))
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_OK;
+    }
+
+    return status;
+}
+
+
+/**
  * @brief offset in samples to the next boundary
  */
 typedef unsigned int pmd_programme_boundary_offset;
@@ -240,7 +294,7 @@ pmd_encode_lra
     (float lu        /**< [in] loudness range in LU */
     )
 {
-    return (pmd_loudness_range)floor((lu * 10.0f) + 0.5f);
+    return (pmd_loudness_range)floorf((lu * 10.0f) + 0.5f);
 }
 
 
@@ -265,6 +319,26 @@ typedef enum
     PMD_LRP1,  /**< Loudness Range as per EBU Tech 3342 v1 */
     PMD_LRP2   /**< Loudness Range as per EBU Tech 3342 v2 */
 } pmd_loudness_range_practice;
+
+
+/**
+ * @brief validate a loudness range practice value
+ */
+static inline
+dlb_pmd_payload_status          /** @return validation status */
+validate_pmd_loudness_range_practice
+(pmd_loudness_range_practice practice   /**< [in] PMD loudness practice value */
+)
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (practice > PMD_LRP2)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+
+    return status;
+}
     
 
 /**

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,17 +32,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
- /******************************************************************************
- * This program is protected under international and U.S. copyright laws as
- * an unpublished work. This program is confidential and proprietary to the
- * copyright owners. Reproduction or disclosure, in whole or in part, or the
- * production of derivative works therefrom without the express permission of
- * the copyright owners is prohibited.
- *
- *                Copyright (C) 2016-2018 by Dolby Laboratories,
- *                Copyright (C) 2016-2018 by Dolby International AB.
- *                            All rights reserved.
- ******************************************************************************/
 
 /**
  * @file klv_reader.h
@@ -154,9 +143,11 @@ klv_reader_error
 static inline
 void
 klv_reader_error_at
-    (klv_reader *r       /**< [in] reader abstraction */
-    ,const char *fmt     /**< [in] format string */
-    ,...                 /**< [in] varags */
+    (klv_reader *r                              /**< [in] reader abstraction */
+    ,dlb_pmd_payload_status code                /**< [in] error code */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] current read status record (may be NULL) */
+    ,const char *fmt                            /**< [in] format string */
+    ,...                                        /**< [in] varags */
     )
 {
     va_list args;
@@ -175,6 +166,13 @@ klv_reader_error_at
     len = vsnprintf(r->errmsg, r->errmsg_capacity, fmt, args);
     va_end(args);
 
+    if (read_status)
+    {
+        read_status->payload_status = code;
+        read_status->error_description[DLB_PMD_PAYLOAD_ERROR_DESCRIPTION_LAST] = '\0';
+        strncpy(read_status->error_description, r->errmsg, DLB_PMD_PAYLOAD_ERROR_DESCRIPTION_LAST);
+    }
+
     if (len > r->errmsg_capacity)
     {
         len = r->errmsg_capacity;
@@ -188,12 +186,13 @@ klv_reader_error_at
  * @brief helper function to read BER-encoded length
  */
 static inline
-int                                    /** @return 0 on success, 1 on failure */
+int                                                 /** @return 0 on success, 1 on failure */
 klv_read_ber_value
-    (klv_reader *r                     /**< [in] reader abstraction */
-    ,unsigned int *value               /**< [out] decoded value */
-    ,unsigned int *encoding_length     /**< [out] optional size of payload length encoding,
-                                         *        or NULL if unwanted */
+    (klv_reader *r                                  /**< [in] reader abstraction */
+    ,unsigned int *value                            /**< [out] decoded value */
+    ,unsigned int *encoding_length                  /**< [out] optional size of payload length encoding,
+                                                      *        or NULL if unwanted */
+    , dlb_pmd_payload_status_record *read_status    /**< [out] optional read status record */
     )
 {
     ptrdiff_t length = r->end - r->rp;
@@ -203,7 +202,7 @@ klv_read_ber_value
 
     if (length < 1)
     {
-        klv_reader_error_at(r, "BER length too small\n");
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status, "BER length too small\n");
         return 1;
     }
 
@@ -222,7 +221,7 @@ klv_read_ber_value
     count = (byte & 0x7f); /* number of length bytes */
     if (length < count+1)
     {
-        klv_reader_error_at(r, "BER length extends beyond end of buffer\n");
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status, "BER length extends beyond end of buffer\n");
         return 1;
     }
     if (encoding_length)
@@ -236,7 +235,7 @@ klv_read_ber_value
         count -= 1;
         if (v > 0xffffff)
         {
-            klv_reader_error_at(r, "BER length too large\n");
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status, "BER length too large\n");
             return 1;
         }
     }
@@ -262,7 +261,10 @@ klv_reader_new_frame
     pmd_signals_init(&r->signals);    
     pmd_idmap_init(r->element_ids);
     pmd_idmap_init(r->apd_ids);
-    model->esd.streams_read = 0;
+    if (model->esd)
+    {
+        model->esd->streams_read = 0;
+    }
 }
 
 
@@ -350,27 +352,27 @@ klv_reader_init
 
     if (!klv_match_universal_label(r->rp, length))
     {
-        klv_reader_error_at(r, "Universal Label not found\n");
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, NULL, "Universal Label not found\n");
         return 1;
     }
 
     length -= UNIVERSAL_KEY_SIZE;
     r->rp += UNIVERSAL_KEY_SIZE;
 
-    if (klv_read_ber_value(r, &payload_length, NULL))
+    if (klv_read_ber_value(r, &payload_length, NULL, NULL))
     {
         return 1;
     }
 
     if (r->rp + payload_length > r->end)
     {
-        klv_reader_error_at(r, "payload length longer than byte buffer\n");
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, NULL, "payload length longer than byte buffer\n");
         return 1;
     }
 
     if (!klv_reader_check_crc32(r->rp, payload_length))
     {
-        klv_reader_error_at(r, "CRC failure\n");
+        klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_ERROR, NULL, "CRC failure\n");
         return 1;
     }
     
@@ -379,6 +381,35 @@ klv_reader_init
      */
     r->end = r->rp + payload_length;
     return 0;
+}
+
+
+/* Language code character encoding*/
+#define LANG_CODE_CHAR_ENC_FIRST_RESERVED (0x1c)
+#define LANG_CODE_CHAR_ENC_LAST_RESERVED (0x1f)
+
+
+/**
+* @brief validate an encoded language code character
+*/
+static inline
+dlb_pmd_payload_status
+klv_reader_validate_langcod_char
+    (uint8_t char_val
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (char_val > LANG_CODE_CHAR_ENC_LAST_RESERVED)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+    else if (char_val >= LANG_CODE_CHAR_ENC_FIRST_RESERVED)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+
+    return status;
 }
 
 

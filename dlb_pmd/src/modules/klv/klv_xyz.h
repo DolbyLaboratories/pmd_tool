@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -90,7 +90,7 @@ klv_xyz_write
         set_(wp, UPDATE_SAMPLE_TIME, time);
         while (i < model->num_xyz && space_for_updates)
         {
-            if (   (!pmd_xyz_set_test(&model->xyz_written, i))
+            if (   (!pmd_xyz_set_test(&model->write_state.xyz_written, i))
                 && (update->time == time))
             {
                 uint16_t obj_id = elements[update->obj_idx].id;
@@ -100,7 +100,7 @@ klv_xyz_write
                 set_(wp, UPDATE_XPOS(written),     update->x);
                 set_(wp, UPDATE_YPOS(written),     update->y);
                 set_(wp, UPDATE_ZPOS(written),     update->z);
-                pmd_xyz_set_add(&model->xyz_written, i);
+                pmd_xyz_set_add(&model->write_state.xyz_written, i);
                 --space_for_updates;
                 ++written;
             }
@@ -117,10 +117,11 @@ klv_xyz_write
  * @brief extract an audio object update from serialized form
  */
 static inline
-int                                /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_xyz_read
-    (klv_reader *r                 /**< [in] KLV buffer to read */
-    ,int payload_length            /**< [in] bytes in presentation payload */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in presentation payload */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
     uint8_t *rp = r->rp;
@@ -130,25 +131,61 @@ klv_xyz_read
     int total = COUNT_UPDATES(payload_length*8);
     int count = 0;
 
-    update.time = (unsigned int)get_(rp, UPDATE_SAMPLE_TIME);
+    update.time = (unsigned int)get_(rp, UPDATE_SAMPLE_TIME);   /* No validation necessary */
     while (count < total)
     {
+        dlb_pmd_payload_status ps;
+        
         obj_id      = (uint16_t)get_(rp, UPDATE_OBJ_ID(count));
         update.x    = (pmd_position)get_(rp, UPDATE_XPOS(count));
         update.y    = (pmd_position)get_(rp, UPDATE_YPOS(count));
         update.z    = (pmd_position)get_(rp, UPDATE_ZPOS(count));
 
-        TRACE(("        XYZ: %u\n", obj_id));                
+        TRACE(("        XYZ: %u\n", obj_id));
+        ps = pmd_validate_audio_element_id(obj_id);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status,
+                                "Invalid audio element id %u for object referenced in XYZ payload\n",
+                                (unsigned int)obj_id);
+            return 1;
+        }
         if (!pmd_idmap_lookup(r->element_ids, obj_id, &idx))
         {
-            klv_reader_error_at(r, "XYZ payload refers to uknown element %d\n", obj_id);
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status,
+                                "XYZ payload refers to unknown element %u\n",
+                                (unsigned int)obj_id);
             return 1;
         }
         update.obj_idx = idx;
 
+        ps = pmd_validate_encoded_position(update.x);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid encoded x position value %u for audio object %u update\n",
+                                (unsigned int)update.x, (unsigned int)obj_id);
+            return 1;
+        }
+
+        ps = pmd_validate_encoded_position(update.y);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid encoded y position value %u for audio object %u update\n",
+                                (unsigned int)update.y, (unsigned int)obj_id);
+            return 1;
+        }
+
+        ps = pmd_validate_encoded_position(update.z);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid encoded z position value %u for audio object %u update\n",
+                                (unsigned int)update.z, (unsigned int)obj_id);
+            return 1;
+        }
+
         if (pmd_model_add_update(r->model, &update))
         {
-            klv_reader_error_at(r, "could not add XYZ payload to model\n");
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status, "could not add XYZ payload to model\n");
             return 1;
         }
         ++count;

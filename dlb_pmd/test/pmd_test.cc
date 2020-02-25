@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,10 +33,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file pmd_test.cc
+ * @brief simple tool to iterate a few tests
+ */
+
 #include "TestModel.hh"
 #include "XmlSchema.hh"
 #include "gtest/gtest.h"
 #include <string.h>
+#include <ctime>
+#include <iostream>
 
 
 /**
@@ -49,12 +56,24 @@ main
     )
 {
     int result = 0;
+    std::time_t start = std::time(NULL);
 
-    ::testing::InitGoogleTest(&argc, argv);
+    try
+    {
+        ::testing::InitGoogleTest(&argc, argv);
 
-    XmlSchema::initialize();
-    result = RUN_ALL_TESTS();
-    XmlSchema::finalize();
+        XmlSchema::initialize();
+        result = RUN_ALL_TESTS();
+        XmlSchema::finalize();
+    }
+    catch(...)
+    {
+        result = -1;
+    }
+
+    std::time_t finish = std::time(NULL);
+    double dt = std::difftime(finish, start);
+    std::cout << "PMD test application ran for " << dt << " seconds" << std::endl;
 
     return result;
 }

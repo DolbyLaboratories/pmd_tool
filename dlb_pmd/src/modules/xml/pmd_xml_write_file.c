@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -70,7 +70,7 @@ get_buffer
     {
         return 0;
     }
-    
+
     if (NULL != pos)
     {
         ptrdiff_t len = pos - xbuf->line;
@@ -82,7 +82,7 @@ get_buffer
 
         fwrite(xbuf->line, 1, len, xbuf->fp);
     }
-    
+
     if (NULL != buf)
     {
         *buf = xbuf->line;
@@ -94,7 +94,7 @@ get_buffer
 
 dlb_pmd_success
 dlb_xmlpmd_file_write
-   (const char    *filename 
+   (const char    *filename
    ,dlb_pmd_model *model
    )
 {
@@ -107,10 +107,8 @@ dlb_xmlpmd_file_write
         error(model, "Failed to open output file: %s\n", filename);
         return PMD_FAIL;
     }
-    
+
     ret = dlb_xmlpmd_write(get_buffer, 0, &xbuf, model);
     fclose(xbuf.fp);
     return ret;
 }
-
-

@@ -42,7 +42,7 @@
 <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='release|x64'">false</LinkIncremental></PropertyGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\src\xercesc\util\FileManagers;..\..\..\src\xercesc\util\MsgLoaders\Win32;..\..\..\src\xercesc\util\MutexManagers;..\..\..\src\xercesc\util\NetAccessors\WinSock;..\..\..\src\xercesc\util\Transcoders\Win32;..\..\..\windows;..\..\..\src;..\..\..\src\xercesc\dom\impl;..\..\..\src\xercesc\dom;..\..\..\src\xercesc\framework;..\..\..\src\xercesc\framework\psvi;..\..\..\src\xercesc\internal;..\..\..\src\xercesc\parsers;..\..\..\src\xercesc\sax;..\..\..\src\xercesc\sax2;..\..\..\src\xercesc\util\MsgLoaders\InMemory;..\..\..\src\xercesc\util\NetAccessors;..\..\..\src\xercesc\util;..\..\..\src\xercesc\util\regx;..\..\..\src\xercesc\validators\DTD;..\..\..\src\xercesc\validators\common;..\..\..\src\xercesc\validators\datatype;..\..\..\src\xercesc\validators\schema\identity;..\..\..\src\xercesc\validators\schema;..\..\..\src\xercesc\xinclude</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\src\xercesc\util\FileManagers;..\..\..\windows;..\..\..\src</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
 <BufferSecurityCheck>true</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
@@ -66,7 +66,7 @@
 <LinkLibraryDependencies>false</LinkLibraryDependencies></ProjectReference></ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\src\xercesc\util\FileManagers;..\..\..\src\xercesc\util\MsgLoaders\Win32;..\..\..\src\xercesc\util\MutexManagers;..\..\..\src\xercesc\util\NetAccessors\WinSock;..\..\..\src\xercesc\util\Transcoders\Win32;..\..\..\windows;..\..\..\src;..\..\..\src\xercesc\dom\impl;..\..\..\src\xercesc\dom;..\..\..\src\xercesc\framework;..\..\..\src\xercesc\framework\psvi;..\..\..\src\xercesc\internal;..\..\..\src\xercesc\parsers;..\..\..\src\xercesc\sax;..\..\..\src\xercesc\sax2;..\..\..\src\xercesc\util\MsgLoaders\InMemory;..\..\..\src\xercesc\util\NetAccessors;..\..\..\src\xercesc\util;..\..\..\src\xercesc\util\regx;..\..\..\src\xercesc\validators\DTD;..\..\..\src\xercesc\validators\common;..\..\..\src\xercesc\validators\datatype;..\..\..\src\xercesc\validators\schema\identity;..\..\..\src\xercesc\validators\schema;..\..\..\src\xercesc\xinclude</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\src\xercesc\util\FileManagers;..\..\..\windows;..\..\..\src</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>Default</BasicRuntimeChecks>
 <BufferSecurityCheck>false</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>

@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup Label="ProjectConfigurations">
+<ProjectConfiguration Include="debug|x64">
+<Configuration>debug</Configuration>
+<Platform>x64</Platform></ProjectConfiguration>
+<ProjectConfiguration Include="release|x64">
+<Configuration>release</Configuration>
+<Platform>x64</Platform></ProjectConfiguration></ItemGroup>
+<PropertyGroup Label="Globals">
+<Keyword>Win32Proj</Keyword>
+<ProjectName>libui_alpha4_1</ProjectName>
+<ProjectGuid>{A509D75D-F300-36CD-B469-C28977B142C3}</ProjectGuid>
+<RootNamespace>libui_alpha4_1</RootNamespace></PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'" Label="Configuration">
+<CharacterSet>Unicode</CharacterSet>
+<ConfigurationType>StaticLibrary</ConfigurationType>
+<UseDebugLibraries>true</UseDebugLibraries>
+<PlatformToolset>v140</PlatformToolset>
+<WholeProgramOptimization>false</WholeProgramOptimization></PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'" Label="Configuration">
+<CharacterSet>Unicode</CharacterSet>
+<ConfigurationType>StaticLibrary</ConfigurationType>
+<UseDebugLibraries>false</UseDebugLibraries>
+<PlatformToolset>v140</PlatformToolset>
+<WholeProgramOptimization>true</WholeProgramOptimization></PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+<ImportGroup Label="ExtensionSettings" />
+<ImportGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'" Label="PropertySheets">
+<Import Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" /></ImportGroup>
+<ImportGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'" Label="PropertySheets">
+<Import Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" /></ImportGroup>
+<PropertyGroup Label="UserMacros" />
+<PropertyGroup>
+<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+<IntDir Condition="'$(Configuration)|$(Platform)'=='debug|x64'">$(Configuration)\VS2015\</IntDir>
+<OutDir Condition="'$(Configuration)|$(Platform)'=='debug|x64'">$(SolutionDir)$(Configuration)\VS2015\</OutDir>
+<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='debug|x64'">true</LinkIncremental>
+<IntDir Condition="'$(Configuration)|$(Platform)'=='release|x64'">$(Configuration)\VS2015\</IntDir>
+<OutDir Condition="'$(Configuration)|$(Platform)'=='release|x64'">$(SolutionDir)$(Configuration)\VS2015\</OutDir>
+<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='release|x64'">false</LinkIncremental></PropertyGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'">
+<ClCompile>
+<AdditionalIncludeDirectories>..\..\..\windows;..\..\..\common;..\..\..</AdditionalIncludeDirectories>
+<BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+<BufferSecurityCheck>true</BufferSecurityCheck>
+<CompileAs>Default</CompileAs>
+<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+<DisableSpecificWarnings />
+<ExceptionHandling>Sync</ExceptionHandling>
+<MinimalRebuild>false</MinimalRebuild>
+<Optimization>Disabled</Optimization>
+<DisableLanguageExtensions>false</DisableLanguageExtensions>
+<PreprocessorDefinitions>WIN32=1;WIN64=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_LIB=1</PreprocessorDefinitions>
+<RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+<PrecompiledHeader />
+<WarningLevel>Level4</WarningLevel>
+<FunctionLevelLinking>false</FunctionLevelLinking>
+<IntrinsicFunctions>false</IntrinsicFunctions></ClCompile>
+<Lib>
+<AdditionalDependencies />
+<AdditionalLibraryDirectories />
+<IgnoreSpecificDefaultLibraries /></Lib>
+<ProjectReference>
+<LinkLibraryDependencies>false</LinkLibraryDependencies></ProjectReference></ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
+<ClCompile>
+<AdditionalIncludeDirectories>..\..\..\windows;..\..\..\common;..\..\..</AdditionalIncludeDirectories>
+<BasicRuntimeChecks>Default</BasicRuntimeChecks>
+<BufferSecurityCheck>false</BufferSecurityCheck>
+<CompileAs>Default</CompileAs>
+<DebugInformationFormat />
+<DisableSpecificWarnings />
+<ExceptionHandling>Sync</ExceptionHandling>
+<MinimalRebuild>false</MinimalRebuild>
+<Optimization>MaxSpeed</Optimization>
+<DisableLanguageExtensions>false</DisableLanguageExtensions>
+<PreprocessorDefinitions>NDEBUG=1;WIN32=1;WIN64=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_LIB=1</PreprocessorDefinitions>
+<RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+<PrecompiledHeader />
+<WarningLevel>Level4</WarningLevel>
+<FunctionLevelLinking>true</FunctionLevelLinking>
+<IntrinsicFunctions>true</IntrinsicFunctions></ClCompile>
+<Lib>
+<AdditionalDependencies />
+<AdditionalLibraryDirectories />
+<IgnoreSpecificDefaultLibraries /></Lib>
+<ProjectReference>
+<LinkLibraryDependencies>false</LinkLibraryDependencies></ProjectReference></ItemDefinitionGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\common\attribute.c" />
+<ClCompile Include="..\..\..\common\debug.c" />
+<ClCompile Include="..\..\..\common\shouldquit.c" />
+<ClCompile Include="..\..\..\common\tablevalue.c" />
+<ClCompile Include="..\..\..\windows\area.cpp" />
+<ClCompile Include="..\..\..\windows\areaevents.cpp" />
+<ClCompile Include="..\..\..\windows\attrstr.cpp" />
+<ClCompile Include="..\..\..\windows\control.cpp" />
+<ClCompile Include="..\..\..\windows\drawtext.cpp" />
+<ClCompile Include="..\..\..\windows\fontbutton.cpp" />
+<ClCompile Include="..\..\..\windows\fontmatch.cpp" />
+<ClCompile Include="..\..\..\windows\image.cpp" />
+<ClCompile Include="..\..\..\windows\init.cpp" />
+<ClCompile Include="..\..\..\windows\opentype.cpp" /></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\ui.h" />
+<ClInclude Include="..\..\..\ui_windows.h" /></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup>
+<ProjectReference Include="..\..\libui_impl_alpha4_1\windows_amd64_msvs\libui_impl_alpha4_1_2015.vcxproj">
+<Project>{B491984A-EA36-3F3C-8E84-012B93677D7D}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference></ItemGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+<ImportGroup Label="ExtensionTargets" /></Project>

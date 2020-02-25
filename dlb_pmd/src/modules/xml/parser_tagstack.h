@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,8 @@ typedef enum
 } tag_encoding;
 
 
-typedef int (*on_pop_tag)(parser *p);
+typedef dlb_pmd_success (*on_pop_tag)(parser *p);
+
 
 typedef struct
 {
@@ -61,14 +62,14 @@ typedef struct
     tag_encoding encoding;
     on_pop_tag pop_action;
 } tagloc;
-    
+
 
 typedef struct
 {
     tagloc stack[XML_TAG_STACK_SIZE];
     unsigned int top;
 } tag_stack;
-    
+
 
 static inline
 void
@@ -78,7 +79,6 @@ tag_stack_init
 {
     stack->top = 0;
 }
-
 
 
 static inline
@@ -97,7 +97,7 @@ tag_stack_push
         loc = &stack->stack[stack->top];
         loc->tag = tag;
         loc->lineno = lineno;
-	loc->encoding = TAG_ENCODING_DEFAULT;
+        loc->encoding = TAG_ENCODING_DEFAULT;
         loc->pop_action = pop_action;
         stack->top += 1;
     }
@@ -124,7 +124,6 @@ tag_stack_pop
     }
     return 0;
 }
-
 
 
 static inline

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 
 /**
  * @file pmd_idmap.h
- * @brief datastructure for maintaining maps from PMD ids to array indexes
+ * @brief data structure for maintaining maps from PMD ids to array indexes
  *
  * For convenience, XML tags can have 'id' attributes that allow them to be
  * referenced in other tags.  However, for efficiency, we'd like to translate

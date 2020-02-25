@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -63,6 +63,30 @@
 
 
 /**
+ * @brief validate a target (speaker position) value
+ */
+static
+dlb_pmd_payload_status      /** @return validation status */
+klv_validate_target
+    (unsigned int target    /**< [in] PMD target speaker position */
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (target > PMD_SPEAKER_RESERVED_LAST)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+    else if ((target == PMD_SPEAKER_NULL) || (target >= PMD_SPEAKER_RESERVED_FIRST && target <= PMD_SPEAKER_RESERVED_LAST))
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+
+    return status;
+}
+
+
+/**
  * @brief write an audio bed to the KLV output stream
  */
 static inline
@@ -83,13 +107,13 @@ klv_abd_write
         pmd_track_metadata *tmd;
         size_t payload_bits;
 
-        if (model->abd_written >= model->num_abd)
+        if (model->write_state.abd_written >= model->num_abd)
         {
             return 0;
         }
 
-        e = &model->element_list[model->bed_write_index];
-        for (ei = model->bed_write_index; ei < model->num_elements; ++ei, ++e)
+        e = &model->element_list[model->write_state.bed_write_index];
+        for (ei = model->write_state.bed_write_index; ei < model->num_elements; ++ei, ++e)
         {
             if (PMD_MODE_CHANNEL == e->mode)
             {
@@ -130,12 +154,12 @@ klv_abd_write
                 wp += (bo + payload_bits) / 8;
                 bo = (bo + payload_bits) % 8;
                 w->wp = wp;
-                model->abd_written += 1;
+                model->write_state.abd_written += 1;
 
                 TRACE(("        ABD: %u\n", e->id));
             }
         }
-        model->bed_write_index = ei;
+        model->write_state.bed_write_index = ei;
         if (bo)
         {
             w->wp += 1;
@@ -149,10 +173,11 @@ klv_abd_write
  * @brief extract an audio bed from serialized form
  */
 static inline
-int                          /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_abd_read
-    (klv_reader *r           /**< [in] KLV buffer to read */
-    ,int payload_length      /**< [in] bytes in audio objects payload */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in audio objects payload */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
     dlb_pmd_model *model = r->model;
@@ -161,8 +186,6 @@ klv_abd_read
     pmd_element *e;
     uint8_t *rp = r->rp;
     uint8_t *end = rp + payload_length;
-    unsigned int src;
-    pmd_bool d = 0;
     pmd_element_id id;
     unsigned int bo = 0;
     unsigned int payload_bits;
@@ -170,13 +193,23 @@ klv_abd_read
 
     while (rp < end-4)
     {
+        dlb_pmd_payload_status ps;
+        uint8_t d = 0;
+
         id = (pmd_element_id)get_(rp, ABD_ID(bo));
-        
+        ps = pmd_validate_audio_element_id(id);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Invalid audio element id %u for bed\n",
+                                (unsigned int)id);
+            return 1;
+        }
         if (!pmd_idmap_lookup(r->element_ids, id, &idx))
         {
-            if (model->num_elements == MAX_AUDIO_ELEMENTS)
+            if (model->num_elements == r->model->profile.constraints.max_elements
+                || model->num_abd == r->model->profile.constraints.max.num_beds)
             {
-                klv_reader_error_at(r, "No space for ABD element in model\n");
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status, "No space for ABD element in model\n");
                 return 1; 
             }            
 
@@ -194,41 +227,90 @@ klv_abd_read
         cmd = &e->md.channel;
         cmd->num_tracks = 0;
 
-        if (!klv_decode_speaker_config((unsigned int)get_(rp, ABD_SPKRCFG(bo)), &cmd->config))
+        cmd->config = (dlb_pmd_speaker_config)get_(rp, ABD_SPKRCFG(bo));
+        ps = klv_speaker_config_validate(cmd->config);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
         {
-            klv_reader_error_at(r, "Illegal speaker config value, reading ABD\n");
+            klv_reader_error_at(r, ps, read_status, "Invalid speaker config value %d for bed with id %u\n",
+                                (int)cmd->config, (unsigned int)id);
             return 1;
         }
-        cmd->derived        = (pmd_bool)get_(rp, ABD_TYPE(bo));
-        d = 0;
+        if (!klv_decode_speaker_config((unsigned int)cmd->config, &cmd->config))
+        {
+            klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status,
+                                "Can't decode speaker config value %u, reading ABD\n",
+                                (unsigned int)cmd->config);
+            return 1;
+        }
+
+        cmd->derived = (pmd_bool)get_(rp, ABD_TYPE(bo));
         if (cmd->derived)
         {
-            cmd->origin     = (pmd_element_id)get_(rp, ABD_SOURCE(bo));
+            cmd->origin = (pmd_element_id)get_(rp, ABD_SOURCE(bo));
+            if (cmd->origin == DLB_PMD_AUDIO_ELEMENT_ID_RESERVED)
+            {
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED, read_status,
+                                    "Parent bed id %u for derived bed %u is a reserved value\n",
+                                    (unsigned int)cmd->origin, (unsigned int)id);
+                return 1;
+            }
             d = 1;
         }
     
         tmd = cmd->metadata;
-        do
+        while (1)
         {
-            /* todo: check for consistency */
-            tmd->target        = (pmd_speaker) get_(rp, ABD_TARGET(bo,d,cmd->num_tracks));
-            src                = (unsigned int)get_(rp, ABD_SRC(bo,d,cmd->num_tracks));
-            tmd->gain          = (pmd_gain)    get_(rp, ABD_GAIN(bo,d, cmd->num_tracks));
-            tmd->source        = (uint8_t)src - 1;
+            unsigned int target;
+            unsigned int src;
 
-            if (tmd->target == 0)
+            target      = (unsigned int)get_(rp, ABD_TARGET(bo,d,cmd->num_tracks));
+            src         = (unsigned int)get_(rp, ABD_SRC(bo,d,cmd->num_tracks));
+            tmd->gain   = (pmd_gain)    get_(rp, ABD_GAIN(bo,d, cmd->num_tracks));
+
+            if (target == PMD_SPEAKER_NULL)
             {
                 break;
             }
-            if (src > 0 && !pmd_signals_test(&r->signals, tmd->source))
+
+            if (cmd->num_tracks > MAX_PMD_CHANNEL_METADATA)
             {
-                pmd_signals_add(&r->signals, tmd->source);
-                r->num_signals += 1;
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE, read_status,
+                                    "More than %u input tracks for bed %u\n",
+                                    (unsigned int)MAX_PMD_CHANNEL_METADATA, (unsigned int)id);
+                return 1;
+            }
+
+            ps = klv_validate_target(target);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "Invalid target %u for bed %u\n",
+                                    (unsigned int)target, (unsigned int)id);
+                return 1;
+            }
+            tmd->target = (pmd_speaker)target;
+
+            ps = pmd_validate_source(src);
+            if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+            {
+                klv_reader_error_at(r, ps, read_status, "Invalid source %u for bed %u\n",
+                                    src, (unsigned int)id);
+                return 1;
+            }
+            tmd->source = (uint8_t)src - 1;
+
+            /* We don't need to validate gain, all possible bitfield values are good */
+
+            if (!pmd_signals_test(&r->signals, tmd->source))
+            {
+                if (!cmd->derived)
+                {
+                    pmd_signals_add(&r->signals, tmd->source);
+                    r->num_signals += 1;
+                }
             }
             cmd->num_tracks += 1;
             ++tmd;
         }
-        while (cmd->num_tracks <= MAX_PMD_CHANNEL_METADATA && src > 0);
         pmd_bed_set_normal_form(cmd);
 
         payload_bits = ABD_PAYLOAD_BITS(cmd->num_tracks, cmd->derived);

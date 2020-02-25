@@ -1,0 +1,1277 @@
+Broadcast Technology …  Professional Metadata
+PMD-APA Audio Presentation Authoring
+Created by McNamara, Tim, last modified yesterday at 03:19 PM Go to start of metadata
+ 
+Terms
+=====
+
+1. Audio Element
+
+   The smallest addressable unit of an Audio Program . Can be
+   channel-based, object-based, or scene-based. Consists of one or
+   more Audio Signals and associated Audio Element Metadata.
+
+2. Audio Element Format
+
+   Description of the configuration and type of an Audio Element.
+   There are three different types of Audio Element Formats. Depending
+   on the type, different kinds of properties are used to describe the
+   configuration:
+
+   - Channel-based audio: e.g., the number of channels and the channel layout
+   - Object-based audio: e.g., dynamic positional information
+   - Scene-based audio: e.g., HOA order, number of transport channels
+
+3. Audio Element Metadata	
+
+   Metadata associated with an Audio Element.
+
+   Some examples of Audio Element Metadata include positional metadata
+   (spatial information describing the position of objects in the
+   reproduction space, which may dynamically change over time, or
+   channel assignments), or personalization metadata (set by content
+   creator to enable certain personalization options such as turning
+   an element “on” or “off,” adjusting its position or gain, and
+   setting limits within which such adjustments may be made by the
+   user).
+
+4. Audio Object
+
+   An Audio Element that consists of an Audio Signal and Audio Element
+   Metadata , which includes rendering information (e.g., gain and
+   position) that may dynamically change.
+
+5. Audio Preselection
+   Audio Presentation
+   Audio Preset
+
+   A set of Audio Program Components representing a version of the
+   Audio Program that may be selected by a user for simultaneous
+   decoding.
+
+   Notes
+
+   An Audio Presentation or Audio Preset is a sub-selection from all
+   available Audio Program Components of one Audio Program . A
+   Presentation can be considered the NGA equivalent of audio services
+   in predecessor systems, which each utilized complete mixes (e.g.,
+   “SAP” or “VDS”).
+
+6. Audio Program	
+
+   The complete collection of all Audio Program Components and a set
+   of accompanying Audio Presentations that are available for one
+   Audio Program.
+
+   Notes
+
+   Not all Audio Program Components of one Audio Program are
+   necessarily meant to be presented at the same time. An Audio
+   Program may contain Audio Program Components that are always
+   presented, and it may include optional Audio Program Components.
+
+7. Audio Program Component
+
+   A logical group of Audio Elements that is used to define an Audio
+   Presentation. The group may consist of one or more Audio Elements.
+
+
+8. Audio Program Component Type	
+   Characterization of an Audio Program Component with regard to its content.
+
+   Examples for Audio Program Component Types:
+   - Complete Main
+   - Music & Effects (M+E):,
+     the background signal that contains a mix of various audio signals except speech.
+   - Dialog: one or more audio signals that contain only speech
+   - Video Description
+
+9. Audio Signal
+
+   A mono signal.
+
+10. Channel Set
+
+    A group of Channel Signals that are intended to be reproduced
+    together.
+
+11. Channel Signal
+
+    An Audio Signal that is intended to be played back at one specific
+    nominal loudspeaker position.
+
+12. Complete Mix
+
+    All Audio Elements of one Audio Presentation mixed together into a
+    Channel Bed.
+
+13. Elementary Stream
+
+    A bit stream that consists of a single type of encoded data
+    (audio, video, or other data). The Audio Elements of one Audio
+    Program may be delivered in a single audio Elementary Stream or
+    distributed over multiple audio Elementary Streams.
+
+14. Mix
+
+    A number of Audio Elements of one Audio Program that are mixed
+    together into one Channel Signal or into a Channel Bed.
+
+
+Additional Metadata (These are all notes/ideas)
+===============================================
+
+Presentation Level
+
+    Radio button like operation i.e. always 1 of n commentaries or no
+    more than n at any one time User influenced object position
+    (primarily dialog) proximity constarints i.e force field strength
+    (think of it as same pole magnets)
+
+Object Level
+
+    Static or Dynamic
+    Core PMD_XYZ
+    XYZ constraints
+
+Audio Signal Level
+
+    Basic entity class, dialog, soundfield, shiny object
+
+Example Usage
+-------------
+
+In the following example we have a 14ch HD-SDI source that contains a
+clean 5.1 bed, a pair of crowd biased stereo mics, plus four other
+audio signals comprised of a PA feed and three commentaries. The
+authoring process will describe a number of channel and hybrid
+channel/object based presentations that can be targeted to various
+endpoints.
+
+XML Non-Realtime Implementation
+===============================
+
+Audio Signals
+-------------
+
+Each input audio signal can be used more than once under different
+guises and/or representations, initially basic information such as the
+physical input source plus input channel lineup details are
+entered. This is similar to how sources are defined in many audio
+editing applications as well as console input map labeling.
+
+<AudioSignals>
+    <AudioSignal id="1">
+        <Name>5.1 Primary SF Mic Left</Name>
+        <SourceChannel>1</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="2"> 
+        <Name>5. Primary SF Mic Right</Name>
+        <SourceChannel>2</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="3">
+        <Name>5.1 Primary SF Mic Center</Name>
+       <SourceChannel>3</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="4">
+        <Name>5.1 Primary SF Mic LFE</Name>
+        <SourceChannel>4</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="5"> 
+        <Name>5.1 Primary SF Mic Left Surround</Name>
+        <SourceChannel>5</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="6"> 
+        <Name>5.1 Primary SF Mic Right Surround</Name>
+        <SourceChannel>6</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="7"> 
+        <Name>Stereo Elevated Mic 2-S Left</Name>
+        <SourceChannel>7</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="8">
+        <Name>Stereo Elevated Mic 2-S Right</Name>
+        <SourceChannel>8</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="9">
+        <Name>Stereo Elevated Mic 2-N Left</Name>
+        <SourceChannel>9</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="10">
+        <Name>Stereo Elevated Mic 2-N Right</Name>
+        <SourceChannel>10</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="11">
+        <Name>PA Direct Feed</Name>
+        <SourceChannel>11</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="12">
+        <Name>Commentary Mic-17-T</Name>
+        <SourceChannel>12</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="13">
+        <Name>Commentary Mic-23-D</Name>
+        <SourceChannel>13</SourceChannel>
+    </AudioSignal>
+    <AudioSignal id="14">
+        <Name>Commentary Mic-07-B</Name>
+        <SourceChannel>14</SourceChannel>
+    </AudioSignal>
+</AudioSignals>
+
+
+Channel Vs. Object Authoring
+============================
+
+Internally all audio signals are single channel objects (or things)
+even though they may at some point be represented in a channel based
+form during the authoring process. An example might be that audio
+signal ID=3 in the list above (5.1 center) is destined to be just part
+of that, the center channel in a 5.1 mix. ATSC3.0 S34-2-235r2 makes a
+distinction between channel and object based audio signals (detailed
+in "Audio, Part-1: Common Elements"). In this case our center channel
+audio signal will inherit metadata that describes the relevant speaker
+channel coordinates which are in turn configured by a user selected
+channel based speaker layout map. Prior to the presentation being
+rendered there is no fundimental difference between audio signals
+whether they are part of a channel or an object, the only real
+difference is that channels essentially have static non-user
+accessable metadata.
+
+Object Metadata
+---------------
+
+An interesting aspect of the design is that an element (channel or
+object) can be created out of one or more audio signals, in effect you
+have a mechanism to mix (or downmix) various input audio signals to
+create a variety of composite elements. If a collection of audio
+signals were to be targeted to an object rather than a channel then
+this will complicate things as an object has only one set of spatial
+coordinates for all of its component audio signals, it's a single
+point source. The single point source analogy works if we think about
+it as a dedicated speaker channel, but not if we consider it an
+object, there wouldn't exist a mechanism to spatially separate out the
+component audio signals. There maybe some applications where this
+characteristic doesn't matter, one possibility is that there maybe
+more than one commentator for a given language and the commentators
+are working as a team (this is especially true with cricket, often
+there are three). Since they all need to be included for a selected
+language presentation then they could be combined into a single object
+and then diverged across the front of the soundfield.
+
+For now the output 'width' of a audio element will be constrained to
+1/2/6/8/10/12/16, the idea being that 2/6/8/10/12/16 will be used for
+describing M+E or CM beds and 1 will be used exclusively for
+objects. At some stage there might be a case for objects that have
+more than one output point but it's unclear how you might position
+it. From an implementation standpoint it is expected that the source
+of the metadata that describes where and how audio signals are routed
+plus any gain that needs to be applied during re-use will ultimately
+be pushed or captured from the mixing console rather then entered in
+an authoring application itself.
+
+In our first example several different channel based elements are
+created from various soundscape input feeds, the Name element in the
+OutputTargetList section designates the speaker channel during
+rendering. The available options that can be selected for a given
+speaker configuration are to be defined in external configuration
+files, to keep things more simplistic the initial targets will consist
+of Stereo, 5.1, 5.1.2, 5.1.4. Note that when describing channel based
+targets the output coordinates of the intended speaker channel are not
+exposed, they do however exist internally.
+
+While it is possible to create a CM mix by adding dialog elements in
+the following description it is not recommended. The more appropriate
+way to create CM mix would be to render a presentation containing M+E,
+dialog, and/or other audio signals prior to encoding with a channel
+based emissions encoder.
+
+Each instance of an M+E Audio object has a unique ID in the range 1
+through 15, ID values of 0 and above 15 are reserved.
+
+M+E Audio Objects
+=================
+
+<AudioObjects>
+    <AudioObject id="1">
+        <Name>Center Stadium</Name>
+        <Mode>Channel</Mode>
+        <SpeakerConfig>5.1</SpeakerConfig>
+        <Type>ME</Type>
+        <OutputTargets>
+            <OutputTarget id="Left">
+                <AudioSignals>
+                   <ID>1
+                       <SourceGain>0.00dB</SourceGain>
+                   </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right">
+                 <AudioSignals>
+                     <ID>2
+                         <SourceGain>0.00dB</SourceGain>
+                     </ID>
+                 </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Center">
+                 <AudioSignals>
+                     <ID>3
+                          <SourceGain>0.00dB</SourceGain>
+                     </ID>
+                 </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="LFE">
+                <AudioSignals>
+                    <ID>4
+                         <SourceGain>0.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Left Surround">
+                <AudioSignals>
+                    <ID>5
+                         <SourceGain>0.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right Surround">
+                <AudioSignals>
+                    <ID>6
+                         <SourceGain>0.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+        </OutputTargets>
+    </AudioObject>
+    <AudioObject id="2">
+        <Name>Immersive Home Team</Name>
+        <Mode>Channel</Mode>
+        <SpeakerConfig>5.1.4</SpeakerConfig>
+        <Type>ME</Type>
+        <OutputTargets>
+            <OutputTarget id="Left">
+                <AudioSignals>
+                   <ID>1
+                       <SourceGain>-0.50dB</SourceGain>
+                   </ID>
+                   <ID>7
+                       <SourceGain>-10.00dB</SourceGain>
+                   </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right">
+                <AudioSignals>
+                    <ID>2
+                       <SourceGain>-0.50dB</SourceGain>
+                    </ID>
+                    <ID>8
+                       <SourceGain>-10.00dB</SourceGain>
+                    </ID>
+               </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Center">
+                <AudioSignals>
+                    <ID>3
+                        <Gain>0.00dB</Gain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="LFE">
+                <AudioSignals>
+                    <ID>4
+                        <SourceGain>0.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Left Surround">
+                 <AudioSignals>
+                    <ID>5
+                        <SourceGain>-0.50dB</SourceGain>
+                    </ID>
+                    <ID>7
+                        <SourceGain>-10.00dB</SourceGain>
+                    </ID>
+                 </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right Surround">
+                <AudioSignals>
+                    <ID>6
+                        <SourceGain>-0.50dB</SourceGain>
+                    </ID>
+                    <ID>8
+                        <SourceGain>-10.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Left Top Front">
+                <AudioSignals>
+                    <ID>7
+                       <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>11
+                       <SourceGain>-6.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right Top Front">
+                <AudioSignals>
+                    <ID>8
+                        <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>11
+                        <SourceGain>-6.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Left Top Rear">
+                <AudioSignals>
+                    <ID>7
+                        <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>11
+                        <SourceGain>-6.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right Top Rear">
+                <AudioSignals>
+                    <ID>8
+                        <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>11
+                        <SourceGain>-6.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+        </OutputTargets>
+    </AudioObject>
+    <AudioObject id="3">
+        <Name>Immersive AwayTeam</Name>
+        <Mode>Channel</Mode>
+        <SpeakerConfig>5.1.4</SpeakerConfig>
+        <Type>ME</Type>
+                    <OutputTargets>
+            <OutputTarget id="Left">
+                <AudioSignals>
+                    <ID>1
+                        <SourceGain>-0.50dB</SourceGain>
+                    </ID>
+                    <ID>9
+                        <SourceGain>-10.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right">
+                <AudioSignals>
+                    <ID>2
+                        <SourceGain>-0.50dB</SourceGain>
+                    </ID>
+                    <ID>10
+                        <SourceGain>-10.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Center">
+                <AudioSignals>
+                    <ID>3
+                        <SourceGain>0.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="LFE">
+                <AudioSignals>
+                    <ID>4
+                        <SourceGain>0.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Left Surround">
+                <AudioSignals>
+                    <ID>5
+                        <SourceGain>-0.50dB</SourceGain>
+                    </ID>
+                    <ID>9
+                        <SourceGain>-10.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right Surround">
+                <AudioSignals>
+                    <ID>6
+                        <SourceGain>-0.50dB</SourceGain>
+                    </ID>
+                    <ID>10
+                        <SourceGain>-10.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Left Top Front">
+                <AudioSignals>
+                    <ID>9
+                        <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>11
+                        <SourceGain>-6.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right Top Front">
+                <AudioSignals>
+                    <ID>10
+                        <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>11
+                        <SourceGain>-6.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Left Top Rear">
+                <AudioSignals>
+                    <ID>9
+                        <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>11
+                        <SourceGain>-6.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right Top Rear">
+                <AudioSignals>
+                    <ID>10
+                        <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>11
+                        <SourceGain>-6.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+        </OutputTargets>
+    </AudioObject>
+    <AudioObject id="4">
+        <Name>Streaming Stereo</Name>
+        <Mode>Channel</Mode>
+        <SpeakerConfig>Stereo</SpeakerConfig>
+        <Type>ME</Type>
+        <OutputTargets>
+            <OutputTarget id="Left">
+                <AudioSignals>
+                    <ID>1
+                        <SourceGain>-4.00dB</SourceGain>
+                    </ID>
+                    <ID>3
+                        <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>5
+                        <SourceGain>-10.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+            <OutputTarget id="Right">
+                <AudioSignals>
+                    <ID>2
+                        <SourceGain>-4.00dB</SourceGain>
+                    </ID>
+                    <ID>3
+                        <SourceGain>-3.00dB</SourceGain>
+                    </ID>
+                    <ID>6
+                        <SourceGain>-10.00dB</SourceGain>
+                    </ID>
+                </AudioSignals>
+            </OutputTarget>
+        </OutputTargets>
+    </AudioObject>
+</AudioObjects>
+
+
+Having described the various channel represented elements we move on
+to non-channel based objects. In the examples above we premixed in the
+PA feed into the immersive M+E's so there is no need to use up an
+object for it. As mentioned earlier, there doesn't seem to be a valid
+use case in the broadcast/live area for objects that have more than
+one output coordinate i.e. a single point source (the single point
+does however have size parameters which can selectively expand it in
+both the horizontal and vertical planes). Perhaps the output of an
+object that is described as a 3D area by multiple points could be of
+some use in an elaborate offline post produced environment, but that's
+not the focus here.
+
+We typically think of discrete objects as something that is intended
+to be overlayed on an audio bed (the term bed we might better describe
+as a collection of pre-rendered objects targeted to a specific channel
+based speaker configuration), however, the format as described is not
+constrained to that model. You could for example signal a 'channel' by
+populating a particular elements metadata to the coordinates of a
+specific speaker position. For now however the focus is on the more
+typical use case whereby objects are used to convey unique audio
+signals that ultimately differentiate the various authored
+presentations, such as multi-language and accessibility dialog
+elements. Near term the number of sources listed under the
+AudioSignals parameter will be constrained to just 1.
+
+If at some stage an object is to be dynamic in nature (the metadata
+can be updated over time) then those relevant portions of the metadata
+will be signaled with a PMD-XYZ Dynamic Object Position payload that
+is attached to the object instance ID iterated in the definition.
+
+Each instance of a Discrete Audio Object has a unique ID range bounded
+by its class (Generic, VDS, Dialog)
+
+   - Generic Object 17-31
+   - VDS 33-47
+   - Dialog 65-127
+   - 128-255 Reserved
+ 
+Discrete Audio Objects
+----------------------
+<AudioObjects>
+    <AudioObject id="65">
+        <Name>English Commentary</Name>
+        <Mode>Object</Mode>
+        <Class>Dialog</Class>
+        <DynamicUpdates>False</DynamicUpdates>
+        <X_Pos>0.35</X_Pos>
+        <Y_Pos>0.00</Y_Pos>
+        <Z_Pos>0.00</Z_Pos>
+        <Size>0.00</Size>
+        <Size_Vertical>False</Size_Vertical>
+        <Diverge>True</Diverge>
+        <ObjectGain>0.00dB</ObjectGain>
+            <AudioSignals>
+                <ID>12</ID>
+            </AudioSignals>
+    </AudioObject>
+    <AudioObject id="66">
+        <Name>Spanish Commentary</Name>
+        <Mode>Object</Mode>
+        <Class>Dialog</Class>
+        <DynamicUpdates>False</DynamicUpdates>
+        <X_Pos>0.35</X_Pos>
+        <Y_Pos>0.00</Y_Pos>
+        <Z_Pos>0.00</Z_Pos>
+        <Size>0.00</Size>
+        <Size_Vertical>False</Size_Vertical>
+        <Diverge>True</Diverge>
+        <ObjectGain>0.00dB</ObjectGain>
+        <AudioSignals>
+            <ID>13</ID>
+        </AudioSignals>
+    </AudioObject>
+    <AudioObject id="33">
+        <Name>English VDS</Name>
+        <Mode>Object</Mode>
+        <Class>VDS</Class>
+        <DynamicUpdates>False</DynamicUpdates>
+        <X_Pos>0.50</X_Pos>
+        <Y_Pos>0.00</Y_Pos>
+        <Z_Pos>0.00</Z_Pos>
+        <Size>0.00</Size>
+        <Size_Vertical>False</Size_Vertical>
+        <Diverge>False</Diverge>
+        <ObjectGain>0.00dB</ObjectGain>
+            <AudioSignals>
+                <ID>14</ID>
+            </AudioSignals>
+    </AudioObject>
+    <AudioObject id="17">
+        <Name>PA</Name>
+        <Mode>Object</Mode>
+        <Class>Generic</Class>
+        <DynamicUpdates>False</DynamicUpdates>
+        <X_Pos>0.50</X_Pos>
+        <Y_Pos>0.50</Y_Pos>
+        <Z_Pos>1.00</Z_Pos>
+        <Size>0.40</Size>
+        <Size_Vertical>False</Size_Vertical>
+        <Diverge>False</Diverge>
+        <ObjectGain>0.00dB</ObjectGain>
+        <AudioSignals>
+            <ID>15</ID>
+        </AudioSignals>
+    </AudioObject>
+    <AudioObject id="18">
+        <Name>Sound Effects</Name>
+        <Mode>Object</Mode>
+        <Class>Generic</Class>
+        <DynamicUpdates>False</DynamicUpdates>
+        <X_Pos>0.50</X_Pos>
+        <Y_Pos>0.50</Y_Pos>
+        <Z_Pos>0.50</Z_Pos>
+        <Size>0.30</Size>
+        <Size_Vertical>True</Size_Vertical>
+        <Diverge>False</Diverge>
+        <ObjectGain>0.00dB</ObjectGain>
+        <AudioSignals>
+            <ID>16</ID>
+        </AudioSignals>
+    </AudioObject>
+</AudioObjects>
+
+
+Defining Audio Experiences
+==========================
+
+Near term the presentation recipes will be fairly constrained as the
+industry transitions to next generation audio programming. A good
+starting point of reference as to what ingredients could go into the
+recipes can be found in the ATSC 3.0 A34-2 Audio Common Elements
+working draft document table A.1.1. This outlines some of the various
+combinations of channel rendered elements (including immersive) plus
+discrete dialog, VDS, and other non-dialog based audio signals.  Note
+(again) that a channel based CM mix is really a pre-rendered (HOA or
+15.1 object modes aside) presentation that is then subsequently
+encoded for emissions as a single elementary stream.
+
+Some initial presentation constraints:
+
+ - The maximum number of 'things' is constrained to 14 or 16 depending upon the workflow
+ - The supported target channel modes for M+E = Stereo, 5.1, 5.1.2, 5.1.4
+ - At minimum a presentation must contain at least 1 M+E element
+
+ - Presentation configurations of M+E, M+E + D, M+E + D + VDS, and
+   some number of O's (discrete objects) to make it up to a total of
+   16 audio signals including the count of cha nnels in the M+E
+
+The recipe of what makes a presentation is a simple linear list of
+ingredients, we could add additional layers of complexity, perhaps a
+grouping of certain presentations under say "5.1" as the parent with 3
+children, English, Spanish, English VDS. This grouping however is only
+in-scope at the playback device where the user would make the choice
+of what presentation to select, so there seems little reason to have
+that information signaled this far up the chain. The list of valid
+settings for PresentationConfiguration are to be stored in an external
+configuration file that also contains applicable constraints logic, it
+is expected that the number of entries will expand over time as new
+use cases are created.
+
+Presentations
+============= 
+
+<Presentations>
+    <Presentation id="1">
+        <Name>English 5.1</Name>
+        <PresentationConfiguration>5.1 ME + D</PresentationConfiguration>
+        <ME_ID>1</ME_ID>
+        <D_ID>65</D_ID>
+    </Presentation>
+    <Presentation id="2">
+        <Name>Spanish 5.1</Name>
+        <PresentationConfiguration>5.1 ME + D</PresentationConfiguration>
+        <ME_ID>1</ME_ID>
+        <D_ID>66</D_ID>
+    </Presentation>
+    <Presentation id="3">
+        <Name>English 5.1 + VDS</Name>
+    <PresentationConfiguration>5.1 ME + D + VDS    </PresentationConfiguration>
+        <ME_ID>1</ME_ID>
+        <D_ID>5</D_ID>
+        <VDS_ID>33</VDS_ID>
+    </Presentation>
+    <Presentation id="4">
+        <Name>Home Immersive</Name>
+    <PresentationConfiguration>5.1.4 ME    </PresentationConfiguration>
+        <ME_ID>2</ME_ID>
+    </Presentation>
+    <Presentation id="5">
+        <Name>Away Immersive</Name>
+    <PresentationConfiguration>5.1.4 ME    </PresentationConfiguration>
+        <ME_ID>3</ME_ID>
+    </Presentation>
+    <Presentation id="6">
+        <Name>Immersive Away Team With Discrete Objects</Name>
+    <PresentationConfiguration>5.1.4 ME + O + O    </PresentationConfiguration>
+        <ME_ID>3</ME_ID>
+        <O1_ID>17</O1_ID>
+        <O2_ID>18</O2_ID>
+    </Presentation>
+</Presentations>
+
+Optimizing The 5.1 Core In Single Stream DD+JOC Applications
+============================================================
+
+There is no BSI/ExBSI parameter that allows direct control as to how
+much of the overhead energy gets mixed into the 5.1 core, a mechanism
+is however needed as the internal default value(s) may not be suitable
+depending upon the content (it could for instance swamp the 5.1 core
+such that commentary becomes difficult to hear). This can become a
+problem if the service provider uses just a single DD+JOC stream for
+both immersive and legacy audio delivery. OAMD does have a number of
+trim parameters that can attenuate (and in some cases boost) the audio
+signals to optimize the 5.1 core mix on an as needed basis.
+
+At a product level it might be worthwhile considering a global
+parameter (OMixLev ?) that can uniformly set the appropriate OAMD
+parameters for all overhead energy such that it does not compromise
+the 5.1 core. This would be user settable through the encoder UI for
+situations where the nature of the content is predetermined (as might
+be done as part of a pre-season mix template/specification).
+
+Even though a single DD+JOC stream has no provision for fully
+customizable presets (aka Willow) or presentations (AC-4) to further
+optimize the 5.1 core all of the applicable OAMD trim parameters can
+be utilized. The M+E Audio Object definition above has separate mix
+coefficient entries for all of the channel beds that are part of a
+group of presentations (typically 5.1.4, 5.1, Stereo). If the primary
+mix is 5.1.4 then the gain contribution for not only the overhead
+channels but also the center and surround can be adjusted for the 5.1
+core mix (hence the Stereo downmix of that 5.1 mix).
+
+The range of possible adjustment during authoring will need to be
+constrained to that allowed, also, as part of the signal chain design
+care would need to be taken to manage the various gain stages (perhaps
+even validated as part of the process).
+
+Constraining Audio Experiences
+==============================
+
+At some point a service provider may desire to let users go beyond
+simple presentation selection and control certain aspects within that
+presentation. These could include overall relative dialog volume
+range, the inclusion of alternative hybrid delivered elements, or a
+more alcarte selection of elements that can be combined into a
+personalized experience. In the following hypothetical example the
+user has the option of two different soundfield (bed) selections and
+three different commentaries (which can be positioned within the
+selected soundfield). The listening mode and immersive/non-immersive
+selection will be gated by the playback device capabilities.
+
+The kinds of constraints (or rules) might include:
+
+ - Not all of the commentaries can be selected at any one time
+ - Can the selected commentary can be muted
+ - The boost/cut range of the commentary
+
+A commentary dialog element can only be positioned within certain
+coordinates relative to the playback device capabilites (Stereo, 5.1,
+immersive) When more than a single commentary is allowed, the dialog
+elements cannot be in too close a proximitry to each other Overall
+program loudness falls within a certain range
+
+Emission Encoder Configuration
+==============================
+
+In a similar way to constraints metadata there needs to be a payload
+(or non-realtime metadata configuration file) that defines what
+happens once the presentation is pre-processed or rendered in a
+downstream emissions encoder/transcoder. An integral function of the
+overall authoring platform extends beyond just presentation authoring
+(i.e. DP590 like functionality). There needs to be an integrated
+environment in which the entire signal chain can be validated to
+ensure that the authored presentations do not violate any target-codec
+specific constraints. Any codec specific configuration settings or
+metadata (such as legacy DD/DD+) should be represented in this payload
+to compartmentalize propriety parameters away from those used to
+describe an audio experience.
+
+Other items that could be considered include:
+
+ - Target codec bitstream topology and complexity
+ - Datarate quality constraints
+ - Bitstream conveyed metadata payload size
+
+CM presentation rendering source Vs. target codec suitability
+=============================================================
+
+In the near term our vehicle for delivering immersive content to the
+the endpoint is by way of DD+/DD+JOC. For now we will constrain the
+modes of operation to the following:
+
+  - Channel modes Stereo, 5.1, 5.1.2, 5.1.4
+  - Datarates of 96kbps (Stereo), 192kbps (5.1), 384kbps (5.1.2 or
+    5.1.4), 448kbps (5.1.2 or 5.1.4), 640kbps (5.1.2 or 5.1.4)
+
+Legacy metadata settings per black box/blue box
+===============================================
+
+For completeness an ATSC3.0 encoder configuration is also
+included. Beyond the basics such as type, datarate, and a list of the
+presentations that will be part of the overall emissions deliverable
+we might not need to specifically callout the overall AC-4 H-ESM
+configuration as it can be deduced from all of the other information
+in the presentation list. It might however be useful if the authoring
+product could facilitate the creation of the non-realtime AC-4 H-ESM
+configuration file for later use as it nicely summarizes the number of
+encoder instances under each encoder parent config.
+
+EncoderConfiguration
+====================
+<EncoderConfigurations>
+    <!-- Configure legacy service codecs first, codec constraints mean only one item in the Presentation_Id_List i.e. single elementary stream -->
+
+    <!-- Constrain configuration modes as follows: -->
+    <!--      DD+ Configuration="Stereo" or "5.1" -->
+    <!--      DD+JOC Configuration="5.1.2" or "5.1.4" -->
+ 
+    <!-- Constrain AC3BSI/AC3ExtBSI/JocBSI metadata settings as follows: -->
+    <!--      BsMod= "Complete Main" or "Music and Effects" -->
+    <!--      CMixLev and SurMixLev are derived values from ExtBSI params -->
+    <!--      SurMod= "Not Indicated" or "Not Dolby Surround Encoded" or "Dolby Surround Encoded" -->
+    <!--      LineMode & RFMode="None" or "Film Standard" or "Film Light" or "Music Standard" or Music Light" or "Speech" -->
+    <!--      PrefDMixMod="Not Indicated" or "LtRt Preferred" or "LoRo Preferred" -->
+    <!--      LtRtCmixLev and LoRoCmixLev="+3.0dB" or "+1.5dB" or "0.0dB" or "-1.5dB" or "-3.0dB" or -4.5dB" or -6dB" or "- "-oodB" -->
+    <!--      LtRtSurmixLev and LoRoSurmixLev="+3.0dB" or "+1.5dB" or "0.0dB" or "-1.5dB" or "-3.0dB" or -4.5dB" or -6dB" or "- "-oodB" -->
+ 
+    <EncoderConfiguration id="1">
+        <Name>English 5.1</Name>
+        <TargetCodec>DD+</TargetCodec>
+        <Configuration>5.1</Configuration>
+        <Datarate>192</Datarate>
+        <AC3BSI>
+            <BsMod>Complete Main</BsMod>
+            <CMixLev>-3.0dB</CMixLev>
+            <SurMixLev>-3.0dB</SurMixLev>
+            <SurMod>Not Dolby Surround Encoded</SurMod>
+            <Dialnorm>26</Dialnorm>
+            <LineMode>Film Light</LineMode>
+            <RFMode>None</RFMode>
+            <Surround90>On</Surround90>
+        </AC3BSI>
+        <AC3ExtBSI>
+            <PrefDMixMod>LtRt</PrefDMixMod>
+            <LtRtCMixLev>-3.0dB</LtRtCmixLev>
+            <LtRtSurmixLev>-3.0dB</LtRtSurmixLev>
+            <LoRoCmixLev>-3.0dB</LoRoCmixLev>
+            <LoRoSurmixLev>-3.0dB</LoRoSurmixLev>
+        </AC3ExtBSI>
+        <Presentation_ID_List>
+            <ID>1</ID>
+        </Presentation_ID_List>
+    </EncoderConfiguration>
+
+    <EncoderConfiguration id="2">
+        <Name>Spanish 5.1</Name>
+        <TargetCodec>DD+</TargetCodec>
+        <Configuration>5.1</Configuration>
+        <Datarate>192</Datarate>
+        <AC3BSI>
+            <BsMod>Complete Main</BsMod>
+            <CMixLev>-3.0dB</CMixLev>
+            <SurMixLev>-3.0dB</SurMixLev>
+            <SurMod>Not Dolby Surround Encoded</SurMod>
+            <Dialnorm>27</Dialnorm>
+            <LineMode>Film Light</LineMode>
+            <RFMode>None</RFMode>
+            <Surround90>On</Surround90>
+        </AC3BSI>
+        <AC3ExtBSI>
+            <PrefDMixMod>LtRt</PrefDMixMod>
+            <LtRtCmixLev>-3.0dB<LtRtCmixLev>
+            <LtRtSurmixLev>-3.0dB<LtRtSurmixLev>
+            <LoRoCmixLev>-3.0dB<LoRoCmixLev>
+            <LoRoSurmixLev>-3.0dB<LoRoSurmixLev>
+        </AC3ExtBSI>
+        <Presentation_ID_List>
+            ID>2</ID>
+        </Presentation_ID_List>
+    </EncoderConfiguration>
+ 
+    <!-- Configure legacy premium (immersive) service codecs, codec supports only have one item in the Presentation_Id_List -->
+    <EncoderConfiguration id="3">
+        <Name>Home Immersive</Name>
+        <TargetCodec>DD+JOC</TargetCodec>
+        <Configuration>5.1.4</Configuration>
+        <Datarate>448</Datarate>
+        <AC3BSI>
+            <BsMod>Complete Main</BsMod>
+            <CMixLev>-3.0dB</CMixLev>
+            <SurMixLev>-3.0dB</SurMixLev>
+            <SurMod>Not Dolby Surround Encoded</SurMod>
+            <Dialnorm>25</Dialnorm>
+            <LineMode>Film Light</LineMode>
+            <RFMode>None</RFMode>
+            <Surround90>On</Surround90>
+        </AC3BSI>
+        <AC3ExtBSI>
+            <PrefDMixMod>LtRt</PrefDMixMod>
+            <LtRtCmixLev>-3.0dB</LtRtCmixLev>
+            <LtRtSurmixLev>-3.0dB</LtRtSurmixLev>
+            <LoRoCmixLev>-3.0dB</LoRoCmixLev>
+            <LoRoSurmixLev>-3.0dB</LoRoSurmixLev>
+        </AC3ExtBSI>
+        <Presentation_ID_List>
+            <ID>4</ID>
+        </Presentation_ID_List>
+    </EncoderConfiguration>
+ 
+    <EncoderConfiguration id="4">
+        <Name>Away Immersive</Name>
+        <TargetCodec>DD+JOC</TargetCodec>
+        <Configuration>5.1.4</Configuration>
+        <Datarate>448</Datarate>
+        <AC3BSI>
+            <BsMod>Complete Main</BsMod>
+            <CMixLev>-3.0dB</CMixLev>
+            <SurMixLev>-3.0dB</SurMixLev>
+            <SurMod>Not Dolby Surround Encoded</SurMod>
+            <Dialnorm>25</Dialnorm>
+            <LineMode>Film Light</LineMode>
+            <RFMode>None</RFMode>
+            <Surround90>On</Surround90>
+        </AC33BSI>
+        <AC3ExtBSI>
+            <PrefDMixMod>LtRt</PrefDMixMod>
+            <LtRtCmixLev>-3.0dB</LtRtCmixLev>
+            <LtRtSurmixLev>-3.0dB</LtRtSurmixLev>
+            <LoRoCmixLev>-3.0dB<//LoRoCmixLev>
+            <LoRoSurmixLev>-3.0dB</LoRoSurmixLev>
+        </AC33ExtBSI>
+        <Presentation_ID_List>
+           <ID>5</ID>
+        </Presentation_ID_List>
+    </EncoderConfiguration>
+ 
+    <!--      Configure next generation ATSC3.0 codec -->
+    <!--      The configuration might not be needed here as it's determined by the presentations to be included       -->
+    <!--      So we have to decide if this section would be used to explicitly configure/callout the AC-4 H-ESM       -->
+    <!--      We do however need something for dual ended immersive stereo, so an example payload is included         -->
+
+    <EncoderConfiguration id="5">
+        <Name>Mobile Delivery</Name>
+        <TargetCodec>AC-4</TargetCodec>
+        <Configuration>IS</Configuration>
+        <Datarate>64</Datarate>
+        <Presentation_ID_List>
+            <ID>4</ID>
+        </Presentation_ID_List>
+    </EncoderConfiguration>
+ 
+    <EncoderConfiguration id="6">
+        <Name>Mobile Away</Name>
+        <TargetCodec>AC-4</TargetCodec>
+        <Configuration>IS</Configuration>
+        <Datarate>64</Datarate>
+    <Presentation_ID_List>
+         <ID>5</ID>
+    </Presentation_ID_List>
+    </EncoderConfiguration>
+ 
+    <EncoderConfiguration id="7">
+        <Name>STB Package</Name>
+        <TargetCodec>AC-4</TargetCodec>
+        <Datarate>Auto</Datarate>
+        <Presentation_ID_List>
+            <ID>1</ID>
+            <ID>2</ID>
+            <ID>3</ID>
+            <ID>6</ID>
+        </Presentation_ID_List>
+    </EncoderConfiguration>
+</EncoderConfigurations>
+
+Having a complete graphical view of the overall system will aide in
+systems design and could highlight known areas of potential
+incompatibility and remedial actions (such as 3rd party s/w versions
+that are known good based upon the product model number). Having
+knowledge of the emission codec configuration will aide in the systems
+design and ensure that non-compliant modes of operation can be
+detected and reported.
+
+Realtime Implementation
+======================
+
+Audio Objects
+-------------
+
+The Mode of an object defines most of its payload,ID and Mode are
+common to both flavors, thereafter they diverge. The realtime
+implementation differs very slightly from the xml variant in that the
+AudioSignals list does not have to be conveyed (the AudioSignalsList
+contains a human readable name plus the channel source), the Source
+parameter below is the actual channel number on the physical interface
+(PCM mode) or the decoded PCM channel within the ED2 system stream.
+
+Name             Values              Description
+-----            -----------------   --------------------------------------------------
+ID               0x00 - 0xFF         0    : End of object list,
+                                     1-255: Audio Object ID
+Mode             0x00 - 0x03         0    : Channel
+                                     1    : Object
+				     2    : HOA (Higher-Order Ambisonics)
+				     3    : Reserved
+<Channel/Object>
+
+<When Mode = Channel
+   SpeakerConfig 0x00 - 0x07  0:    Stereo
+                              1:    5.1
+			      2:    5.1.2
+			      3:    5.1.4
+			      4-7:  Reserved
+   Type          0x00 - 0x01  0:    ME
+                              1:    CM
+   Target        0x00 - 0x0F  0:    End of target list
+                              1:    Left
+                              2:    Right
+			      3:    Center
+			      4:    LFE
+			      5:    Left Surround
+			      6:    Right Surround
+			      7:    Left Top Front
+			      8:    Right Top Front
+			      9:    Left Top Rear
+			      10:   Right Top Rear
+			      11:   Left Top Middle
+			      12:   Right Top Middle
+                              13-15:Reserved Note: The speaker designations listed may
+                                    need to be aligned with industry adopted nomenclature
+
+   Source        0x00 - 0xFF        Input channel source (in channel mode there is no
+                                    limit to the number of audio signal sources)
+
+   SourceGain    0x00 - 0x3F        Source gain value in steps of 0.33dB
+                                    (+3.00dB to -17.5dB) 0dB = 0x36
+>
+<When Mode = Object
+   Class         0x00 - 0x03   0:   Dialog
+                               1:   VDS
+			       2:   Generic object
+			       3:   Reserved (maybe hearing impaired ?)
+
+   DynamicUpdates 0x00 - 0x01  0:   False
+                               1:   True
+   X_Pos          0x00 - 0x3FF      Position 0.00 to 1.00 in steps of 1/1024
+   Y_Pos          0x00 - 0x3FF      As above
+   Z_Pos          0x00 - 0x3FF      As above (bit 9 (sign) signifies height is either
+                                    above or below the horizon)
+   Size           0x00 - 0x1F       3D spatial size
+   Size_Vertical  0x00 - 0x01  0:   False
+                               1:   True (size param above is constrained to the
+			                  horizontal plane only)
+   Diverge        0x00 - 0x01       Simple implementation for cloning an object in
+                                    the mirror front quadrant (authoring tool would
+				    constrain to front channels only)
+   ObjectGain     0x00 - 0x3F       Overall object trim gain in steps of 0.33dB
+                                    (+3.00dB to -17.5dB) 0dB = 0x36
+   Source         0x00 - 0xFF       Input channel source (in object mode we are constrained
+                                    to a single audio signal source)
+>
+
+Audio Presentations
+===================
+
+The structure is static, each item in the list comprises of up to four
+elements, an M+E, Dialog, VDS, and an optional number of discrete
+object elements (up to 3) that can be used as needed. V1.0 works on
+the assumption that the extra objects are static in nature (they don't
+have to be, it's just there is no identified use case for
+otherwise). For more advanced applications such as live music where
+more than 3 objects may exist V1.1 will support the reserved configs
+4-7 that can accommodate many more discrete objects.
+
+M+E is always present, If no other audio elements are included beyond
+this then the overall presentation can be assumed to be CM (the
+referenced M+E audio object can also signal an override to CM).
+
+Name       Values         Description
+ID         0x00 - 0x3F    0=End of presentation list, 1 to 63 = Presentation ID
+Config     0x00 - 0xFF    Bits 0-2 Speaker target
+                                   0=Stereo,
+				   1=5.1,
+				   2=5.1.2,
+				   3=5.1.4,
+				   4-7 Reserved
+                          Bits 3-4 Elements
+			           Bit3=D,
+				   Bit4=VDS
+                          Bits 5&6 Discrete object count
+                          Bit7     Reserved
+ME_ID      0x00 - 0x0F    0=Reserved, 1 to 15 from AudioObjects
+D_ID       0x00 - 0x3F    0=No Dialog, 1 to 63, this value is added to 64 resulting
+                            in the overall ID in AudioObjects
+VDS_ID     0x00 - 0x0F    0=No VDS, 1 to 15, this value is added to 32 resulting in
+                            the overall ID in AudioObjects
+O1_ID      0x00 - 0x0F    0=No O1, 1 to 15, this value is added to 16 resulting in
+                            the overall ID in AudioObjects
+O2_ID      0x00 - 0x0F    0=No O2, 1 to 15, this value is added to 16 resulting in
+                            the overall ID in AudioObjects
+O3_ID      0x00 - 0x0F    0=No O3, 1 to 15, this value is added to 16 resulting in
+                            the overall ID in AudioObjects
+
+Emission Encoder Configuration
+==============================
+TBD
+
+
+COMMENTS
+========
+
+Cowdery, James:
+--------------
+For the channel mode, you allow a channel configuration to be
+specified and then the speaker positions. There seems to be
+information in two places and some useful channel configurations are
+excluded e.g. mono or 7.1.2. Why not just let people specify a list of
+speaker positions and give complete freedom? You could still have
+presets to save time and remove ambiguity for the more common cases.
+
+I see dialog is carried as mono object so if 3/0 dialog handled with
+size or divergence?
+
+I've seen ITU documents refer to top rather than height but not sure
+which is the right reference here i.e. ITU 775 for Atmos.
+ 
+McNamara, Tim:
+--------------
+Re: Channel mode, correct, it's one of those areas where I thought
+there was duplication of data but hadn't ruled out there being a
+reason for that to be ok, makes sense to eliminate the redundancy and
+in a similar way to some other parameters use an enum list for the
+realtime efficient payload.
+
+Re: Dialog, correct, my intent was to use divergence which is defined
+as across the screen channels only. But I wonder if there would be a
+use case where you would not want to diverge (perhaps if you had a
+specific Stereo presentation Vs. doing a downmix from a 5.1
+presentation) and you wanted to use size instead. Right now size has
+an addition boolean to limit to horizontal plane only, so to do dialog
+on the screen channels only we'd perhaps need to add another boolean
+to constrain to front horizontal only.
+
+Re: Channel naming, I was going to follow whatever ATSC3.0 A34-2
+refers to on that, will investigate which direction the broadcasters
+are going.
+
+Ward, Mike
+----------
+Re: Overhead channels (objects) downmixing data - to again align with
+OAMD, would it be worthy of consideration to define a separate payload
+for this - maybe Dynamic Rendering Parameters or something, that
+includes the overhead, center and surround trims? I really don't think
+this belongs in the Encoder Configuration Payload when it affects
+anything in the chain containing a renderer that processes height
+channels/objects.
+
+McNamara, Tim
+-------------
+I wonder if we might use two control options here depending usage. I
+can see the value of a global setting that informs the encoder to
+equally duck all the overhead energy from the core 5.1 depending upon
+the attenuation setting, kind of what you might set on a UI.
+
+At a lower level we could actually use the gain values from the M&E
+Audio Objects payload as it has separate mix coefficient entries for
+all of the required (what ATSC3.0 calls 'channel sets') beds that are
+part of the presentation (typically 5.1.4, 5.1, 2/0). That way we
+would also have a method to influence the non-height trims as well,
+all of which can be real-time rendered/emulated during authoring.
+
+I'll add some text to around the subject so it can be better
+understood and reviewed.
+
+McNamara, Tim
+-------------
+Oh, and yes, correct, if we do the latter then it's no longer an
+encoder config thing as it would be directly controlled via PMD.
+
+Hoffmann, Michael
+-----------------
+In the emission encoder configuration, there are fields to constrain
+datarate, and then within each encoder configuration there is a data
+rate setting. From what i know, in current workflows of external
+metadata (i.e. RDD-6 or DBMD for files), the datarate parameter is
+largely ignored, since most services will want to define their own
+data rates and not just use the one specified in the metadata.
+
+Also, if we have fields for "constraints" we need to define what the
+encoder behavior should be if it's set to something outside of the
+constraints, i.e. mute, fallback
+

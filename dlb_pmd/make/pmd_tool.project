@@ -1,9 +1,0 @@
-pmd_tool = ProjectSpec (
-  actions=mbuild_compile_and_link,
-  depends=[
-            'dlb_pmd_lib',
-	    'dlb_wave_lib',
-	    'libamber'
-	  ],
-  build_configuration=mbuild_standard
- )

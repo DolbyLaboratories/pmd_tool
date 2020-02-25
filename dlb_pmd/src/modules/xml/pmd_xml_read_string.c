@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,7 @@ line_callback
     pmd_xml_buf *xbuf = (pmd_xml_buf *)arg;
     size_t size = xbuf->end - xbuf->pos;
     const char *next;
-    
+
     if (xbuf->pos == xbuf->end)
     {
         return NULL;
@@ -81,7 +81,7 @@ line_callback
         {
             next = xbuf->end;
         }
-        else 
+        else
         {
             if (*next == '\n' || *next == '\r') ++next;
             if (*next == '\n') ++next;
@@ -113,24 +113,25 @@ error_callback
 }
 
 
-int
+dlb_pmd_success
 dlb_xmlpmd_string_read
    (const char                *data
    ,size_t                     size
    ,dlb_pmd_model             *pmd_model
+   ,dlb_pmd_bool               strict
    ,dlb_xmlpmd_error_callback  err
    ,void                      *arg
    ,unsigned int              *errline
    )
 {
     pmd_xml_buf xbuf;
-        
+
     xbuf.cberr  = err;
     xbuf.cbarg  = arg;
     xbuf.pos    = data;
     xbuf.end    = data + size;
     xbuf.lineno = 1;
-    if (dlb_xmlpmd_parse(line_callback, error_callback, &xbuf, pmd_model))
+    if (dlb_xmlpmd_parse(line_callback, error_callback, &xbuf, pmd_model, strict))
     {
         if (errline)
         {
@@ -140,4 +141,3 @@ dlb_xmlpmd_string_read
     }
     return 0;
 }
-

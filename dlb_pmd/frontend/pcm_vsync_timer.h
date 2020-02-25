@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,8 +41,10 @@
 #ifndef PCM_VSYNC_TIMER_INC_
 #define PCM_VSYNC_TIMER_INC_
 
-#if defined(_MSC_VER) && !defined(inline)
-#  define inline __inline
+#if defined(_MSC_VER)
+#  if _MSC_VER < 1900 && !defined(inline)
+#    define inline __inline
+#  endif
 #endif
 
 
@@ -74,10 +76,10 @@ static const size_t VF_SPACING[NUM_PMD_FRAMERATES][VF_CYCLE] =
     /*  30    fps */ { 1600, 1600, 1600, 1600, 1600 },
     /*  50    fps */ {  960,  960,  960,  960,  960 },
     /*  59.94 fps */ {  800,  801,  801,  801,  801 },
-    /*  60    fps */ {  800,  800,  800,  800,  800 },   
+    /*  60    fps */ {  800,  800,  800,  800,  800 },
     /* 100    fps */ {  480,  480,  480,  480,  480 },
     /* 119.88 fps */ {  400,  400,  401,  400,  401 },
-    /* 120    fps */ {  400,  400,  400,  400,  400 },    
+    /* 120    fps */ {  400,  400,  400,  400,  400 },
 };
 
 
@@ -86,11 +88,11 @@ static const size_t VF_SPACING[NUM_PMD_FRAMERATES][VF_CYCLE] =
  */
 typedef struct
 {
-    size_t next_vsync;     /**< samples left until next vsync position */
-    size_t cycle_index;    /**< current framerate frame-size cycle position */
-    const size_t *cycle;   /**< frame rate cycle data */
+    size_t        next_vsync;   /**< samples left until next vsync position */
+    size_t        cycle_index;  /**< current framerate frame-size cycle position */
+    const size_t *cycle;        /**< frame rate cycle data */
 } vsync_timer;
-    
+
 
 /**
  * @brief setup vsync timer
@@ -98,9 +100,9 @@ typedef struct
 static inline
 void
 vsync_timer_init
-   (vsync_timer *vt               /**< [in] timer to initialize */
-   ,dlb_pmd_frame_rate rate       /**< [in] frame rate */
-   ,size_t first_vsync            /**< [in] samples until first vsync */
+   (vsync_timer        *vt           /**< [in] timer to initialize */
+   ,dlb_pmd_frame_rate  rate         /**< [in] frame rate */
+   ,size_t              first_vsync  /**< [in] samples until first vsync */
    )
 {
     vt->next_vsync = first_vsync;
@@ -115,10 +117,10 @@ vsync_timer_init
  * Adjust countdown to next vsync by subtracting this many samples
  */
 static inline
-size_t                       /** @return vsync offset in block, #VSYNC_NONE if none */
+size_t                        /** @return vsync offset in block, #VSYNC_NONE if none */
 vsync_timer_add_samples
-   (vsync_timer *vt          /**< [in] vsync timer */
-   ,size_t num_samples       /**< [in] number of samples read */
+   (vsync_timer *vt           /**< [in] vsync timer */
+   ,size_t       num_samples  /**< [in] number of samples read */
    )
 {
     size_t res = DLB_PMD_VSYNC_NONE;
@@ -127,8 +129,8 @@ vsync_timer_add_samples
         res = vt->next_vsync;
         while (vt->next_vsync <= num_samples)
         {
-            num_samples -= vt->next_vsync;
-            vt->next_vsync = vt->cycle[vt->cycle_index];
+            num_samples    -= vt->next_vsync;
+            vt->next_vsync  = vt->cycle[vt->cycle_index];
             vt->cycle_index = (vt->cycle_index + 1) % VF_CYCLE;
         }
     }

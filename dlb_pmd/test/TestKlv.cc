@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
-extern "C"
-{
-#include "dlb_pmd_klv.h"
-}
-
+/**
+ * @file TestKlv.cc
+ * @brief encapsulate KLV read/write testing
+ */
 
 #include "TestKlv.hh"
 #include <string.h>
@@ -125,7 +124,7 @@ TestKlv::~TestKlv()
     
 dlb_pmd_success TestKlv::write(dlb_klvpmd_universal_label ul, dlb_pmd_model *model)
 {
-    size_ = dlb_klvpmd_write_all(model, 0, mem_, MAX_KLV_SIZE, ul);
+    size_ = dlb_klvpmd_write_all(model, DLB_PMD_NO_ED2_STREAM_INDEX, mem_, MAX_KLV_SIZE, ul);
     return (0 == size_)
         ? (dlb_pmd_success)PMD_FAIL
         : (dlb_pmd_success)PMD_SUCCESS;
@@ -134,7 +133,7 @@ dlb_pmd_success TestKlv::write(dlb_klvpmd_universal_label ul, dlb_pmd_model *mod
                 
 dlb_pmd_success TestKlv::read(dlb_pmd_model *model)
 {
-    if (dlb_klvpmd_read_payload(mem_, size_, model, 1, NULL))
+    if (dlb_klvpmd_read_payload(mem_, size_, model, 1, NULL, NULL))
     {
         return PMD_FAIL;
     }

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  **********************************************************************/
 
 /**
- * @flle dlb_pmd_klv.h
+ * @file dlb_pmd_klv.h
  * @brief KLV reading/writing
  */
 
@@ -86,7 +86,7 @@ dlb_klvpmd_universal_label;
  *
  * This is used to determine if the block carries no actual metadata
  */
-int
+unsigned int
 dlb_klvpmd_min_block_size
     (void
     );
@@ -132,12 +132,13 @@ dlb_klvpmd_write_all
  */
 int                                /** @return 0 on success, non-zero otherwise */
 dlb_klvpmd_read_payload
-    (uint8_t            *buffer    /**< [in] input buffer */
-    ,size_t              length    /**< [in] actual number of bytes in buffer */
-    ,dlb_pmd_model      *model     /**< [in] PMD model structure to populate */
-    ,int                 new_frame /**< [in] is this the first payload of a new video frame? */ 
-    ,uint8_t            *sindex    /**< [in/out] ED2 stream index if known or
-                                      *       #DLB_PMD_NO_ED2_STREAM_INDEX, may be null */
+    (uint8_t                    *buffer         /**< [in] input buffer */
+    ,size_t                      length         /**< [in] actual number of bytes in buffer */
+    ,dlb_pmd_model              *model          /**< [in] PMD model structure to populate */
+    ,int                         new_frame      /**< [in] is this the first payload of a new video frame? */ 
+    ,uint8_t                    *sindex         /**< [in/out] ED2 stream index if known or
+                                                 *        #DLB_PMD_NO_ED2_STREAM_INDEX, may be null */
+    ,dlb_pmd_payload_set_status *read_status    /**< [out] Payload read status, may be null */
     );
 
 

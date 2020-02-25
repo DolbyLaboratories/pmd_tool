@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,10 +33,21 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_Floatvals.cc
+ * @brief floating-point value testing
+ *
+ * Check that we can encode and decode floating point values accurately to
+ * within PMD quantization.
+ */
+
 #include "dlb_pmd_api.h"    
 #include "TestModel.hh"
 #include "gtest/gtest.h"
 #include <math.h>
+
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_FLOATVALS_TESTS
 
 class FloatingValueTest: public ::testing::TestWithParam<std::tr1::tuple<int, int> > {};
 
@@ -80,7 +91,8 @@ struct Floatvals
     }
 };
 
-    
+   
+#ifndef DISABLE_FLOATVALS_TESTS
 TEST_P(FloatingValueTest, floating_values)
 {
     unsigned int i = std::tr1::get<0>(GetParam());
@@ -109,6 +121,7 @@ TEST_P(FloatingValueTest, floating_values)
             char tmp[32];
             snprintf(tmp, sizeof(tmp), "Floatvals_%u", i);
             m.skip_pcm_samples(i);
+            m.minimal_check();  /* don't care about element or presentation names*/
             try
             {
                 m.test(t, tmp, i);
@@ -127,4 +140,5 @@ INSTANTIATE_TEST_CASE_P(PMD_FloatingValues, FloatingValueTest,
            testing::Combine(testing::Range(0, 100),
                             testing::Range(TestModel::FIRST_TEST_TYPE,
                                            TestModel::LAST_TEST_TYPE+1)));
+#endif
 

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@
 
 /**
  * @file pmd_eep.h
- * @brief model of EAC3 Encoding Parametrs (EEP) payload
+ * @brief model of EAC3 Encoding Parameters (EEP) payload
  *
  * This file defines the data structure used to represent EAC3 encoding
  * parameter payloads inside the PMD model.
@@ -113,7 +113,102 @@ typedef struct
     unsigned int num_presentations;
     pmd_presentation_id presentations[PMD_EEP_MAX_PRESENTATIONS];
 } pmd_eep;
-    
+
+
+/**
+ * @brief validate an EEP id
+ */
+static inline
+dlb_pmd_payload_status      /** @return validation status */
+validate_pmd_eep_id
+    (unsigned int id        /**< [in] EEP id */
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (id > PMD_EAC3_PARAMS_ID_MAX)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+    else if (id == PMD_EAC3_PARAMS_ID_RESERVED)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief validate a DRC compression mode value
+ */
+static inline
+dlb_pmd_payload_status          /** @return validation status */
+validate_pmd_compression_mode
+    (pmd_compression_mode mode  /**< [in] PMD compression mode value */
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (mode > PMD_COMPR_RESERVED_LAST)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+    else if (mode >= PMD_COMPR_RESERVED_FIRST && mode <= PMD_COMPR_RESERVED_LAST)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief validate a DRC surround mode value
+ */
+static inline
+dlb_pmd_payload_status          /** @return validation status */
+validate_pmd_surround_mode
+    (pmd_surround_mode mode     /**< [in] PMD surround mode value */
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (mode > PMD_DSURMOD_RESERVED)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+    else if (mode == PMD_DSURMOD_RESERVED)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief validate a DRC dialnorm value
+ */
+static inline
+dlb_pmd_payload_status          /** @return validation status */
+validate_pmd_dialogue_norm
+    (pmd_dialogue_norm dialnorm /**< [in] PMD dialnorm value */
+    )
+{
+    dlb_pmd_payload_status status = DLB_PMD_PAYLOAD_STATUS_OK;
+
+    if (dialnorm > DLB_PMD_MAX_DIALNORM)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_OUT_OF_RANGE;
+    }
+    else if (dialnorm == DLB_PMD_RESERVED_DIALNORM)
+    {
+        status = DLB_PMD_PAYLOAD_STATUS_VALUE_RESERVED;
+    }
+
+    return status;
+}
 
 
 #endif /* PMD_EEP_H */

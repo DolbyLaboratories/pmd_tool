@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -192,7 +192,7 @@ typedef enum
    KLV_PMD_LOCAL_TAG_AUDIO_PRESENTATION_NAMES = 0x08,  /* (APN) */
    KLV_PMD_LOCAL_TAG_AUDIO_ELEMENT_NAMES      = 0x09,  /* (AEN) */
    KLV_PMD_LOCAL_TAG_ED2_SUBSTREAM_DESC       = 0x0A,  /* (ESD) */
-   KLV_PMD_LOCAL_TAG_ED2_SUBSTREAM_NAME       = 0x0B,  /* (ESN) */
+   KLV_PMD_LOCAL_TAG_ED2_SUBSTREAM_NAMES      = 0x0B,  /* (ESN) */
    KLV_PMD_LOCAL_TAG_EAC3_ENCODING_PARAMETERS = 0x0C,  /* (EEP) */
    KLV_PMD_LOCAL_TAG_DYNAMIC_UPDATES          = 0x0D,  /* (XYZ) */
    KLV_PMD_LOCAL_TAG_IAT                      = 0x0E,  /* (IAT) */

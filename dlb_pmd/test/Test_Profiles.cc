@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_Profiles.cc
+ * @brief Test Profiles and levels
+ */
+
 #include "dlb_pmd_generate.h"
 #include "TestModel.hh"
 #include "gtest/gtest.h"
+
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_PROFILES_TESTS
 
 
 class ProfileTest: public ::testing::TestWithParam<std::tr1::tuple<int, int, int, int, int> >
@@ -69,6 +77,7 @@ ProfileTest::ProfLevel ProfileTest::levels1_[NUM_PROF1_LEVELS] =
 
 
 
+#ifndef DISABLE_PROFILES_TESTS
 TEST_P(ProfileTest, profile_level_after)
 {
     /* num_beds * num_bed_types * num_objs */
@@ -95,7 +104,7 @@ TEST_P(ProfileTest, profile_level_after)
     counts.num_objects = num_objs;
     counts.num_presentations = num_pres;
 
-    if (dlb_pmd_generate_random(m, &counts, seed))
+    if (dlb_pmd_generate_random(m, &counts, seed, 0, 0))
     {
         ADD_FAILURE() << "Could not generate random model";
     }
@@ -105,7 +114,7 @@ TEST_P(ProfileTest, profile_level_after)
         dlb_pmd_success expected = 0;
         
         if (   (profile != 1)
-            || (level < 0 || level > 3)
+            || (level > 3)
             || (           num_sigs > levels1_[level-1].max_signals)
             || (num_beds + num_objs > levels1_[level-1].max_elements)
             || (           num_pres > levels1_[level-1].max_presentations)
@@ -159,7 +168,7 @@ TEST_P(ProfileTest, profile_level_before)
     counts.num_presentations = num_pres;
 
     if (   (profile != 1)
-        || (level < 0 || level > 3)
+        || (level > 3)
         || (           num_sigs > levels1_[level-1].max_signals)
         || (num_beds + num_objs > levels1_[level-1].max_elements)
         || (           num_pres > levels1_[level-1].max_presentations)
@@ -170,7 +179,7 @@ TEST_P(ProfileTest, profile_level_before)
 
 
     ok   = dlb_pmd_set_profile(m, profile, level)
-        || dlb_pmd_generate_random(m, &counts, seed);
+        || dlb_pmd_generate_random(m, &counts, seed, 0, 0);
     
 
     if (ok != expected)
@@ -194,6 +203,7 @@ INSTANTIATE_TEST_CASE_P(PMD_Profile, ProfileTest,
                                          testing::Range(1, 52),  /* num elements */
                                          testing::Range(1, 50)   /* num presentations */
                                          ));
+#endif
 
 
 

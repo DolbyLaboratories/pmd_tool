@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,9 @@
 #define KLV_APN_H_
 
 #ifdef _MSC_VER
+/* Disable warning that complains about using assignment in the test
+ * of while statement: we are not confusing = and ==.
+ */
 __pragma(warning(disable:4706))
 #endif
 
@@ -88,7 +91,7 @@ klv_apn_write
         size_t len;
         unsigned int j;
         
-        while ((name = pmd_apn_list_iterator_get(&model->apni)))
+        while ((name = pmd_apn_list_iterator_get(&model->write_state.apni)))
         {
             text = name->text;
 
@@ -122,7 +125,8 @@ klv_apn_write
             wp += (bo + name_bits) / 8;
             bo = (bo + name_bits) % 8;
             w->wp = wp;
-            pmd_apn_list_iterator_next(&model->apni);
+            model->write_state.apn_written++;
+            pmd_apn_list_iterator_next(&model->write_state.apni);
         }
         if (bo)
         {
@@ -137,10 +141,11 @@ klv_apn_write
  * @brief extract presentation names from serialized form
  */
 static inline
-int                                /** @return 0 on success, 1 on error */
+int                                             /** @return 0 on success, 1 on error */
 klv_apn_read
-    (klv_reader *r                 /**< [in] KLV buffer to read */
-    ,int payload_length            /**< [in] bytes in presentation payload */
+    (klv_reader *r                              /**< [in] KLV buffer to read */
+    ,int payload_length                         /**< [in] bytes in presentation payload */
+    ,dlb_pmd_payload_status_record *read_status /**< [out] read status record, may be NULL */
     )
 {
     uint8_t *rp = r->rp;
@@ -152,13 +157,18 @@ klv_apn_read
     uint16_t presid;
     uint8_t c;
     unsigned int len;
+    unsigned int max_len;
     uint8_t *text = NULL;
-    uint8_t *text_end = NULL;
     uint16_t presidx;
     pmd_langcode lang;
 
     while (rp < end-3)
     {
+        dlb_pmd_payload_status ps;
+        uint8_t langch0;
+        uint8_t langch1;
+        uint8_t langch2;
+
         presid = get_(rp, APN_PRESENTATION_ID(bo));
         if (presid == 0)
         {
@@ -166,20 +176,46 @@ klv_apn_read
             break;
         }
 
+        langch0 = get_(rp, APN_LANGCOD0(bo));
+        ps = klv_reader_validate_langcod_char(langch0);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Name for presentation %d has invalid language code character [0] %u\n",
+                                presid, langch0);
+            return 1;
+        }
+
+        langch1 = get_(rp, APN_LANGCOD1(bo));
+        ps = klv_reader_validate_langcod_char(langch1);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Name for presentation %d has invalid language code character [1] %u\n",
+                                presid, langch1);
+            return 1;
+        }
+
+        langch2 = get_(rp, APN_LANGCOD2(bo));
+        ps = klv_reader_validate_langcod_char(langch2);
+        if (ps != DLB_PMD_PAYLOAD_STATUS_OK)
+        {
+            klv_reader_error_at(r, ps, read_status, "Name for presentation %d has invalid language code character [2] %u\n",
+                                presid, langch2);
+            return 1;
+        }
+
         lang = 0;
-        lang |= klv_decode_langch(get_(rp, APN_LANGCOD0(bo))) << 24;
-        lang |= klv_decode_langch(get_(rp, APN_LANGCOD1(bo))) << 16;
-        lang |= klv_decode_langch(get_(rp, APN_LANGCOD2(bo))) << 8;
+        lang |= klv_decode_langch(langch0) << 24;
+        lang |= klv_decode_langch(langch1) << 16;
+        lang |= klv_decode_langch(langch2) << 8;
 
         /* look up presentation name, if it exists */
         name = pmd_apn_list_find(&r->model->apn_list, presid, lang);
-
         if (!name)
         {
             name = pmd_apn_list_add(&r->model->apn_list);
             if (!name)
             {
-                klv_reader_error_at(r, "No space for APN name in model\n");
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status, "No space for APN name in model\n");
                 return 1;
             }
         }
@@ -189,9 +225,12 @@ klv_apn_read
         if (pmd_idmap_lookup(&r->model->apd_ids, presid, &presidx))
         {
             pres = &r->model->apd_list[presidx];
-            if (pres->num_names >= DLB_PMD_MAX_PRESENTATION_NAMES)
+            if (pres->num_names >= r->model->profile.constraints.max_presentation_names)
             {
                 /* too many names */
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status,
+                                    "Too many names (%u) for presentation %u\n",
+                                    (unsigned int)(pres->num_names + 1u), (unsigned int)presid);
                 return 1;
             }
         }
@@ -213,22 +252,25 @@ klv_apn_read
                 pres->num_names += 1;
             }
         }
-        text = name->text;
 
+        text = name->text;
         memset(text, '\0', sizeof(name->text));
-        text_end = text + sizeof(name->text) - 1;
 
         name->presid = presid;
         name->lang = lang;
         name->readcount += 1;
 
         len = 0;
+        max_len = sizeof(name->text);
         c = get_(rp, APN_CHARVAL(bo,len));
         while (rp < end && c != 0)
         {
-            if (text == text_end)
+            if (len >= max_len)
             {
                 /* string too long! error */
+                klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_OUT_OF_MEMORY, read_status,
+                                    "Too many characters (%u) in name for presentation %u\n",
+                                    len, (unsigned int)presid);
                 return 1;
             }
             text[len] = c;

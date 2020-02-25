@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  **********************************************************************/
 
 /**
- * @flle dlb_pmd_xml.h
+ * @file dlb_pmd_xml.h
  * @brief definitions for reading and writing XML
  */
 
@@ -47,6 +47,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+/**
+ * @def DLB_PMD_XML_STRICT
+ * @brief symbol constant indicating strict XML checking
+ */
+#define DLB_PMD_XML_STRICT (1)
 
 
 /**
@@ -91,7 +98,7 @@ int  /** @return 1 on success, 0 on failure */
 /**
  * @brief decide whether the given XML buffer contains PMD or not
  */
-dlb_pmd_bool               /** @return 1 if buffer has ProfessionalMetadata tag, 0 otherwise */
+dlb_pmd_bool              /** @return 1 if buffer has ProfessionalMetadata tag, 0 otherwise */
 dlb_xmlpmd_is_pmd
     (const char *buffer   /**< [in] XML buffer */
     ,size_t length        /**< [in] length of data in XML buffer */
@@ -104,6 +111,27 @@ dlb_xmlpmd_is_pmd
  * The XML parser expects uses a callback to ask for more input data.
  * When it comes to writing errors, it will invoke the error callback
  * multiple times to give a 'stack trace' of XML tags.
+ *
+ * Upon parse error, this function will return 1, and the error message
+ * can be retrieved via dlb_pmd_error().
+ *
+ * The parser attempts to verify validity of all fields, including
+ * the presentation config, which is a string that needs to match the
+ * format
+ *
+ *   <speaker config> [ME|CM] (+<n>(D|VDS|VO|SS|O|EI|EA))*
+ *
+ * which is more precisely defined in the schema regular expression.
+ * However, an XML schema cannot express semantic constraints, such
+ * that the meaning of the presentation config field exactly
+ * represents the shape of the presentation.
+ *
+ * If #strict checking is set to 1, then the parser will require that
+ * presentation config strings describe their presentation exactly;
+ * otherwise it will allow partial descriptions, e.g., just the
+ * speaker config.  In either case, incorrect information will be
+ * rejected (e.g., if we choose to specify the objects, but do so
+ * incorrectly, that will be regarded as an error).
  */
 dlb_pmd_success                    /** @return 0 on success, 1 on failure */
 dlb_xmlpmd_parse
@@ -111,6 +139,7 @@ dlb_xmlpmd_parse
     ,dlb_xmlpmd_error_callback ecb /**< [in] callback to write error messages */
     ,void *cbarg                   /**< [in] client-supplied argument to the callbacks */
     ,dlb_pmd_model *model          /**< [in] model to populate */
+    ,dlb_pmd_bool strict           /**< [in] apply strict checking? */
     );
 
 

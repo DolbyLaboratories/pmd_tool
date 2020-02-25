@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -64,11 +64,11 @@ line_callback
     xml_buffer *xbuf = (xml_buffer *)arg;
     char *line;
 
-    if (feof(xbuf->fp)) 
+    if (feof(xbuf->fp))
     {
         return NULL;
     }
-    
+
     line = fgets(xbuf->line, sizeof(xbuf->line), xbuf->fp);
     return line;
 }
@@ -99,6 +99,7 @@ dlb_pmd_success
 dlb_xmlpmd_file_read
    (const char                *filename
    ,dlb_pmd_model             *model
+   ,dlb_pmd_bool               strict
    ,dlb_xmlpmd_error_callback  err
    ,void                      *arg
    )
@@ -114,8 +115,8 @@ dlb_xmlpmd_file_read
         error(model, "Failed to open input file: %s\n", filename);
         return PMD_FAIL;
     }
-    
-    ret = (dlb_pmd_success)dlb_xmlpmd_parse(line_callback, error_callback, &xbuf, model);
+
+    ret = (dlb_pmd_success)dlb_xmlpmd_parse(line_callback, error_callback, &xbuf, model, strict);
     fclose(xbuf.fp);
     return ret;
 }

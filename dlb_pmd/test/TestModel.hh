@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,13 +33,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file TestModel.hh
+ * @brief encapsulate control of PMD models for testing
+ */
+
 #ifndef DLB_PMD_TEST_MODEL_HH
 #define DLB_PMD_TEST_MODEL_HH
 
 extern "C"
 {
 #include "dlb_pmd_api.h"
-#include "dlb_pmd_pcm.h"
 #include <stdint.h>
 }
 
@@ -65,9 +69,10 @@ public:
         std::string msg;
     };
     
-
-
     TestModel();
+    TestModel(dlb_pmd_model_constraints&);
+    TestModel(unsigned int profile, unsigned int level);
+    
     ~TestModel();
 
     TestModel& operator= (const TestModel&);
@@ -111,12 +116,27 @@ public:
         TEST_PCM_PAIR_12000,
         TEST_PCM_CHAN_12000,
 
-        NUM_TEST_TYPES
+        NUM_PMD_TEST_TYPES,
+
+        TEST_SADM = NUM_PMD_TEST_TYPES,
+
+        TEST_SADM_PCM_PAIR_2398,
+        TEST_SADM_PCM_CHAN_2398,
+        TEST_SADM_PCM_PAIR_2400,
+        TEST_SADM_PCM_CHAN_2400,
+        TEST_SADM_PCM_PAIR_2500,
+        TEST_SADM_PCM_CHAN_2500,
+        TEST_SADM_PCM_PAIR_2997,
+        TEST_SADM_PCM_CHAN_2997,
+        TEST_SADM_PCM_PAIR_3000,
+        TEST_SADM_PCM_CHAN_3000,
+
+        NUM_TOTAL_TEST_TYPES
     };
 
     static const TestModel::TestType TEST_TYPES[];
     static const int FIRST_TEST_TYPE = (int)TEST_XML;
-    static const int LAST_TEST_TYPE = NUM_TEST_TYPES - 1;
+    static const int LAST_TEST_TYPE = NUM_PMD_TEST_TYPES - 1;
 
     static const unsigned int NUM_FRAME_RATE_NAMES = 11;
     static const dlb_pmd_frame_rate FRAME_RATES[NUM_FRAME_RATE_NAMES];
@@ -147,6 +167,17 @@ public:
      * information required to produce a desired render.
      */
     void minimal_check() { minimal_check_ = true; }
+
+
+    /**
+     * @brief ignore name checking in model comparison
+     *
+     * Because names are low-priority payloads, they may not all occur
+     * after model read/write, especially in high-frame-rate PCM.
+     * This flag simply allows us to compare everything but names.
+     */
+    void ignore_name_checking()  { ignore_name_check_ = true; }
+
 
     /**
      * @brief enable random-access PCM+PMD testing
@@ -214,23 +245,21 @@ public:
      */
     bool populate (dlb_pmd_element_id *obj);
 
-
     /**
      * @brief set the ED2 system info to that of another
      */
     void set_ed2_system (const TestModel& other);
-    
 
     /**
      * @brief apply updates to the model
      */
-    bool apply_updates();
-
+    bool apply_updates(dlb_pmd_frame_rate fr, unsigned int num_frames = 1);
 
     /**
      * @brief generate random model
      */
-    void generate_random(unsigned int seed);
+    void generate_random(unsigned int seed, bool sadm = false,
+                         bool prune_unused_signals = false);
 
 private:
 
@@ -239,7 +268,8 @@ private:
     void test_xml_  (const char *testname, int param, bool match);
     void test_mdset_(const char *testname, int param, bool match);
     void test_klv_  (const char *testname, int param, bool match);
-    void test_pcm_  (const char *testname, int param, int fr_idx, bool single_channel, bool match, bool apply_updates);
+    void test_sadm_ (const char *testname, int param, bool match);
+    void test_pcm_  (const char *testname, int param, int fr_idx, bool single_channel, bool match, bool apply_updates, bool sadm);
 
     size_t size_;
     std::string mem_;
@@ -247,6 +277,7 @@ private:
     unsigned int pcm_skip_samples_;
     bool pcm_single_frame_;
     bool minimal_check_;
+    bool ignore_name_check_;
     unsigned int max_sig_id_;
     unsigned int max_track_id_;
     unsigned int max_element_id_;

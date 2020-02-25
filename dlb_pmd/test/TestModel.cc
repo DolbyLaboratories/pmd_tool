@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file TestModel.cc
+ * @brief tests to actually do a basic encode/decode/compare test
+ */
+
 //#define ENABLE_TRACE
 #ifdef ENABLE_TRACE
 #  define TRACE printf
@@ -52,6 +57,7 @@ extern "C"
 #include "TestKlv.hh"
 #include "TestPcm.hh"
 #include "TestMdset.hh"
+#include "TestSadm.hh"
 
 #include "TestModel.hh"
 
@@ -84,6 +90,17 @@ const TestModel::TestType TestModel::TEST_TYPES[] =
     TestModel::TEST_PCM_CHAN_11988,
     TestModel::TEST_PCM_PAIR_12000,
     TestModel::TEST_PCM_CHAN_12000,
+    TestModel::TEST_SADM,
+    TestModel::TEST_SADM_PCM_PAIR_2398,
+    TestModel::TEST_SADM_PCM_CHAN_2398,
+    TestModel::TEST_SADM_PCM_PAIR_2400,
+    TestModel::TEST_SADM_PCM_CHAN_2400,
+    TestModel::TEST_SADM_PCM_PAIR_2500,
+    TestModel::TEST_SADM_PCM_CHAN_2500,
+    TestModel::TEST_SADM_PCM_PAIR_2997,
+    TestModel::TEST_SADM_PCM_CHAN_2997,
+    TestModel::TEST_SADM_PCM_PAIR_3000,
+    TestModel::TEST_SADM_PCM_CHAN_3000,
 };
 
 
@@ -115,7 +132,6 @@ const char *TestModel::FRAME_RATE_NAMES[] =
 #define NUM_FRAME_RATE_NAMES ((sizeof FRAME_RATE_NAMES)/(sizeof FRAME_RATE_NAMES[0]))
 
 
-
 TestModel::TestModel()
     : size_(dlb_pmd_query_mem())
     , mem_(size_, 0)
@@ -123,6 +139,7 @@ TestModel::TestModel()
     , pcm_skip_samples_(0)
     , pcm_single_frame_(false)
     , minimal_check_(false)
+    , ignore_name_check_(false)
     , max_sig_id_(0)
     , max_track_id_(0)
     , max_element_id_(0)
@@ -131,6 +148,44 @@ TestModel::TestModel()
     , max_etd_id_(0)
 {
     dlb_pmd_init(&model_, &mem_[0]);
+}
+
+
+TestModel::TestModel(dlb_pmd_model_constraints& con)
+    : size_(dlb_pmd_query_mem_constrained(&con))
+    , mem_(size_, 0)
+    , model_(0)
+    , pcm_skip_samples_(0)
+    , pcm_single_frame_(false)
+    , minimal_check_(false)
+    , ignore_name_check_(false)
+    , max_sig_id_(0)
+    , max_track_id_(0)
+    , max_element_id_(0)
+    , max_pres_id_(0)
+    , max_eac3_id_(0)
+    , max_etd_id_(0)
+{
+    dlb_pmd_init_constrained(&model_, &con, &mem_[0]);
+}
+
+
+TestModel::TestModel(unsigned int profile, unsigned int level)
+    : size_(dlb_pmd_query_mem_profile(profile, level))
+    , mem_(size_, 0)
+    , model_(0)
+    , pcm_skip_samples_(0)
+    , pcm_single_frame_(false)
+    , minimal_check_(false)
+    , ignore_name_check_(false)
+    , max_sig_id_(0)
+    , max_track_id_(0)
+    , max_element_id_(0)
+    , max_pres_id_(0)
+    , max_eac3_id_(0)
+    , max_etd_id_(0)
+{
+    dlb_pmd_init_profile(&model_, profile, level, &mem_[0]);
 }
 
 
@@ -145,6 +200,9 @@ TestModel& TestModel::operator= (const TestModel& other)
 {
     assert(size_ == other.size_);
     dlb_pmd_copy(model_, other.model_);
+    pcm_skip_samples_ = other.pcm_skip_samples_;
+    pcm_single_frame_ = other.pcm_single_frame_;
+    minimal_check_ = other.minimal_check_;
     max_sig_id_ = other.max_sig_id_;
     max_track_id_ = other.max_track_id_;
     max_element_id_ = other.max_element_id_;
@@ -220,7 +278,7 @@ bool TestModel::populate(dlb_pmd_element_id *obj)
 }
 
 
-void TestModel::generate_random(unsigned int seed)
+void TestModel::generate_random(unsigned int seed, bool sadm, bool prune_unused_signals)
 {
     dlb_pmd_metadata_count count;
 
@@ -235,7 +293,8 @@ void TestModel::generate_random(unsigned int seed)
     count.num_ed2_turnarounds= PMD_GENERATE_RANDOM_NUMBER;
     count.num_headphone_desc = PMD_GENERATE_RANDOM_NUMBER;
 
-    if (dlb_pmd_generate_random(model_, &count, seed))
+    if (dlb_pmd_generate_random(model_, &count, seed, false, sadm)
+        || (prune_unused_signals && dlb_pmd_prune_unused_signals(model_)))
     {
         printf("Failed to generate random model: %s\n", dlb_pmd_error(model_));
     }
@@ -243,9 +302,21 @@ void TestModel::generate_random(unsigned int seed)
 
 
 
-bool TestModel::apply_updates()
+bool TestModel::apply_updates(dlb_pmd_frame_rate fr, unsigned int num_frames)
 {
-    return dlb_pmd_apply_updates(model_) == 0 ? false : true;
+    bool res = false;
+    while (num_frames-- && !res)
+    {
+        if (dlb_pmd_apply_updates(model_, fr))
+        {
+            res = true;
+        }
+        else
+        {
+            res = false;
+        }
+    }
+    return res;
 }
 
 
@@ -260,33 +331,46 @@ void TestModel::test_(TestType type, const char *n, int p, bool m, bool au)
 {
     switch (type)
     {
-        case TEST_XML:            test_xml_(n, p, m); break;
+        case TEST_XML:            test_xml_(n, p, m);   break;
         case TEST_MDSET:          test_mdset_(n, p, m); break; 
-        case TEST_KLV:            test_klv_(n, p, m); break;   
+        case TEST_KLV:            test_klv_(n, p, m);   break;   
 
-        case TEST_PCM_PAIR_2398:  test_pcm_(n, p, 0, false, m, au); break;  
-        case TEST_PCM_PAIR_2400:  test_pcm_(n, p, 1, false, m, au); break;  
-        case TEST_PCM_PAIR_2500:  test_pcm_(n, p, 2, false, m, au); break;  
-        case TEST_PCM_PAIR_2997:  test_pcm_(n, p, 3, false, m, au); break;  
-        case TEST_PCM_PAIR_3000:  test_pcm_(n, p, 4, false, m, au); break;  
-        case TEST_PCM_PAIR_5000:  test_pcm_(n, p, 5, false, m, au); break;  
-        case TEST_PCM_PAIR_5994:  test_pcm_(n, p, 6, false, m, au); break;  
-        case TEST_PCM_PAIR_6000:  test_pcm_(n, p, 7, false, m, au); break;  
-        case TEST_PCM_PAIR_10000: test_pcm_(n, p, 8, false, m, au); break;  
-        case TEST_PCM_PAIR_11988: test_pcm_(n, p, 9, false, m, au); break;  
-        case TEST_PCM_PAIR_12000: test_pcm_(n, p,10, false, m, au); break;  
+        case TEST_PCM_PAIR_2398:  test_pcm_(n, p, 0, false, m, au, false); break;  
+        case TEST_PCM_PAIR_2400:  test_pcm_(n, p, 1, false, m, au, false); break;  
+        case TEST_PCM_PAIR_2500:  test_pcm_(n, p, 2, false, m, au, false); break;  
+        case TEST_PCM_PAIR_2997:  test_pcm_(n, p, 3, false, m, au, false); break;  
+        case TEST_PCM_PAIR_3000:  test_pcm_(n, p, 4, false, m, au, false); break;  
+        case TEST_PCM_PAIR_5000:  test_pcm_(n, p, 5, false, m, au, false); break;  
+        case TEST_PCM_PAIR_5994:  test_pcm_(n, p, 6, false, m, au, false); break;  
+        case TEST_PCM_PAIR_6000:  test_pcm_(n, p, 7, false, m, au, false); break;  
+        case TEST_PCM_PAIR_10000: test_pcm_(n, p, 8, false, m, au, false); break;  
+        case TEST_PCM_PAIR_11988: test_pcm_(n, p, 9, false, m, au, false); break;  
+        case TEST_PCM_PAIR_12000: test_pcm_(n, p,10, false, m, au, false); break;  
 
-        case TEST_PCM_CHAN_2398:  test_pcm_(n, p, 0, true, m, au); break;  
-        case TEST_PCM_CHAN_2400:  test_pcm_(n, p, 1, true, m, au); break;  
-        case TEST_PCM_CHAN_2500:  test_pcm_(n, p, 2, true, m, au); break;  
-        case TEST_PCM_CHAN_2997:  test_pcm_(n, p, 3, true, m, au); break;  
-        case TEST_PCM_CHAN_3000:  test_pcm_(n, p, 4, true, m, au); break;  
-        case TEST_PCM_CHAN_5000:  test_pcm_(n, p, 5, true, m, au); break;  
-        case TEST_PCM_CHAN_5994:  test_pcm_(n, p, 6, true, m, au); break;  
-        case TEST_PCM_CHAN_6000:  test_pcm_(n, p, 7, true, m, au); break;  
-        case TEST_PCM_CHAN_10000: test_pcm_(n, p, 8, true, m, au); break;  
-        case TEST_PCM_CHAN_11988: test_pcm_(n, p, 9, true, m, au); break;  
-        case TEST_PCM_CHAN_12000: test_pcm_(n, p,10, true, m, au); break; 
+        case TEST_PCM_CHAN_2398:  test_pcm_(n, p, 0, true, m, au, false); break;  
+        case TEST_PCM_CHAN_2400:  test_pcm_(n, p, 1, true, m, au, false); break;  
+        case TEST_PCM_CHAN_2500:  test_pcm_(n, p, 2, true, m, au, false); break;  
+        case TEST_PCM_CHAN_2997:  test_pcm_(n, p, 3, true, m, au, false); break;  
+        case TEST_PCM_CHAN_3000:  test_pcm_(n, p, 4, true, m, au, false); break;  
+        case TEST_PCM_CHAN_5000:  test_pcm_(n, p, 5, true, m, au, false); break;  
+        case TEST_PCM_CHAN_5994:  test_pcm_(n, p, 6, true, m, au, false); break;  
+        case TEST_PCM_CHAN_6000:  test_pcm_(n, p, 7, true, m, au, false); break;  
+        case TEST_PCM_CHAN_10000: test_pcm_(n, p, 8, true, m, au, false); break;  
+        case TEST_PCM_CHAN_11988: test_pcm_(n, p, 9, true, m, au, false); break;  
+        case TEST_PCM_CHAN_12000: test_pcm_(n, p,10, true, m, au, false); break; 
+
+        case TEST_SADM:               test_sadm_(n, p, m);                    break;   
+        case TEST_SADM_PCM_PAIR_2398: test_pcm_(n, p, 0, false, m, au, true); break;  
+        case TEST_SADM_PCM_PAIR_2400: test_pcm_(n, p, 1, false, m, au, true); break;  
+        case TEST_SADM_PCM_PAIR_2500: test_pcm_(n, p, 2, false, m, au, true); break;  
+        case TEST_SADM_PCM_PAIR_2997: test_pcm_(n, p, 3, false, m, au, true); break;  
+        case TEST_SADM_PCM_PAIR_3000: test_pcm_(n, p, 4, false, m, au, true); break; 
+
+        case TEST_SADM_PCM_CHAN_2398: test_pcm_(n, p, 0, true, m, au, true); break;  
+        case TEST_SADM_PCM_CHAN_2400: test_pcm_(n, p, 1, true, m, au, true); break;  
+        case TEST_SADM_PCM_CHAN_2500: test_pcm_(n, p, 2, true, m, au, true); break;  
+        case TEST_SADM_PCM_CHAN_2997: test_pcm_(n, p, 3, true, m, au, true); break;  
+        case TEST_SADM_PCM_CHAN_3000: test_pcm_(n, p, 4, true, m, au, true); break;  
 
         default: abort();
     }
@@ -305,6 +389,11 @@ void TestModel::test_klv_(const char *testname, int param, bool match)
 }
 
 
+void TestModel::test_sadm_(const char *testname, int param, bool match)
+{
+    TestSadm::run(*this, testname, param, match);
+}
+
 
 void TestModel::test_mdset_(const char *testname, int param, bool match)
 {
@@ -313,13 +402,11 @@ void TestModel::test_mdset_(const char *testname, int param, bool match)
 
 
 void TestModel::test_pcm_(const char *testname, int param, int fr_idx, bool single_channel,
-                          bool match, bool apply_updates)
+                          bool match, bool apply_updates, bool sadm)
 {
     TestPcm::run(*this, testname, param, pcm_single_frame_,
-                 FRAME_RATES[fr_idx], single_channel, minimal_check_, match,
-                 apply_updates,
+                 FRAME_RATES[fr_idx], single_channel, minimal_check_, ignore_name_check_, match,
+                 apply_updates, sadm,
                  /* don't try random access testing when we only have one frame of data! */
                  pcm_single_frame_ ? 0 : pcm_skip_samples_);
 }
-
-

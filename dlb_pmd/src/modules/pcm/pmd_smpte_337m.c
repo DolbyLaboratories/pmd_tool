@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  **********************************************************************/
 
 /**
- * @flle pmd_smpte_337m.c
+ * @file pmd_smpte_337m.c
  * @brief KLV SMPTE 337m wrapper/unwrapper code
  */
 
@@ -50,6 +50,43 @@ __pragma(warning(disable:4204))
 #include <stdlib.h>
 
 #include "pmd_smpte_337m.h"
+#include "dlb_pmd_pcm.h"
+
+
+/**
+ * @brief serial ADM stuff
+ */
+enum serial_adm_defs
+{
+    /* sADM SMPTE 337m Pc word --------------------------------------------- */
+    SADM_PC_DSN = 0 << 29, /**< sADM data stream number, 0-7 */
+    SADM_PC_MCF = 0 << 27, /**< sADM multiple chunk flag, 0 = single chunk, 1 = multi chunk */
+    SADM_PC_FF  = 1 << 26, /**< sADM format_info present flag */
+    SADM_PC_AI  = 1 << 25, /**< sADM assemble_info present flag */
+    SADM_PC_CMF = 1 << 24, /**< sADM metadata-has-changed flag */
+    SADM_PC_DT  = 0x1f << 16,  /**< sADM smpte 337m data type, 31 */
+
+    PC_SADM = SADM_PC_DSN
+            | SADM_PC_MCF
+            | SADM_PC_FF
+            | SADM_PC_AI
+            | SADM_PC_CMF
+            | SADM_PC_DT,
+    PE_SADM = 0x1000,
+    PF_SADM = 0,
+
+    /* sADM assemble_info --------------------------------------------- */
+    SADM_IN_TIMELINE_FLAG = 0,
+    SADM_TRACK_NUMBERS    = 0,
+    SADM_TRACK_ID         = 0,
+    SADM_ASSEMBLE_INFO    = (SADM_IN_TIMELINE_FLAG << 4)
+                          | (SADM_TRACK_NUMBERS << 6)
+                          | (SADM_TRACK_ID << 12) << 12,
+
+    /* sADM format_info ----------------------------------------------- */
+    SADM_FORMAT_TYPE      = 1,  /* gzip, as specified in RFC-1952) */
+    SADM_FORMAT_INFO      = (SADM_FORMAT_TYPE << 16)
+};
 
 
 /**
@@ -62,7 +99,7 @@ enum preamble_words
     PA          = 0x6f872000,   /* IEC 958 preamble a (sync word 1) */
     PB          = 0x54e1f000,   /* IEC 958 preamble b (sync word 2) */
     PC_MASK     = 0x007f0000,   /* SMPTE preamble C data_mode & data_type mask */
-    PC          = 0x003b0000,   /* preamble C (stream 0, 20-bit, KLV), bit 24 'key_flag' set */
+    PC_PMD      = 0x003b0000,   /* preamble C (stream 0, 20-bit, KLV), bit 24 'key_flag' set */
     PC_KEY_FLAG = 0x01000000,   /* KLV 'key_flag' to indicate presence of Universal Key */
     PC_NULL     = 0x00000000,   /* preamble C (20-bit, NULL) */
 
@@ -79,6 +116,7 @@ enum preamble_words
 
 
 /* -------------------- write interface functions ------------------------ */
+
 
 static inline
 uint32_t *                    /** @return next PCM sample to write */
@@ -188,6 +226,94 @@ phase_write_guardband
 
 
 static inline
+uint32_t*
+phase_write_sadm_ff
+    (pmd_s337m *s337m       /**< [in] PCM smpte state */
+    ,uint32_t *pcm          /**< [in/out] PCM channel buffer to modify */
+    ,uint32_t *end          /**< [in] 1st sample after end of block */
+    )
+{
+    assert(pcm < end);
+    assert(s337m->sadm);
+
+    (void)end;
+
+    pcm[0] = SADM_FORMAT_INFO;
+    s337m->phase = S337M_PHASE_DATA;
+    s337m->vsync_offset -= 1;
+    return pcm + s337m->stride;
+}
+
+
+static inline
+uint32_t*
+phase_write_sadm_ai
+    (pmd_s337m *s337m       /**< [in] PCM smpte state */
+    ,uint32_t *pcm          /**< [in/out] PCM channel buffer to modify */
+    ,uint32_t *end          /**< [in] 1st sample after end of block */
+    )
+{
+    assert(pcm < end);
+    assert(s337m->sadm);
+
+    (void)end;
+
+    pcm[0] = SADM_ASSEMBLE_INFO;
+    s337m->phase = S337M_PHASE_SADM_FF;
+    if (s337m->pair)
+    {
+        return phase_write_sadm_ff(s337m, pcm+1, end)-1;
+    }
+    s337m->vsync_offset -= 1;
+    return pcm + s337m->stride;
+}
+
+
+static inline
+uint32_t*
+phase_write_preamble_pf
+    (pmd_s337m *s337m       /**< [in] PCM smpte state */
+    ,uint32_t *pcm          /**< [in/out] PCM channel buffer to modify */
+    ,uint32_t *end          /**< [in] 1st sample after end of block */
+    )
+{
+    assert(pcm < end);
+    assert(s337m->sadm);
+
+    (void)end;
+
+    pcm[0] = PF_SADM;
+    s337m->phase = S337M_PHASE_SADM_AI;
+    s337m->vsync_offset -= 1;
+    return pcm + s337m->stride;
+}
+
+
+static inline
+uint32_t*
+phase_write_preamble_pe
+    (pmd_s337m *s337m       /**< [in] PCM smpte state */
+    ,uint32_t *pcm          /**< [in/out] PCM channel buffer to modify */
+    ,uint32_t *end          /**< [in] 1st sample after end of block */
+    )
+{
+    assert(pcm < end);
+    assert(s337m->sadm);
+
+    (void)end;
+
+    pcm[0] = PE_SADM;
+    s337m->phase = S337M_PHASE_PREAMBLEF;
+    if (s337m->pair)
+    {
+        return phase_write_preamble_pf(s337m, pcm+1, end)-1;
+    }
+    s337m->vsync_offset -= 1;
+    return pcm + s337m->stride;
+}
+
+
+static inline
 uint32_t *                    /** @return next PCM sample to write */
 phase_write_preamble_pd
     (pmd_s337m *s337m         /**< [in] PCM augmmentor */
@@ -195,17 +321,36 @@ phase_write_preamble_pd
     ,uint32_t *end            /**< [in] 1st sample after end of block */
     )
 {
-    unsigned int bits_per_sample = s337m->pair ? PAIR_BITS : WORD_BITS;
-    unsigned int preamble_samples = s337m->pair ? PREAMBLE_SAMPLE_PAIRS : PREAMBLE_SAMPLES;
+    unsigned int bits_per_sample = WORD_BITS;
+    unsigned int preamble_samples = PREAMBLE_SAMPLES + (2 * s337m->sadm);
+
+    if (s337m->pair)
+    {
+        bits_per_sample = PAIR_BITS;
+        preamble_samples /= 2;
+    }
 
     assert(pcm < end);
     (void)end;
     
     if (s337m->databits)
     {
+        if (s337m->sadm)
+        {
+            s337m->phase = S337M_PHASE_PREAMBLEE;
+            /* sADM preamble includes Pe and Pf words, which must be added
+             * to the databit count
+             */
+            s337m->databits += 2 * WORD_BITS;
+        }
+        else
+        {
+            s337m->phase = S337M_PHASE_DATA;
+        }
+
         pcm[0] = (uint32_t)(s337m->databits << 12);
-        s337m->phase = S337M_PHASE_DATA;
         s337m->databits = ROUND_UP(s337m->databits, bits_per_sample);
+        assert(s337m->framelen > (preamble_samples + (s337m->databits / bits_per_sample)));
         s337m->padding = s337m->framelen - preamble_samples - (s337m->databits / bits_per_sample);
     }
     else
@@ -235,7 +380,9 @@ phase_write_preamble_pc
     s337m->phase = S337M_PHASE_PREAMBLED;
     if (s337m->databits)
     {
-        pcm[0] = PC | PC_KEY_FLAG;  
+        pcm[0] = s337m->sadm
+            ? PC_SADM | PC_KEY_FLAG
+            : PC_PMD  | PC_KEY_FLAG;  
     }
     else if (s337m->mark_empty)
     {
@@ -405,8 +552,7 @@ phase_read_padding
     size_t stride = s337m->stride;
     size_t vo = s337m->vsync_offset;
 
-    assert(s337m->vsync_offset >= s337m->padding);
-
+    /* in the presence of no Pa spacing errors, vsync_offset >= padding */
     pcm += stride * padding;
     vo -= padding;
     padding = 0;
@@ -423,8 +569,6 @@ phase_read_padding
     }
     s337m->padding = padding;
     s337m->vsync_offset = vo;
-    
-    assert(s337m->vsync_offset >= s337m->padding);
 
     return pcm;
 }
@@ -445,8 +589,7 @@ phase_read_wait_vsync
     {
         pcm += vo * stride;
         vo = 0;
-        s337m->padding = GUARDBAND;
-        s337m->phase = S337M_PHASE_GUARDBAND;
+        s337m->phase = S337M_PHASE_PREAMBLEA;
     }
     else
     {
@@ -460,30 +603,107 @@ phase_read_wait_vsync
 
 
 static inline
-uint32_t *                    /** @return next PCM sample to read */
-phase_read_guardband
-    (pmd_s337m *s337m         /**< [in] PCM smpte extractor */
-    ,uint32_t *pcm            /**< [in/out] PCM channel buffer to read */
-    ,uint32_t *end            /**< [in] 1st sample after end of block */
+uint32_t*
+phase_read_sadm_ff
+    (pmd_s337m *s337m       /**< [in] PCM smpte state */
+    ,uint32_t *pcm          /**< [in/out] PCM channel buffer to modify */
+    ,uint32_t *end          /**< [in] 1st sample after end of block */
     )
 {
-    size_t stride = s337m->stride;
-    size_t gband = s337m->padding;
+    assert(pcm < end);
 
-    if (pcm + gband * stride <= end)
+    (void)end;
+    
+    /* todo: decode sADM format info field */
+    s337m->databits -= WORD_BITS;
+    s337m->phase = S337M_PHASE_DATA;
+    s337m->vsync_offset -= 1;
+    return pcm + s337m->stride;
+}
+
+
+static inline
+uint32_t*
+phase_read_sadm_ai
+    (pmd_s337m *s337m       /**< [in] PCM smpte state */
+    ,uint32_t *pcm          /**< [in/out] PCM channel buffer to modify */
+    ,uint32_t *end          /**< [in] 1st sample after end of block */
+    )
+{
+    assert(pcm < end);
+
+    (void)end;
+    
+    s337m->databits -= WORD_BITS;
+    if (s337m->pair)
     {
-        pcm += gband * stride;
-        gband = 0;
-        s337m->phase = S337M_PHASE_PREAMBLEA;
+        return phase_read_sadm_ff(s337m, pcm+1, end)-1;
+    }
+    /* todo: decode sADM assemble info field */
+    s337m->phase = S337M_PHASE_SADM_FF;
+    s337m->vsync_offset -= 1;
+    return pcm + s337m->stride;
+}
+
+
+static inline
+uint32_t*
+phase_read_preamble_pf
+    (pmd_s337m *s337m       /**< [in] PCM smpte state */
+    ,uint32_t *pcm          /**< [in/out] PCM channel buffer to modify */
+    ,uint32_t *end          /**< [in] 1st sample after end of block */
+    )
+{
+    assert(pcm < end);
+
+    (void)end;
+    
+    if (pcm[0] == PF_SADM)
+    {
+        s337m->phase =
+            (s337m->sadm_ai) ? S337M_PHASE_SADM_AI :
+            (s337m->sadm_ff) ? S337M_PHASE_SADM_FF :
+            S337M_PHASE_DATA;
+            
+        s337m->databits -= WORD_BITS;
+        s337m->vsync_offset -= 1;
+        return pcm + s337m->stride;
+    }
+    s337m->vsync_offset -= 1;
+    s337m->phase = S337M_PHASE_PREAMBLEA;
+    return pcm + s337m->stride;
+}
+
+
+static inline
+uint32_t*
+phase_read_preamble_pe
+    (pmd_s337m *s337m       /**< [in] PCM smpte state */
+    ,uint32_t *pcm          /**< [in/out] PCM channel buffer to modify */
+    ,uint32_t *end          /**< [in] 1st sample after end of block */
+    )
+{
+    assert(pcm < end);
+
+    (void)end;
+    
+    if (pcm[0] == PE_SADM)
+    {
+        s337m->phase = S337M_PHASE_PREAMBLEF;
+        s337m->databits -= WORD_BITS;
+        if (s337m->pair)
+        {
+            return phase_read_preamble_pf(s337m, pcm+1, end)-1;
+        }
+        return pcm + s337m->stride;
     }
     else
     {
-        gband -= (end - pcm) / stride;
-        pcm = end;
+        s337m->phase = S337M_PHASE_PREAMBLEA;
     }
     
-    s337m->padding = gband;
-    return pcm;
+    s337m->vsync_offset -= 1;
+    return pcm + s337m->stride;
 }
 
 
@@ -495,9 +715,16 @@ phase_read_preamble_pd
     ,uint32_t *end            /**< [in] 1st sample after end of block */
     )
 {
-    unsigned int bits_per_sample = s337m->pair ? PAIR_BITS : WORD_BITS;
-    unsigned int preamble_samples = s337m->pair ? PREAMBLE_SAMPLE_PAIRS : PREAMBLE_SAMPLES;
+    unsigned int bits_per_sample = WORD_BITS;
+    unsigned int preamble_samples = PREAMBLE_SAMPLES + (2 * s337m->sadm);
     unsigned int databits;
+    size_t reqsamples;
+
+    if (s337m->pair)
+    {
+        bits_per_sample = PAIR_BITS;
+        preamble_samples /= 2;
+    }
 
     (void)end;
     assert(pcm < end);
@@ -505,13 +732,48 @@ phase_read_preamble_pd
     databits = *pcm >> 12;
     if (databits > s337m->databits)
     {
-        printf("datasize too large for input buffer, ignoring\n");
+        /* datasize too large for input buffer, ignoring */
         databits = 0;
     }
     
-    s337m->phase = S337M_PHASE_DATA;
-    s337m->databits = ROUND_UP(databits, bits_per_sample);
-    s337m->padding = s337m->framelen - preamble_samples - (s337m->databits / bits_per_sample);
+    if (s337m->sadm)
+    {
+        s337m->phase = S337M_PHASE_PREAMBLEE;
+    }
+    else
+    {
+        s337m->phase = S337M_PHASE_DATA;
+        s337m->databits = ROUND_UP(databits, bits_per_sample);
+        s337m->framelen = DLB_PCMPMD_BLOCK_SIZE;
+    }
+
+    databits = ROUND_UP(databits, bits_per_sample);
+    reqsamples = preamble_samples + (databits / bits_per_sample);
+    if (s337m->framelen < reqsamples)
+    {
+        /* we have corrupt data. Ignore and wait for the next one */
+        s337m->phase = S337M_PHASE_PREAMBLEA;
+    }
+    else
+    {
+        /* Due to the guardband, the number of samples between the first
+         * and second blocks of a video frame, (MTx(0) and MTx(1)) will be
+         * 128 samples rather than 160.  We may not accurately know where
+         * we are in the frame, so the rule is: *if* the databits could
+         * fit into 128 samples, then assume the frame length *is*
+         * 128. This means that the state machine will not miss the start
+         * of the next block.  In the worst case, where we are not at the
+         * start of the frame and the actual Pa spacing between blocks is 160
+         * samples, setting the frame length to 128 simply means we have to
+         * wait in the PA premable phase for an additional 32 samples.
+         */
+        if (s337m->framelen - GUARDBAND > reqsamples)
+        {
+            s337m->framelen -= GUARDBAND;
+        }
+        
+        s337m->padding = s337m->framelen - preamble_samples - (databits / bits_per_sample);
+    }
     s337m->vsync_offset -= 1;
     return pcm + s337m->stride;
 }
@@ -527,7 +789,17 @@ phase_read_preamble_pc
 {
     assert(pcm < end);
 
-    if ((*pcm & PC_MASK) != PC)
+    if ((*pcm & PC_MASK) == PC_PMD)
+    {
+        s337m->sadm = 0;
+    }
+    else if ((*pcm & PC_MASK) == (PC_SADM & PC_MASK))
+    {
+        s337m->sadm_ai = !!(*pcm & SADM_PC_AI);
+        s337m->sadm_ff = !!(*pcm & SADM_PC_FF);
+        s337m->sadm = 1;
+    }
+    else
     {
         s337m->phase = S337M_PHASE_PREAMBLEA;
         return pcm;
@@ -599,7 +871,8 @@ phase_read_data_burst
     ,uint32_t *end          /**< [in] 1st sample after end of block */
     )
 {
-    size_t databits = s337m->databits;
+    unsigned int bits_per_sample = s337m->pair ? PAIR_BITS : WORD_BITS;
+    size_t databits = ROUND_UP(s337m->databits, bits_per_sample);
     size_t stride = s337m->stride;
     size_t vo = s337m->vsync_offset;    
     dlb_pmd_bool isodd = s337m->isodd;
@@ -626,7 +899,6 @@ phase_read_data_burst
         switch (isodd)
         {
         case 0:
-            sample = *pcm;
             p[0] = (sample >> 24) & 0xff;
             p[1] = (sample >> 16) & 0xff;
             p[2] = ((sample >> 8) & 0xf0);
@@ -678,12 +950,14 @@ pmd_s337m_init
     ,dlb_pmd_bool pair
     ,unsigned int start
     ,dlb_pmd_bool mark_empty_block
+    ,dlb_pmd_bool sadm
     )
 {
     memset(s337m, '\0', sizeof(*s337m));
 
     s337m->pair = pair;
     s337m->start = pair ? 2*start : start;
+    s337m->pa_found = NO_PA_FOUND;
     s337m->phase = S337M_PHASE_VSYNC;
     s337m->stride = stride;
     s337m->next = next;
@@ -691,6 +965,7 @@ pmd_s337m_init
     s337m->padding = 0;
     s337m->vsync_offset = ~0u;
     s337m->mark_empty = mark_empty_block;
+    s337m->sadm = sadm;
 
     s337m->next(s337m);
     s337m->isodd = 0;
@@ -736,6 +1011,22 @@ pmd_s337m_wrap
             pcm = phase_write_preamble_pd(s337m, pcm, end);
             break;
             
+        case S337M_PHASE_PREAMBLEE:
+            pcm = phase_write_preamble_pe(s337m, pcm, end);
+            break;
+
+        case S337M_PHASE_PREAMBLEF:
+            pcm = phase_write_preamble_pf(s337m, pcm, end);
+            break;
+
+        case S337M_PHASE_SADM_AI:
+            pcm = phase_write_sadm_ai(s337m, pcm, end);
+            break;
+
+        case S337M_PHASE_SADM_FF:
+            pcm = phase_write_sadm_ff(s337m, pcm, end);
+            break;
+            
         case S337M_PHASE_DATA:
             pcm = phase_write_data_burst(s337m, pcm, end);
             break;
@@ -752,6 +1043,9 @@ pmd_s337m_unwrap
     ,uint32_t *end
     )
 {
+    uint32_t *pcm_begin = pcm;
+    s337m->pa_found = NO_PA_FOUND;
+
     while (pcm < end)
     {
         switch (s337m->phase)
@@ -760,15 +1054,12 @@ pmd_s337m_unwrap
             pcm = phase_read_wait_vsync(s337m, pcm, end);
             break;
                 
-        case S337M_PHASE_GUARDBAND:
-            pcm = phase_read_guardband(s337m, pcm, end);
-            break;
-
         case S337M_PHASE_PADDING:
             pcm = phase_read_padding(s337m, pcm, end);
             break;
             
         case S337M_PHASE_PREAMBLEA:
+        case S337M_PHASE_GUARDBAND:
             pcm = phase_read_preamble_pa(s337m, pcm, end);
             break;
             
@@ -777,6 +1068,11 @@ pmd_s337m_unwrap
             break;
             
         case S337M_PHASE_PREAMBLEC:
+            s337m->pa_found = (pcm - pcm_begin)/s337m->stride - 1 - !s337m->pair;
+            if (s337m->pa_found_cb)
+            {
+                (*s337m->pa_found_cb)(s337m->pa_found_cb_arg, s337m->pa_found);
+            }
             pcm = phase_read_preamble_pc(s337m, pcm, end);
             break;
             
@@ -784,6 +1080,22 @@ pmd_s337m_unwrap
             pcm = phase_read_preamble_pd(s337m, pcm, end);
             break;
             
+        case S337M_PHASE_PREAMBLEE:
+            pcm = phase_read_preamble_pe(s337m, pcm, end);
+            break;
+
+        case S337M_PHASE_PREAMBLEF:
+            pcm = phase_read_preamble_pf(s337m, pcm, end);
+            break;
+
+        case S337M_PHASE_SADM_AI:
+            pcm = phase_read_sadm_ai(s337m, pcm, end);
+            break;
+
+        case S337M_PHASE_SADM_FF:
+            pcm = phase_read_sadm_ff(s337m, pcm, end);
+            break;
+
         case S337M_PHASE_DATA:
             pcm = phase_read_data_burst(s337m, pcm, end);
             break;

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  **********************************************************************/
 
 /**
- * @flle dlb_pmd_api.h
+ * @file dlb_pmd_api.h
  * @brief header for programmatic API for Dolby Professional Metadata library
  */
 
@@ -72,6 +72,25 @@ enum
     PMD_FAIL
 };
 
+/**
+  * Mask used for determining which components should be
+  * considered during PMD comparison.
+  */
+enum dlb_pmd_equal_mask
+{
+    PMD_EQUAL_MASK_SIGNALS         = (0x0001 << 0),
+    PMD_EQUAL_MASK_BEDS            = (0x0001 << 1),
+    PMD_EQUAL_MASK_OBJECTS         = (0x0001 << 2),
+    PMD_EQUAL_MASK_PRESENTATIONS   = (0x0001 << 3),
+    PMD_EQUAL_MASK_HEADPHONES      = (0x0001 << 4),
+    PMD_EQUAL_MASK_NUM_ED2_SYSTEM  = (0x0001 << 5),
+    PMD_EQUAL_MASK_LOUDNESS        = (0x0001 << 6),
+    PMD_EQUAL_MASK_IAT             = (0x0001 << 7),
+    PMD_EQUAL_MASK_EAC3            = (0x0001 << 8),
+    PMD_EQUAL_MASK_ED2_SYSTEM      = (0x0001 << 9),
+    PMD_EQUAL_MASK_ED2_TURNAROUNDS = (0x0001 << 10),
+    PMD_EQUAL_MASK_ED2_UPDATES     = (0x0001 << 11)
+};
 
 /**
  * @brief return error string
@@ -105,9 +124,10 @@ dlb_pmd_error
  */
 void
 dlb_pmd_library_version
-    (unsigned int *maj      /**< [out] library implementation major number */
+    (unsigned int *epoch    /**< [out] library implementation epoch number */
+    ,unsigned int *maj      /**< [out] library implementation major number */
     ,unsigned int *min      /**< [out] library implementation minor number */
-    ,unsigned int *release  /**< [out] library implementation change */
+    ,unsigned int *build    /**< [out] library implementation build number */
     ,unsigned int *bs_maj   /**< [out] library supported bitstream major version */
     ,unsigned int *bs_min   /**< [out] library supported bitstream minor version */
     );
@@ -123,10 +143,44 @@ dlb_pmd_query_mem
 
 
 /**
+ * @brief establish how much memory the client needs to allocate, given
+ * some maximum entity counts. Use the same max counts when allocating
+ * the model using #dlb_pmd_init_constrained
+ *
+ * The constraints must be such that there are:
+ *    - at least one bed or object
+ *    - at least one presentation
+ *    - at least one signal
+ *    - at most one IAT and ED2 system
+ *    - at least one presentation name per presentation
+ *
+ * If the constraints do not satisfy these conditions, this function will
+ * return 0.
+ */
+size_t                                  /** @return size of memory to allocate in bytes */
+dlb_pmd_query_mem_constrained
+    (const dlb_pmd_model_constraints *c /**< [in] model size constraints */
+    );
+
+
+/**
+ * @brief establish how much memory the client needs to allocate, given
+ * a required maximum profile and level.  Use the same profile and memory
+ * values when initialising the model using #dlb_pmd_init_profile.
+ * If the profile is unknown, returns 0.
+ */
+size_t                       /** @return size of memory to allocate in bytes, or 0 if profile unknown */
+dlb_pmd_query_mem_profile
+    (unsigned int   profile  /**< [in] profile number */
+    ,unsigned int   level    /**< [in] profile level number */
+    );
+
+
+/**
  * @brief initialize a region of memory to be a dlb_pmd model
  *
  * Note that this assumes that the memory provided is at least of size
- * established by the #dlb_pmd_query_memory function
+ * established by the #dlb_pmd_query_mem function
  *
  * Invalid parameters cause undefined behaviour.
  */
@@ -136,6 +190,59 @@ dlb_pmd_init
     ,void *mem                  /**< [in] memory for the model */
     );
 
+
+/**
+ * @brief initialize a region of memory to be a dlb_pmd model with the given
+ * maximum entity limits
+ *
+ * Note that this assumes that the memory provided is at least of size
+ * established by the #dlb_pmd_query_mem_constrained function.
+ *
+ * The constraints must be such that there are:
+ *    - at least one bed or object
+ *    - at least one presentation
+ *    - at least one signal
+ *    - at most one IAT and ED2 system
+ *    - at least one presentation name per presentation
+ *
+ * Invalid parameters cause undefined behaviour.
+ */
+void
+dlb_pmd_init_constrained
+    (      dlb_pmd_model **model        /**< [out] newly created model structure */
+    ,const dlb_pmd_model_constraints *c /**< [in] model size constraints */
+    ,      void *mem                    /**< [in] memory for the model */
+    );
+
+
+/**
+ * @brief initialize a region of memory to be a dlb_pmd model with the given
+ * maximum entity limits
+ *
+ * Note that this assumes that the memory provided is at least of size
+ * established by the #dlb_pmd_query_mem_profile function
+ *
+ * Invalid parameters cause undefined behaviour.  If the profile is unknown,
+ * the model is set to NULL.
+ */
+void
+dlb_pmd_init_profile
+    (dlb_pmd_model **model        /**< [out] newly created model structure */
+    ,unsigned int   profile       /**< [in] profile number */
+    ,unsigned int   level         /**< [in] profile level number */
+    ,void *mem                    /**< [in] memory for the model */
+    );
+
+
+/**
+ * @brief retrieve maximum constraints of a model
+ */
+void
+dlb_pmd_get_constraints
+    (const dlb_pmd_model *model     /**< [in] PMD model */
+    ,dlb_pmd_model_constraints *c   /**< [in/out] space to write model's constraints */
+    );
+    
 
 /**
  * @brief reinitialize a dlb_pmd model
@@ -166,12 +273,41 @@ dlb_pmd_finish
  *
  * Invalid parameters cause undefined behaviour.
  */
-void
+dlb_pmd_success                /** @return 0 if succeeded, 1 if not (i.e., not
+                                 * enough space in destination model for entirety
+                                 * of source model */
 dlb_pmd_copy
     (      dlb_pmd_model *dest /**< [in] model to overwrite */
     ,const dlb_pmd_model *src  /**< [in] source model */
     );
 
+
+/**
+ * A standard mask that defines which components of PMD should be considered
+ * during comparison.
+ *
+ * @see dlb_pmd_equal_mask
+ */
+extern const uint32_t PMD_COMPARE_MASK;
+
+
+/**
+ * @brief test whether two models are equal
+ *
+ * More general approach than existing dlb_pmd_equal2
+ * uses bit mask, allowing to choose exact components for comparison.
+ */
+dlb_pmd_success                   /** @return 0 if equal, 1 otherwise */
+dlb_pmd_equal3
+    (const dlb_pmd_model *m1             /**< [in] 1st model to compare */
+    ,const dlb_pmd_model *m2             /**< [in] 2nd model to compare */
+    ,      dlb_pmd_bool ignore_names     /**< [in] ignore APN and AEN? */
+    ,      uint32_t components_to_check  /**< [in] u32 variable where bits are set
+                                           *       according to which compoments we
+                                           *       want to be included in comparison.
+                                           *       Uses dlb_pmd_equal_mask
+                                           */
+    );
 
 /**
  * @brief test whether two models are equal
@@ -182,13 +318,29 @@ dlb_pmd_copy
  * Invalid parameters cause undefined behaviour.
  */
 dlb_pmd_success                   /** @return 0 if equal, 1 otherwise */
+dlb_pmd_equal2
+    (const dlb_pmd_model *m1            /**< [in] 1st model to compare */
+    ,const dlb_pmd_model *m2            /**< [in] 2nd model to compare */
+    ,      dlb_pmd_bool ignore_updates  /**< [in] ignore updates? */
+    ,      dlb_pmd_bool ignore_names    /**< [in] ignore APN and AEN? */
+    ,      dlb_pmd_bool minimal         /**< [in] only check beds, objects, models
+                                          *       implies #ignore_updates and #ignore_names
+                                          */
+    );
+
+
+static inline
+dlb_pmd_success                   /** @return 0 if equal, 1 otherwise */
 dlb_pmd_equal
     (const dlb_pmd_model *m1            /**< [in] 1st model to compare */
     ,const dlb_pmd_model *m2            /**< [in] 2nd model to compare */
     ,      dlb_pmd_bool ignore_updates  /**< [in] ignore updates? */
     ,      dlb_pmd_bool minimal         /**< [in] only check beds, objects, models */
-    );
-
+    )
+{
+    return dlb_pmd_equal2(m1, m2, ignore_updates, 0, minimal);
+}
+    
 
 /**
  * @brief apply a channel remapping
@@ -214,7 +366,7 @@ dlb_pmd_remap_channels
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                  /** @return 0 on success, non-zero on failure */       
+dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL on failure */       
 dlb_pmd_smpte2109_sample_offset
     (const dlb_pmd_model *m      /**< [in] model to query */
     ,      uint16_t *so          /**< [out] SMPTE 2109 sample offset */
@@ -226,7 +378,7 @@ dlb_pmd_smpte2109_sample_offset
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                        /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                        /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_version
     (const dlb_pmd_model *model        /**< [in] model to query */
     ,      unsigned char *maj          /**< [out] bitstream major version */
@@ -239,7 +391,7 @@ dlb_pmd_version
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                 /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_title
     (const dlb_pmd_model *model /**< [in] model to query */
     ,const char **title         /**< [out] title */
@@ -254,7 +406,7 @@ dlb_pmd_title
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                    /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_profile
     (const dlb_pmd_model *model    /**< [in] model to query */
     ,      unsigned int  *profile  /**< [out] profile number */
@@ -894,7 +1046,7 @@ dlb_pmd_hed_iterator_next
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success            /** @return 0 on success, non-zero on failure */       
+dlb_pmd_success            /** @return PMD_SUCCESS on success, PMD_FAIL on failure */       
 dlb_pmd_set_smpte2109_sample_offset
     (dlb_pmd_model *m      /**< [in] model to populate */
     ,uint16_t so           /**< [in] starting sample offset */
@@ -906,7 +1058,7 @@ dlb_pmd_set_smpte2109_sample_offset
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success              /** @return 0 on success, non-zero on failure */
+dlb_pmd_success              /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_remap_local_tag
     (dlb_pmd_model *m        /**< [in] model to populate */
     ,uint16_t localtag       /**< [in] local tag to remap */
@@ -921,7 +1073,7 @@ dlb_pmd_remap_local_tag
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success          /** @return 0 on success, non-zero on failure */
+dlb_pmd_success          /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_title
     (dlb_pmd_model *m    /**< [in] model to populate */
     ,const char *title   /**< [in] name of model */
@@ -941,7 +1093,7 @@ dlb_pmd_set_title
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success              /** @return 0 on success, non-zero on failure */
+dlb_pmd_success              /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_profile
     (dlb_pmd_model *model    /**< [in] model to populate */
     ,unsigned int   profile  /**< [in] profile number */
@@ -953,7 +1105,7 @@ dlb_pmd_set_profile
  * @brief unset a model profile
  */
 static inline
-dlb_pmd_success              /** @return 0 on success, non-zero on failure */
+dlb_pmd_success              /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_unset_profile
     (dlb_pmd_model *model    /**< [in] model to query */
     )
@@ -969,7 +1121,7 @@ dlb_pmd_unset_profile
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                  /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_signal
     (dlb_pmd_model *m            /**< [in] model to populate */
     ,dlb_pmd_signal s            /**< [in] PCM channel position, 1-based, 1-255 */
@@ -984,7 +1136,7 @@ dlb_pmd_add_signal
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                  /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_signals
     (dlb_pmd_model *m            /**< [in] model to populate */
     ,unsigned int num_signals    /**< [in] number of signals to add */
@@ -1000,7 +1152,7 @@ dlb_pmd_add_signals
  * Invalid parameters cause undefined behaviour.
  */
 
-dlb_pmd_success                  /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_bed
     (dlb_pmd_model *m            /**< [in] model to augment */
     ,dlb_pmd_element_id id       /**< [in] desired element identifier */
@@ -1016,7 +1168,7 @@ dlb_pmd_add_bed
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                         /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_bed
     (      dlb_pmd_model *m             /**< [in] model to augment */
     ,const dlb_pmd_bed   *bed           /**< [in] overwrite/add bed */
@@ -1035,7 +1187,7 @@ dlb_pmd_set_bed
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                   /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_object
     (dlb_pmd_model *m             /**< [in] model to augment */
     ,dlb_pmd_element_id id        /**< [in] desired element id */
@@ -1058,7 +1210,7 @@ dlb_pmd_add_object
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                         /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_object
     (      dlb_pmd_model *m             /**< [in] model to augment */
     ,const dlb_pmd_object *object       /**< [in] overwrite/add object */
@@ -1078,7 +1230,7 @@ dlb_pmd_set_object
  * Invalid parameters cause undefined behaviour.
  */
 static inline
-dlb_pmd_success                   /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_generic_obj
     (dlb_pmd_model *m             /**< [in] model to augment */
     ,dlb_pmd_element_id id        /**< [in] desired element id */
@@ -1108,7 +1260,7 @@ dlb_pmd_add_generic_obj
  * Invalid parameters cause undefined behaviour. 
  */
 static inline
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_generic_obj2
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,dlb_pmd_element_id id    /**< [in] desired element id */
@@ -1130,35 +1282,35 @@ dlb_pmd_add_generic_obj2
  * in increasing order, numbered 1,2,3,... etc.
  *
  * @note divergence controls how far from center a channel is spread
- * across the fronts. This is a value between 0.0 and 0.5 that
+ * across the fronts. This is a value between 0.0 and 1.0 that
  * indicates how far the energy spreads from the center in both
  * directions. So, a divergence of 0.0 means no spread, all energy is
- * located at the center. A divergence of 0.25 means that the channel
- * is spread from x = 0.25 to x = 0.75. A divergence of 0.5 means that
- * the energy is spread from x = 0.0 to x = 1.0.
+ * located at the center. A divergence of 0.5 means that the channel
+ * is spread from x = -0.5 to x = 0.5. A divergence of 1.0 means that
+ * the energy is spread from x = -1.0 to x = 1.0.
  *
  * Invalid parameters cause undefined behaviour. 
  */
 static inline
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_dialog
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,dlb_pmd_element_id id    /**< [in] desired element id */
     ,const char *name         /**< [in] object name, or NULL */
     ,unsigned int signal      /**< [in] PCM track number, 1 based */
-    ,float divergence         /**< [in] divergence, 0 - 0.5 */
+    ,float divergence         /**< [in] divergence, 0 - 1.0 */
     )
 {
     dlb_pmd_bool diverge = 0;
-    float x = 0.5;
+    float x = 0.0;
 
-    if (divergence < 0.0f || divergence > 0.5f) return PMD_FALSE;
+    if (divergence < 0.0f || divergence > 1.0f) return PMD_FALSE;
 
     x -= divergence;
-    diverge = x != 0.5f;
+    diverge = x != 0.0f;
 
     return dlb_pmd_add_object(m, id, name, PMD_CLASS_DIALOG, signal, x,
-                              0.0, 0.5, 0.0, 0.0, 0, 0, diverge);
+                              1.0, 0, 0.0, 0.0, 0, 0, diverge);
 }
 
 
@@ -1170,35 +1322,35 @@ dlb_pmd_add_dialog
  * in increasing order, numbered 1,2,3,... etc.
  *
  * @note divergence controls how far from center a channel is spread
- * across the fronts. This is a value between 0.0 and 0.5 that
+ * across the fronts. This is a value between 0.0 and 1.0 that
  * indicates how far the energy spreads from the center in both
  * directions. So, a divergence of 0.0 means no spread, all energy is
- * located at the center. A divergence of 0.25 means that the channel
- * is spread from x = 0.25 to x = 0.75. A divergence of 0.5 means that
- * the energy is spread from x = 0.0 to x = 1.0.
+ * located at the center. A divergence of 0.5 means that the channel
+ * is spread from x = -0.5 to x = 0.5. A divergence of 1.0 means that
+ * the energy is spread from x = -1.0 to x = 1.0.
  *
  * Invalid parameters cause undefined behaviour. 
  */
 static inline
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_vds
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,dlb_pmd_element_id id    /**< [in] desired element id */
     ,const char *name         /**< [in] object name, or NULL */
     ,unsigned int signal      /**< [in] PCM track number, 1 based */
-    ,float divergence         /**< [in] divergence, 0 - 0.5 */
+    ,float divergence         /**< [in] divergence, 0 - 1.0 */
     )
 {
     dlb_pmd_bool diverge = 0;
-    float x = 0.5;
+    float x = 0.0;
 
-    if (divergence < 0.0f || divergence > 0.5f) return PMD_FALSE;
+    if (divergence < 0.0f || divergence > 1.0f) return PMD_FALSE;
 
     x -= divergence;
-    diverge = x != 0.5f;
+    diverge = x != 0.0f;
 
     return dlb_pmd_add_object(m, id, name, PMD_CLASS_VDS, signal,
-                              x, 0.0, 0.5, 0.0, 0.0, 0, 0, diverge);
+                              x, 1.0, 0.0, 0.0, 0.0, 0, 0, diverge);
 }
 
 
@@ -1209,35 +1361,35 @@ dlb_pmd_add_vds
  * in increasing order, numbered 1,2,3,... etc.
  *
  * @note divergence controls how far from center a channel is spread
- * across the fronts. This is a value between 0.0 and 0.5 that
+ * across the fronts. This is a value between 0.0 and 1.0 that
  * indicates how far the energy spreads from the center in both
  * directions. So, a divergence of 0.0 means no spread, all energy is
- * located at the center. A divergence of 0.25 means that the channel
- * is spread from x = 0.25 to x = 0.75. A divergence of 0.5 means that
- * the energy is spread from x = 0.0 to x = 1.0.
+ * located at the center. A divergence of 0.5 means that the channel
+ * is spread from x = -0.5 to x = 0.5. A divergence of 1.0 means that
+ * the energy is spread from x = -1.0 to x = 1.0.
  *
  * Invalid parameters cause undefined behaviour. 
  */
 static inline
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_voiceover
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,dlb_pmd_element_id id    /**< [in] desired element id */
     ,const char *name         /**< [in] object name, or NULL */
     ,unsigned int signal      /**< [in] PCM track number, 1 based */
-    ,float divergence         /**< [in] divergence, 0 - 0.5 */
+    ,float divergence         /**< [in] divergence, 0 - 1.0 */
     )
 {
     dlb_pmd_bool diverge = 0;
-    float x = 0.5;
+    float x = 0.0;
 
-    if (divergence < 0.0f || divergence > 0.5f) return PMD_FALSE;
+    if (divergence < 0.0f || divergence > 1.0f) return PMD_FALSE;
 
     x -= divergence;
-    diverge = x != 0.5f;
+    diverge = x != 0.0f;
 
     return dlb_pmd_add_object(m, id, name, PMD_CLASS_VOICEOVER, signal,
-                              x, 0.0, 0.5, 0.0, 0.0, 0, 0, diverge);
+                              x, 1.0, 0.0, 0.0, 0.0, 0, 0, diverge);
 }
 
 
@@ -1248,7 +1400,7 @@ dlb_pmd_add_voiceover
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                 /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_presentation
     (dlb_pmd_model *m           /**< [in] model to augment */
     ,dlb_pmd_presentation_id id /**< [in] desired presentation id */
@@ -1270,7 +1422,7 @@ dlb_pmd_add_presentation
  * Invalid parameters cause undefined behaviour.
  */
 static inline
-dlb_pmd_success                 /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_presentation2
     (dlb_pmd_model *m           /**< [in] model to augment */
     ,dlb_pmd_presentation_id id /**< [in] desired presentation id */
@@ -1279,7 +1431,7 @@ dlb_pmd_add_presentation2
     ,const char *namelang       /**< [in] language of name */
     ,dlb_pmd_speaker_config cfg /**< [in] channel config of object to add */
     ,int num_elements           /**< [in] number of elements in presentation */
-    ,...                        /**< [in] sequence of model ids */
+    ,...                        /**< [in] sequence of element ids */
     )
 {
     va_list ep;
@@ -1288,7 +1440,7 @@ dlb_pmd_add_presentation2
 
     if (num_elements > (int)(sizeof(eids)/sizeof(eids[0])))
     {
-        return 0;
+        return PMD_FAIL;
     }
 
     va_start(ep, num_elements);
@@ -1306,7 +1458,7 @@ dlb_pmd_add_presentation2
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                    /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_presentation_name
     (dlb_pmd_model           *m    /**< [in] model to augment */
     ,dlb_pmd_presentation_id  id   /**< [in] presentation to name */
@@ -1320,7 +1472,7 @@ dlb_pmd_add_presentation_name
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                         /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_presentation
     (      dlb_pmd_model *m             /**< [in] model to augment */
     ,const dlb_pmd_presentation *p      /**< [in] overwrite/add presentation */
@@ -1330,9 +1482,13 @@ dlb_pmd_set_presentation
 /**
  * @brief programmatically add an update into model to augment
  *
+ * Note that PCM+PMD workflows restrict the first PMD timeslice to ABD,AOD,
+ * APD and HED payloads only.  Since no XYZ (update) payload may occur in
+ * this timeslice, any updated with time < 5 will be ignored.
+ *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success             /** @return 0 on success, non-zero on failure */
+dlb_pmd_success             /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_update
     (dlb_pmd_model *m       /**< [in] model to augment */
     ,dlb_pmd_element_id id  /**< [in] id of object element to update (must have dynamic_updates) */
@@ -1348,7 +1504,7 @@ dlb_pmd_add_update
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                         /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_update
     (      dlb_pmd_model *m             /**< [in] model to augment */
     ,const dlb_pmd_update *u            /**< [in] overwrite/add object update */
@@ -1368,7 +1524,7 @@ dlb_pmd_set_update
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success             /** @return 0 on success, non-zero on failure */
+dlb_pmd_success             /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_eac3_encoding_parameters
     (dlb_pmd_model *m       /**< [in] model to augment */
     ,int id                 /**< [in] desired EAC3 encoding parameter id */
@@ -1383,7 +1539,7 @@ dlb_pmd_add_eac3_encoding_parameters
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                 /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_eep_add_encoder_params
     (dlb_pmd_model *m           /**< [in] model to augment */
     ,unsigned int   id          /**< [in] eac3 encoding parameters id */
@@ -1400,7 +1556,7 @@ dlb_pmd_eep_add_encoder_params
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                       /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                       /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_eep_add_bitstream_params
     (dlb_pmd_model    *m              /**< [in] model to augment */
     ,unsigned int      id             /**< [in] eac3 encoding parameters id*/
@@ -1420,7 +1576,7 @@ dlb_pmd_eep_add_bitstream_params
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_eep_add_drc_params
     (dlb_pmd_model *m          /**< [in] model to augment */
     ,unsigned int   id         /**< [in] eac3 encoding parameters id*/
@@ -1437,7 +1593,7 @@ dlb_pmd_eep_add_drc_params
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                    /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_eep_add_presentation
     (dlb_pmd_model *m              /**< [in] model to augment */
     ,unsigned int   id             /**< [in] eac3 encoding parameters id */
@@ -1450,7 +1606,7 @@ dlb_pmd_eep_add_presentation
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                         /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_eac3
     (      dlb_pmd_model *m             /**< [in] model to augment */
     ,const dlb_pmd_eac3 *e              /**< [in] overwrite/add EAC3 encoding parameters */
@@ -1462,7 +1618,7 @@ dlb_pmd_set_eac3
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_etd
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,int id                   /**< [in] desired ED2 turnaround id */
@@ -1474,7 +1630,7 @@ dlb_pmd_add_etd
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                     /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                     /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_etd_add_ed2
     (dlb_pmd_model     *m           /**< [in] model to augment */
     ,int                etd         /**< [in] ED2 turnaround id */
@@ -1492,7 +1648,7 @@ dlb_pmd_etd_add_ed2
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_etd_add_ed2_presentation
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,unsigned int   id        /**< [in] ED2 turnaround id */
@@ -1507,7 +1663,7 @@ dlb_pmd_etd_add_ed2_presentation
  * Invalid parameters cause undefined behaviour. 
  */
 static inline
-dlb_pmd_success                        /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                        /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_ed2_turnaround
     (dlb_pmd_model     *m              /**< [in] model to augment */
     ,int                id             /**< [in] desired ED2 turnaround id */
@@ -1541,7 +1697,7 @@ dlb_pmd_add_ed2_turnaround
  * 
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                           /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                           /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_etd_add_de
     (dlb_pmd_model            *m          /**< [in] model to augment */
     ,int                       etd        /**< [in] ED2 turnaround id */
@@ -1555,7 +1711,7 @@ dlb_pmd_etd_add_de
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                   /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_etd_add_de_presentation
     (dlb_pmd_model *m             /**< [in] model to augment */
     ,unsigned int  id             /**< [in] ED2 turnaround id */
@@ -1570,7 +1726,7 @@ dlb_pmd_etd_add_de_presentation
  * Invalid parameters cause undefined behaviour.
  */
 static inline
-dlb_pmd_success                           /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                           /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_de_turnaround
     (dlb_pmd_model            *m          /**< [in] model to augment */
     ,int                       id         /**< [in] desired ED2 turnaround id */
@@ -1606,7 +1762,7 @@ dlb_pmd_add_de_turnaround
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                         /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_ed2_turnaround
     (      dlb_pmd_model *m             /**< [in] model to augment */
     ,const dlb_pmd_ed2_turnaround *e    /**< [in] overwrite/add ED2 turnaround */
@@ -1618,7 +1774,7 @@ dlb_pmd_set_ed2_turnaround
  *
  * Invalid parameters cause undefined behaviour. 
  */
-dlb_pmd_success                    /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_add
     (dlb_pmd_model *m              /**< [in] model to augment */
     ,uint64_t       timestamp      /**< [in] timestamp - only mandatory field (35 bits) */
@@ -1633,7 +1789,7 @@ dlb_pmd_iat_add
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_content_id_uuid
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,const char    *uuid      /**< [in] uuid */
@@ -1647,7 +1803,7 @@ dlb_pmd_iat_content_id_uuid
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_content_id_eidr
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,const char    *eidr      /**< [in] eidr */
@@ -1662,7 +1818,7 @@ dlb_pmd_iat_content_id_eidr
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_content_id_ad_id
     (dlb_pmd_model *m          /**< [in] model to augment */
     ,const char    *ad_id      /**< [in] Ad-ID */
@@ -1676,7 +1832,7 @@ dlb_pmd_iat_content_id_ad_id
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                     /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                     /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_content_id_raw
     (dlb_pmd_model          *m      /**< [in] model to augment */
     ,dlb_pmd_content_id_type type   /**< [in] content id 'type' : 3 - 0x1e */
@@ -1690,7 +1846,7 @@ dlb_pmd_iat_content_id_raw
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_distribution_id_atsc3
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,uint16_t       bsid      /**< [in] 16-bit bsid */
@@ -1706,7 +1862,7 @@ dlb_pmd_iat_distribution_id_atsc3
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                        /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                        /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_distribution_id_raw
     (dlb_pmd_model *m                  /**< [in] model to augment */
     ,dlb_pmd_distribution_id_type type /**< distribution id type */
@@ -1720,7 +1876,7 @@ dlb_pmd_iat_distribution_id_raw
  * 
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_set_offset
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,uint16_t       offset    /**< [in] 11-bit offset */
@@ -1732,7 +1888,7 @@ dlb_pmd_iat_set_offset
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success               /** @return 0 on success, non-zero on failure */
+dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_set_validity_duration
     (dlb_pmd_model *m         /**< [in] model to augment */
     ,uint16_t       vdur      /**< [in] 11-bit validity duration */
@@ -1744,7 +1900,7 @@ dlb_pmd_iat_set_validity_duration
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                 /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_set_user_data
     (dlb_pmd_model *m           /**< [in] model to augment */
     ,size_t         size        /**< [in] user data bytes */
@@ -1757,7 +1913,7 @@ dlb_pmd_iat_set_user_data
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success           /** @return 0 on success, non-zero on failure */
+dlb_pmd_success           /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_set_extension
     (dlb_pmd_model *m     /**< [in] model to augment */
     ,size_t         size  /**< [in] extension bytes */
@@ -1770,7 +1926,7 @@ dlb_pmd_iat_set_extension
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                        /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                        /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_iat
     (dlb_pmd_model *m                  /**< [in] model to augment */
     ,dlb_pmd_identity_and_timing *iat  /**< [in] overwrite/add identity and timing */
@@ -1782,7 +1938,7 @@ dlb_pmd_set_iat
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                    /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_loudness
     (      dlb_pmd_model    *m     /**< [in] model to augment */
     ,const dlb_pmd_loudness *pld   /**< [in] presentation loudness struct */
@@ -1794,7 +1950,7 @@ dlb_pmd_set_loudness
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                 /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_element_name
     (dlb_pmd_model        *m    /**< [in] model to augment */
     ,dlb_pmd_element_id    id   /**< [in] element (bed or object) to name */
@@ -1807,7 +1963,7 @@ dlb_pmd_add_element_name
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success           /** @return 0 on success, non-zero on failure */
+dlb_pmd_success           /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_ed2_stream_name
     (dlb_pmd_model *m     /**< [in] model to augment */
     ,unsigned int   idx   /**< [in] ED2 stream index 0 - 15 */
@@ -1821,7 +1977,7 @@ dlb_pmd_add_ed2_stream_name
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                         /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_ed2_system
     (      dlb_pmd_model *m             /**< [in] model to augment */
     ,const dlb_pmd_ed2_system *sys      /**< [in] overwrite/add ED2 system */
@@ -1831,7 +1987,7 @@ dlb_pmd_set_ed2_system
 /**
  * @brief add a headphone element description
  */
-dlb_pmd_success                         /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_headphone_element
     (      dlb_pmd_model *m             /**< [in] model to augment */
     ,const dlb_pmd_headphone *hed       /**< [in] headphone element to add */
@@ -1856,13 +2012,25 @@ dlb_pmd_set_headphone_element
  * This has the effect of adjusting all the relevant object positions
  * and deleting the updates from the model.
  *
+ * If the model has an IAT, this will also update the IAT's timestamp.
+ * 
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                   /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_apply_updates
     (dlb_pmd_model *m             /**< [in] model to augment */
+    ,dlb_pmd_frame_rate rate      /**< [in] video frame rate */
     );
 
+
+/**
+ * @brief prune away signals not used by the elements in the model
+ */
+dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
+dlb_pmd_prune_unused_signals
+    (dlb_pmd_model *m             /**< [in] model to augment */
+    );
+   
 
 /* ----------------------- metadata sets ------------------------ */
 
@@ -1894,7 +2062,7 @@ dlb_pmd_metadata_set_max_memory
  *
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                   /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_create_metadata_set
     (const dlb_pmd_model *model   /**< [in] model from which to generate metadata set */
     ,void *memory                 /**< [in] pre-allocated memory to use */
@@ -1910,10 +2078,51 @@ dlb_pmd_create_metadata_set
  * 
  * Invalid parameters cause undefined behaviour.
  */
-dlb_pmd_success                         /** @return 0 on success, non-zero on failure */
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_ingest_metadata_set
     (      dlb_pmd_model        *m      /**< [in] model to create */
     ,const dlb_pmd_metadata_set *mdset  /**< [in] metadata set */
+    );
+
+
+/** -----------------  payload set read/write status  ------------------------- */
+
+
+/**
+ * @brief Initialize a payload set status record
+ *
+ * Initialize a payload set status record, using the given array for the XYZ payloads.
+ */
+dlb_pmd_success                                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
+dlb_pmd_initialize_payload_set_status
+    (dlb_pmd_payload_set_status     *payload_set_status /**< [in/out] Payload set status record to initialize */
+    ,dlb_pmd_payload_status_record  *xyz_status         /**< [in]  Array of XYZ payload status records to use, may be NULL */
+    ,unsigned int                    xyz_count          /**< [in]  Number of XYZ payload status records in the array */
+    );
+
+
+/**
+ * @brief Initialize a payload set status record, including callback information
+ *
+ * Initialize a payload set status record, using the given array for the XYZ payloads.  The callback will be called
+ * at the end of payload set processing.
+ */
+dlb_pmd_success                                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
+dlb_pmd_initialize_payload_set_status_with_callback
+    (dlb_pmd_payload_set_status             *payload_set_status /**< [in/out] Payload set status record to initialize */
+    ,dlb_pmd_payload_status_record          *xyz_status         /**< [in]  Array of XYZ payload status records to use, may be NULL */
+    ,unsigned int                            xyz_count          /**< [in]  Number of XYZ payload status records in the array */
+    ,void                                   *callback_arg       /**< [in]  Special-purpose argument to callback function */
+    ,dlb_pmd_payload_set_status_callback     callback           /**< [in]  Callback function pointer */
+    );
+
+
+/**
+ * @brief Clear (reset) the data in a payload set status record
+ */
+void
+dlb_pmd_clear_payload_set_status
+    (dlb_pmd_payload_set_status *payload_set_status     /**< [in/out] Payload set status record to clear */
     );
 
 

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_ABD_AOD_APD.cc
+ * @brief Test different combinations of beds, objects and presentations
+ */
+
 #include "dlb_pmd_api.h"
 #include "src/model/pmd_model.h"
 extern "C"
@@ -41,6 +46,9 @@ extern "C"
 }
 #include "TestModel.hh"
 #include "gtest/gtest.h"
+
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_ABD_AOD_APD_TESTS
 
 /**
  * @brief number of channels in each different speaker config
@@ -65,9 +73,9 @@ static const int MAX_BED_CHANS = 16;
  * doesn't seem likely in practice, and we only have a max of 255 input
  * signals
  */
-static const int MAX_ED2_BEDS = 4;
-static const int MAX_ED2_OBJS = 32;
-static const int MAX_ED2_PRES = 16;
+static const int MAX_INTERNAL_BEDS = 4;
+static const int MAX_INTERNAL_OBJS = 32;
+static const int MAX_INTERNAL_PRES = 16;
 
 static const int MAX_BEDS = 128;
 static const int MAX_OBJS = 128;
@@ -86,6 +94,18 @@ static const int BLOCK_OVERHEAD = (16  /* UL */
                                    + 6 /* CRC */
                                    );
 
+/**
+ * @brief report available bits
+ */
+struct BitCapacity
+{
+    unsigned int mtx0_bits;    /**< number of bits for MTx(0), ABD,AOD,APN,HED only */
+    unsigned int other_bits;   /**< bits available in all other time slices */
+
+    BitCapacity(unsigned int m0, unsigned int ob) : mtx0_bits(m0), other_bits(ob) {};
+};
+
+
 
 class ElementTest: public ::testing::TestWithParam<std::tr1::tuple<int, int, int, int> > {};
 
@@ -93,17 +113,27 @@ class ElementTest: public ::testing::TestWithParam<std::tr1::tuple<int, int, int
 /**
  * @brief estimate how much actual data is available in a given test config
  */
-static unsigned int estimate_pcmklv_capacity(unsigned int frame_length, bool ispair)
+static BitCapacity estimate_pcmklv_capacity(unsigned int frame_length, bool ispair)
 {
-    frame_length -= GUARD_SAMPLES;
     unsigned int num_blocks = frame_length / PMD_BLOCK_SIZE;
     unsigned int block_bytes = (ispair ? MAX_DATA_BYTES_PAIR : MAX_DATA_BYTES_CHAN) - BLOCK_OVERHEAD;
-    unsigned int num_bits = num_blocks * block_bytes * 8;
+    unsigned int mtx0_bits = block_bytes * 8;
+    unsigned int num_bits = (num_blocks-1) * block_bytes * 8;
+    unsigned int guard_bits = (ispair ? (GUARD_SAMPLES * 40) : (GUARD_SAMPLES * 20));
+
+    /* simulate removal of GUARD_SAMPLES worth of space from 1st and last blocks */
+    num_bits -= guard_bits;
+    mtx0_bits -= guard_bits;
 
     /* remove the tag/length overhead for the ABD, AOD, APD, AEN and APN payloads, assume
      * in each block */
-    num_bits -= (5 * 16 * num_blocks);
-    return (unsigned int)(num_bits * .9);
+    num_bits -= (5 * 16 * (num_blocks-1));
+    mtx0_bits -= (4 * 16); /* only ABD, AOD, APD, HED */
+  
+    mtx0_bits = (unsigned int)(mtx0_bits * .9);
+    num_bits = (unsigned int)(num_bits * .9);
+    
+    return BitCapacity(mtx0_bits, num_bits);
 }
 
 
@@ -112,13 +142,13 @@ static unsigned int estimate_pcmklv_capacity(unsigned int frame_length, bool isp
  *
  * All beds, objects and elements must be transmitted in a single frame.
  */
-static unsigned int estimate_test_capacity(TestModel::TestType t)
+static BitCapacity estimate_test_capacity(TestModel::TestType t)
 {
     switch (t)
     {
-        case TestModel::TEST_XML:            return ~0u;  /* unlimited */
-        case TestModel::TEST_MDSET:          return ~0u;
-        case TestModel::TEST_KLV:            return ~0u;
+        case TestModel::TEST_XML:            return BitCapacity(0, ~0u);  /* unlimited */
+        case TestModel::TEST_MDSET:          return BitCapacity(0, ~0u);
+        case TestModel::TEST_KLV:            return BitCapacity(0, ~0u);
 
         case TestModel::TEST_PCM_PAIR_2398:  return estimate_pcmklv_capacity(2002, true);
         case TestModel::TEST_PCM_PAIR_2400:  return estimate_pcmklv_capacity(2000, true);
@@ -144,8 +174,10 @@ static unsigned int estimate_test_capacity(TestModel::TestType t)
         case TestModel::TEST_PCM_CHAN_11988: return estimate_pcmklv_capacity( 400, false);
         case TestModel::TEST_PCM_CHAN_12000: return estimate_pcmklv_capacity( 400, false);
 
+        case TestModel::TEST_SADM:           return BitCapacity(0, ~0u);
+
         default:
-            return ~0u;
+            return BitCapacity(0, ~0u);
     }
 }
 
@@ -153,11 +185,9 @@ static unsigned int estimate_test_capacity(TestModel::TestType t)
 /**
  * @brief estimate number of bits required by a test config (excluding tag/len bytes)
  */
-static void estimate_bit_requirement(unsigned int num_beds,
-                                     unsigned int num_objs,
-                                     unsigned int num_pres,
-                                     unsigned int *minbits,
-                                     unsigned int *maxbits)
+static BitCapacity estimate_bit_requirement(unsigned int num_beds,
+                                            unsigned int num_objs,
+                                            unsigned int num_pres)
 {
     unsigned int num_elements = (num_beds + num_objs + num_pres) % MAX_PRESENTATION_ELEMENTS;
         
@@ -184,7 +214,8 @@ static void estimate_bit_requirement(unsigned int num_beds,
      * at end of block by adding requirement for one additional thing of biggest
      * size
      */
-    unsigned int max_item = bed_bits > obj_bits ? bed_bits : obj_bits;
+    assert(bed_bits > obj_bits);
+    unsigned int max_item = bed_bits;
     max_item = max_item > pres_bits ? max_item : pres_bits;
     mtx0_bits += max_item;
     
@@ -195,8 +226,7 @@ static void estimate_bit_requirement(unsigned int num_beds,
         + ROUND_TO_BYTES((32 + 8*PRES_NAME_LENGTH) * num_pres * 2);
     /* we test with dual-named presentations */
     
-    *minbits = mtx0_bits;
-    *maxbits = mtx0_bits + name_bits;
+    return BitCapacity(mtx0_bits, name_bits);
 }
 
 
@@ -209,24 +239,43 @@ static void configure_test_params(TestModel& m, TestModel::TestType t,
                                   unsigned int& num_objs,
                                   unsigned int& num_pres)
 {
-    unsigned int maxbits = estimate_test_capacity(t);
-    unsigned int req_min;
-    unsigned int req_max;
+    BitCapacity req = estimate_bit_requirement(num_beds, num_objs, num_pres);
+    BitCapacity capacity = estimate_test_capacity(t);
+    unsigned int req_bits;
+    unsigned int available;
     
-    estimate_bit_requirement(num_beds, num_objs, num_pres, &req_min, &req_max);
-    while (req_max > maxbits)
+    for (;;)
     {
-        if (req_min < maxbits)
+        /* remove MTx(0).  capacity.mtx0_bits indicates bits available in 1s */
+        if (req.mtx0_bits > capacity.mtx0_bits)
+        {
+            req.mtx0_bits -= capacity.mtx0_bits;
+        }
+        else
+        {
+            req.mtx0_bits = 0;
+        }
+        /* now that 1st block is accounted for, consider all remaining bits in
+         * all other blocks */
+        
+        req_bits = req.mtx0_bits + req.other_bits;
+        available = capacity.other_bits;
+        if (req_bits <= available)
+        {
+            return;
+        }
+
+        if (req.mtx0_bits < available)
         {
             m.minimal_check();
             return;
         }
-        
+            
         num_beds /= 2;
         num_objs /= 2;
         num_pres /= 2;
         if (num_pres == 0) num_pres = 1;
-
+        
         if (num_beds == 0 && num_objs == 0)
         {
             switch (((unsigned int)t) % 3)
@@ -242,14 +291,166 @@ static void configure_test_params(TestModel& m, TestModel::TestType t,
                     num_objs = 1;
             }
         }
-        estimate_bit_requirement(num_beds, num_objs, num_pres, &req_min, &req_max);
+        req = estimate_bit_requirement(num_beds, num_objs, num_pres);
     }
 }
                                   
 
-static bool generate_model(TestModel& m,
-                           unsigned int num_beds, unsigned int num_objs,
-                           unsigned int num_pres)
+static bool generate_sadm_model(TestModel& m,
+                                unsigned int num_beds, unsigned int num_objs,
+                                unsigned int num_pres)
+{
+    dlb_pmd_element_id bed_elements[MAX_BEDS];
+    dlb_pmd_element_id obj_elements[MAX_OBJS];
+    dlb_pmd_speaker_config bed_configs[MAX_BEDS];
+    unsigned int option = (num_beds + num_objs + num_pres);
+    unsigned int num_bed_signals = 0;
+    int bedcfg_limit;
+    unsigned int ch = 0;
+    bool merge_beds = false;
+    unsigned int i;
+    unsigned int j;
+
+    /* remove compiler warnings */
+    (void)ISO_639_1_CODES;
+    (void)ISO_639_2t_CODES;
+    
+    bedcfg_limit = (num_beds > 16)
+        ? (num_beds > 40)
+        ? ((int)DLB_PMD_SPEAKER_CONFIG_2_0+1)
+        : ((int)DLB_PMD_SPEAKER_CONFIG_5_1+1)
+        : (int)DLB_PMD_SPEAKER_CONFIG_7_1_4+1;
+    
+
+    /* count required number of signals */
+    for (i = 0; i != num_beds; ++i)
+    {
+        dlb_pmd_speaker_config cfg = (dlb_pmd_speaker_config)((option+i) % bedcfg_limit);
+        num_bed_signals += BED_SIZES[cfg];
+    }
+
+    /* if too many signals, merge the beds */
+    if (num_bed_signals + num_objs > 255)
+    {
+        merge_beds = true;
+        num_bed_signals = 0;
+
+        for (i = 0; i != num_beds; ++i)
+        {
+            dlb_pmd_speaker_config cfg = (dlb_pmd_speaker_config)((option+i) % bedcfg_limit);
+            
+            if (BED_SIZES[cfg] > num_bed_signals)
+            {
+                num_bed_signals = BED_SIZES[cfg];
+            }
+        }
+    }
+
+    assert(num_bed_signals + num_objs <= 255);
+        
+    printf("test elements: %u beds, %u objs %u presentations\n",
+           num_beds, num_objs, num_pres);
+    
+    if (   dlb_pmd_set_title(m, "element testing")
+        || dlb_pmd_add_signals(m, num_bed_signals + num_objs))
+    {
+        return true;
+    }
+    
+    /* bed elements will have ids 1 to beds */
+    for (i = 0; i != num_beds; ++i)
+    {
+        dlb_pmd_speaker_config cfg = (dlb_pmd_speaker_config)((option+i) % bedcfg_limit);
+        dlb_pmd_element_id id;
+        char bedname[64];
+
+        /* skip 3 element ids */
+        m.new_elid();
+        m.new_elid();
+        m.new_elid();
+        id = m.new_elid();
+        snprintf(bedname, sizeof(bedname), "TestBedName %u", id);
+        if (dlb_pmd_add_bed(m, id, bedname, cfg, ch+1, 0))
+        {
+            return true;        
+        }
+        if (!merge_beds)
+        {
+            ch += BED_SIZES[cfg];
+        }
+        bed_elements[i] = id;
+        bed_configs[i] = cfg;
+    }
+    
+    /* object elements will have ids num_beds+1 to num_beds+num_objs */
+    for (i = 0; i != num_objs; ++i)
+    {
+        char objname[64];
+        float x = (float)(num_objs+num_beds+num_pres) / (float)(MAX_BEDS + MAX_OBJS + MAX_PRES);
+        float y = (x > 0.5f) ? x - 0.1f : x + 0.1f;
+        float z = (x > 0.5f) ? x - 0.2f : x + 0.2f;
+        dlb_pmd_element_id id;
+        m.new_elid();
+        m.new_elid();
+        m.new_elid();
+        id = m.new_elid();
+        snprintf(objname, sizeof(objname), "TestObjName %u", id);
+        if (dlb_pmd_add_object(m, id, objname,
+                               (dlb_pmd_object_class)(i % PMD_CLASS_EMERGENCY_INFO),
+                               num_bed_signals+i+1, x, y, z, 0, 0, 0, 0, 0))
+        {
+            return true;
+        }
+        obj_elements[i] = id;
+    }
+    
+    for (i = 0; i != num_pres; ++i)
+    {
+        /* sADM presentations must have a single bed, and its presentation config
+         * must match speaker config of that bed
+         */
+        const char *lang1 = ISO_639_2b_CODES[(option+i) % NUM_ISO_639_2b_CODES];
+        const char *lang2 = ISO_639_2b_CODES[(option+i+1) % NUM_ISO_639_2b_CODES];
+        dlb_pmd_element_id pres_elements[MAX_PRESENTATION_ELEMENTS];
+        dlb_pmd_presentation_id presid;
+        dlb_pmd_element_id bedid = bed_elements[i % num_beds];
+        dlb_pmd_speaker_config cfg = bed_configs[i % num_beds];
+        char name[64];
+
+        unsigned int num_elements = option % MAX_PRESENTATION_ELEMENTS;
+        
+        if (num_elements > 1 + num_objs)
+        {
+            num_elements = 1 + num_objs;
+        }
+        
+        if (!num_elements)
+        {
+            num_elements = 1;
+        }
+        
+        pres_elements[0] = bedid;
+        for (j = 1; j < num_elements; ++j)
+        {
+            pres_elements[j] = obj_elements[(j-1) % num_objs];
+        }
+
+        presid = m.new_presid();
+        snprintf(name, sizeof(name), "TEST_PRES_%u", presid);
+        if (   dlb_pmd_add_presentation(m, presid, lang1, name, lang1,
+                                        cfg, num_elements, pres_elements)
+            || dlb_pmd_add_presentation_name(m, presid, lang2, name))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+static bool generate_pmd_model(TestModel& m,
+                               unsigned int num_beds, unsigned int num_objs,
+                               unsigned int num_pres)
 {
     dlb_pmd_element_id pres_elements[MAX_PRESENTATION_ELEMENTS];
     unsigned int option = (num_beds + num_objs + num_pres);
@@ -280,8 +481,7 @@ static bool generate_model(TestModel& m,
     /* count required number of signals */
     for (i = 0; i != num_beds; ++i)
     {
-        dlb_pmd_speaker_config cfg =
-            (dlb_pmd_speaker_config)((option+i) % bedcfg_limit);
+        dlb_pmd_speaker_config cfg = (dlb_pmd_speaker_config)((option+i) % bedcfg_limit);
         num_bed_signals += BED_SIZES[cfg];
     }
 
@@ -293,8 +493,7 @@ static bool generate_model(TestModel& m,
 
         for (i = 0; i != num_beds; ++i)
         {
-            dlb_pmd_speaker_config cfg =
-                (dlb_pmd_speaker_config)((option+i) % bedcfg_limit);
+            dlb_pmd_speaker_config cfg = (dlb_pmd_speaker_config)((option+i) % bedcfg_limit);
             
             if (BED_SIZES[cfg] > num_bed_signals)
             {
@@ -317,8 +516,7 @@ static bool generate_model(TestModel& m,
     /* bed elements will have ids 1 to beds */
     for (i = 0; i != num_beds; ++i)
     {
-        dlb_pmd_speaker_config cfg =
-            (dlb_pmd_speaker_config)((option+i) % bedcfg_limit);
+        dlb_pmd_speaker_config cfg = (dlb_pmd_speaker_config)((option+i) % bedcfg_limit);
         dlb_pmd_element_id id;
         char bedname[64];
 
@@ -363,12 +561,11 @@ static bool generate_model(TestModel& m,
     {
         const char *lang1 = ISO_639_2b_CODES[(option+i) % NUM_ISO_639_2b_CODES];
         const char *lang2 = ISO_639_2b_CODES[(option+i+1) % NUM_ISO_639_2b_CODES];
-        dlb_pmd_speaker_config cfg = 
-            (dlb_pmd_speaker_config)(option % bedcfg_limit);
-        char name[64];
         unsigned int num_elements = option % MAX_PRESENTATION_ELEMENTS;
         dlb_pmd_presentation_id presid;
-        
+        dlb_pmd_speaker_config cfg = (dlb_pmd_speaker_config)(option % bedcfg_limit);
+        char name[64];
+
         if (num_beds + num_objs + num_pres >= 111)
         {
             num_elements = 6;
@@ -397,6 +594,23 @@ static bool generate_model(TestModel& m,
 }
 
 
+static bool generate_model(TestModel& m,
+                           unsigned int num_beds, unsigned int num_objs,
+                           unsigned int num_pres,
+                           bool sadm)
+{
+    if (sadm)
+    {
+        return generate_sadm_model(m, num_beds, num_objs, num_pres);
+    }
+    else
+    {
+        return generate_pmd_model(m, num_beds, num_objs, num_pres);
+    }
+}
+
+
+#ifndef DISABLE_ABD_AOD_APD_TESTS
 TEST_P(ElementTest, combo_testing)
 {
     unsigned int num_beds = std::tr1::get<0>(GetParam()) * 4;
@@ -409,7 +623,7 @@ TEST_P(ElementTest, combo_testing)
     m.pcm_single_frame();
     
     configure_test_params(m, t, num_beds, num_objs, num_pres);
-    if (generate_model(m, num_beds, num_objs, num_pres))
+    if (generate_model(m, num_beds, num_objs, num_pres, t >= TestModel::TEST_SADM))
     {
         ADD_FAILURE() << "Could not generate model: " << dlb_pmd_error(m);
     }
@@ -431,22 +645,31 @@ TEST_P(ElementTest, combo_testing)
 }
 
 
-INSTANTIATE_TEST_CASE_P(PMD_ElementPresPCMED2, ElementTest,
-           testing::Combine(testing::Range(1, MAX_ED2_BEDS/4+1),
-                            testing::Range(1, MAX_ED2_OBJS/4+1),
-                            testing::Range(1, MAX_ED2_PRES/16+1),
-                            testing::Range(TestModel::FIRST_TEST_TYPE,
-                                           TestModel::LAST_TEST_TYPE+1)));
-
-
 INSTANTIATE_TEST_CASE_P(PMD_ElementPresPCM, ElementTest,
-           testing::Combine(testing::Range(MAX_ED2_BEDS/4, MAX_BEDS/4+1),
-                            testing::Range(MAX_ED2_OBJS/4, MAX_OBJS/4+1),
-                            testing::Range(MAX_ED2_PRES/4, MAX_PRES/16+1),
+           testing::Combine(testing::Range(MAX_INTERNAL_BEDS/4, MAX_BEDS/4+1),
+                            testing::Range(MAX_INTERNAL_OBJS/4, MAX_OBJS/4+1),
+                            testing::Range(MAX_INTERNAL_PRES/4, MAX_PRES/16+1),
                             testing::Range(TestModel::FIRST_TEST_TYPE,
                                            TestModel::TEST_PCM_CHAN_12000+1)));
 
 
+INSTANTIATE_TEST_CASE_P(PMD_SADM_ElementPres, ElementTest,
+           testing::Combine(testing::Range(MAX_INTERNAL_BEDS/4, MAX_BEDS/4+1),
+                            testing::Range(MAX_INTERNAL_OBJS/4, MAX_OBJS/4+1),
+                            testing::Range(MAX_INTERNAL_PRES/4, MAX_PRES/16+1),
+                            testing::Range((int)TestModel::TEST_SADM,
+                                           TestModel::TEST_SADM+1)));
 
+
+/* sADM is far less bandwith-efficient than PMD, so we have to cut down the
+ * range of tests
+ */
+INSTANTIATE_TEST_CASE_P(PMD_SADM_ElementPresPCM, ElementTest,
+           testing::Combine(testing::Range(1, MAX_INTERNAL_BEDS/4+1),
+                            testing::Range(1, MAX_INTERNAL_OBJS/4+1),
+                            testing::Range(1, MAX_INTERNAL_PRES/32+1),
+                            testing::Range((int)TestModel::TEST_SADM_PCM_PAIR_2398,
+                                           TestModel::TEST_SADM_PCM_CHAN_3000+1)));
+#endif
 
 

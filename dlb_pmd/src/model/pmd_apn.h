@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -56,12 +56,6 @@
 
 //#define DEBUG_PRESENTATION_NAMES
 
-/**
- * @def MAX_PRESENTATION_NAMES
- * @brief maximum number of presentation names we can store
- */
-#define MAX_PRESENTATION_NAMES (MAX_PRESENTATIONS * DLB_PMD_MAX_PRESENTATION_NAMES)
-
 
 /**
  * @brief internal type of presentation name
@@ -74,7 +68,7 @@ typedef struct
     uint16_t readcount;                     /**< number of times this name is read,
                                               * used to detect stale names */
     pmd_langcode lang;                      /**< presentation name language */
-    uint8_t  text[DLB_PMD_MAX_NAME_LENGTH]; /**< name text (UTF-8) */
+    uint8_t  text[DLB_PMD_NAME_ARRAY_SIZE]; /**< name text (Unicode) */
 } pmd_apn;
 
 
@@ -119,8 +113,9 @@ typedef struct
  */
 typedef struct
 {
-    pmd_apn      pool[MAX_PRESENTATION_NAMES];  /**< memory pool for name allocation */
+    pmd_apn     *pool;                          /**< memory pool for name allocation */
     unsigned int num;                           /**< number of current names */
+    unsigned int max;                           /**< maximum number of names */
     uint16_t     list;                          /**< list of current names */
     uint16_t     free;                          /**< list of unused slots in pool */
     uint16_t     max_readcount;                 /**< largest number of times a name has
@@ -156,7 +151,7 @@ TRACE_LIST
     printf(": [");
 
     idx = nl->list;
-    while (PMD_PRESENTATION_NAMELIST_END != idx)
+    while (PMD_APN_LIST_END != idx)
     {
         name = &nl->pool[idx];
         printf("%u ", name->idx);
@@ -176,22 +171,25 @@ static inline
 void
 pmd_apn_list_init
     (pmd_apn_list *nl  /**< [in] name list to initialize */
+    ,unsigned int maxm /**< [in] max number allowed */
     )
 {
     pmd_apn *name;
+    uint16_t max = maxm > 65535 ? 65535 : (uint16_t)maxm;
     uint16_t i;
 
     name = nl->pool;
-    for (i = 0; i != MAX_PRESENTATION_NAMES; ++i)
+    for (i = 0; i != max; ++i)
     {
         memset(name, '\0', sizeof(*name));
         name->idx = i;
-        name->next = (i+1 == MAX_PRESENTATION_NAMES) ? (unsigned short)PMD_APN_LIST_END : i+1;
+        name->next = (i+1 == max) ? (unsigned short)PMD_APN_LIST_END : i+1;
         ++name;
     }
     nl->free = 0;
     nl->list = PMD_APN_LIST_END;
     nl->num = 0;
+    nl->max = max;
     nl->max_readcount = 0;
 }
 
@@ -207,7 +205,7 @@ pmd_apn_list_add
 {
     pmd_apn *name;
     
-    if (nl->num == MAX_PRESENTATION_NAMES)
+    if (nl->num == nl->max)
     {
         return NULL;
     }

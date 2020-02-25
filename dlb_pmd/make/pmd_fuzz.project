@@ -1,9 +1,0 @@
-pmd_fuzz = ProjectSpec (
-  actions=mbuild_compile_and_link,
-  depends=[
-            'dlb_pmd_lib',
-	    'dlb_wave_lib',
-	    'xerces_3_2_0_lib',
-	  ],
-  build_configuration=mbuild_standard
- )

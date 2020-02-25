@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file TestKlv.hh
+ * @brief encapsulate KLV read/write testing
+ */
+
 extern "C"
 {
 #include "dlb_pmd_api.h"
+#include "dlb_pmd_klv.h"
 }
 
 #include "TestModel.hh"

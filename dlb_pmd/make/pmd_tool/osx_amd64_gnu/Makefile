@@ -9,19 +9,20 @@ CCDEP = $(CC)
 CFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 DEFINES_release = -DNDEBUG=1
-INCLUDES = -I$(BASE)dlb_bitbuf/2.0 -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/frontend -I$(BASE)dlb_pmd -I$(BASE)dlb_pmd/include -I$(BASE)dlb_wave/1.6 -I$(BASE). -I$(BASE).
+INCLUDES = -I$(BASE)dlb_bitbuf/2.0 -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE)dlb_pmd/frontend -I$(BASE)dlb_pmd/include -I$(BASE)dlb_wave/1.6 -I$(BASE). -I$(BASE).
 LD = $(CC)
 LDFLAGS_debug = -dead_strip -m64
 LDFLAGS_release = -dead_strip -O2 -m64
 LDLIBS = -lpthread
 
-COMMON_FILES = $(TMP)dlb_pmd/frontend/klv $(TMP)dlb_pmd/frontend/pcm $(TMP)dlb_pmd/frontend/pmd_tool $(TMP)dlb_pmd/frontend/xml
+COMMON_FILES = $(TMP)dlb_pmd/frontend/pmd_tool/klv $(TMP)dlb_pmd/frontend/pmd_tool/pcm $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool\
+               $(TMP)dlb_pmd/frontend/pmd_tool/xml
 
 INPUTS_COMMON_LINK_debug = $(addsuffix .pmd_tool_osx_amd64_gnu_debug.o,$(COMMON_FILES))
 INPUTS_COMMON_LINK_release = $(addsuffix .pmd_tool_osx_amd64_gnu_release.o,$(COMMON_FILES))
 
-DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_debug.a
-DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_release.a
+DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_debug.a
+DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_release.a
 
 default: pmd_tool_debug pmd_tool_release
 
@@ -50,6 +51,7 @@ clean: cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu cleanself
+	$(MAKE) -C $(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu cleanself
 
 cleanself:
 	$(RM) $(CLEAN_COMMON_COMPILE_debug)
@@ -72,21 +74,23 @@ help:
 	@echo " cleandeps"
 	@echo " help"
 
-include $(wildcard $(TMP)dlb_pmd/frontend/klv.pmd_tool_osx_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/frontend/pcm.pmd_tool_osx_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool.pmd_tool_osx_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/frontend/xml.pmd_tool_osx_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/frontend/klv.pmd_tool_osx_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/frontend/pcm.pmd_tool_osx_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool.pmd_tool_osx_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/frontend/xml.pmd_tool_osx_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/klv.pmd_tool_osx_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_tool_osx_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_tool_osx_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_tool_osx_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/klv.pmd_tool_osx_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_tool_osx_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_tool_osx_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_tool_osx_amd64_gnu_release.d)
 
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_debug.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_gnu/dlb_pmd_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_debug.a \
 $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_gnu/dlb_wave_lib_release.a \
 $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_debug.a \
-$(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_release.a: %.a: FORCE
+$(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_gnu/dlb_xml_release.a \
+$(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu/zlib_debug.a \
+$(BASE)zlib/1.2.11/make/zlib/osx_amd64_gnu/zlib_release.a: %.a: FORCE
 	$(MAKE) -C $(@D) $(@F)
 
 

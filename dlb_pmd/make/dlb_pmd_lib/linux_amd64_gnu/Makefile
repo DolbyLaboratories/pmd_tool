@@ -6,24 +6,30 @@ TMP=$(BASE)
 %/..:; @test $(dir $(basename $(@D))) | mkdir -p $(dir $(basename $(@D)))
 ARFLAGS = -rc
 CCDEP = $(CC)
-CFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
-CFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
+CFLAGS_debug = -D_GNU_SOURCE -g -ggdb3 -O0 -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
+CFLAGS_release = -D_GNU_SOURCE -O3 -ftree-vectorize -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 DEFINES_release = -DNDEBUG=1
-INCLUDES = -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd -I$(BASE)dlb_pmd/src/model -I$(BASE)dlb_pmd/src/modules/klv -I$(BASE)dlb_pmd/src/modules/pcm -I$(BASE)dlb_pmd/src/modules/xml -I$(BASE)dlb_xmllib/1.0.4 -I$(BASE).
+INCLUDES = -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd/src/model -I$(BASE)dlb_pmd/src/modules/klv -I$(BASE)dlb_pmd/src/modules/pcm -I$(BASE)dlb_pmd/src/modules/sadm -I$(BASE)dlb_pmd/src/modules/xml -I$(BASE)dlb_xmllib/1.0.4 -I$(BASE). -I$(BASE)zlib/1.2.11/zlib-1.2.11
 
-COMMON_FILES = $(TMP)dlb_pmd/src/api/dlb_pmd $(TMP)dlb_pmd/src/api/dlb_pmd_api_read $(TMP)dlb_pmd/src/api/dlb_pmd_api_write\
+COMMON_FILES = $(TMP)dlb_pmd/os/linux/pmd_ctrl_c $(TMP)dlb_pmd/src/api/dlb_pmd $(TMP)dlb_pmd/src/api/dlb_pmd_api_read $(TMP)dlb_pmd/src/api/dlb_pmd_api_write\
                $(TMP)dlb_pmd/src/api/dlb_pmd_equal $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set $(TMP)dlb_pmd/src/model/pmd_language\
                $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator $(TMP)dlb_pmd/src/modules/klv/pmd_crc32 $(TMP)dlb_pmd/src/modules/klv/pmd_klv_reader\
                $(TMP)dlb_pmd/src/modules/klv/pmd_klv_writer $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor\
-               $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string\
-               $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_string\
-               $(TMP)dlb_pmd/src/modules/xml/pmd_xml_writer
+               $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m $(TMP)dlb_pmd/src/modules/sadm/idmap $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_generator\
+               $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_ingester $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_string\
+               $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_reader $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_string\
+               $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_writer $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_model $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_file\
+               $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_string $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_reader\
+               $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_file $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_string\
+               $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_writer $(TMP)dlb_pmd/src/modules/sadm/sadm/idrefs $(TMP)dlb_pmd/src/modules/sadm/sadm/lookup3\
+               $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader\
+               $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_string $(TMP)dlb_pmd/src/modules/xml/pmd_xml_writer
 
 INPUTS_COMMON_ARCHIVE_debug = $(addsuffix .dlb_pmd_lib_linux_amd64_gnu_debug.o,$(COMMON_FILES))
 INPUTS_COMMON_ARCHIVE_release = $(addsuffix .dlb_pmd_lib_linux_amd64_gnu_release.o,$(COMMON_FILES))
 
-DEP_PROJ_ARCHIVE_debug = $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_debug.a
-DEP_PROJ_ARCHIVE_release = $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_release.a
+DEP_PROJ_ARCHIVE_debug = $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_debug.a
+DEP_PROJ_ARCHIVE_release = $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_release.a
 
 default: dlb_pmd_lib_debug.a dlb_pmd_lib_release.a
 
@@ -50,6 +56,7 @@ cleandeps:
 
 clean: cleanself
 	$(MAKE) -C $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu cleanself
+	$(MAKE) -C $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu cleanself
 
 cleanself:
 	$(RM) $(CLEAN_COMMON_COMPILE_debug)
@@ -72,6 +79,7 @@ help:
 	@echo " cleandeps"
 	@echo " help"
 
+include $(wildcard $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.dlb_pmd_lib_linux_amd64_gnu_debug.d)
@@ -85,12 +93,31 @@ include $(wildcard $(TMP)dlb_pmd/src/modules/klv/pmd_klv_writer.dlb_pmd_lib_linu
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/idmap.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_generator.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_ingester.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_string.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_reader.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_string.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_writer.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_model.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_file.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_string.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_reader.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_file.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_string.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_writer.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/idrefs.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/lookup3.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_string.dlb_pmd_lib_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_writer.dlb_pmd_lib_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.dlb_pmd_lib_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd.dlb_pmd_lib_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.dlb_pmd_lib_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.dlb_pmd_lib_linux_amd64_gnu_release.d)
@@ -104,6 +131,24 @@ include $(wildcard $(TMP)dlb_pmd/src/modules/klv/pmd_klv_writer.dlb_pmd_lib_linu
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.dlb_pmd_lib_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.dlb_pmd_lib_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/idmap.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_generator.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_ingester.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_string.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_reader.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_string.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_writer.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_model.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_file.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_string.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_reader.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_file.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_string.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_writer.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/idrefs.dlb_pmd_lib_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/lookup3.dlb_pmd_lib_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.dlb_pmd_lib_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.dlb_pmd_lib_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.dlb_pmd_lib_linux_amd64_gnu_release.d)
@@ -112,7 +157,9 @@ include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_string.dlb_pmd_li
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_writer.dlb_pmd_lib_linux_amd64_gnu_release.d)
 
 $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_debug.a \
-$(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_release.a: %.a: FORCE
+$(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_release.a \
+$(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_debug.a \
+$(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_release.a: %.a: FORCE
 	$(MAKE) -C $(@D) $(@F)
 
 

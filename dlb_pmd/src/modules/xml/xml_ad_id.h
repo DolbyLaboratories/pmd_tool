@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
 /**
  * Ad-ID codes
  *
- * All AD-ID codes are 11 characters excpet HD or 3D codes which have an H or D in 12th Character
+ * All AD-ID codes are 11 characters except HD or 3D codes which have an H or D in 12th Character
  *
  * - 4-character prefix identifying company
  * - 7-character code, can by any combination of letters or numbers
@@ -80,10 +80,10 @@ read_ad_id
     for (i = 0; i != 11; ++i)
     {
         char c = in[i];
-	if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')))
-	{
-	    return 0;
-	}
+    if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')))
+    {
+        return 0;
+    }
     }
     memcpy(adid, in, 11);
     return 1;

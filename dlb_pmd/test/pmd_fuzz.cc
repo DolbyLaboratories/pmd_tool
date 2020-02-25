@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
-#include "TestModel.hh"
+/**
+ * @file pmd_fuzz.cc
+ * @brief simple app to repeatedly generate random models and make sure
+ * the different aspects of dlb_pmd_lib 'work'
+ *
+ * @todo add the ability to generate broken xml to check the parser
+ */
+
+#include "TestModelRandom.hh"
 #include "XmlSchema.hh"
 #include <cstdlib>
 #include <iostream>
@@ -78,6 +86,7 @@ main
 {
     unsigned int seed = 0x12345678u;
     uint64_t count = 0;
+    int retval = 0;
     
     if (argc > 1)
     {
@@ -85,30 +94,36 @@ main
         seed = (unsigned int)strtol(argv[1], &endp, 0);
     }
 
-    XmlSchema::initialize();
-
-    std::cout << "PMD Fuzzer" << std::endl;
-    std::cout << "Copyright (c) Dolby Labs 2018" << std::endl;
-
-    for (;;)
+    try
     {
-        TestModel m;
-        m.generate_random(seed);
-        m.pcm_single_frame();
+        XmlSchema::initialize();
 
-        std::cout << "fuzz iteration " << count << std::endl;
+        std::cout << "PMD Fuzzer" << std::endl;
+        std::cout << "Copyright (c) Dolby Labs 2018-2019" << std::endl;
 
-        try_test(m, seed, count, TestModel::TEST_XML);
-        try_test(m, seed, count, TestModel::TEST_KLV);
-        try_test(m, seed, count, TestModel::TEST_MDSET);
-
-        /* todo: test PCM/ED2 if the number of beds/objects is small enough */
-
-        seed = seed * 77777777;
-        count += 1;
+        for (;;)
+        {
+            TestModelRandom m(seed);
+            m.pcm_single_frame();
+            
+            std::cout << "fuzz iteration " << count << std::endl;
+            
+            try_test(m, seed, count, TestModel::TEST_XML);
+            try_test(m, seed, count, TestModel::TEST_KLV);
+            try_test(m, seed, count, TestModel::TEST_MDSET);
+            
+            /* todo: test PCM/ED2 if the number of beds/objects is small enough */
+            
+            seed = seed * 77777777;
+            count += 1;
+        }
+    }
+    catch(...)
+    {
+        retval = -1;
     }
 
     XmlSchema::finalize();
-    return 0;
+    return retval;
 }
 

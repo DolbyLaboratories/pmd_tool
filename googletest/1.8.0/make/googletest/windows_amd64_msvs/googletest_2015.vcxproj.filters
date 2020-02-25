@@ -12,8 +12,6 @@
 <Filter Include="googletest\1.8.0\src">
 <UniqueIdentifier>{09bc3b1b-8566-3e10-93c6-eea6c1298e45}</UniqueIdentifier></Filter></ItemGroup>
 <ItemGroup>
-<ClCompile Include="..\..\..\src\gtest-all.cc">
-<Filter>googletest\1.8.0\src</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\gtest-death-test.cc">
 <Filter>googletest\1.8.0\src</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\gtest-filepath.cc">

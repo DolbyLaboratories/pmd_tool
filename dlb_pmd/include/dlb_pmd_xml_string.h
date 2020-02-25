@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  **********************************************************************/
 
 /**
- * @flle dlb_pmd_xml_string.h
+ * @file dlb_pmd_xml_string.h
  * @brief process XML embedded within a string
  */
 
@@ -63,12 +63,19 @@ dlb_xmlpmd_string_write
 
 /**
  * @brief helper routine to read and parse PMD XML from a string
+ *
+ * Upon parse error, this function will return 1, and the error message
+ * can be retrieved via dlb_pmd_error().
+ *
+ * see the note on #dlb_xmlpmd_parse for an explanation of the #strict
+ * field.
  */
-int                             /** @return 0 if string read and parsed successfully, 1 otherwise */
+dlb_pmd_success                /** @return 0 if string read and parsed successfully, 1 otherwise */
 dlb_xmlpmd_string_read
    (const char                *data          /**< [in] data to read */
    ,size_t                     size          /**< [in] length of data */
    ,dlb_pmd_model             *pmd_model     /**< [in] PMD model struct to populate */
+   ,dlb_pmd_bool               strict        /**< [in] apply strict checking? */
    ,dlb_xmlpmd_error_callback  err           /**< [in] error callback */
    ,void                      *arg           /**< [in] user-parameter for err callback */
    ,unsigned int              *error_line    /**< [in] error line */

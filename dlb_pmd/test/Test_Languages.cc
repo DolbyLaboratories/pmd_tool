@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2018, Dolby Laboratories Inc.
+ * Copyright (c) 2020, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+/**
+ * @file Test_Languages.cc
+ * @brief language encoding tests
+ *
+ * Check that we can encode and decode PMD language codes properly
+ */
+
 #include "dlb_pmd_api.h"    
 
 extern "C"
@@ -43,6 +50,10 @@ extern "C"
 #include "TestModel.hh"
 #include "gtest/gtest.h"
 
+// Uncomment the next line to remove the tests in this file from the run:
+//#define DISABLE_LANGUAGES_TESTS
+
+#ifndef DISABLE_LANGUAGES_TESTS
 class Iso639_1_Test: public ::testing::TestWithParam<std::tr1::tuple<int, int> > {};
 class Iso639_2b_Test: public ::testing::TestWithParam<std::tr1::tuple<int, int> > {};
 class Iso639_2t_Test: public ::testing::TestWithParam<std::tr1::tuple<int, int> > {};
@@ -68,7 +79,14 @@ TEST_P(Iso639_1_Test, iso639_1)
     }
     else
     {
-        m.test(t, "ISO_639_1_language_code", i);
+        try
+        {
+            m.test(t, "ISO_639_1_language_code", i);
+        }
+        catch (TestModel::failure& f)
+        {
+            ADD_FAILURE() << f.msg;
+        }
     }
 }
 
@@ -93,7 +111,14 @@ TEST_P(Iso639_2b_Test, iso639_2b)
     }
     else
     {
-        m.test(t, "ISO_639_2b_language_code", i);
+        try
+        {
+            m.test(t, "ISO_639_2b_language_code", i);
+        }
+        catch (TestModel::failure& f)
+        {
+            ADD_FAILURE() << f.msg;
+        }
     }
 }
 
@@ -118,7 +143,14 @@ TEST_P(Iso639_2t_Test, iso639_2t)
     }
     else
     {
-        m.test(t, "ISO_639_2t_language_code", i);
+        try
+        {
+            m.test(t, "ISO_639_2t_language_code", i);
+        }
+        catch (TestModel::failure& f)
+        {
+            ADD_FAILURE() << f.msg;
+        }
     }
 }
 
@@ -177,4 +209,5 @@ INSTANTIATE_TEST_CASE_P(PMD_Language, Iso639_Illegal_Test,
            testing::Combine(testing::Range(0, 6),
                             testing::Range(TestModel::FIRST_TEST_TYPE, 
                                            TestModel::FIRST_TEST_TYPE+1)));
+#endif
 
