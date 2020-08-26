@@ -56,6 +56,7 @@ extern "C"
  * Note that since sADM is an XML format, we re-use definitions from
  * the PMD XML format.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                        
 dlb_sadm_write
    (      dlb_xmlpmd_get_buffer gb  /**< [in] callback when writer needs more output space */

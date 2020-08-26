@@ -58,6 +58,7 @@ extern "C" {
  * see the note on #dlb_xmlpmd_parse for an explanation of the #strict
  * field.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success          /** @return 0 if file read and parsed successfully, 1 otherwise */
 dlb_xmlpmd_file_read
    (const char                *filename      /**< [in] file to read */
@@ -71,6 +72,7 @@ dlb_xmlpmd_file_read
 /**
  * @brief helper function to determine whether a file contains PMD XML or not
  */
+DLB_DLL_ENTRY
 dlb_pmd_bool                 /** @return 1 if it contains <ProfessionalMetadata tag, 0 otherwise */
 dlb_xmlpmd_file_is_pmd
      (const char *filename   /**< [in] name of file to check */
@@ -80,6 +82,7 @@ dlb_xmlpmd_file_is_pmd
 /**
  * @brief helper function to write PMD model to an XML file
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                  /** @return 0 if file written successfully, 1 otherwise */
 dlb_xmlpmd_file_write
    (const char    *filename      /**< [in] file to write */

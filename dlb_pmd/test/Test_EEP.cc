@@ -52,6 +52,8 @@ extern "C"
 // Uncomment the next line to remove the tests in this file from the run:
 //#define DISABLE_EEP_TESTS
 
+static const int EEP_MAX_PRESENTATIONS = 8;
+
 static
 dlb_pmd_dialnorm
 make_dialnorm
@@ -75,6 +77,11 @@ generate_eac3_encoding_parameters
     unsigned int i;
     unsigned int id = m.new_eac3id();
     dlb_pmd_presentation_id pid;
+
+    if (static_cast<int>(num_presentations) == EEP_MAX_PRESENTATIONS)
+    {
+        num_presentations = static_cast<unsigned int>(PMD_EEP_MAX_PRESENTATIONS);
+    }
     
     *eepid = id;
     if (dlb_pmd_add_eac3_encoding_parameters(m, id)) return 1;
@@ -199,7 +206,7 @@ TEST_P(EEP_PayloadTest, payload_testing)
 
 
 INSTANTIATE_TEST_CASE_P(PMD_EEP, EEP_PayloadTest,
-                        testing::Combine(testing::Range(0, PMD_EEP_MAX_PRESENTATIONS), // p
+                        testing::Combine(testing::Range(0, EEP_MAX_PRESENTATIONS), // p
                                          testing::Range(0, 8), // options
                                          testing::Range(0, 32),// e
                                          testing::Range(TestModel::FIRST_TEST_TYPE,

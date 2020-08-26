@@ -42,6 +42,7 @@
 #define DLB_SADM_MODEL_H_
 
 #include "dlb_pmd_api.h"
+#include "sadm/dlb_sadm_model_type.h"
 
 #include <math.h> 
 #if defined(_MSC_VER) && !defined(INFINITY)
@@ -50,12 +51,36 @@
 #  define isinf(x) (!_finite(x))
 #endif
 
+#ifdef __GNUC__
+#  define MAY_BE_UNUSED __attribute__((unused))
+#else
+#  define MAY_BE_UNUSED
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+    
+/**
+ * @def MAX_AO_AO (8)
+ * @brief maximum number of audioObject references an audioObject may have
+ */
+#define MAX_AO_AO (8)
+
 
 /**
- * @brief abstract type of DLB-constrained serial ADM model
+ * @brief enumeration of ADM metadata frame types
  */
-typedef struct dlb_sadm_model dlb_sadm_model;
-
+typedef enum
+{
+    DLB_SADM_FRAME_FORMAT_FULL,
+    DLB_SADM_FRAME_FORMAT_HEADER,
+    DLB_SADM_FRAME_FORMAT_DIVIDED,
+    DLB_SADM_FRAME_FORMAT_INTERMEDIATE,
+    DLB_SADM_FRAME_FORMAT_ALL
+} DLB_SADM_FRAME_FORMAT;
 
 /**
  * @brief enumeration of ADM dialogue types
@@ -70,7 +95,7 @@ typedef enum
 
     /* dialogue content kind "DK" */
     DLB_SADM_CONTENT_DK               = 10,
-    DLB_SADM_CONTENT_DK_UNDEF         = 10,
+    DLB_SADM_CONTENT_DK_UNDEFINED     = 10,
     DLB_SADM_CONTENT_DK_DIALOGUE      = 11,
     DLB_SADM_CONTENT_DK_VOICEOVER     = 12,
     DLB_SADM_CONTENT_DK_SPOKEN_SUB    = 13,
@@ -80,9 +105,12 @@ typedef enum
 
     /* mixed content kind "MK" */
     DLB_SADM_CONTENT_MK               = 20,
+    DLB_SADM_CONTENT_MK_UNDEFINED     = 20,
     DLB_SADM_CONTENT_MK_COMPLETE_MAIN = 21,
     DLB_SADM_CONTENT_MK_MIXED         = 22,
-    DLB_SADM_CONTENT_MK_HEARING_IMP   = 23,    
+    DLB_SADM_CONTENT_MK_HEARING_IMP   = 23,
+
+    DLB_SADM_CONTENT_UNSET
 } dlb_sadm_content_type;
 
 
@@ -94,7 +122,19 @@ typedef enum
     DLB_SADM_PACKFMT_TYPE_DIRECT_SPEAKERS = 1,  /**< normal beds */
     DLB_SADM_PACKFMT_TYPE_MATRIX = 2,           /**< derived beds */
     DLB_SADM_PACKFMT_TYPE_OBJECT = 3,           /**< objects */
+    DLB_SADM_PACKFMT_TYPE_HOA = 4,              /**< Higher Order Ambisonics */
 } dlb_sadm_packfmt_type;
+
+/**
+ *  @brief enumeration of different format definitions
+ *  WARNING! confirm with documentation
+ */
+typedef enum
+{
+    DLB_SADM_FORMAT_PCM = 1,
+    DLB_SADM_FORMAT_DATA = 2,
+    DLB_SADM_FORMAT_CODED_AUDIO = 3,
+} dlb_sadm_format;
 
 
 /**
@@ -206,12 +246,13 @@ typedef struct
 
 
 /**
- * @brief sAMD block format
+ * @brief sADM block format
  */ 
 typedef struct
 {
     dlb_sadm_id id;
     unsigned char speaker_label[DLB_PMD_NAME_ARRAY_SIZE];
+    float gain;                         /**< gain in dB */
     dlb_pmd_bool cartesian_coordinates;
     float azimuth_or_x;
     float elevation_or_y;
@@ -231,7 +272,7 @@ typedef struct
 
 
 /**
- * @brief sADM packing format
+ * @brief sADM pack format
  */
 typedef struct
 {
@@ -240,6 +281,27 @@ typedef struct
     dlb_sadm_packfmt_type type;
     dlb_sadm_idref_array chanfmts;
 } dlb_sadm_pack_format;
+
+
+/**
+ * @brief sADM stream format
+ */
+typedef struct
+{
+    dlb_sadm_id id;
+    dlb_sadm_name name;
+    dlb_sadm_format format;
+    dlb_sadm_name formatLabel;  //TODO: check documentation for allowed values and define enum!
+} dlb_sadm_stream_format;
+
+
+/**
+ * @brief sADM track format
+ */
+typedef struct
+{
+    dlb_sadm_id id;
+} dlb_sadm_track_format;
 
 
 /**
@@ -263,9 +325,19 @@ typedef struct
     dlb_sadm_name name;
     float gain;                       /**< gain in dB */
     dlb_sadm_idref pack_format;
+    dlb_sadm_idref_array object_refs;
     dlb_sadm_idref_array track_uids;
 } dlb_sadm_object;
 
+
+/**
+ * @brief sADM content label
+ */
+typedef struct
+{
+    char language[4];
+    dlb_sadm_name name;
+} dlb_sadm_content_label;
 
 /**
  * @brief sADM audioContent entity
@@ -276,7 +348,8 @@ typedef struct
     dlb_sadm_name name;
     unsigned int dialogue_value;
     dlb_sadm_content_type type;
-    dlb_sadm_idref object; /* can this be a list? */
+    dlb_sadm_content_label label;
+    dlb_sadm_idref_array objects;
 } dlb_sadm_content;
 
 
@@ -319,10 +392,14 @@ typedef struct
     size_t num_track_uids;
 
     size_t max_programme_labels;   /**< max labels per programme */
-    size_t max_programme_contents; /**< max objects per presentation */
+    size_t max_programme_contents; /**< max contents per presentation */
+    size_t max_content_objects;    /**< max objects per content */
+    size_t max_object_objects;     /**< max objects per object */
     size_t max_object_track_uids;  /**< max track_uids per object */
     size_t max_packfmt_chanfmts;   /**< max chan formats per pack format */
     size_t max_chanfmt_blkfmts;    /**< max block formats per channel format */
+
+    dlb_pmd_bool use_common_defs;  /**< If true, use ADM common definitions */
 } dlb_sadm_counts;
     
 
@@ -337,8 +414,27 @@ typedef enum
     DLB_SADM_OBJECT    = 3,
     DLB_SADM_PACKFMT   = 4,
     DLB_SADM_TRACKUID  = 5,
-    DLB_SADM_BLOCKFMT  = 6
+    DLB_SADM_BLOCKFMT  = 6,
+    DLB_SADM_STREAMFMT = 7,
+    DLB_SADM_TRACKFMT  = 8,
 } dlb_sadm_idref_type;
+
+
+/**
+ * @brief names of sADM types reference
+ */ 
+static const char *ref_types_names[] MAY_BE_UNUSED =
+{
+    "audioProgramme",
+    "audioContent",
+    "audioChannelFormat",
+    "audioObject",
+    "audioPackFormat",
+    "audioTrackUID",
+    "audioBlockFormat",
+    "audioStreamFormat",
+    "audioTrackFormat"
+};
 
 
 /**
@@ -355,6 +451,7 @@ typedef struct
 /**
  * @brief get some defaults
  */
+DLB_DLL_ENTRY
 void
 dlb_sadm_get_default_counts
     (dlb_sadm_counts *limits   /**< [in] struct to populate with defaults */
@@ -364,6 +461,7 @@ dlb_sadm_get_default_counts
 /**
  * @brief return memory required for a given set of limits
  */
+DLB_DLL_ENTRY
 size_t                         /** @return size of memory required */
 dlb_sadm_query_memory
     (dlb_sadm_counts *limits   /**< [in] limits struct, use NULL for defaults */
@@ -373,6 +471,7 @@ dlb_sadm_query_memory
 /**
  * @brief initialize an sADM model from the given memroy
  */
+DLB_DLL_ENTRY
 dlb_pmd_success
 dlb_sadm_init
     (dlb_sadm_counts *limits   /**< [in] limits struct, use NULL for defaults */
@@ -384,6 +483,7 @@ dlb_sadm_init
 /**
  * @brief tidy up an instance of an sADM model 
  */
+DLB_DLL_ENTRY
 void
 dlb_sadm_finish
     (dlb_sadm_model *m         /**< [in] model to tidy up */
@@ -391,8 +491,34 @@ dlb_sadm_finish
 
 
 /**
+ * @brief overwrite one model with the content of another
+ */
+DLB_DLL_ENTRY
+dlb_pmd_success                 /** @return 0 if succeeded, 1 if not (e.g., not
+                                  * enough space in destination model for entirety
+                                  * of source model */
+dlb_sadm_copy
+    (      dlb_sadm_model *dest /**< [in] model to overwrite */
+    ,const dlb_sadm_model *src  /**< [in] source model */
+    );
+
+
+/**
+ * @brief Are the two models equal?  Note: this is a very strict version of equality,
+ *        entities and references must be equivalent and in the same order.
+ */
+DLB_DLL_ENTRY
+dlb_pmd_bool                    /** @return PMD_TRUE if equal, PMD_FALSE if not */
+dlb_sadm_eq
+    (const dlb_sadm_model *m1   /**< [in] first model */
+    ,const dlb_sadm_model *m2   /**< [in] second model */
+    );
+
+
+/**
  * @brief reinitialize the sADM model
  */
+DLB_DLL_ENTRY
 void
 dlb_sadm_reinit
     (dlb_sadm_model *m         /**< [in] model to reinitialise */
@@ -402,6 +528,7 @@ dlb_sadm_reinit
 /**
  * @brief set the model's error string
  */
+DLB_DLL_ENTRY
 void
 dlb_sadm_set_error
     (const dlb_sadm_model *model     /**< [in] model to set */
@@ -413,6 +540,7 @@ dlb_sadm_set_error
 /**
  * @brief clear out model's error string
  */
+DLB_DLL_ENTRY
 void
 dlb_sadm_error_reset
     (const dlb_sadm_model *model     /**< [in] model to set */
@@ -420,28 +548,70 @@ dlb_sadm_error_reset
 
 
 /**
+ * @brief get model's metadata frame format
+ */
+DLB_DLL_ENTRY
+dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
+dlb_sadm_model_frame_format
+    (const dlb_sadm_model *model            /**< [in] model to query */
+    ,DLB_SADM_FRAME_FORMAT *frame_format    /**< [out] metadata frame format */
+    );
+
+
+/**
  * @brief get model's limits
  */
-dlb_pmd_success                  /** @return PMD_SUCCESS on succes, PMD_FAIL otherwise */
+DLB_DLL_ENTRY
+dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_model_limits
     (const dlb_sadm_model *model /**< [in] model to query */
-    ,dlb_sadm_counts* limits     /**< [out] limits structure to popua;ate */
+    ,dlb_sadm_counts *limits     /**< [out] limits structure to populate */
     );
 
 
 /**
  * @brief get model's current entity counts
  */
-dlb_pmd_success                  /** @return PMD_SUCCESS on succes, PMD_FAIL otherwise */
+DLB_DLL_ENTRY
+dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_model_counts
     (const dlb_sadm_model *model /**< [in] model to query */
-    ,dlb_sadm_counts*counts
+    ,dlb_sadm_counts *counts     /**< [out] limits structure to populate */
+    );
+
+
+/**
+ * @brief check to see if an idref points to nothing
+ */
+dlb_pmd_bool                  /** @return PMD_TRUE if the reference is null, PMD_FALSE otherwise */
+dlb_sadm_idref_is_null
+    (const dlb_sadm_idref i   /**< [in] idref to check */
+    );
+
+
+/**
+ * @brief check to see if an idref is for a common definition
+ */
+dlb_pmd_bool                  /** @return PMD_TRUE if the reference is non-null and refers to a common definition */
+dlb_sadm_idref_is_common_def
+    (const dlb_sadm_idref i   /**< [in] idref to check */
+    );
+
+
+/**
+ * @brief set whether an idref is for a common definition
+ */
+dlb_pmd_success               /** @return PMD_SUCCESS if ok, PMD_FAIL otherwise */
+dlb_sadm_idref_set_is_common_def
+    (dlb_sadm_idref i         /**< [in/out] idref to modify */
+    ,dlb_pmd_bool is_common   /**< [in] value to set */
     );
 
 
 /**
  * @brief add (or overwrite) an audio programme
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on succes, PMD_FAIL otherwise */
 dlb_sadm_set_programme
     (dlb_sadm_model *model     /**< [in] model to augment */
@@ -449,19 +619,6 @@ dlb_sadm_set_programme
     ,dlb_sadm_idref *idref     /**< [in/out] place to return idref of new entry, or NULL */
     );
 
-
-/**
- * @brief look up and audio programme from its idref
- */
-dlb_pmd_success                        /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
-dlb_sadm_programme_lookup
-    (const dlb_sadm_model *model       /**< [in] model to query */
-    ,dlb_sadm_idref idref              /**< [in] idref to lookup */
-    ,dlb_sadm_idref_array *contents    /**< [in] idref array to use for programme's contents */
-    ,dlb_sadm_programme_label *labels  /**< [in] labels array to use for programme's labels */
-    ,unsigned int num_labels           /**< [in] size of #labels array */
-    ,dlb_sadm_programme *p             /**< [out] populated programme struct */
-    );
 
 /**
  * @brief type of an audio programme iterator
@@ -477,7 +634,8 @@ typedef struct
 /**
  * @brief initialize an audio programme iterator
  */
-dlb_pmd_success                      /** @return PMD_SUCCESS on succes, PMD_FAIL otherwise */
+DLB_DLL_ENTRY
+dlb_pmd_success                      /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_programme_iterator_init
     (dlb_sadm_programme_iterator *it /**< [in] iterator */
     ,const dlb_sadm_model *m         /**< [in] sADM model to iterate over */
@@ -487,6 +645,7 @@ dlb_sadm_programme_iterator_init
 /**
  * @brief return next audio programme
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                       /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_programme_iterator_next
    (dlb_sadm_programme_iterator *it   /**< [in] iterator */
@@ -500,6 +659,7 @@ dlb_sadm_programme_iterator_next
 /**
  * @brief add (or overwrite) an audio content
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_set_content
     (dlb_sadm_model *model     /**< [in] model to augment */
@@ -511,11 +671,13 @@ dlb_sadm_set_content
 /**
  * @brief look up and audio content from its idref
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_content_lookup
     (const dlb_sadm_model *model /**< [in] model to query */
     ,dlb_sadm_idref idref
-    ,dlb_sadm_content *c
+    ,dlb_sadm_content *content
+    ,dlb_sadm_idref_array *objects
     );
 
 
@@ -533,6 +695,7 @@ typedef struct
 /**
  * @brief initialize an audio content iterator
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                      /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_content_iterator_init
     (dlb_sadm_content_iterator *it    /**< [in] iterator */
@@ -543,6 +706,7 @@ dlb_sadm_content_iterator_init
 /**
  * @brief return next audio content
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                      /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_content_iterator_next
    (dlb_sadm_content_iterator *it    /**< [in] iterator */
@@ -553,6 +717,7 @@ dlb_sadm_content_iterator_next
 /**
  * @brief add (or overwrite) an audio object
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_set_object
     (dlb_sadm_model *model     /**< [in] model to augment */
@@ -562,13 +727,15 @@ dlb_sadm_set_object
 
 
 /**
- * @brief look up and audio object from its idref
+ * @brief look up an audio object from its idref
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_object_lookup
     (const dlb_sadm_model *model /**< [in] model to query */
     ,dlb_sadm_idref idref
     ,dlb_sadm_object *object
+    ,dlb_sadm_idref_array *object_refs
     ,dlb_sadm_idref_array *track_uids
     );
 
@@ -587,6 +754,7 @@ typedef struct
 /**
  * @brief initialize an audio object iterator
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                     /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_object_iterator_init
     (dlb_sadm_object_iterator *it
@@ -597,17 +765,20 @@ dlb_sadm_object_iterator_init
 /**
  * @brief return next audio object
  */
-dlb_pmd_success                      /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
+DLB_DLL_ENTRY
+dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_object_iterator_next
-   (dlb_sadm_object_iterator *it     /**< [in] iterator */
-   ,dlb_sadm_object *object          /**< [in/out] signal id to populate */
-   ,dlb_sadm_idref_array *track_uids /**< [in] an array of idrefs to populate in #object */
+   (dlb_sadm_object_iterator *it        /**< [in] iterator */
+   ,dlb_sadm_object *object             /**< [in/out] object record to populate */
+   ,dlb_sadm_idref_array *object_refs   /**< [in] an array of idrefs to populate in #object */
+   ,dlb_sadm_idref_array *track_uids    /**< [in] an array of idrefs to populate in #object */
    );
 
 
 /**
  * @brief add (or overwrite) an audio pack format
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_set_pack_format
     (dlb_sadm_model *model     /**< [in] model to augment */
@@ -619,12 +790,25 @@ dlb_sadm_set_pack_format
 /**
  * @brief look up and audio pack format from its idref
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_pack_format_lookup
     (const dlb_sadm_model *model /**< [in] model to query */
     ,dlb_sadm_idref idref
     ,dlb_sadm_pack_format *p
     ,dlb_sadm_idref_array *chanfmts
+    );
+
+
+/**
+ * @brief is an audio pack format an ADM common definition?
+ */
+DLB_DLL_ENTRY
+dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
+dlb_sadm_pack_format_is_common_def
+    (const dlb_sadm_model *model    /**< [in] model to query */
+    ,dlb_sadm_pack_format *p        /**< [in] pack format to test */
+    ,dlb_pmd_bool *is_common_def    /**< [out] yes or no */
     );
 
 
@@ -642,6 +826,7 @@ typedef struct
 /**
  * @brief initialize an audio pack format iterator
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                     /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_pack_format_iterator_init
     (dlb_sadm_pack_format_iterator *it
@@ -652,6 +837,7 @@ dlb_sadm_pack_format_iterator_init
 /**
  * @brief return next audio pack format
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                        /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_pack_format_iterator_next
    (dlb_sadm_pack_format_iterator *it  /**< [in] iterator */
@@ -663,6 +849,7 @@ dlb_sadm_pack_format_iterator_next
 /**
  * @brief add (or overwrite) an audio channel format
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_set_channel_format
     (dlb_sadm_model *model      /**< [in] model to augment */
@@ -674,12 +861,25 @@ dlb_sadm_set_channel_format
 /**
  * @brief look up and audio channel format from its idref
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_channel_format_lookup
     (const dlb_sadm_model *model /**< [in] model to query */
     ,dlb_sadm_idref idref
     ,dlb_sadm_channel_format *c
     ,dlb_sadm_idref_array *blkfmts
+    );
+
+
+/**
+ * @brief is an audio channel format an ADM common definition?
+ */
+DLB_DLL_ENTRY
+dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
+dlb_sadm_channel_format_is_common_def
+    (const dlb_sadm_model *model    /**< [in] model to query */
+    ,dlb_sadm_channel_format *p     /**< [in] channel format to test */
+    ,dlb_pmd_bool *is_common_def    /**< [out] result */
     );
 
 
@@ -697,6 +897,7 @@ typedef struct
 /**
  * @brief initialize an channel format iterator
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                     /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_channel_format_iterator_init
     (dlb_sadm_channel_format_iterator *it
@@ -707,10 +908,11 @@ dlb_sadm_channel_format_iterator_init
 /**
  * @brief return next audio channel format
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                           /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_channel_format_iterator_next
    (dlb_sadm_channel_format_iterator *it  /**< [in] iterator */
-   ,dlb_sadm_channel_format *chanfmt      /**< [in] packfmt struct to populate */
+   ,dlb_sadm_channel_format *chanfmt      /**< [in] channel format struct to populate */
    ,dlb_sadm_idref_array *blkfmts         /**< [in] an array of idrefs to populate in #chanfmt */
    );
 
@@ -718,6 +920,7 @@ dlb_sadm_channel_format_iterator_next
 /**
  * @brief add (or overwrite) an audio block format
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_set_block_format
     (dlb_sadm_model *model     /**< [in] model to augment */
@@ -729,6 +932,7 @@ dlb_sadm_set_block_format
 /**
  * @brief look up and audio block format from its idref
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_block_format_lookup
     (const dlb_sadm_model *model /**< [in] model to query */
@@ -740,6 +944,7 @@ dlb_sadm_block_format_lookup
 /**
  * @brief add (or overwrite) an audio track UID
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_set_track_uid
     (dlb_sadm_model *model     /**< [in] model to augment */
@@ -751,11 +956,24 @@ dlb_sadm_set_track_uid
 /**
  * @brief look up and audio track UID from its idref
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_track_uid_lookup
     (const dlb_sadm_model *model /**< [in] model to query */
     ,dlb_sadm_idref idref
     ,dlb_sadm_track_uid *u
+    );
+
+
+/**
+ * @brief is the audio track UID an ADM common definition?
+ */
+DLB_DLL_ENTRY
+dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
+dlb_sadm_track_uid_is_common_def
+    (const dlb_sadm_model *model    /**< [in] model to query */
+    ,dlb_sadm_track_uid *p          /**< [in] track uid to test */
+    ,dlb_pmd_bool *is_common_def    /**< [out] result */
     );
 
 
@@ -773,6 +991,7 @@ typedef struct
 /**
  * @brief initialize an audio track_uid iterator
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_track_uid_iterator_init
     (dlb_sadm_track_uid_iterator *it /**< [in] iterator */
@@ -783,6 +1002,7 @@ dlb_sadm_track_uid_iterator_init
 /**
  * @brief return next audio track UID
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                     /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_track_uid_iterator_next
    (dlb_sadm_track_uid_iterator *it /**< [in] iterator */
@@ -791,8 +1011,37 @@ dlb_sadm_track_uid_iterator_next
 
 
 /**
+ * @brief set the frame format flow ID
+ *
+ * Set a 'human-readable' UUID as flow ID - format:
+ *   xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+ *
+ */
+DLB_DLL_ENTRY
+dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
+dlb_sadm_set_flow_id
+    (dlb_sadm_model *model      /**< [in] model to augment */
+    ,const char     *uuid       /**< [in] uuid -- valid UUID string, or NULL or empty string to clear flow ID */
+    ,size_t          sz         /**< [in] size in bytes of uuid buffer */
+    );
+
+
+/**
+ * @brief get the frame format flow ID
+ */
+DLB_DLL_ENTRY
+dlb_pmd_success                     /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
+dlb_sadm_get_flow_id
+    (const dlb_sadm_model   *model  /**< [in] model to query */
+    ,char                   *uuid   /**< [in] uuid */
+    ,size_t                  sz     /**< [in] size in bytes of uuid buffer */
+    );
+
+
+/**
  * @brief return error message
  */
+DLB_DLL_ENTRY
 const char *                     /** @return error message */
 dlb_sadm_error
     (const dlb_sadm_model *model /**< [in] model to query */
@@ -802,6 +1051,7 @@ dlb_sadm_error
 /**
  * @brief lookup a generic reference
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
 dlb_sadm_lookup_reference
     (const dlb_sadm_model *model /**< [in] model to query */
@@ -815,6 +1065,7 @@ dlb_sadm_lookup_reference
 /**
  * @brief is the reference defined, or just a forward reference?
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                  /** @return PMD_SUCCESS if idref is defined, PMD_FAIL otherwise */
 dlb_sadm_idref_defined
     (dlb_sadm_idref *ref         /**< [in] reference */
@@ -824,6 +1075,7 @@ dlb_sadm_idref_defined
 /**
  * @brief populate an array of as-yet undefined references in model
  */
+DLB_DLL_ENTRY
 size_t                             /** @return number of undefined references */
 dlb_sadm_get_undefined_references
     (const dlb_sadm_model *model   /**< [in] model to query */
@@ -831,5 +1083,10 @@ dlb_sadm_get_undefined_references
     ,size_t capacity               /**< [in] capacity of #undef */
     );
 
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* DLB_SADM_MODEL_H_ */

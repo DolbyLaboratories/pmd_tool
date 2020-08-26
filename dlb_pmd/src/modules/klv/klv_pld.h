@@ -350,7 +350,8 @@ klv_pld_read
     unsigned int bo = 0;
     unsigned int bo2 = 0;
     unsigned int tmp;
-    uint16_t idx;
+    uint16_t apd_idx;
+    uint16_t pld_idx;
     
     while (rp < end-1)      /* TODO: is this correct for "bytes remain"? */
     {
@@ -365,7 +366,7 @@ klv_pld_read
                                 (unsigned int)(model->num_pld + 1), (unsigned int)id);
             return 1;
         }
-        if (!pmd_idmap_lookup(r->apd_ids, id, &idx))
+        if (!pmd_idmap_lookup(r->apd_ids, id, &apd_idx))
         {
             /* presentation does not exist */
             klv_reader_error_at(r, DLB_PMD_PAYLOAD_STATUS_INCORRECT_STRUCTURE, read_status,
@@ -384,11 +385,11 @@ klv_pld_read
         }
 
         /* Clear the next PLD record in the model */
-        idx = model->num_pld;
+        pld_idx = model->num_pld;
         pld = &model->pld_list[model->num_pld];
         memset(pld, '\0', sizeof(*pld));
         model->num_pld += 1;
-        pld->presid = idx;      /* idx seems to be correct, although the name would imply id is correct... */
+        pld->presid = apd_idx;      /* idx seems to be correct, although the name would imply id is correct... */
       
         /* Field-by-field validation */
         TRACE(("        Loudness (Presentation %u)\n", id));

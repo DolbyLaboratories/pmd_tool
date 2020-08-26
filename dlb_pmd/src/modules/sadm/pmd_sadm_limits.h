@@ -53,9 +53,11 @@ compute_sadm_limits
 
     sc->max_programme_labels   = 16;
     sc->max_programme_contents = c->max_elements;
+    sc->max_content_objects    = SADM_LIMITS_MAX_CHANNELS_PER_BED;
+    sc->max_object_objects     = MAX_AO_AO;
     sc->max_object_track_uids  = SADM_LIMITS_MAX_CHANNELS_PER_BED;
     sc->max_packfmt_chanfmts   = SADM_LIMITS_MAX_CHANNELS_PER_BED;
-    sc->max_chanfmt_blkfmts    = 1;
+    sc->max_chanfmt_blkfmts    = 1 + 1; /* +1 for Fhg and NHK SADM content */
     
     sc->num_programmes = c->max.num_presentations;
     sc->num_track_uids = c->max_elements * SADM_LIMITS_MAX_CHANNELS_PER_BED;
@@ -65,6 +67,8 @@ compute_sadm_limits
     sc->num_packfmts   = sc->num_objects;
     sc->num_chanfmts   = sc->num_objects * SADM_LIMITS_MAX_CHANNELS_PER_BED;
     sc->num_blkfmts    = sc->num_chanfmts * sc->max_chanfmt_blkfmts;
+
+    sc->use_common_defs = c->use_adm_common_defs;
 }
 
 

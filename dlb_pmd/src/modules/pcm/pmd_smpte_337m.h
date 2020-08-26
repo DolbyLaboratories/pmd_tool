@@ -43,43 +43,13 @@
 
 
 #include "dlb_pmd_types.h"
+#include "dlb_pmd_pcm.h"
 
 
-/**
- * @def BYTES_PER_SAMPLE_PAIR
- * @brief number of bytes of PMD contained in a single sample of SMPTE 337m 20-bit pair
- *
- * PMD is transmitted at 20 bits per sample in SMPTE 337m, so one sample set in
- * a pair will contain 40 bits, which is equal to 5 bytes.
- */
-#define BYTES_PER_SAMPLE_PAIR (5)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-
-/**
- * @def MAX_PMD_DATA_BYTES_PAIR
- * @brief maximum number of bytes available to PMD in a single PMD block when
- * transmitted over a pair of channels
- *
- * PMD-over-PCM is transmitted in blocks of 160 samples.
- *
- * KLV uses 20 bits per 32-bit sample, like DE. So, 20 bits per
- * channel, 2 channels = 40 bits or 5 bytes, reserve 2 samples for
- * Smpte Preamble, and 4 more for zeros before next ('long
- * preamble')
- */
-#define MAX_PMD_DATA_BYTES_PAIR ((DLB_PCMPMD_BLOCK_SIZE - 6) * BYTES_PER_SAMPLE_PAIR)
-
-
-/**
- * @def MAX_PMD_DATA_BYTES_CHAN
- * @brief maximum number of bytes available to PMD in a single PMD block when
- * transmitted over a single channel.
- * 
- * For a single-channel encode, we need 8 samples for the preamble, but
- * reserving only 2.5 bytes of data (20 bits).
- */ 
-#define MAX_PMD_DATA_BYTES_CHAN (((DLB_PCMPMD_BLOCK_SIZE - 8) * BYTES_PER_SAMPLE_PAIR)/2)
-    
 
 /**
  * @def GUARDBAND
@@ -91,47 +61,13 @@
 
 
 /**
- * @def GUARDBAND_BYTES_PAIR
- * @brief number of data bytes (20 bits per sample) in a pair that guardband removes from a block
- */
-#define GUARDBAND_BYTES_PAIR (GUARDBAND * BYTES_PER_SAMPLE_PAIR)
-
-
-/**
- * @def GUARDBAND_BYTES_CHAN
- * @brief number of data bytes (20 bits per sample) in a channel that guardband removes from a block
- */
-#define GUARDBAND_BYTES_CHAN ((GUARDBAND * BYTES_PER_SAMPLE_PAIR)/2)
-
-
-/**
- * @def MAX_PMD_DATA_BYTES_PAIR_BLOCK0
- * @brief maximum number of bytes available to PMD in the first PMD block of
- * a frame when transmitted over a pair of channels
- *
- * This is simply #MAX_PMD_DATA_BYTES_PAIR less the space used for the guardband
- */
-#define MAX_PMD_DATA_BYTES_PAIR_BLOCK0 (MAX_PMD_DATA_BYTES_PAIR - GUARDBAND_BYTES_PAIR)
-
-
-/**
- * @def MAX_PMD_DATA_BYTES_CHAN_BLOCK0
- * @brief maximum number of bytes available to PMD in the first PMD block of a frame
- * when transmitted over a single channel.
- * 
- * This is simply #MAX_PMD_DATA_BYTES_CHAN less the space used for the guardband
- */ 
-#define MAX_PMD_DATA_BYTES_CHAN_BLOCK0 (MAX_PMD_DATA_BYTES_CHAN - GUARDBAND_BYTES_CHAN)
-
-
-/**
  * @def MAX_DATA_BYTES
  * @brief maximum buffer size of encoded metadata
  *
- * This must be largest possible, which is serial ADM (full-frame) at 23.98 fps
- * (2002 samples, 5 bytes per sample pair).
+ * This must be the largest possible, which is serial ADM (full-frame) at 23.98 fps,
+ * using bit depth 24 (2002 samples, 6 bytes per sample pair).
  */
-#define MAX_DATA_BYTES (2002 * 5)
+#define MAX_DATA_BYTES (2002 * 6)
 
 
 /**
@@ -141,11 +77,11 @@
 #define NO_PA_FOUND (~0u)
 
 
-/**
- * @def SADM_PREAMBLE
- * @brief number of samples required by SMPTE-337m encoding of serial ADM
- */
-#define SADM_PREAMBLE  (6)
+ /**
+  * @def PREAMBLE_WORDS
+  * @brief number of words required to frame a SMPTE-337m databurst
+  */
+#define PREAMBLE_WORDS (4)
 
 
 /**
@@ -155,22 +91,22 @@ typedef struct pmd_s337m pmd_s337m;
 
 
 /**
- * @brief augmentation phase
+ * @brief processing phase
  */
 typedef enum
 {
-    S337M_PHASE_VSYNC,          /**< write silence until vsync */
+    S337M_PHASE_VSYNC,          /**< read/write silence until vsync */
     S337M_PHASE_GUARDBAND,      /**< wait guardband samples after vsync */
-    S337M_PHASE_PADDING,        /**< writing silence */
-    S337M_PHASE_PREAMBLEA,      /**< writing SMPTE 337m preamble, Pa */
-    S337M_PHASE_PREAMBLEB,      /**< writing SMPTE 337m preamble, Pb */
-    S337M_PHASE_PREAMBLEC,      /**< writing SMPTE 337m preamble, Pc */
-    S337M_PHASE_PREAMBLED,      /**< writing SMPTE 337m preamble, Pd */
-    S337M_PHASE_PREAMBLEE,      /**< writing SMPTE 337m preamble, Pe (sADM) */
-    S337M_PHASE_PREAMBLEF,      /**< writing SMPTE 337m preamble, Pf (sADM) */
-    S337M_PHASE_SADM_AI,        /**< writing sADM Assemble info word */
-    S337M_PHASE_SADM_FF,        /**< writing sADM format info word */
-    S337M_PHASE_DATA            /**< writing data burst */
+    S337M_PHASE_PADDING,        /**< read/write silence */
+    S337M_PHASE_PREAMBLEA,      /**< read/write SMPTE 337m preamble, Pa */
+    S337M_PHASE_PREAMBLEB,      /**< read/write SMPTE 337m preamble, Pb */
+    S337M_PHASE_PREAMBLEC,      /**< read/write SMPTE 337m preamble, Pc */
+    S337M_PHASE_PREAMBLED,      /**< read/write SMPTE 337m preamble, Pd */
+    S337M_PHASE_PREAMBLEE,      /**< read/write SMPTE 337m preamble, Pe (sADM) */
+    S337M_PHASE_PREAMBLEF,      /**< read/write SMPTE 337m preamble, Pf (sADM) */
+    S337M_PHASE_SADM_AI,        /**< read/write sADM Assemble info word */
+    S337M_PHASE_SADM_FF,        /**< read/write sADM format info word */
+    S337M_PHASE_DATA            /**< read/write data burst */
 } s337m_phase;
 
 
@@ -205,13 +141,16 @@ struct pmd_s337m
 {
     s337m_phase  phase;        /**< current SMPTE 337m phase */
     dlb_pmd_bool pair;         /**< true for SMPTE 337m pair, false for single channel */
-    dlb_pmd_bool isodd;        /**< current word is at odd index of pair */
+    dlb_pmd_bool pairity;      /**< keep track of channel index in the pair */
+    dlb_pmd_bool isodd;        /**< current word is at odd index of encoded pair */
     dlb_pmd_bool mark_empty;   /**< mark empty PMD blocks with SMPTE 337m NULL burst? */
     dlb_pmd_bool sadm;         /**< generate/detect serial ADM instead of PMD? */
     dlb_pmd_bool sadm_ai;      /**< write/detect sADM assemble_info  */
     dlb_pmd_bool sadm_ff;      /**< write/detect sADM format_info */
     unsigned int start;        /**< start channel index */
-    size_t       pa_found;     /**< sample within block in which PA was found, or NO_PA_FOUND */
+    size_t       pa_found;     /**< sample within block in which Pa was found, or NO_PA_FOUND */
+    unsigned int bit_depth;    /**< Bit depth */
+    unsigned int wrap_depth;   /**< Bit depth for wrapping */
 
     uint8_t *data;             /**< data to write/buffer to write to */
     size_t databits;           /**< size of data to write/capacity of buffer to write */
@@ -235,6 +174,7 @@ struct pmd_s337m
 void
 pmd_s337m_init
     (pmd_s337m *s337m              /**< structure to initialize */
+    ,unsigned int wrap_depth       /**< bit depth to use for wrapping */
     ,unsigned int stride           /**< PCM channel stride */
     ,next_block next               /**< callback to retrieve next PMD block */
     ,void *nextarg                 /**< user-supplied argument to callback */
@@ -242,6 +182,41 @@ pmd_s337m_init
     ,unsigned int start            /**< index of channel, or 1st channel of pair */
     ,dlb_pmd_bool mark_empty_block /**< highlight empty PMD blocks with NULL data burst? */
     ,dlb_pmd_bool sadm             /**< generate/extract sADM instead of PMD? */
+    );
+
+
+/**
+ * @brief how many data bytes do the given number of samples contain?
+ */
+unsigned int                      /** @return data byte count, or 0 on error  */
+pmd_s337m_data_bytes
+    (pmd_s337m *s337m             /**< [in] SMPTE 337m state */
+    ,unsigned int sample_count    /**< [in] number of samples */
+    );
+
+
+/**
+ * @brief what's the maximum number of data bytes available in a PMD block?
+ *
+ * Note that the first block (block 0) and the last will be shorter than the others.
+ */
+unsigned int                      /** @return data byte count, or 0 on error  */
+pmd_s337m_pmd_data_bytes
+    (pmd_s337m *s337m             /**< [in] SMPTE 337m state */
+    ,unsigned int block_number    /**< [in] 0-based block number */
+    ,unsigned int block_count     /**< [in] number of blocks in a video frame */
+    );
+
+
+/**
+ * @brief what's the maximum number of data bytes available in a serial ADM block?
+ *
+ * Note that there is only one block per frame for sADM.
+ */
+unsigned int                      /** @return data byte count, or 0 on error  */
+pmd_s337m_sadm_data_bytes
+    (pmd_s337m *s337m             /**< [in] SMPTE 337m state */
+    ,dlb_pmd_frame_rate rate      /**< [in] frame rate */
     );
 
 
@@ -324,6 +299,11 @@ pmd_s337m_min_frame_size
         default:                      return 1920; break;
     }
 }
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* PMD_SMPTE_337M_H_ */

@@ -93,6 +93,13 @@ klv_decode_speaker_config
     return ok;    
 }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#if __GNUC__ > 5 || defined(__APPLE_CC__)
+#pragma GCC diagnostic ignored "-Wtautological-constant-out-of-range-compare"
+#endif
+#endif
+
 /**
  * @brief validate a speaker config value
  */
@@ -115,5 +122,9 @@ klv_speaker_config_validate
 
     return status;
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 #endif /* KLV_SPEAKER_CONFIG_H_ */

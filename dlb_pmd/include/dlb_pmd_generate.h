@@ -41,7 +41,6 @@
 #ifndef DLB_PMD_GENERATE_H
 #define DLB_PMD_GENERATE_H
 
-#include <stdint.h>
 #include "dlb_pmd_api.h"
 
 
@@ -64,6 +63,7 @@ extern "C" {
  * @note this function does not reset the model, it simply adds random
  * data to it.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                      /** @return 0 on success, 1 on failure */
 dlb_pmd_generate_random
     (dlb_pmd_model           *model  /**< [in] model to populate randomly */

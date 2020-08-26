@@ -9,7 +9,7 @@ CCDEP = $(CC)
 CFLAGS_debug = -msse2 -g -ggdb3 -O0 -m32 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CFLAGS_release = -msse2 -O3 -ftree-vectorize -m32 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 DEFINES_release = -DNDEBUG=1
-INCLUDES = -I$(BASE)dlb_bitbuf/2.0 -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_socket/0.1/dlb_socket/include/posix -I$(BASE)dlb_socket/0.1/dlb_socket/include -I$(BASE)dlb_socket/0.1/dlb_socket/src/posix -I$(BASE)dlb_socket/0.1 -I$(BASE).
+INCLUDES = -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_socket/0.1/dlb_socket/include/posix -I$(BASE)dlb_socket/0.1/dlb_socket/include -I$(BASE)dlb_socket/0.1/dlb_socket/src/posix -I$(BASE)dlb_socket/0.1 -I$(BASE).
 
 COMMON_FILES = $(TMP)dlb_socket/0.1/dlb_socket/src/dlb_http_client $(TMP)dlb_socket/0.1/dlb_socket/src/dlb_http_server $(TMP)dlb_socket/0.1/dlb_socket/src/dlb_socket
 

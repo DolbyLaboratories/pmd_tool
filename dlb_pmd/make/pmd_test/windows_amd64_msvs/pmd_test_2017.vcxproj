@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup Label="ProjectConfigurations">
+<ProjectConfiguration Include="debug|x64">
+<Configuration>debug</Configuration>
+<Platform>x64</Platform></ProjectConfiguration>
+<ProjectConfiguration Include="release|x64">
+<Configuration>release</Configuration>
+<Platform>x64</Platform></ProjectConfiguration></ItemGroup>
+<PropertyGroup Label="Globals">
+<Keyword>Win32Proj</Keyword>
+<ProjectName>pmd_test</ProjectName>
+<ProjectGuid>{E7BCF35E-037E-3C42-A920-0B3FEA33AAB7}</ProjectGuid>
+<RootNamespace>pmd_test</RootNamespace></PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'" Label="Configuration">
+<CharacterSet>Unicode</CharacterSet>
+<ConfigurationType>Application</ConfigurationType>
+<UseDebugLibraries>true</UseDebugLibraries>
+<PlatformToolset>v141</PlatformToolset>
+<WholeProgramOptimization>false</WholeProgramOptimization></PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'" Label="Configuration">
+<CharacterSet>Unicode</CharacterSet>
+<ConfigurationType>Application</ConfigurationType>
+<UseDebugLibraries>false</UseDebugLibraries>
+<PlatformToolset>v141</PlatformToolset>
+<WholeProgramOptimization>true</WholeProgramOptimization></PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+<ImportGroup Label="ExtensionSettings" />
+<ImportGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'" Label="PropertySheets">
+<Import Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" /></ImportGroup>
+<ImportGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'" Label="PropertySheets">
+<Import Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" /></ImportGroup>
+<PropertyGroup Label="UserMacros" />
+<PropertyGroup>
+<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+<IntDir Condition="'$(Configuration)|$(Platform)'=='debug|x64'">$(Configuration)\VS2017\</IntDir>
+<OutDir Condition="'$(Configuration)|$(Platform)'=='debug|x64'">$(SolutionDir)$(Configuration)\VS2017\</OutDir>
+<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='debug|x64'">true</LinkIncremental>
+<IntDir Condition="'$(Configuration)|$(Platform)'=='release|x64'">$(Configuration)\VS2017\</IntDir>
+<OutDir Condition="'$(Configuration)|$(Platform)'=='release|x64'">$(SolutionDir)$(Configuration)\VS2017\</OutDir>
+<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='release|x64'">false</LinkIncremental></PropertyGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'">
+<ClCompile>
+<AdditionalIncludeDirectories>..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..\os;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\xerces\xerces-c-3.2.0\src\xercesc\util\FileManagers;..\..\..\..\xerces\xerces-c-3.2.0\windows;..\..\..\..\xerces\xerces-c-3.2.0\src</AdditionalIncludeDirectories>
+<BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+<BufferSecurityCheck>true</BufferSecurityCheck>
+<CompileAs>Default</CompileAs>
+<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+<DisableSpecificWarnings />
+<ExceptionHandling>Sync</ExceptionHandling>
+<MinimalRebuild>false</MinimalRebuild>
+<Optimization>Disabled</Optimization>
+<DisableLanguageExtensions>false</DisableLanguageExtensions>
+<PreprocessorDefinitions>HAVE_CONFIG_H=1;WIN32=1;WIN64=1;XERCES_BUILDING_LIBRARY=1;_CONSOLE=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
+<RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+<PrecompiledHeader />
+<WarningLevel>Level4</WarningLevel>
+<FunctionLevelLinking>false</FunctionLevelLinking>
+<IntrinsicFunctions>false</IntrinsicFunctions></ClCompile>
+<Link>
+<AdditionalDependencies />
+<AdditionalLibraryDirectories />
+<EnableCOMDATFolding>false</EnableCOMDATFolding>
+<GenerateDebugInformation>true</GenerateDebugInformation>
+<IgnoreSpecificDefaultLibraries />
+<ModuleDefinitionFile />
+<OptimizeReferences>false</OptimizeReferences>
+<OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+<SubSystem>Console</SubSystem>
+<TargetMachine>MachineX64</TargetMachine>
+<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers></Link></ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
+<ClCompile>
+<AdditionalIncludeDirectories>..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..\os;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\xerces\xerces-c-3.2.0\src\xercesc\util\FileManagers;..\..\..\..\xerces\xerces-c-3.2.0\windows;..\..\..\..\xerces\xerces-c-3.2.0\src</AdditionalIncludeDirectories>
+<BasicRuntimeChecks>Default</BasicRuntimeChecks>
+<BufferSecurityCheck>false</BufferSecurityCheck>
+<CompileAs>Default</CompileAs>
+<DebugInformationFormat />
+<DisableSpecificWarnings />
+<ExceptionHandling>Sync</ExceptionHandling>
+<MinimalRebuild>false</MinimalRebuild>
+<Optimization>MaxSpeed</Optimization>
+<DisableLanguageExtensions>false</DisableLanguageExtensions>
+<PreprocessorDefinitions>HAVE_CONFIG_H=1;NDEBUG=1;WIN32=1;WIN64=1;XERCES_BUILDING_LIBRARY=1;_CONSOLE=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
+<RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+<PrecompiledHeader />
+<WarningLevel>Level4</WarningLevel>
+<FunctionLevelLinking>true</FunctionLevelLinking>
+<IntrinsicFunctions>true</IntrinsicFunctions></ClCompile>
+<Link>
+<AdditionalDependencies />
+<AdditionalLibraryDirectories />
+<EnableCOMDATFolding>true</EnableCOMDATFolding>
+<GenerateDebugInformation>false</GenerateDebugInformation>
+<IgnoreSpecificDefaultLibraries />
+<ModuleDefinitionFile />
+<OptimizeReferences>true</OptimizeReferences>
+<OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+<SubSystem>Console</SubSystem>
+<TargetMachine>MachineX64</TargetMachine>
+<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers></Link></ItemDefinitionGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\os\windows\pmd_ctrl_c.c" />
+<ClCompile Include="..\..\..\test\TestKlv.cc" />
+<ClCompile Include="..\..\..\test\TestMdset.cc" />
+<ClCompile Include="..\..\..\test\TestModel.cc" />
+<ClCompile Include="..\..\..\test\TestPcm.cc" />
+<ClCompile Include="..\..\..\test\TestSadm.cc" />
+<ClCompile Include="..\..\..\test\TestXml.cc" />
+<ClCompile Include="..\..\..\test\Test_ABD_AOD_APD.cc" />
+<ClCompile Include="..\..\..\test\Test_API.cc" />
+<ClCompile Include="..\..\..\test\Test_Characters.cc" />
+<ClCompile Include="..\..\..\test\Test_EEP.cc" />
+<ClCompile Include="..\..\..\test\Test_ETD.cc" />
+<ClCompile Include="..\..\..\test\Test_Floatvals.cc" />
+<ClCompile Include="..\..\..\test\Test_HED.cc" />
+<ClCompile Include="..\..\..\test\Test_IAT.cc" />
+<ClCompile Include="..\..\..\test\Test_Languages.cc" />
+<ClCompile Include="..\..\..\test\Test_PLD.cc" />
+<ClCompile Include="..\..\..\test\Test_PresentationConfig.cc" />
+<ClCompile Include="..\..\..\test\Test_Profiles.cc" />
+<ClCompile Include="..\..\..\test\Test_Smpte2109.cc" />
+<ClCompile Include="..\..\..\test\Test_Versions.cc" />
+<ClCompile Include="..\..\..\test\Test_XYZ.cc" />
+<ClCompile Include="..\..\..\test\XmlSchema.cc" />
+<ClCompile Include="..\..\..\test\pmd_test.cc" /></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\include\dlb_pmd_api.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_capture.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_generate.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_klv.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_lib_dll.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_pcm.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_types.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_xml.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_xml_file.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model_type.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h" />
+<ClInclude Include="..\..\..\os\pmd_os.h" />
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_riff.h" />
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_wave.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest-death-test.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest-message.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest-param-test.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest-printers.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest-spi.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest-test-part.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest-typed-test.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest_pred_impl.h" />
+<ClInclude Include="..\..\..\..\googletest\1.8.0\include\gtest\gtest_prod.h" />
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\stricmp.h" />
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\strnicmp.h" />
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\towlower.h" />
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\towupper.h" />
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\src\xercesc\util\MsgLoaders\Win32\resource.h" />
+<ClInclude Include="..\..\..\..\xerces\xerces-c-3.2.0\windows\config.h" /></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup>
+<ProjectReference Include="..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2017.vcxproj">
+<Project>{888B31BA-E7A4-360D-978E-857D8E4C4BAC}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\make\dlb_xml\windows_amd64_msvs\dlb_xml_2017.vcxproj">
+<Project>{20895E86-0CC5-376D-A205-153F08960967}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\zlib\1.2.11\make\zlib\windows_amd64_msvs\zlib_2017.vcxproj">
+<Project>{76502233-DBC5-3511-A0CE-193C451A7809}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\dlb_wave_lib\windows_amd64_msvs\dlb_wave_lib_2017.vcxproj">
+<Project>{2A4DF4EE-7136-33B4-B637-60938D184F39}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\xerces\xerces-c-3.2.0\make\xerces_3_2_0_lib\windows_amd64_msvs\xerces_3_2_0_lib_2017.vcxproj">
+<Project>{F3113CD3-1EEE-3755-88A8-9D430022FDA1}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\googletest\1.8.0\make\googletest\windows_amd64_msvs\googletest_2017.vcxproj">
+<Project>{B4C84256-BB70-3A94-8652-67784173D102}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference></ItemGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+<ImportGroup Label="ExtensionTargets" /></Project>

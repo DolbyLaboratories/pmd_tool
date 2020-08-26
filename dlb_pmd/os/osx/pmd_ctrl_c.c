@@ -37,6 +37,8 @@
 #include <signal.h>
 #include <stdlib.h>
 
+#include "../pmd_os.h"
+
 /**
  * @brief global variable to set upon receipt of CTRL-C
  */

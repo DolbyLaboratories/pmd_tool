@@ -594,6 +594,24 @@ static void add(uiGrid *g, struct gridChild *gc)
 	uiWindowsControlMinimumSizeChanged(uiWindowsControl(g));
 }
 
+static void remove(uiGrid *g, struct gridChild *gc)
+{
+	std::vector<struct gridChild *>::iterator iter;
+	std::vector<struct gridChild *>::iterator endIter = g->children->end();
+
+	for (iter = g->children->end() ; iter != endIter; ++iter)
+	{
+		if (*iter == gc)
+		{
+			g->children->erase(iter);
+		}
+	}
+	gridRecomputeMinMax(g);
+	gridArrangeChildren(g);
+	uiWindowsControlMinimumSizeChanged(uiWindowsControl(g));
+}
+
+
 void uiGridAppend(uiGrid *g, uiControl *c, int left, int top, int xspan, int yspan, int hexpand, uiAlign halign, int vexpand, uiAlign valign)
 {
 	struct gridChild *gc;
@@ -602,6 +620,13 @@ void uiGridAppend(uiGrid *g, uiControl *c, int left, int top, int xspan, int ysp
 	gc->left = left;
 	gc->top = top;
 	add(g, gc);
+}
+
+void uiGridDelete(uiGrid *g, uiControl *c)
+{
+	struct gridChild *gc;
+	gc = (*(g->children))[(*(g->indexof))[c]];
+	remove(g, gc);
 }
 
 // TODO decide what happens if existing is NULL

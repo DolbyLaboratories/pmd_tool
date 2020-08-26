@@ -63,6 +63,7 @@ PaError PaWinDs_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiInde
 PaError PaAsio_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
 PaError PaWinWdm_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
 PaError PaWasapi_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
+PaError PaCallback_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
 
 #ifdef __cplusplus
 }

@@ -36,6 +36,6 @@
 #ifndef __PMD_TOOL_BUILD_VERSION_H__
 #define __PMD_TOOL_BUILD_VERSION_H__
 
-#define PMD_TOOL_BUILD_VERSION (2)
+#define PMD_TOOL_BUILD_VERSION (6)
 
 #endif /*__PMD_TOOL_BUILD_VERSION_H__ */

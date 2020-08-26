@@ -8,11 +8,11 @@ CCDEP = $(CC)
 CFLAGS_debug = -D_GNU_SOURCE -g -ggdb3 -O0 -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CFLAGS_release = -D_GNU_SOURCE -O3 -ftree-vectorize -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CXXDEP = $(CXX)
-CXXFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall
-CXXFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall
+CXXFLAGS_debug = -std=c++11 -g -ggdb3 -O0 -m64 -c -Wall
+CXXFLAGS_release = -std=c++11 -O3 -ftree-vectorize -m64 -c -Wall
 DEFINES_debug = -DHAVE_CONFIG_H=1 -DXERCES_BUILDING_LIBRARY=1
 DEFINES_release = -DHAVE_CONFIG_H=1 -DNDEBUG=1 -DXERCES_BUILDING_LIBRARY=1
-INCLUDES = -I$(BASE)dlb_bitbuf/2.0 -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd -I$(BASE)dlb_wave/1.6 -I$(BASE). -I$(BASE). -I$(BASE)xerces/xerces-c-3.2.0/linux/x86 -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/FileManagers -I$(BASE)xerces/xerces-c-3.2.0/src
+INCLUDES = -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd -I$(BASE)dlb_wave/1.6 -I$(BASE). -I$(BASE). -I$(BASE)xerces/xerces-c-3.2.0/linux/x86 -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/FileManagers -I$(BASE)xerces/xerces-c-3.2.0/src
 LD = $(CXX)
 LDFLAGS_debug = -m64
 LDFLAGS_release = -O2 -m64
@@ -46,7 +46,7 @@ $(TMP)%.sadm_fuzz_linux_amd64_gnu_debug.o: $(BASE)%.c | $(TMP)%/..
 	$(CC) $(CFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.sadm_fuzz_linux_amd64_gnu_debug.o: $(BASE)%.cc | $(TMP)%/..
-	$(CXXDEP) -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CXXDEP) -std=c++11 -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
 	$(CXX) $(CXXFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.sadm_fuzz_linux_amd64_gnu_release.o: $(BASE)%.c | $(TMP)%/..
@@ -54,7 +54,7 @@ $(TMP)%.sadm_fuzz_linux_amd64_gnu_release.o: $(BASE)%.c | $(TMP)%/..
 	$(CC) $(CFLAGS_release) $(DEFINES_release) $(INCLUDES) -o $@ $<
 
 $(TMP)%.sadm_fuzz_linux_amd64_gnu_release.o: $(BASE)%.cc | $(TMP)%/..
-	$(CXXDEP) -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CXXDEP) -std=c++11 -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
 	$(CXX) $(CXXFLAGS_release) $(DEFINES_release) $(INCLUDES) -o $@ $<
 
 CLEAN_COMPILE_debug = $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.sadm_fuzz_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/test/TestKlv.sadm_fuzz_linux_amd64_gnu_debug.d\

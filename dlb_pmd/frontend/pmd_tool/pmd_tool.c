@@ -43,29 +43,18 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <assert.h>
 #include <limits.h>
 
-#ifdef _MSC_VER
-#  include <windows.h>
-#  if !defined(inline)
-#    define inline __inline
-#  endif
-#else
-#  include <unistd.h>
-#endif
+#include "pmd_tool.h"
 
 #include "dlb_pmd_api.h"
-#include "dlb_pmd_klv.h"
 #include "dlb_pmd_generate.h"
 
-#include "./xml.h"
-#include "./klv.h"
-#include "./pcm.h"
+#include "xml.h"
+#include "pmd_tool_klv.h"
+#include "pcm.h"
 
-#include "./pmd_tool_build_version.h"
-
-#include "dlb_pmd/src/modules/pcm/pmd_smpte_337m.h"     /* pick up definition of pmd_s337m_min_frame_size() */
+#include "pmd_tool_build_version.h"
 
 static const char *FRAME_RATE_NAMES[] =
 {
@@ -73,58 +62,6 @@ static const char *FRAME_RATE_NAMES[] =
 };
 
 #define NUM_FRAME_RATE_NAMES ((sizeof FRAME_RATE_NAMES)/(sizeof FRAME_RATE_NAMES[0]))
-
-
-/**
- * @brief list of input/output modes
- *
- * We use input/output modes, (mostly based on file suffix types) to
- * guide the type of processing we'd like done.
- */
-typedef enum
-{
-    MODE_NONE = 0,
-    MODE_UNKNOWN,
-    MODE_XML,
-    MODE_KLV,
-    MODE_WAV,
-    MODE_PRNG,
-
-    MIN_MODE = MODE_XML,
-    MAX_MODE = MODE_WAV
-
-} mode;
-
-
-/**
- * @brief result of command-line argument parsing
- */
-typedef struct
-{
-    const char *progname;
-    const char *in;
-    const char *out;
-    const char *logname;
-
-    dlb_pmd_frame_rate          rate;
-    unsigned int                chan;
-    dlb_pmd_bool                s337m_pair;
-    dlb_pmd_bool                sadm_out;
-    dlb_pmd_bool                mark_pcm_blocks;
-    unsigned int                skip_pcm_samples;
-    unsigned int                vsync;
-    mode                        inmode;
-    mode                        outmode;
-    mode                        mdmode;
-    unsigned int                presid;
-    dlb_klvpmd_universal_label  ul;
-
-    dlb_pmd_bool                try_frame;
-    dlb_pmd_bool                strict_xml;
-    unsigned int                random_seed;
-    dlb_pmd_bool                generate_ascii_strings;
-    dlb_pmd_metadata_count      random_counts;
-} Args;
 
 
 /**
@@ -141,38 +78,157 @@ typedef struct
 /**
  * @brief print the PMD Tool version number to stdout
  */
-static
 void
-print_version(void)
+dlb_pmd_tool_print_version(void)
 {
     unsigned int epoch;
     unsigned int maj;
     unsigned int min;
     unsigned int build;
-    unsigned int y, z;
+    unsigned int bs_maj;
+    unsigned int bs_min;
 
-    dlb_pmd_library_version(&epoch, &maj, &min, &build, &y, &z);
-    printf("%u.%u.%u.%u-%u", epoch, maj, min, build, PMD_TOOL_BUILD_VERSION);
+    dlb_pmd_library_version(&epoch, &maj, &min, &build, &bs_maj, &bs_min);
+    printf("%u.%u.%u.%u-%u.%u (%u)", epoch, maj, min, build, bs_maj, bs_min, PMD_TOOL_BUILD_VERSION);
+}
+
+
+/**
+ * @brief print the PMD Tool usage instructions to stdout
+ */
+void dlb_pmd_tool_usage
+    (const Args *args
+    )
+{
+    size_t i;
+
+    printf("usage:\n");
+    printf("    %s <opt>*\n", args == NULL ? "pmd_tool" : args->progname);
+    printf("    where <opt> can be:\n");
+    printf("        -v              - print tool version and exit\n");
+    printf("        -i <filename>   - input filename:  .xml, .klv or .wav\n");
+    printf("        -o <filename>   - output filename: .xml, .klv or .wav\n");
+    printf("                          (see note below when -o is .wav)\n");
+    printf("        -log <filename> - log file name for .wav input, may also be stdout or stderr\n");
+    printf("                          (optional)\n");
+    printf("        -chan <channel> - PCM channel to read/write SMPTE-337m encoded metadata [0-n]\n");
+    printf("        -pair <pair>    - PCM pair to read/write SMPTE-337m encoded metadata [0-n]\n");
+    printf("                          (use either -chan or -pair, not both!)\n");
+    printf("        -fr <rate>      - video frame rate, where <rate> may be one of:\n");
+    printf("                          ");
+    for (i = 0; i != NUM_FRAME_RATE_NAMES; ++i)
+    {
+        printf("%s ", FRAME_RATE_NAMES[i]);
+    }
+    printf("\n");
+    printf("                          (default: 25)\n");
+    printf("        -unstrict-xml   - relax stringent XML field checking of the presentation config string\n");
+    printf("        -skip-pcm <count> - (PCM+PMD read) simulate random access into a PCM stream by skipping\n");
+    printf("                          this many samples from the start of the .wav file\n");
+    printf("        -vsync <offset> - (PCM+PMD read) number of samples from the beginning of the .wav file\n");
+    printf("                          where the first video frame boundary occurs\n");
+    printf("        -Dolby          - use Dolby Private Universal Label instead of SMPTE 2109\n");
+    printf("        -mark-pcm-blocks - insert SMPTE 337m NULL-frames at PCM block boundaries\n");
+    printf("                          even when there is no data for that PCM block\n");
+    printf("        -sadm           - generate serial ADM output in XML output mode\n");
+    printf("                          EXPERIMENTAL!\n");
+    printf("        -sadm-common    - use ADM common definitions for serial ADM\n");
+    printf("                          EXPERIMENTAL!\n");
+    printf("\n");
+    printf("        -try-frame      - for XML input, try to fit the resulting model into one video frame,\n");
+    printf("                          with the given frame rate and number of metadata channels (single\n");
+    printf("                          or pair), and print the status to stdout\n");
+    printf("            status - ERROR:  an error occurred trying to write the model\n");
+    printf("                   - GREEN:  the model fits in a single frame\n");
+    printf("                   - YELLOW: some names are dropped to fit the model in a single frame\n");
+    printf("                   - RED:    the model does not fit in a single frame\n");
+    printf("\n");
+    printf("        -rand           - generate a random model instead of using an input\n");
+    printf("                          EXPERIMENTAL!\n");
+    printf("        -seed <num>     - 32-bit seed to use for pseudo-random number generation\n");
+    printf("        -ns <num>       - number of signals [1-255]\n");
+    printf("        -nb <num>       - number of beds [0-4095]\n");
+    printf("        -no <num>       - number of objects [0-4095] \n");
+    printf("        -np <num>       - number of presentations [1-511]\n");
+    printf("        -nl <num>       - number of loudness payloads [0-511]\n");
+    printf("                          (will be limited to the number of presentations)\n");
+    printf("        -ne <num>       - number of EAC3 encoding parameters [0-255]\n");
+    printf("        -nt <num>       - number of ED2 turnarounds [0-255]\n");
+    printf("        -nh <num>       - number of Headphone Element Descriptions [0-255]\n");
+    printf("        -gas            - restrict all names to printable ascii\n");
+    printf("\n");
+    printf("NOTE: if generating a random model via the -rand argument, the related arguments are\n");
+    printf("      optional (they are ignored if not generating a random model).\n");
+    printf("\n");
+    printf("NOTE: the suffixes of the input and output files determine the kind of processing.\n");
+    printf("\n");
+    printf("NOTE: \"KLV\" format refers to the SMPTE 336 Key-Length-Value encoding of the metadata.\n");
+    printf("\n");
+    printf("NOTE: if neither -pair nor -chan are specified in PCM workflows, the default behavior\n");
+    printf("      is to use the first pair of channels (equivalent to \"-pair 0\").\n");
+    printf("\n");
+    printf("EXAMPLES:\n");
+    printf("\n");
+    printf("      1. to convert PMD metadata in XML format to KLV format:\n");
+    printf("            pmd_tool -i <file>.xml -o <file>.klv\n");
+    printf("\n");
+    printf("      2. to convert KLV back into XML format, use\n");
+    printf("            pmd_tool -i <file>.klv -o <file>.xml\n");
+    printf("\n");
+    printf("      3. to add metadata in XML format to PCM in a .wav file:\n");
+    printf("            pmd_tool -i <md>.xml -o <pcm>.wav -fr <framerate>\n");
+    printf("\n");
+    printf("         This will take <md>.xml as input metadata and <pcm>.wav as *input*\n");
+    printf("         PCM.  It will create a new file <pcm>_klv.wav as output, where the\n");
+    printf("         first two channels of the PCM have been overwritten with SMPTE 337m-\n");
+    printf("         wrapped KLV metadata, at 160 sample chunks within the specified\n");
+    printf("         video framerate.\n");
+    printf("         NOTE: the PCM must have an even number of channels, unless you use\n");
+    printf("         the -chan option.\n");
+    printf("         NOTE: to read metadata from KLV format instead, change the .xml\n");
+    printf("         suffix to .klv.\n");
+    printf("\n");
+    printf("     4. to extract metadata from PCM and dump to XML:\n");
+    printf("           pmd_tool -i <pcm>.wav -o <md>.xml\n");
+    printf("\n");
+    printf("        If there is metadata on the first two channels of the PCM, extract\n");
+    printf("        the SMPTE-337m wrapped KLV and write the equivalent data in XML format.\n");
+    printf("        NOTE: to write metadata to KLV format instead, change the .xml suffix\n");
+    printf("        to .klv.\n");
+    printf("\n");
+    printf("    5.  to copy metadata from one .wav file to another:\n");
+    printf("          pmd_tool -i <pcm1>.wav -o <pcm2>.wav\n");
+    printf("\n");
+    printf("        Assuming that both inputs are PCM with even number of channels, and\n");
+    printf("        that <pcm1>.wav has SMPTE-337m encoded metadata in first pair,\n");
+    printf("        this will decode the KLV metadata and write it out again onto the\n");
+    printf("        first pair of <pcm2>.wav, to produce <pcm2>_klv.wav.\n");
+    printf("\n");
+    printf("\n");
 }
 
 
 /**
  * @brief create a PMD model
  */
-static inline
+static
 int
 model_init
-    (model *m
+    (model          *m
+    ,const Args     *args
     )
 {
-    m->size = dlb_pmd_query_mem();
+    dlb_pmd_model_constraints c;
+
+    dlb_pmd_max_constraints(&c, args->sadm_common);
+    m->size = dlb_pmd_query_mem_constrained(&c);
     m->mem  = malloc(m->size);
     if (NULL == m->mem)
     {
-        printf("could not allocate memory\n");
+        fprintf(stderr, "could not allocate memory\n");
         return 0;
     }
-    dlb_pmd_init(&m->model, m->mem);
+    dlb_pmd_init_constrained(&m->model, &c, m->mem);
     return 1;
 }
 
@@ -180,7 +236,7 @@ model_init
 /**
  * @brief destroy a PMD model
  */
-static inline
+static
 void
 model_finish
     (model *m
@@ -215,7 +271,7 @@ read_file_mode
 
     if (*ptr != '.')
     {
-        printf("ERROR: no suffix\n");
+        fprintf(stderr, "ERROR: no suffix\n");
         return MODE_NONE;
     }
 
@@ -240,7 +296,7 @@ read_file_mode
 /**
  * @brief check supported suffix
  */
-static inline
+static
 int
 check_modes
     (Args *args
@@ -248,17 +304,23 @@ check_modes
 {
     if (args->inmode != MODE_PRNG)
     {
-        args->inmode = read_file_mode(args->in);
+        args->inmode =
+            read_file_mode
+                (args->in
+                );
         if ((MIN_MODE > args->inmode) || (MAX_MODE < args->inmode))
         {
-            printf("ERROR: unsupported input file type\n");
+            fprintf(stderr, "ERROR: unsupported input file type\n");
             return 0;
         }
     }
-    args->outmode = read_file_mode(args->out);
+    args->outmode =
+        read_file_mode
+            (args->out
+            );
     if ((MIN_MODE > args->outmode) || (MAX_MODE < args->outmode))
     {
-        printf("ERROR: unsupported output file type\n");
+        fprintf(stderr, "ERROR: unsupported output file type\n");
         return 0;
     }
     return 1;
@@ -268,7 +330,7 @@ check_modes
 /**
  * @brief parse video frame rate command-line option
  */
-static inline
+static
 int                        /** @return 1 on success, 0 on failure */
 parse_frame_rate
     (      Args *args      /**< [in] argument structure to populate */
@@ -292,7 +354,7 @@ parse_frame_rate
 /**
  * @brief parse argument of -pair option
  */
-static inline
+static
 int                        /** @return 1 on success, 0 on failure */
 parse_pair_number
     (      Args         *args     /**< [in] argument structure to populate */
@@ -306,8 +368,8 @@ parse_pair_number
     tmp = strtol(arg, &endp, 0);
     if ((endp == arg) || (tmp < 0) || (tmp > INT_MAX))
     {
-        printf("Error: '%s' requires a non-negative integer, not '%s'\n",
-               is_pair ? "-pair" : "-chan", arg);
+        fprintf(stderr, "Error: '%s' requires a non-negative integer, not '%s'\n",
+                is_pair ? "-pair" : "-chan", arg);
         return 0;
     }
     args->chan = (unsigned int)tmp * (is_pair ? 2 : 1);
@@ -316,33 +378,9 @@ parse_pair_number
 
 
 /**
- * @brief parse argument of -p option
- */
-static inline
-int                        /** @return 1 on success, 0 on failure */
-parse_presentation_id
-    (      Args *args      /**< [in] argument structure to populate */
-    ,const char *arg       /**< [in] option argument to parse */
-    )
-{
-    long int  tmp;
-    char     *endp;
-
-    tmp = strtol(arg, &endp, 0);
-    if ((endp == arg) || (tmp < 1) || (tmp > 256))
-    {
-        printf("Error: '-p' requires a positive integer, not '%s'\n", arg);
-        return 0;
-    }
-    args->presid = (unsigned int)tmp;
-    return 1;
-}
-
-
-/**
  * @brief parse an unsigned integer valued argument
  */
-static inline
+static
 int                          /** @return 1 on success, 0 otherwise */
 parse_uint_arg
    (      int            argc
@@ -358,14 +396,14 @@ parse_uint_arg
 
     if (!argc)
     {
-        printf("ERROR: option %s expects an integral argument\n", opt);
+        fprintf(stderr, "ERROR: option %s expects an integral argument\n", opt);
         return 0;
     }
     tmp = strtol(*argv, &endp, 0);
     if ((endp == *argv) || (tmp < (long)min) ||(tmp > (long)max))
     {
-        printf("ERROR: option %s requires a positive integer "
-               "between %u and %u inclusing, not \"%s\"\n", opt, min, max, *argv);
+        fprintf(stderr, "ERROR: option %s requires a positive integer "
+                "between %u and %u inclusive, not \"%s\"\n", opt, min, max, *argv);
         return 0;
     }
     *value = (unsigned int)tmp;
@@ -376,9 +414,8 @@ parse_uint_arg
 /**
  * @brief parse command-line arguments
  */
-static
-int
-chkargs
+dlb_pmd_bool
+dlb_pmd_tool_parse_cmdline_args
     (      Args  *args
     ,      int    argc
     ,const char **argv
@@ -386,7 +423,6 @@ chkargs
 {
     struct stat  info;
     dlb_pmd_bool has_chan_or_pair = PMD_FALSE;
-    unsigned int i;
 
     memset(args, 0, sizeof(*args));
 
@@ -400,8 +436,8 @@ chkargs
     args->rate                   = DLB_PMD_FRAMERATE_2500;
     args->chan                   = 0;
     args->s337m_pair             = 1;
-    args->presid                 = 1;
     args->sadm_out               = 0;
+    args->sadm_common            = 0;
     args->mark_pcm_blocks        = 0;
     args->skip_pcm_samples       = 0;
     args->vsync                  = 0;
@@ -428,10 +464,10 @@ chkargs
     {
         const char *opt = *argv;
 
-        if (0 == strncmp(opt, "-v", 3))
+        if (0 == strncmp(opt, "-v", 3) || 0 == strncmp(opt, "--version", 10))
         {
-            printf("PMD TOOL Version ");
-            print_version();
+            printf("PMD TOOL version ");
+            dlb_pmd_tool_print_version();
             printf("\n");
             exit(0);
         }
@@ -441,7 +477,7 @@ chkargs
             ++argv;
             if (!argc)
             {
-                printf("ERROR: option -i expects a filename parameter\n");
+                fprintf(stderr, "ERROR: option -i expects a filename parameter\n");
                 goto error;
             }
             args->in = *argv;
@@ -452,7 +488,7 @@ chkargs
             ++argv;
             if (!argc)
             {
-                printf("ERROR: option -o expects a filename parameter\n");
+                fprintf(stderr, "ERROR: option -o expects a filename parameter\n");
                 goto error;
             }
             args->out = *argv;
@@ -463,7 +499,7 @@ chkargs
             ++argv;
             if (!argc)
             {
-                printf("ERROR: option -log expects a filename parameter\n");
+                fprintf(stderr, "ERROR: option -log expects a filename parameter\n");
                 goto error;
             }
             args->logname = *argv;
@@ -474,12 +510,12 @@ chkargs
             ++argv;
             if (!argc)
             {
-                printf("ERROR: option -fr expects a frame rate parameter\n");
+                fprintf(stderr, "ERROR: option -fr expects a frame rate parameter\n");
                 goto error;
             }
             if (!parse_frame_rate(args, *argv))
             {
-                printf("ERROR: unknown frame rate\n");
+                fprintf(stderr, "ERROR: unknown frame rate\n");
                 goto error;
             }
         }
@@ -489,12 +525,12 @@ chkargs
             ++argv;
             if (!argc)
             {
-                printf("ERROR: option -pair expects a pair number\n");
+                fprintf(stderr, "ERROR: option -pair expects a pair number\n");
                 goto error;
             }
             if (has_chan_or_pair)
             {
-                printf("ERROR: option -chan or -pair already seen\n");
+                fprintf(stderr, "ERROR: option -chan or -pair already seen\n");
                 goto error;
             }
             if (!parse_pair_number(args, *argv, 1))
@@ -510,12 +546,12 @@ chkargs
             ++argv;
             if (!argc)
             {
-                printf("ERROR: option -chan expects a channel number\n");
+                fprintf(stderr, "ERROR: option -chan expects a channel number\n");
                 goto error;
             }
             if (has_chan_or_pair)
             {
-                printf("ERROR: option -chan or -pair already seen\n");
+                fprintf(stderr, "ERROR: option -chan or -pair already seen\n");
                 goto error;
             }
             if (!parse_pair_number(args, *argv, 0))
@@ -525,20 +561,6 @@ chkargs
             has_chan_or_pair = PMD_TRUE;
             args->s337m_pair = 0;
         }
-        else if (0 == strncmp(opt, "-p", 3))
-        {
-            --argc;
-            ++argv;
-            if (!argc)
-            {
-                printf("ERROR: option -p expects a presentation id\n");
-                goto error;
-            }
-            if (!parse_presentation_id(args, *argv))
-            {
-                goto error;
-            }
-        }
         else if (0 == strncmp(opt, "-Dolby", 8))
         {
             args->ul = DLB_PMD_KLV_UL_DOLBY;
@@ -546,6 +568,10 @@ chkargs
         else if (0 == strncmp(opt, "-sadm", 6))
         {
             args->sadm_out = 1;
+        }
+        else if (0 == strncmp(opt, "-sadm-common", 13))
+        {
+            args->sadm_common = 1;
         }
         else if (0 == strncmp(opt, "-mark-pcm-blocks", 18))
         {
@@ -677,7 +703,7 @@ chkargs
         }
         else
         {
-            printf("ERROR: unknown filename options %s\n", opt);
+            fprintf(stderr, "ERROR: unknown filename options %s\n", opt);
             goto error;
         }
 
@@ -687,7 +713,7 @@ chkargs
 
     if ((NULL == args->in && MODE_PRNG != args->inmode) || NULL == args->out)
     {
-        printf("ERROR: not enough arguments\n");
+        fprintf(stderr, "ERROR: not enough arguments\n");
         goto error;
     }
 
@@ -698,132 +724,30 @@ chkargs
         {
             if ((args->random_counts.num_beds + args->random_counts.num_objects) == 0)
             {
-                printf("ERROR: attempting to generate a model with no elements\n");
+                fprintf(stderr, "ERROR: attempting to generate a model with no elements\n");
                 goto error;
             }
             if ((args->random_counts.num_beds + args->random_counts.num_objects) > 4095)
             {
-                printf("ERROR: attempting to generate a model with too many elements\n");
+                fprintf(stderr, "ERROR: attempting to generate a model with too many elements\n");
                 goto error;
             }
         }
     }
     else if (stat(args->in, &info))
     {
-        printf("ERROR: input file is not accessible '%s'\n", args->in);
-        return -1;
+        fprintf(stderr, "ERROR: input file is not accessible '%s'\n", args->in);
+        return PMD_FALSE;
     }
 
     if (!check_modes(args))
     {
-        return 0;
+        return PMD_FALSE;
     }
-    return 1;
+    return PMD_TRUE;
 
   error:
-    printf("usage:\n");
-    printf("    %s <opt>*\n", args->progname);
-    printf("    where <opt> can be:\n");
-    printf("        -v              - print tool version and exit\n");
-    printf("        -i <filename>   - input filename:  .xml, .klv, .wav\n");
-    printf("        -o <filename>   - output filename: .xml, .klv, .wav\n");
-    printf("                          (see note below when -o is .wav)\n");
-    printf("        -log <filename> - log file name for .wav input, may also be stdout or stderr\n");
-    printf("                          (optional)\n");
-    printf("        -chan <channel> - PCM channel to read/write SMPTE-337m encoded metadata [0-n]\n");
-    printf("        -pair <pair>    - PCM pair to read/write SMPTE-337m encoded metadata [0-n]\n");
-    printf("                          (use either -chan or -pair, not both!)\n");
-    printf("        -fr <rate>      - video frame rate, where <rate> may be one of:\n");
-    printf("                          ");
-    for (i = 0; i != NUM_FRAME_RATE_NAMES; ++i)
-    {
-        printf("%s ", FRAME_RATE_NAMES[i]);
-    }
-    printf("\n");
-    printf("                          (default: 25)\n");
-    printf("        -unstrict-xml   - relax stringent XML field checking of the presentation config string\n");
-    printf("        -skip-pcm <count> - (PCM+PMD read) simulate random access into a PCM stream by skipping\n");
-    printf("                          this many samples from the start of the .wav file\n");
-    printf("        -vsync <offset> - (PCM+PMD read) number of samples from the beginning of the .wav file\n");
-    printf("                          where the first video frame boundary occurs\n");
-    printf("        -Dolby          - use Dolby Private Universal Label instead of SMPTE 2109\n");
-    printf("        -mark-pcm-blocks - insert SMPTE 337m NULL-frames at PCM block boundaries\n");
-    printf("                          even when there is no data for that PCM block\n");
-    printf("        -p <presid>     - select presentation id <presid> when generating OAMDI\n");
-    printf("        -sadm           - generate serial ADM output in XML output mode\n");
-    printf("                          EXPERIMENTAL!\n");
-    printf("\n");
-    printf("        -try-frame      - for XML input, try to fit the resulting model into one video frame,\n");
-    printf("                          with the given frame rate and number of metadata channels (single\n");
-    printf("                          or pair), and print the status to stdout\n");
-    printf("            status - ERROR:  an error occurred trying to write the model\n");
-    printf("                   - GREEN:  the model fits in a single frame\n");
-    printf("                   - YELLOW: some names are dropped to fit the model in a single frame\n");
-    printf("                   - RED:    the model does not fit in a single frame\n");
-    printf("\n");
-    printf("        -rand           - generate a random model instead of using an input\n");
-    printf("                          EXPERIMENTAL!\n");
-    printf("        -seed <num>     - 32-bit seed to use for pseudo-random number generation\n");
-    printf("        -ns <num>       - number of signals [1-255]\n");
-    printf("        -nb <num>       - number of beds [0-4095]\n");
-    printf("        -no <num>       - number of objects [0-4095] \n");
-    printf("        -np <num>       - number of presentations [1-511]\n");
-    printf("        -nl <num>       - number of loudness payloads [0-511]\n");
-    printf("                          (will be limited to the number of presentations)\n");
-    printf("        -ne <num>       - number of EAC3 encoding parameters [0-255]\n");
-    printf("        -nt <num>       - number of ED2 turnarounds [0-255]\n");
-    printf("        -nh <num>       - number of Headphone Element Descriptions [0-255]\n");
-    printf("        -gas            - restrict all names to printable ascii\n");
-    printf("\n");
-    printf("NOTE: if generating a random model via the -rand argument, the related arguments are\n");
-    printf("      optional (they are ignored if not generating a random model).\n");
-    printf("\n");
-    printf("NOTE: the suffixes of the input and output files determine the kind of processing.\n");
-    printf("\n");
-    printf("NOTE: \"KLV\" format refers to the SMPTE 336 Key-Length-Value encoding of the metadata.\n");
-    printf("\n");
-    printf("NOTE: if neither -pair nor -chan are specified in PCM workflows, the default behavior\n");
-    printf("      is to use the first pair of channels (equivalent to \"-pair 0\").\n");
-    printf("\n");
-    printf("EXAMPLES:\n");
-    printf("\n");
-    printf("      1. to convert PMD metadata in XML format to KLV format:\n");
-    printf("            pmd_tool -i <file>.xml -o <file>.klv\n");
-    printf("\n");
-    printf("      2. to convert KLV back into XML format, use\n");
-    printf("            pmd_tool -i <file>.klv -o <file>.xml\n");
-    printf("\n");
-    printf("      3. to add metadata in XML format to PCM in a .wav file:\n");
-    printf("            pmd_tool -i <md>.xml -o <pcm>.wav -fr <framerate>\n");
-    printf("\n");
-    printf("         This will take <md>.xml as input metadata and <pcm>.wav as *input*\n");
-    printf("         PCM.  It will create a new file <pcm>_klv.wav as output, where the\n");
-    printf("         first two channels of the PCM have been overwritten with SMPTE 337m-\n");
-    printf("         wrapped KLV metadata, at 160 sample chunks within the specified\n");
-    printf("         video framerate.\n");
-    printf("         NOTE: the PCM must have an even number of channels, unless you use\n");
-    printf("         the -chan option.\n");
-    printf("         NOTE: to read metadata from KLV format instead, change the .xml\n");
-    printf("         suffix to .klv.\n");
-    printf("\n");
-    printf("     4. to extract metadata from PCM and dump to XML:\n");
-    printf("           pmd_tool -i <pcm>.wav -o <md>.xml\n");
-    printf("\n");
-    printf("        If there is metadata on the first two channels of the PCM, extract\n");
-    printf("        the SMPTE-337m wrapped KLV and write the equivalent data in XML format.\n");
-    printf("        NOTE: to write metadata to KLV format instead, change the .xml suffix\n");
-    printf("        to .klv.\n");
-    printf("\n");
-    printf("    5.  to copy metadata from one .wav file to another:\n");
-    printf("          pmd_tool -i <pcm1>.wav -o <pcm2>.wav\n");
-    printf("\n");
-    printf("        Assuming that both inputs are PCM with even number of channels, and\n");
-    printf("        that <pcm1>.wav has SMPTE-337m encoded metadata in first pair,\n");
-    printf("        this will decode the KLV metadata and write it out again onto the\n");
-    printf("        first pair of <pcm2>.wav, to produce <pcm2>_klv.wav.\n");
-    printf("\n\n");
-
-    return 0;
+    return PMD_FALSE;
 }
 
 
@@ -833,14 +757,14 @@ chkargs
 static
 int                           /** @return 0 on success, 1 on failure */
 prng_read
-    (Args          *args      /**< [in]  command-line arguments */
+    (Args          *args      /**< [in]  control arguments */
     ,dlb_pmd_model *model     /**< [out] PMD model to read */
     )
 {
     if (dlb_pmd_generate_random(model, &args->random_counts, args->random_seed,
                                 args->generate_ascii_strings, args->sadm_out))
     {
-        printf("Failed to generate random model: %s\n", dlb_pmd_error(model));
+        fprintf(stderr, "Failed to generate random model: %s\n", dlb_pmd_error(model));
         return 1;
     }
     return 0;
@@ -853,14 +777,14 @@ prng_read
 static
 int                           /** @return 0 on success, 1 on failure */
 read_input
-    (Args          *args      /**< [in]  command-line arguments */
+    (const Args    *args      /**< [in]  control arguments */
     ,dlb_pmd_model *model     /**< [out] PMD model to read */
     )
 
 {
     int                  result = 1;
     dlb_pmd_bool         try_it = PMD_FALSE;
-    dlb_pmd_bool         sadm   = PMD_FALSE;
+    dlb_pmd_bool         sadm   = args->sadm_out;   /* TODO: is this correct? */
     dlb_pmd_frame_rate   rate   = args->rate;
     dlb_pmd_bool         ispair = args->s337m_pair;
     unsigned int         chan   = args->chan;
@@ -881,7 +805,7 @@ read_input
         result = pcm_read(in, args->logname, rate, chan, ispair, vsync, skip, model);
         break;
     case MODE_PRNG:
-        result = prng_read(args, model);
+        result = prng_read((Args *)args, model);    /* TODO: it would be nice to keep args const... */
         break;
     default:
         break;
@@ -890,12 +814,14 @@ read_input
     if (try_it)
     {
         unsigned int n_chan = 2;
-        unsigned int n_samp = (unsigned int)pmd_s337m_min_frame_size(rate);
+        unsigned int n_samp = dlb_pcmpmd_min_frame_size(rate);
         uint32_t *buf = malloc(n_chan * n_samp * sizeof(uint32_t));
+        size_t sz = dlb_pcmpmd_augmentor_model_try_frame_query_mem(model, sadm);
+        uint8_t *mem = malloc(sz);
 
-        if (buf != NULL)
+        if (buf != NULL && mem != NULL)
         {
-            dlb_pcmpmd_write_status write_status = dlb_pcmpmd_augmentor_model_try_frame(model, buf, n_chan, n_samp, rate, ispair, sadm);
+            dlb_pcmpmd_write_status write_status = dlb_pcmpmd_augmentor_model_try_frame(model, mem, buf, n_chan, n_samp, rate, ispair, sadm);
             switch (write_status)
             {
             case DLB_PCMPMD_WRITE_STATUS_ERROR:
@@ -914,6 +840,7 @@ read_input
                 printf("Try frame status is UNKNOWN\n");
                 break;
             }
+            free(mem);
             free(buf);
         }
     }
@@ -925,7 +852,7 @@ read_input
 /**
  * @brief helper function to generate pcm+pmd output .wav file name
  */
-static inline
+static
 void
 generate_output_filename
     (const char         *filename        /**< [in]  input .wav filename */
@@ -939,7 +866,7 @@ generate_output_filename
 
     if (len > outfile_size)
     {
-        printf("input PCM filename too long\n");
+        fprintf(stderr, "input PCM filename too long\n");
         abort();
     }
 
@@ -964,11 +891,11 @@ generate_output_filename
 /**
  * @brief write to chosen output format
  */
-static inline
+static
 int                           /** @return 0 on success, 1 on failure */
 write_output
-    (Args          *args      /**< [in] command-line arguments */
-    ,dlb_pmd_model *model     /**< [in] PMD model to write */
+    (const Args    *args      /**< [in]  control arguments */
+    ,dlb_pmd_model *model     /**< [out] PMD model to write */
     )
 {
           char                         pcm_out[256];
@@ -984,7 +911,7 @@ write_output
 
     switch (args->outmode)
     {
-    case MODE_XML:   return xml_write(out, model, args->sadm_out);
+    case MODE_XML:   return xml_write(out, model, sadm);
     case MODE_KLV:   return klv_write(out, model, ul);
     case MODE_WAV:   return pcm_write(out, pcm_out, rate, chan, ispair, ul, mark, sadm, model);
     case MODE_PRNG:  abort();  /* not possible */
@@ -993,26 +920,23 @@ write_output
 }
 
 
+/**
+ * @brief process files according to the arguments
+ */
 int
-main
-    (      int   argc
-    ,const char *argv[]
+dlb_pmd_tool_process
+    (const Args *args
     )
 {
-    int   res = 0;
-    Args  args;
+    int res = 0;
     model m;
 
-    if (!chkargs(&args, argc, argv))
+    if (model_init(&m, args))
     {
-        return -1;
-    }
-
-    if (model_init(&m))
-    {
-        res = read_input(&args, m.model)
-           || write_output(&args, m.model);
+        res = read_input(args, m.model)
+           || write_output(args, m.model);
         model_finish(&m);
     }
+
     return res;
 }

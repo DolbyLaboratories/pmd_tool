@@ -144,6 +144,13 @@ pmd_iat_init
 }
     
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#if __GNUC__ > 5 || defined(__APPLE_CC__)
+#pragma GCC diagnostic ignored "-Wtautological-constant-out-of-range-compare"
+#endif
+#endif
+
 /**
  * @brief Validate the encoded value of an IAT content id type
  */
@@ -190,6 +197,10 @@ pmd_validate_encoded_iat_distribution_id_type
 
     return status;
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 
 

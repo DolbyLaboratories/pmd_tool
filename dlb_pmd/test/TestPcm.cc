@@ -178,6 +178,9 @@ TestPcm::TestPcm(dlb_pmd_frame_rate fr, bool check_updates)
     , ispair_(true)
     , num_samples_(0)
     , mem_(0)
+#ifdef PA_POS
+    , pa_positions_()
+#endif
 {
     if (check_updates)
     {
@@ -193,7 +196,7 @@ TestPcm::TestPcm(dlb_pmd_frame_rate fr, bool check_updates)
         num_samples_ = (SAMPLE_RATE / frame_cycle_length) * frame_cycle_length;
     }
     mem_ = new uint32_t[num_samples_ * NUM_CHANNELS];
-    memset(mem_, '\0', num_samples_ * NUM_CHANNELS * sizeof(uint32_t));
+    ::memset(mem_, '\0', num_samples_ * NUM_CHANNELS * sizeof(uint32_t));
 }
 
 
@@ -247,17 +250,53 @@ dlb_pmd_success TestPcm::write(bool ispair, dlb_klvpmd_universal_label ul, dlb_p
 bool TestPcm::verify_preamble_(uint32_t pa, uint32_t pb, uint32_t pc, uint32_t pd,
                                unsigned int maxbits)
 {
-    if (pa != PA) return false;
-    if (pb != PB) return false;
+    if (pa != PA)
+    {
+        return false;
+    }
+    if (pb != PB)
+    {
+        return false;
+    }
     if (((pc & PC_MASK) != PC) || ((pd>>12) > maxbits))
     {
         /* if PcPd is not a full KLV data burst, it may be a NULL data burst
          * because we enable the 'mark all blocks' option */
-        if (pc != 0 || pd != 0) return false;
+        if (pc != 0 || pd != 0)
+        {
+            return false;
+        }
     }
 
     return true;
 }
+
+
+#ifdef PA_POS
+void TestPcm::record_pa_positions_()
+{
+    uint32_t *pcm = mem_;
+    uint16_t sample;
+    size_t stride = 1;
+    unsigned int max_bits = MAX_CHAN_BITS;
+    size_t preamble_samples = PREAMBLE_SAMPLES;
+
+    if (ispair_)
+    {
+        stride *= 2;
+        max_bits *= 2;
+        preamble_samples /= 2;
+    }
+
+    for (sample = 0; sample < num_samples_ - preamble_samples; ++sample, pcm += stride)
+    {
+        if (verify_preamble_(pcm[0], pcm[1], pcm[2], pcm[3], max_bits))
+        {
+            pa_positions_.push_back(sample);
+        }
+    }
+}
+#endif
 
 
 dlb_pmd_success TestPcm::validate()
@@ -276,6 +315,10 @@ dlb_pmd_success TestPcm::validate()
 
     unsigned int num_frames = (unsigned int)(num_samples_ / FRAME_SIZES[fr_]);
     size_t num_blocks;
+
+#ifdef PA_POS
+    record_pa_positions_();
+#endif
 
     uint32_t *pcm = mem_;
     int vfpos = 0;    

@@ -38,13 +38,16 @@
  * @brief encapsulate PCM read/write testing
  */
 
-extern "C"
-{
 #include "dlb_pmd_api.h"
-}
-
 #include "TestModel.hh"
+
 #include <string>
+
+// If defined, record Pa positions (primarily useful for debugging)
+//#define PA_POS
+#ifdef PA_POS
+#include <vector>
+#endif
 
 
 class TestPcm
@@ -72,6 +75,12 @@ private:
     bool ispair_;
     size_t num_samples_;
     uint32_t *mem_;
+
+#ifdef PA_POS
+    void record_pa_positions_();
+
+    std::vector<uint16_t> pa_positions_;
+#endif
 };
 
     

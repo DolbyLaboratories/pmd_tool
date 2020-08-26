@@ -770,14 +770,14 @@ populate_api_loudness
     p = &model->apd_list[pld->presid];
     loudness->presid = p->id;
     loudness->loud_prac_type = (dlb_pmd_loudness_practice)pld->lpt;
-    if (loudness->loud_prac_type != 0)
+    if (loudness->loud_prac_type != PMD_PLD_LOUDNESS_PRACTICE_NOT_INDICATED)
     {
         if (options & PMD_PLD_OPT_LOUDCORR_DIALGATE)
         {
             loudness->b_loudcorr_gating = 1;
             loudness->loudcorr_gating = (dlb_pmd_dialgate_practice)pld->dpt;
-            loudness->loudcorr_type = (dlb_pmd_correction_type)pld->corrty;
         }
+        loudness->loudcorr_type = (dlb_pmd_correction_type)pld->corrty;
     }
     if (options & PMD_PLD_OPT_LOUDRELGAT)
     {

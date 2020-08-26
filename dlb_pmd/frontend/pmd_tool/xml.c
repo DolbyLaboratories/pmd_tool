@@ -85,7 +85,6 @@ xml_read
         }
         return 0;
     }
-    printf("XML read file failed\n");
     return 1;
 }
 

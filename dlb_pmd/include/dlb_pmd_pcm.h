@@ -52,10 +52,8 @@
 #  define __uint32_t uint32_t
 #endif
 
-#include <stdint.h>
-#include "dlb_pmd_klv.h"
 #include "dlb_pmd_api.h"
-
+#include "dlb_pmd_klv.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,7 +61,7 @@ extern "C" {
 
 
 /**
- * @def DLB_PCMPMD_BLOCK_SIZE (160)
+ * @def DLB_PCMPMD_BLOCK_SIZE
  * @brief number of PCM sample sets in one block
  */
 #define DLB_PCMPMD_BLOCK_SIZE (160)
@@ -94,11 +92,30 @@ dlb_pcmpmd_write_status;
 
 
 /**
+ * @brief status of parsing serial ADM
+ */
+typedef enum
+{
+    DLB_PCMSADM_OK = 0,                     /**< Success */
+    DLB_PCMSADM_PARSE_ERROR = 1,            /**< Error while parsing XML */
+    DLB_PCMSADM_DEC_ERROR = 2,              /**< Error while decompressing bitstream */
+}
+dlb_pcmsadm_status;
+
+
+/**
  * @brief type of a callback used when #dlb_pcmpmd_extract2 discovers
  * a new frame or when #dlb_pcmpmd_augment2 is about to write a new
  * frame.
  */
-typedef void (*dlb_pcmpmd_new_frame) (void* arg);
+typedef void (*dlb_pcmpmd_new_frame) (void *arg);
+
+
+/**
+ * @brief type of a callback used when #dlb_pcmpmd_extract3 decompresses
+ * a new frame of sADM
+ */
+typedef void (*dlb_pcmpmd_new_sadm) (void *arg, void *buff, size_t size, dlb_pcmsadm_status result);
 
 
 /**
@@ -112,6 +129,7 @@ typedef struct dlb_pcmpmd_augmentor dlb_pcmpmd_augmentor;
  * @brief return the smallest size in samples of a frame at the given rate,
  *        0 if frame_rate is out of range
  */
+DLB_DLL_ENTRY
 unsigned int
 dlb_pcmpmd_min_frame_size
    (dlb_pmd_frame_rate frame_rate       /**< [in] frame rate */
@@ -120,16 +138,34 @@ dlb_pcmpmd_min_frame_size
 
 /**
  * @brief determine how much memory to provide to #dlb_pcmpmd_augmentor_init2
+ *
+ * To enable augmentation with serial ADM, set #sadm to PMD_TRUE and give an
+ * appropriate value for #limits.  Use #dlb_pmd_get_constraints to generate
+ * the limits from your PMD model.  Here is an example:
+ *
+ *     dlb_pmd_model             *model = <your model>;
+ *     dlb_pmd_model_constraints  limits;
+ *     size_t                     sz;
+ *
+ *     dlb_pmd_get_constraints(model, &limits);
+ *     sz = dlb_pcmpmd_augmentor_query_mem2(sadm, &limits);
+ *
+ * With this method, you set the overall system limits once, in the model,
+ * and propagate them to the augmentor in a completely consistent way.
  */
-size_t                                  /**< [out] size of memory in bytes */
+DLB_DLL_ENTRY
+size_t                                  /**< [out] size of memory in bytes, or 0 if error */
 dlb_pcmpmd_augmentor_query_mem2
     (dlb_pmd_bool               sadm    /**< [in]  write serial ADM instead of PMD? */
-    ,dlb_pmd_model_constraints *limits  /**< [in]  model constraints for sADM conversion */
+    ,dlb_pmd_model_constraints *limits  /**< [in]  model constraints for sADM conversion (required for sADM) */
     );
 
 
 /**
  * @brief determine how much memory to provide to #dlb_pcmpmd_augmentor_init
+ *
+ * DO NOT USE THIS FUNCTION with serial ADM (sADM), use #dlb_pcmpmd_augmentor_query_mem2
+ * instead!
  */
 static inline
 size_t                               /**< [out] size of memory in bytes */
@@ -151,9 +187,13 @@ dlb_pcmpmd_augmentor_query_mem
  * wrapped PMD (SMPTE 2109, similar to KLV format). These follow
  * the subframe and frame-based encoding of SMPTE 337m.
  *
- * The augmentor will copy the source PCM to output PCM, overwriting the
- * selected channel or pair of channels with PMD.
+ * The augmentor will copy the source PCM to output PCM, overwriting
+ * the selected channel or pair of channels with PMD.
+ *
+ * If #sadm is true, the size for #mem must have been calculated by
+ * calling #dlb_pcmpmd_augmentor_query_mem2 with correct arguments.
  */
+DLB_DLL_ENTRY
 void
 dlb_pcmpmd_augmentor_init2
     (dlb_pcmpmd_augmentor       **aug              /**< [in] PCM augmentor to initialize */
@@ -183,6 +223,8 @@ dlb_pcmpmd_augmentor_init2
  *
  * The augmentor will copy the source PCM to output PCM, overwriting the
  * selected channel or pair of channels with PMD.
+ *
+ * For sADM, use #dlb_pcmpmd_augmentor_init2.
  */
 static inline
 void
@@ -208,9 +250,21 @@ dlb_pcmpmd_augmentor_init
 /**
  * @brief finalize PCM augmentor
  */
+DLB_DLL_ENTRY
 void
 dlb_pcmpmd_augmentor_finish
     (dlb_pcmpmd_augmentor *aug  /**< [in] PCM augmentor to clean up */
+    );
+
+
+/**
+ * @brief calculate how many bytes of external memory are
+ * needed to "try" a frame
+ */
+DLB_DLL_ENTRY
+size_t                                  /**< [out] size of memory in bytes, or 0 if error */
+dlb_pcmpmd_augmentor_try_frame_query_mem
+    (dlb_pcmpmd_augmentor *aug          /**< [in] PCM augmentor */
     );
 
 
@@ -220,6 +274,13 @@ dlb_pcmpmd_augmentor_finish
  * The purpose of this function is to determine whether,
  * and how well, the serialization of the model will fit
  * into a single video frame.
+ *
+ * @param aug An initialized augmentor instance.
+ *
+ * @param mem A pointer to a block of memory of sufficient
+ * size to complete the processing; you may call the
+ * #dlb_pcmpmd_augmentor_try_frame_query_mem() function to
+ * determine this size.
  *
  * @param buf A buffer at least numchannels * num_samples
  * in size.  The memory will be modified, but not in any
@@ -236,9 +297,11 @@ dlb_pcmpmd_augmentor_finish
  * @note This is an expensive operation, it is recommended
  * to call it only when the model structure changes.
  */
+DLB_DLL_ENTRY
 dlb_pcmpmd_write_status
 dlb_pcmpmd_augmentor_try_frame
     (dlb_pcmpmd_augmentor *aug          /**< [in]     PCM augmentor */
+    ,void                 *mem          /**< [in]     scratch memory needed to "try" the frame */
     ,uint32_t             *buf          /**< [in/out] modifiable buffer */
     ,unsigned int          num_channels /**< [in]     number of channels in the buffer */
     ,unsigned int          num_samples  /**< [in]     number of samples in the buffer */
@@ -246,14 +309,29 @@ dlb_pcmpmd_augmentor_try_frame
 
 
 /**
+ * @brief calculate how many bytes of external memory are
+ * needed to "try" a frame, starting from a model
+ */
+DLB_DLL_ENTRY
+size_t                                  /**< [out] size of memory in bytes, or 0 if error */
+dlb_pcmpmd_augmentor_model_try_frame_query_mem
+    (dlb_pmd_model        *model        /**< [in] PMD model */
+    ,dlb_pmd_bool          sadm         /**< [in] serial ADM encoding? */
+    );
+
+
+/**
  * @brief "try" to write the model into a single frame
  *
- * Similar to dlb_pcmpmd_augmentor_try_frame() but starting
- * from a model instead of an augmentor.
+ * Similar to dlb_pcmpmd_augmentor_try_frame() but starting from a model instead
+ * of an augmentor.  Use #dlb_pcmpmd_augmentor_model_try_frame_query_mem() to
+ * determine the size needed for #mem.
  */
+DLB_DLL_ENTRY
 dlb_pcmpmd_write_status
 dlb_pcmpmd_augmentor_model_try_frame
     (dlb_pmd_model        *model        /**< [in]     PMD model */
+    ,void                 *mem          /**< [in]     scratch memory needed to "try" the frame */
     ,uint32_t             *buf          /**< [in/out] modifiable buffer */
     ,unsigned int          num_channels /**< [in]     number of channels in the buffer */
     ,unsigned int          num_samples  /**< [in]     number of samples in the buffer */
@@ -266,25 +344,25 @@ dlb_pcmpmd_augmentor_model_try_frame
 /**
  * @brief take a block of PCM and augment it with PMD metadata
  *
- * Note that PCM must be at least 20 bits, and have exactly
- * #DLB_PCMPMD_BLOCK_SIZE samples of audio for each channel.
- *
- * If this is not true, then behaviour is undefined.
- *
- * Note that no blocks will be written until the first video
- * sync is detected, but the target pair will be zeroed out.
+ * IMPORTANT: Note that no blocks will be written until the first video
+ * sync is given, and the target channel or pair will be zeroed out.  The
+ * video sync positions must be generated by or passed through from the
+ * caller of this function, the augmentor does not otherwise keep track of
+ * where frames start.
  *
  * Note that the PCM is assumed to be 24-bit samples, carried in a
  * 32-bit integer (because that is a handy machine datatype), such
  * that the 24 bits are shifted to the most significant bits.
  */
+DLB_DLL_ENTRY
 void
 dlb_pcmpmd_augment
     (dlb_pcmpmd_augmentor *aug          /**< [in]     PCM augmentor */
     ,uint32_t             *pcm          /**< [in/out] PCM channel buffer to modify */
     ,size_t                num_samples  /**< [in]     number of samples in current block */
-    ,size_t                video_sync   /**< [in]     video frame sync occurs at given line,
-                                          *           or #DLB_PMD_VSYNC_NONE if no frame sync. */
+    ,size_t                video_sync   /**< [in]     video frame sync occurs at the given position
+                                          *           in the input block, or use #DLB_PMD_VSYNC_NONE
+                                          *           if there is no sync point in the current block. */
     );
 
 
@@ -297,15 +375,16 @@ dlb_pcmpmd_augment
  * start of the frame, without fear of inconsistencies with previous
  * metadata blocks.
  */
+DLB_DLL_ENTRY
 void
 dlb_pcmpmd_augment2
     (dlb_pcmpmd_augmentor *aug          /**< [in]     PCM augmentor */
     ,uint32_t             *pcm          /**< [in/out] PCM channel buffer to modify */
     ,size_t                num_samples  /**< [in]     number of samples in current block */
-    ,size_t                video_sync   /**< [in]     video frame sync occurs at given line,
-                                          *           or #DLB_PMD_VSYNC_NONE if no frame sync. */
-
-    ,dlb_pcmpmd_new_frame  callback     /**< [in]     callback to invoke when new frame is found */
+    ,size_t                video_sync   /**< [in]     video frame sync occurs at the given position
+                                          *           in the input block, or use #DLB_PMD_VSYNC_NONE
+                                          *           if there is no sync point in the current block. */
+    ,dlb_pcmpmd_new_frame  callback     /**< [in]     callback to invoke when a new frame is started */
     ,void                 *cbarg        /**< [in]     user argument to callback */
     );
 
@@ -318,8 +397,23 @@ typedef struct dlb_pcmpmd_extractor dlb_pcmpmd_extractor;
 
 
 /**
- * @brief determine number of bytes required to intialize an extractor
+ * @brief determine number of bytes required to initialize an extractor
+ *
+ * To enable extraction with serial ADM, set #sadm to PMD_TRUE and give an
+ * appropriate value for #limits.  Use #dlb_pmd_get_constraints to generate
+ * the limits from your PMD model.  Here is an example:
+ *
+ *     dlb_pmd_model             *model = <your model>;
+ *     dlb_pmd_model_constraints  limits;
+ *     size_t                     sz;
+ *
+ *     dlb_pmd_get_constraints(model, &limits);
+ *     sz = dlb_pcmpmd_extractor_query_mem2(sadm, &limits);
+ *
+ * With this method, you set the overall system limits once, in the model,
+ * and propagate them to the extractor in a completely consistent way.
  */
+DLB_DLL_ENTRY
 size_t                                  /** @return number of bytes */
 dlb_pcmpmd_extractor_query_mem2
     (dlb_pmd_bool               sadm    /**< [in] sADM supported? */
@@ -328,7 +422,10 @@ dlb_pcmpmd_extractor_query_mem2
 
 
 /**
- * @brief determine number of bytes required to intialize an extractor
+ * @brief determine number of bytes required to initialize an extractor
+ *
+ * DO NOT USE THIS FUNCTION with serial ADM (sADM), use #dlb_pcmpmd_extractor_query_mem2
+ * instead!
  */
 static inline
 size_t                              /** @return number of bytes */
@@ -342,7 +439,14 @@ dlb_pcmpmd_extractor_query_mem
 
 /**
  * @brief initialize PCM extractor
+ *
+ * If #sadm is true, the size for #mem must have been calculated by
+ * calling #dlb_pcmpmd_extractor_query_mem2 with correct arguments.
+ *
+ * If #sadm is not true, and the extractor encounters serial ADM
+ * content, that content will be ignored.
  */
+DLB_DLL_ENTRY
 void
 dlb_pcmpmd_extractor_init2
     (dlb_pcmpmd_extractor          **extptr     /**< [out] PCM extractor to initialize */
@@ -360,6 +464,8 @@ dlb_pcmpmd_extractor_init2
 
 /**
  * @brief initialize PCM extractor
+ *
+ * For sADM, use #dlb_pcmpmd_extractor_init2.
  */
 static inline
 void
@@ -382,6 +488,7 @@ dlb_pcmpmd_extractor_init
 /**
  * @brief clean up resources
  */
+DLB_DLL_ENTRY
 void
 dlb_pcmpmd_extractor_finish
     (dlb_pcmpmd_extractor *ext      /**< [in] PCM extractor to tidy up */
@@ -396,7 +503,14 @@ dlb_pcmpmd_extractor_finish
  *
  * Note that a non-zero return code indicates that the encoded
  * metadata failed to decode; the PCM can continue to be extracted.
+ *
+ * Note that this version depends upon an external video frame sync
+ * for determining the start of video frames.  A common misconception
+ * is that giving #DLB_PMD_VSYNC_NONE from the start of decoding will
+ * cause automatic detection of frame start, however, what really
+ * happens is no metadata will be decoded until a sync point is given.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                        /** @return 0 on success, non-zero otherwise */
 dlb_pcmpmd_extract
     (dlb_pcmpmd_extractor *ext         /**< [in] PCM extractor struct */
@@ -417,8 +531,9 @@ dlb_pcmpmd_extract
  * metadata failed to decode; the PCM can continue to be extracted.
  *
  * Note that this is a variant of #dlb_pcmpmd_extract, which attempts
- * to automatically discover start of frames
+ * to automatically discover start of frames.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                        /** @return 0 on success, non-zero otherwise */
 dlb_pcmpmd_extract2
     (dlb_pcmpmd_extractor *ext         /**< [in]  PCM extractor struct */
@@ -428,6 +543,26 @@ dlb_pcmpmd_extract2
     ,void                 *cbarg       /**< [in]  user argument to callback */
     ,size_t               *video_sync  /**< [out] video frame sync occurs at given line,
                                          *        or #DLB_PMD_VSYNC_NONE if no frame sync. */
+    );
+
+
+/**
+ * @brief unwrap one block of PCM
+ *
+ * This is a variant of #dlb_pcmpmd_extract2, adding a callback function
+ * and buffer for serial ADM
+ */
+dlb_pmd_success                             /** @return 0 on success, non-zero otherwise */
+dlb_pcmpmd_extract3
+    (dlb_pcmpmd_extractor *ext              /**< [in]  PCM extractor struct */
+    ,uint32_t             *pcm              /**< [in]  PCM to unwrap */
+    ,size_t                num_samples      /**< [in]  number of PCM sample sets */
+    ,dlb_pcmpmd_new_frame  callback         /**< [in]  callback to invoke when new frame is found */
+    ,dlb_pcmpmd_new_sadm   sadm_callback    /**< [in]  callback to invoke when new sadm packet is processed */
+    ,char                 *sadm_xml_buf     /**< [in]  buffer to store sadm xml */
+    ,void                 *cbarg            /**< [in]  user argument to callback */
+    ,size_t               *video_sync       /**< [out] video frame sync occurs at given line,
+                                             **<       or #DLB_PMD_VSYNC_NONE if no frame sync. */
     );
 
 

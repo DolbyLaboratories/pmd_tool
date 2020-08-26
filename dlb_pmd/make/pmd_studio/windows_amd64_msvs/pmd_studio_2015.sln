@@ -5,6 +5,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmd_studio", "pmd_studio_20
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC} = {888B31BA-E7A4-360D-978E-857D8E4C4BAC}
 		{2A4DF4EE-7136-33B4-B637-60938D184F39} = {2A4DF4EE-7136-33B4-B637-60938D184F39}
 		{A509D75D-F300-36CD-B469-C28977B142C3} = {A509D75D-F300-36CD-B469-C28977B142C3}
+		{9D9F12E2-511F-3975-8CFE-095479470D7D} = {9D9F12E2-511F-3975-8CFE-095479470D7D}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_pmd_lib", "..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2015.vcxproj", "{888B31BA-E7A4-360D-978E-857D8E4C4BAC}"
@@ -23,6 +24,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libui_alpha4_1", "..\..\..\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libui_impl_alpha4_1", "..\..\..\..\libui\alpha_4.1\libui\make\libui_impl_alpha4_1\windows_amd64_msvs\libui_impl_alpha4_1_2015.vcxproj", "{B491984A-EA36-3F3C-8E84-012B93677D7D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "portaudio_19_6_lib", "..\..\..\..\portaudio\19.6\portaudio\make\portaudio_19_6_lib\windows_amd64_msvs\portaudio_19_6_lib_2015.vcxproj", "{9D9F12E2-511F-3975-8CFE-095479470D7D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "..\..\..\..\zlib\1.2.11\make\zlib\windows_amd64_msvs\zlib_2015.vcxproj", "{76502233-DBC5-3511-A0CE-193C451A7809}"
 EndProject
@@ -44,6 +47,8 @@ Global
 		{A509D75D-F300-36CD-B469-C28977B142C3}.debug|x64.Build.0 = debug|x64
 		{B491984A-EA36-3F3C-8E84-012B93677D7D}.debug|x64.ActiveCfg = debug|x64
 		{B491984A-EA36-3F3C-8E84-012B93677D7D}.debug|x64.Build.0 = debug|x64
+		{9D9F12E2-511F-3975-8CFE-095479470D7D}.debug|x64.ActiveCfg = debug|x64
+		{9D9F12E2-511F-3975-8CFE-095479470D7D}.debug|x64.Build.0 = debug|x64
 		{76502233-DBC5-3511-A0CE-193C451A7809}.debug|x64.ActiveCfg = debug|x64
 		{76502233-DBC5-3511-A0CE-193C451A7809}.debug|x64.Build.0 = debug|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.release|x64.ActiveCfg = release|x64
@@ -58,6 +63,8 @@ Global
 		{A509D75D-F300-36CD-B469-C28977B142C3}.release|x64.Build.0 = release|x64
 		{B491984A-EA36-3F3C-8E84-012B93677D7D}.release|x64.ActiveCfg = release|x64
 		{B491984A-EA36-3F3C-8E84-012B93677D7D}.release|x64.Build.0 = release|x64
+		{9D9F12E2-511F-3975-8CFE-095479470D7D}.release|x64.ActiveCfg = release|x64
+		{9D9F12E2-511F-3975-8CFE-095479470D7D}.release|x64.Build.0 = release|x64
 		{76502233-DBC5-3511-A0CE-193C451A7809}.release|x64.ActiveCfg = release|x64
 		{76502233-DBC5-3511-A0CE-193C451A7809}.release|x64.Build.0 = release|x64
 	EndGlobalSection

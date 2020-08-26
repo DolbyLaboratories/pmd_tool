@@ -1,0 +1,280 @@
+dlb_xml - A Simple XML Parser
+
+
+
+OVERVIEW:
+
+XML (Extensible Markup Language) is an ideal way of implementing
+configuration files. The files are human readable, they can be
+extended, and they are easily parsed and checked for errors.
+
+
+
+LANGUAGE DEFINITIONS:
+
+An XML file consists of one "Element", which is formed by an open
+and close "Tag" and contains text or further Elements inbeween
+those Tags. Open Tags can contain "Attributes", which are named
+string values.
+
+Open Tag (Enclosed in '<' and '>'):
+	<ElementName>
+
+Close Tag (Starting with '</'):
+	</ElementName>
+
+Open and Close Tag in one (Ending with '/>', complete element):
+	<ElementName/>
+
+Open Tag with Attribute:
+	<ElementName AttributeName="AttributeValue">
+
+Attributes are separated by whitespace (space, tab, eol) from
+the element name and from each other, their name and value are
+separated by '=', and the value has to be enclosed in quotes,
+either ''' or '"'.
+
+Open and Close Tag with Attribute:
+	<ElementName AttributeName="AttributeValue" />
+
+Element containing Text:
+	<ElementName>Element Text</ElementName>
+
+Element containing other Element:
+	<ParentElementName><ChildElementName/></ParentElementName>
+
+Comment:
+	<!--Comment Text or <Elements/>-->
+
+A more technical and complete definition can be found at:
+http://www.w3.org/TR/REC-xml/
+
+
+
+CONFIG FILE DESIGN:
+
+To design configuration file formats, gather values into
+logical groups, to form an element. Collect all elements
+into one main element. Hierachical arrangements are an
+option for sub-groups of values. Choose whether to represent
+values as attributes or element text, or a combination of both.
+
+<Config>
+	<FirstSet>
+		<Param1>Hello</Param1>
+		<Param2>Some more text</Param2>
+	</FirstSet>
+	<SecondSet>
+		<Size Width="123" Height="456" />
+		<Title Short="Lion Cage" Long='This is a "Cage" for "Lions"' />
+		<Value Version="78">Skyscraper</Value>
+	</SecondSet>
+</Config>
+
+
+
+USAGE:
+
+To use dlb_xml, implement callback functions for elements
+and attributes, as well as a mandatory callback function
+to feed the XML text into th parser. Once the parser is
+called, the perts of the XML file are returned via the
+appropriate callback calls. The element callback has two
+parameter, the element name and the contained element text.
+When called on the open tag of an element, the text pointer
+is NULL. The attribute  callback has three parameter, the
+element name, the attribute name and the contained value
+text.
+
+When implementing the callbacks, check for consistency of
+your config file structure. For example, with the above file,
+when receiving an Attribute callback for "Short", make sure
+it occurs in a "Title" Element, and that both "Config" and
+"SecondSet" Elements are still open.
+
+The parser returns callbacks as the conditions for their
+completion are met within the source file. The only states
+held are for the current element name, element text, and
+one attribute and one comment at each hierachical level.
+Recursing into a child level allocates a new set of local
+state variables, therefore the resource requirements of
+the parser are conditional to the element depth of the
+XML file.
+
+
+
+CALLBACK OCCURRENCE:
+
+This example shows at what point in the source text the
+respective callbacks are being called, and with which
+parameter:
+
+<Sample One="Value" Two="23">some text<Child/></Sample>
+       ^           ^        ^               ^^        ^
+       A           B        C               DE        F
+
+A: element callback with name "Sample" and NULL text
+B: attribute callback with "Sample", "One" and "Value"
+C: attribute callback with "Sample", "Two" and "23"
+D: element callback with name "Child" and NULL text
+E: element callback with name "Child" and ""
+F: element callback with name "Sample" and "some text"
+
+
+
+EXAMPLE:
+
+Call the application with filename of XML file as the first and only parameter
+
+--------------------------------------------------------------
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "dlb_xml/include/dlb_xml.h"
+
+#define MAXLINE 4096
+struct context {
+	FILE *fp;
+	char line[MAXLINE];
+};
+
+/**
+ * @brief Loads next line from a file
+ *
+ * @param p_context: Passed through context pointer, to load a line
+ */
+static 
+char *
+line_callback
+	( void *p_context
+	)
+{
+	if (feof(((struct context *)p_context)->fp)) 
+	{
+		return NULL;
+	}
+	return fgets(((struct context *)p_context)->line, MAXLINE, ((struct context *)p_context)->fp);
+}
+
+/**
+ * @brief "Element" callback for XML parser
+ *
+ * @param p_context: Passed through context pointer
+ * @param tag: Tag string (name of the element)
+ * @param text: Text enclosed inside the element's open and close tags, or NULL on open tag
+ */
+static 
+int 
+element_callback
+	( void *p_context
+	, char *tag
+	, char *text
+	)
+{
+	if (text == NULL) /* Open tag */
+	{
+		printf("OPEN('%s')\n", tag);
+	} 
+	else /* Close tag */
+	{
+		printf("CLOSE('%s', '%s')\n", tag, text);
+	}
+	
+	return 0;
+}
+
+/**
+ * @brief "Attribute" callback for XML parser
+ *
+ * @param p_context: Passed through context pointer
+ * @param tag: Tag string (name of the element)
+ * @param attribute: Attribute string (name of the attribute)
+ * @param value: Text enclosed inside the attribute's quotes
+ */
+static 
+int 
+attribute_callback
+	( void *p_context
+	, char *tag
+	, char *attribute
+	, char *value
+	)
+{
+	printf("ATTR('%s', '%s', '%s')\n", tag, attribute, value);
+	
+	return 0;
+}
+
+int 
+main
+	( int argc
+	, const char **argv
+	) 
+{
+	struct context context = {0,};
+	int status;
+	
+	context.fp = fopen(argv[1], "r");
+	status = dlb_xml_parse
+		( &context
+		, &line_callback
+		, &element_callback
+		, &attribute_callback
+		);
+	printf("XML parsing: %s\n", (status) ? "ERROR" : "SUCCESS");
+	fclose(context.fp);
+	
+	return status;
+}
+
+--------------------------------------------------------------
+
+
+
+LIMITATIONS:
+
+This is a "non-validating" parser, "ignoring external
+entities". It parses on the fly, returning valid
+callbacks up to any existing error condition.
+
+This parser does not perform full error checking, e.g. for
+illegal characters and prohibited names. It does find most
+egregious and obvious errors, such as mismatched element
+tags. The parser also does not return any comment text.
+
+It will not complain when a character other than ' or "
+is used as attribute value quotes, as long as they are
+matched. It does not handle the XML text declaration very
+well, the declarations are returned through the attribute
+callback with an element name of "xml".
+
+At this time, "Entities" (a sort of macros in XML,
+starting with '<!', ending with a matched '>') are
+not supported and are ignored if they occur in the
+XML files. References to Entities, starting with
+'&' or '%' and ending with ';', are not expanded
+and are returned "as-is".
+
+URI escaped characters as well as UTF-16 or UCS-4 unicode
+or any other 16/32 bit encodings are not suppported.
+UTF-8 unicode characters in strings are passed to the
+callback, but are not supported in elements of the XML.
+
+Element and Attribute names are limited to a significant
+length of 32 characters, text and value strings are
+limited to their first 2048 characters.
+
+
+
+TESTING:
+
+The W3C provides XML files for compliance testing at:
+http://www.w3.org/XML/Test/
+http://www.w3.org/XML/Test/xmlts20080827.tar.gz
+
+I am planning to write a unit test using a sub-set
+of these files.
+
+
+  Christian Wolff (CWOLF), 2013
+

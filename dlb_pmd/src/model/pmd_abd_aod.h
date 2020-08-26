@@ -45,6 +45,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+
  /* Object position */
 #define PMD_OBJECT_POSITION_MIN (-1.0f)
 #define PMD_OBJECT_POSITION_MAX (1.0f)
@@ -329,6 +330,16 @@ typedef unsigned short pmd_gain;
 
 
 /**
+ * @brief workaround for tenacious difficulty with isinf()
+ */
+#ifdef __cplusplus
+extern "C" dlb_pmd_bool is_infinity(float f);
+#else
+extern dlb_pmd_bool is_infinity(float f);
+#endif
+
+
+/**
  * @brief convert dB value to PMD gain value
  */
 static inline
@@ -337,7 +348,7 @@ pmd_db_to_gain
     (float db        /**< floating point gain in dB */
     )
 {
-    if (isinf(db) && db < 0)
+    if (is_infinity(db) && db < 0)
     {
         return 0;
     }

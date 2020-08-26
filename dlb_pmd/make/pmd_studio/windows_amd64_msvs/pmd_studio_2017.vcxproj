@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup Label="ProjectConfigurations">
+<ProjectConfiguration Include="debug|x64">
+<Configuration>debug</Configuration>
+<Platform>x64</Platform></ProjectConfiguration>
+<ProjectConfiguration Include="release|x64">
+<Configuration>release</Configuration>
+<Platform>x64</Platform></ProjectConfiguration></ItemGroup>
+<PropertyGroup Label="Globals">
+<Keyword>Win32Proj</Keyword>
+<ProjectName>pmd_studio</ProjectName>
+<ProjectGuid>{876FFB22-17A4-34F1-93D7-1E5ED8657F9A}</ProjectGuid>
+<RootNamespace>pmd_studio</RootNamespace></PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'" Label="Configuration">
+<CharacterSet>Unicode</CharacterSet>
+<ConfigurationType>Application</ConfigurationType>
+<UseDebugLibraries>true</UseDebugLibraries>
+<PlatformToolset>v141</PlatformToolset>
+<WholeProgramOptimization>false</WholeProgramOptimization></PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'" Label="Configuration">
+<CharacterSet>Unicode</CharacterSet>
+<ConfigurationType>Application</ConfigurationType>
+<UseDebugLibraries>false</UseDebugLibraries>
+<PlatformToolset>v141</PlatformToolset>
+<WholeProgramOptimization>true</WholeProgramOptimization></PropertyGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+<ImportGroup Label="ExtensionSettings" />
+<ImportGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'" Label="PropertySheets">
+<Import Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" /></ImportGroup>
+<ImportGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'" Label="PropertySheets">
+<Import Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" /></ImportGroup>
+<PropertyGroup Label="UserMacros" />
+<PropertyGroup>
+<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+<IntDir Condition="'$(Configuration)|$(Platform)'=='debug|x64'">$(Configuration)\VS2017\</IntDir>
+<OutDir Condition="'$(Configuration)|$(Platform)'=='debug|x64'">$(SolutionDir)$(Configuration)\VS2017\</OutDir>
+<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='debug|x64'">true</LinkIncremental>
+<IntDir Condition="'$(Configuration)|$(Platform)'=='release|x64'">$(Configuration)\VS2017\</IntDir>
+<OutDir Condition="'$(Configuration)|$(Platform)'=='release|x64'">$(SolutionDir)$(Configuration)\VS2017\</OutDir>
+<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='release|x64'">false</LinkIncremental></PropertyGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'">
+<ClCompile>
+<AdditionalIncludeDirectories>..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\frontend;..\..\..\frontend\pmd_studio;..\..\..\frontend\pmd_tool;..\..\..\frontend;..\..\..\include;..\..\..\os;..\..\..\..\dlb_socket\0.1\dlb_socket\include\win32;..\..\..\..\dlb_socket\0.1\dlb_socket\include;..\..\..\..\dlb_socket\0.1;..\..\..\..\dlb_wave\1.6;..\..\..\..\libui\alpha_4.1\libui;..\..\..\..;..\..\..\..;..\..\..\..\portaudio\19.6\portaudio\include</AdditionalIncludeDirectories>
+<BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+<BufferSecurityCheck>true</BufferSecurityCheck>
+<CompileAs>Default</CompileAs>
+<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+<DisableSpecificWarnings />
+<ExceptionHandling>Sync</ExceptionHandling>
+<MinimalRebuild>false</MinimalRebuild>
+<Optimization>Disabled</Optimization>
+<DisableLanguageExtensions>false</DisableLanguageExtensions>
+<PreprocessorDefinitions>WIN32=1;WIN64=1;_CONSOLE=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
+<RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+<PrecompiledHeader />
+<WarningLevel>Level4</WarningLevel>
+<FunctionLevelLinking>false</FunctionLevelLinking>
+<IntrinsicFunctions>false</IntrinsicFunctions></ClCompile>
+<Link>
+<AdditionalDependencies>ws2_32.lib</AdditionalDependencies>
+<AdditionalLibraryDirectories />
+<EnableCOMDATFolding>false</EnableCOMDATFolding>
+<GenerateDebugInformation>true</GenerateDebugInformation>
+<IgnoreSpecificDefaultLibraries />
+<ModuleDefinitionFile />
+<OptimizeReferences>false</OptimizeReferences>
+<OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+<SubSystem>Console</SubSystem>
+<TargetMachine>MachineX64</TargetMachine>
+<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers></Link></ItemDefinitionGroup>
+<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
+<ClCompile>
+<AdditionalIncludeDirectories>..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\frontend;..\..\..\frontend\pmd_studio;..\..\..\frontend\pmd_tool;..\..\..\frontend;..\..\..\include;..\..\..\os;..\..\..\..\dlb_socket\0.1\dlb_socket\include\win32;..\..\..\..\dlb_socket\0.1\dlb_socket\include;..\..\..\..\dlb_socket\0.1;..\..\..\..\dlb_wave\1.6;..\..\..\..\libui\alpha_4.1\libui;..\..\..\..;..\..\..\..;..\..\..\..\portaudio\19.6\portaudio\include</AdditionalIncludeDirectories>
+<BasicRuntimeChecks>Default</BasicRuntimeChecks>
+<BufferSecurityCheck>false</BufferSecurityCheck>
+<CompileAs>Default</CompileAs>
+<DebugInformationFormat />
+<DisableSpecificWarnings />
+<ExceptionHandling>Sync</ExceptionHandling>
+<MinimalRebuild>false</MinimalRebuild>
+<Optimization>MaxSpeed</Optimization>
+<DisableLanguageExtensions>false</DisableLanguageExtensions>
+<PreprocessorDefinitions>NDEBUG=1;WIN32=1;WIN64=1;_CONSOLE=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
+<RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+<PrecompiledHeader />
+<WarningLevel>Level4</WarningLevel>
+<FunctionLevelLinking>true</FunctionLevelLinking>
+<IntrinsicFunctions>true</IntrinsicFunctions></ClCompile>
+<Link>
+<AdditionalDependencies>ws2_32.lib</AdditionalDependencies>
+<AdditionalLibraryDirectories />
+<EnableCOMDATFolding>true</EnableCOMDATFolding>
+<GenerateDebugInformation>false</GenerateDebugInformation>
+<IgnoreSpecificDefaultLibraries />
+<ModuleDefinitionFile />
+<OptimizeReferences>true</OptimizeReferences>
+<OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+<SubSystem>Console</SubSystem>
+<TargetMachine>MachineX64</TargetMachine>
+<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers></Link></ItemDefinitionGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\frontend\pmd_studio\pmd_studio.c" />
+<ClCompile Include="..\..\..\frontend\pmd_studio\pmd_studio_audio_beds.c" />
+<ClCompile Include="..\..\..\frontend\pmd_studio\pmd_studio_audio_objects.c" />
+<ClCompile Include="..\..\..\frontend\pmd_studio\pmd_studio_audio_outputs.c" />
+<ClCompile Include="..\..\..\frontend\pmd_studio\pmd_studio_audio_presentations.c" />
+<ClCompile Include="..\..\..\frontend\pmd_studio\pmd_studio_device.c" />
+<ClCompile Include="..\..\..\frontend\pmd_tool\pcm.c" />
+<ClCompile Include="..\..\..\frontend\pmd_tool\pmd_tool.c" />
+<ClCompile Include="..\..\..\frontend\pmd_tool\pmd_tool_klv.c" />
+<ClCompile Include="..\..\..\frontend\pmd_tool\xml.c" />
+<ClCompile Include="..\..\..\os\windows\pmd_ctrl_c.c" /></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\frontend\pcm_vsync_timer.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\am824_framer.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\model.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\pmd_studio.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\pmd_studio_audio_beds.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\pmd_studio_audio_objects.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\pmd_studio_audio_outputs.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\pmd_studio_audio_presentations.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\pmd_studio_device.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\pmd_studio_file_menu.h" />
+<ClInclude Include="..\..\..\frontend\pmd_studio\pmd_studio_limits.h" />
+<ClInclude Include="..\..\..\frontend\pmd_tool\pcm.h" />
+<ClInclude Include="..\..\..\frontend\pmd_tool\pmd_tool.h" />
+<ClInclude Include="..\..\..\frontend\pmd_tool\pmd_tool_build_version.h" />
+<ClInclude Include="..\..\..\frontend\pmd_tool\pmd_tool_klv.h" />
+<ClInclude Include="..\..\..\frontend\pmd_tool\xml.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_api.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_capture.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_generate.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_klv.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_lib_dll.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_pcm.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_types.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_xml.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_xml_file.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model_type.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h" />
+<ClInclude Include="..\..\..\os\pmd_os.h" />
+<ClInclude Include="..\..\..\..\dlb_socket\0.1\dlb_socket\include\dlb_http_client.h" />
+<ClInclude Include="..\..\..\..\dlb_socket\0.1\dlb_socket\include\dlb_http_server.h" />
+<ClInclude Include="..\..\..\..\dlb_socket\0.1\dlb_socket\include\dlb_socket.h" />
+<ClInclude Include="..\..\..\..\dlb_socket\0.1\dlb_socket\include\win32\dlb_socket_os_impl.h" />
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_riff.h" />
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_wave.h" />
+<ClInclude Include="..\..\..\..\libui\alpha_4.1\libui\ui.h" />
+<ClInclude Include="..\..\..\..\libui\alpha_4.1\libui\ui_windows.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_asio.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_callback.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_jack.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_linux_alsa.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_mac_core.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_win_ds.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_win_wasapi.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_win_waveformat.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_win_wdmks.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\pa_win_wmme.h" />
+<ClInclude Include="..\..\..\..\portaudio\19.6\portaudio\include\portaudio.h" /></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup>
+<ProjectReference Include="..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2017.vcxproj">
+<Project>{888B31BA-E7A4-360D-978E-857D8E4C4BAC}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\make\dlb_xml\windows_amd64_msvs\dlb_xml_2017.vcxproj">
+<Project>{20895E86-0CC5-376D-A205-153F08960967}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\zlib\1.2.11\make\zlib\windows_amd64_msvs\zlib_2017.vcxproj">
+<Project>{76502233-DBC5-3511-A0CE-193C451A7809}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\dlb_wave_lib\windows_amd64_msvs\dlb_wave_lib_2017.vcxproj">
+<Project>{2A4DF4EE-7136-33B4-B637-60938D184F39}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\libui\alpha_4.1\libui\make\libui_alpha4_1\windows_amd64_msvs\libui_alpha4_1_2017.vcxproj">
+<Project>{A509D75D-F300-36CD-B469-C28977B142C3}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\libui\alpha_4.1\libui\make\libui_impl_alpha4_1\windows_amd64_msvs\libui_impl_alpha4_1_2017.vcxproj">
+<Project>{B491984A-EA36-3F3C-8E84-012B93677D7D}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\portaudio\19.6\portaudio\make\portaudio_19_6_lib\windows_amd64_msvs\portaudio_19_6_lib_2017.vcxproj">
+<Project>{9D9F12E2-511F-3975-8CFE-095479470D7D}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference></ItemGroup>
+<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+<ImportGroup Label="ExtensionTargets" /></Project>

@@ -1,0 +1,24 @@
+<Config>
+	<FirstSet>
+		<Param1>Hello</Param1>
+		<Param2>Some more text</Param2>
+	</FirstSet>
+	<!-- Comment -->
+	<SecondSet>
+		Second set text, before elements.
+		<Size Width="123" Height="456" />
+		Second set text, inbetween elements.
+		<Title Short="Lion Cage" Long='This is a "Cage" for "Lions"' />
+		<Value Version="78">Skyscraper</Value>
+		Second set text, after elements.
+	</SecondSet>
+	<!-- <Element/> within comment -->
+	<EmptyElement Param="XYZ" />
+	<!ENTITY IgnoredEntity "Zebra">
+	<!ENTITY entityname [PUBLIC "public-identifier"]
+		SYSTEM "system-identifier">
+	<EntityFail>&IgnoredEntity;</EntityFail>
+	<!-- uncomment for error case <ThirdTag></ThridTag> -->
+	<!-- uncomment for error case <FourthTag><Fourth -->
+</Config>
+

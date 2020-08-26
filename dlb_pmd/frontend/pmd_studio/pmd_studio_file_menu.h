@@ -49,6 +49,10 @@ typedef struct
     uiMenuItem *save_pmd;
     uiMenuItem *save_sadm;
     uiMenuItem *quit;
+    uiMenuItem *update;
+#ifndef NDEBUG
+    uiMenuItem *debug;
+#endif
 } pmd_studio_file_menu;
     
 
@@ -137,6 +141,56 @@ do_quit
     uiQuit();
 }
 
+static
+void
+do_update
+    (uiMenuItem *item
+    ,uiWindow *w
+    ,void *data
+    )
+{
+	int status;
+	pmd_studio *s = (pmd_studio*)data;
+	FILE *file;
+
+
+    (void)item;
+    (void)w;
+    
+    
+
+    pmd_studio_save_file(s, "pmd.xml", 0);
+    pmd_studio_save_file(s, "pmd.klv", 0);
+    pmd_studio_save_file(s, "sadm.xml", 1);
+    /* Check to see if update script exists before running it */
+    file = fopen("./update", "r");
+    if (file != NULL)
+    {
+        fclose(file);
+        status = system("./update");
+    }
+
+    (void)status;
+}
+
+#ifndef NDEBUG
+static
+void
+print_debug
+    (uiMenuItem *item
+    ,uiWindow *w
+    ,void *data
+    )
+{
+	pmd_studio *s = (pmd_studio*)data;
+
+    (void)item;
+    (void)w;
+	pmd_studio_outputs_print_debug(s);
+    pmd_studio_device_print_debug(s);
+}
+#endif
+
 
 static
 dlb_pmd_success
@@ -151,13 +205,20 @@ pmd_studio_file_menu_init
     fm->save_pmd   = uiMenuAppendItem(fm->menu, "Save PMD");
     fm->save_sadm  = uiMenuAppendItem(fm->menu, "Save sADM");
     uiMenuAppendSeparator(fm->menu);
+    fm->update     = uiMenuAppendItem(fm->menu, "Update");
     fm->quit       = uiMenuAppendItem(fm->menu, "Quit");
-
+#ifndef NDEBUG
+    fm->debug      = uiMenuAppendItem(fm->menu, "Debug");
+#endif
     uiMenuItemOnClicked(fm->new_model,  new_model,       s);
     uiMenuItemOnClicked(fm->open_model, open_model,      s);
     uiMenuItemOnClicked(fm->save_pmd,   save_model_pmd,  s);
     uiMenuItemOnClicked(fm->save_sadm,  save_model_sadm, s);
+    uiMenuItemOnClicked(fm->update,     do_update,  s);
     uiMenuItemOnClicked(fm->quit,       do_quit,    NULL);
+#ifndef NDEBUG
+    uiMenuItemOnClicked(fm->debug,       print_debug,    s);
+#endif
     return PMD_SUCCESS;
 }
 

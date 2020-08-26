@@ -36,7 +36,7 @@
 /* derived from the public-domain load_grammar_sax.cpp by Boris Kolpackov */
 
 #include <string>
-#include <memory>   // std::auto_ptr
+#include <memory>   // std::shared_ptr
 #include <cstddef>  // std::size_t
 #include <iostream>
 
@@ -144,15 +144,15 @@ private:
 
     XMLLifetime xml_lifetime;
     MemoryManager* mm;
-    auto_ptr<XMLGrammarPool> gp;
-    auto_ptr<SAX2XMLReader> parser;
+    shared_ptr<XMLGrammarPool> gp;
+    shared_ptr<SAX2XMLReader> parser;
     error_handler eh;
     bool valid;
 
 
-    auto_ptr<SAX2XMLReader> create_parser (XMLGrammarPool* pool)
+    shared_ptr<SAX2XMLReader> create_parser (XMLGrammarPool* pool)
     {
-        auto_ptr<SAX2XMLReader> p (
+        shared_ptr<SAX2XMLReader> p (
             pool ? XMLReaderFactory::createXMLReader (XMLPlatformUtils::fgMemoryManager,
                                                       pool)
                  : XMLReaderFactory::createXMLReader ());

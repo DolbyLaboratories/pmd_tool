@@ -63,6 +63,7 @@ void
 /**
  * @brief helper routine to write PMD SADM to a string
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if string written successfully, 1 otherwise */
 dlb_sadm_string_write
    (const dlb_sadm_model *model     /**< [in] PMD model struct to write */
@@ -78,6 +79,7 @@ dlb_sadm_string_write
  * Upon parse error, this function will return 1, and the error message
  * can be retrieved via dlb_sadm_error().
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if string read and parsed successfully, 1 otherwise */
 dlb_sadm_string_read
    (const char               *data          /**< [in] data to read */

@@ -38,21 +38,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <locale.h>
 #include "ui.h"
 #include "pmd_studio.h"
 #include "dlb_pmd_klv.h"
 #include "xml.h"
-#include "klv.h"
+#include "pmd_tool_klv.h"
 #include "pcm.h"
 
 #include "pmd_studio_file_menu.h"
 #include "pmd_studio_audio_beds.h"
 #include "pmd_studio_audio_objects.h"
 #include "pmd_studio_audio_presentations.h"
+#include "pmd_studio_audio_outputs.h"
+#include "pmd_studio_device.h"
 
-
-#define PMD_STUDIO_VERSION "0.2(alpha)"
-
+#define PMD_STUDIO_VERSION "0.3(madi-dev)"
 
 /*
  * @brief type of pmd_studio abstraction
@@ -61,145 +62,90 @@ struct pmd_studio
 {
     char title[DLB_PMD_MAX_NAME_LENGTH];
     model pmd;
-    uiWindow *window;
-    uiEntry *title_entry;
-    pmd_studio_file_menu file_menu;
-    pmd_studio_audio_beds audio_beds;
-    pmd_studio_audio_objects audio_objects;
-    pmd_studio_audio_presentations audio_presentations;
+    uiWindow 						*window;
+    uiEntry 						*title_entry;
+    pmd_studio_file_menu 			file_menu;
+    pmd_studio_audio_beds 			*audio_beds;
+    pmd_studio_audio_objects 		*audio_objects;
+    pmd_studio_audio_presentations 	*audio_presentations;
+    pmd_studio_outputs  			*outputs;
+    pmd_studio_device 				*device;
+};
 
-    int pmd_studio_audio_object_count;
-    int pmd_studio_audio_presentation_count;
-    int pmd_studio_audio_bed_count;
-
-    /* 
-     * separate counts which tell how many elements are present in
-     * xml that is being imported
-     */
-    int pmd_studio_audio_object_count_import;
-    int pmd_studio_audio_presentation_count_import;
-    //int pmd_studio_audio_bed_count_import;
-
-
+const unsigned int pmd_studio_speaker_config_num_channels[NUM_PMD_SPEAKER_CONFIGS] = 
+{
+    2,       /**< L, R                                               */
+    3,       /**< L, R, C                                            */
+    6,       /**< L, R, C, Lfe, Ls, Rs                               */
+    8,       /**< L, R, C, Lfe, Ls, Rs, Ltm, Rtm                     */
+    10,      /**< L, R, C, Lfe, Ls, Rs, Ltf, Rtf, Ltr, Rtr           */
+    12,      /**< L, R, C, Lfe, Ls, Rs, Lrs, Rrs, Ltf, Rtf, Ltr, Rtr */
+    16,      /**< L, R, C, Lfe, Ls, Rs, Lrs, Rrs, Lfw, Rfw,
+             *   Ltf, Rtf, Ltm, Rtm, Ltr, Rtr */
+    2,       /**< L, R, portable speakers   */
+    2,       /**< L, R, portable headphones */
 };
 
 
-/* access the presentation checkboxes for dynamic appearance to the studio on front end */
-static 
-uiCheckbox * 
-getCheckBox
-    (pmd_studio *s
-    ,int i
-    ,int j
-    )
+const char *pmd_studio_speaker_config_strings[NUM_PMD_SPEAKER_CONFIGS] = 
 {
-    return s->audio_presentations.presentations[i].checkBoxes[j];
-}
+    "2.0",
+    "3.0",
+    "5.1",
+    "5.1.2",
+    "5.1.4",
+    "7.1.4",
+    "9.1.6",
+    "Portable",
+    "Headphone"
+};
 
-/*
-counter for current objects initialized which can be accessed through the studio
-this is better than just an arbitrary global variable
-*/
-static 
-unsigned int 
-getCurrentObjectCount
-    (pmd_studio *s
-    )
+const char* pmd_studio_error_messages[PMD_STUDIO_NUM_ERROR_MESSAGES] =
 {
-    return s->pmd_studio_audio_object_count;
-}
+    "OK",
+    "Port Audio Error",
+    "Assertion",
+    "Memory",
+    "User Interface Error"
+};
 
-static void 
-setCurrentObjectCount
-    (pmd_studio *s
-    ,int current
-    )
-{
-    s->pmd_studio_audio_object_count = current;
-}
 
-/* getter and setter only initialized and used if importing an xml file */
-static 
-unsigned int 
-getImportObjectCount
-    (pmd_studio *s
-    )
-{
-    return s->pmd_studio_audio_object_count_import;
-}
+/* Program version string (use the function, not the global variable!) */
 
-static void 
-setImportObjectCount
-    (pmd_studio *s
-    ,int current
-    )
+#define VERSION_STRING_SIZE (128)
+static char version_string[VERSION_STRING_SIZE];
+
+static const char *get_version_string(const char *prefix)
 {
-    s->pmd_studio_audio_object_count_import = current;
+    unsigned int epoch;
+    unsigned int major;
+    unsigned int minor;
+    unsigned int build;
+    unsigned int bs_maj;
+    unsigned int bs_min;
+
+    dlb_pmd_library_version(&epoch, &major, &minor, &build, &bs_maj, &bs_min);
+
+    if (prefix == NULL)
+    {
+        prefix = "";
+    }
+
+    snprintf(version_string, VERSION_STRING_SIZE, "%sv%s PMD: %u.%u.%u.%u-%u.%u",
+        prefix, PMD_STUDIO_VERSION, epoch, major, minor, build, bs_maj, bs_min);
+
+    return version_string;
 }
 
 
-/* ability to update the object count when a new object is added via the add object button */
+/* Prototypes */
+
 static
 void
-increaseCurrentObjectCount
-    (pmd_studio *s
-    )
-{
-    int current;
-    current = s->pmd_studio_audio_object_count;
-    s->pmd_studio_audio_object_count = current+1;
-}
+print_usage
+    (void
+    );
 
-/* counter for current presentations, same idea as with objects */
-static
-unsigned int 
-getCurrentPresentationCount
-    (pmd_studio *s
-    )
-{
-    return s->pmd_studio_audio_presentation_count;
-}
-
-static 
-void 
-setCurrentPresentationCount
-    (pmd_studio *s
-    ,int current
-    )
-{
-    s->pmd_studio_audio_presentation_count = current;
-}
-
-static
-int 
-getImportPresentationCount
-    (pmd_studio *s
-    )
-{
-    return s->pmd_studio_audio_presentation_count_import;
-}
-
-static 
-void 
-setImportPresentationCount
-    (pmd_studio *s
-    ,int current
-    )
-{
-    s->pmd_studio_audio_presentation_count_import = current;
-}
-
-
-static 
-void 
-increaseCurrentPresentationCount
-    (pmd_studio *s
-    )
-{
-    int current;
-    current = s->pmd_studio_audio_presentation_count;
-    s->pmd_studio_audio_presentation_count = current+1;
-}
 
 
 
@@ -226,6 +172,9 @@ typedef enum
  * and the output b.klv, we want to translate metadata in XML format
  * into the serialized KLV format.
  */
+
+/* Private functions */
+
 static
 mode                          /** @return file's mode */
 read_file_mode
@@ -263,6 +212,7 @@ read_file_mode
 }
 
 
+#ifdef todo
 /**
  * @brief helper function to generate pcm+pmd output .wav file name
  */
@@ -300,6 +250,7 @@ generate_output_filename
         sprintf(outfile, "_%s.wav", sadm ? "sadm" : "klv");
     }
 }
+#endif
 
 
 static
@@ -342,25 +293,165 @@ onTitleChanged
     pmd_studio_update_model(s);
 }
 
-static inline
+static
+void
+print_usage
+    (void
+    )
+{
+    fprintf(stderr, "%s\n", get_version_string("pmd_studio [OPTION]... "));
+    fprintf(stderr, "Copyright Dolby Laboratories Inc., 2020. All rights reserved.\n\n");
+    fprintf(stderr, "-fb                  File-based mode (overrides streaming options)\n");
+    fprintf(stderr, "-di <index>          Device index to use for input\n");
+    fprintf(stderr, "-do <index>          Device index to use for output\n");
+    fprintf(stderr, "-dl                  List input and output devices\n");
+    fprintf(stderr, "-c <channels>        Number of input and output channels\n");
+    fprintf(stderr, "-f <filename>        Filename of file to load on launch\n");
+    fprintf(stderr, "-l <latency>         Input and output latency in seconds\n");
+    fprintf(stderr, "-buf <samples>       Buffer size in samples\n");
+    fprintf(stderr, "-am824               Select am824 framing for metadata output. For use with ALSA AES67 driver\n");
+    fprintf(stderr, "-h                   This message\n");
+    fprintf(stderr, "--help               This message\n");
+}
+
+static
 dlb_pmd_success
 pmd_studio_init
-    (pmd_studio *s
-    )
+    (pmd_studio *s,
+     int argc,
+     char **argv)
 {
     uiInitOptions options;
     const char *err;
-    uiBox *vbox, *hbox;
+    uiBox *toplevelbox, *titlebox, *rowbox, *column1box, *column2box;
+    int i;
+    int input_device = paNoDevice;
+    int output_device = paNoDevice;
+    unsigned int num_channels = MAX_CHANNELS;
+    float latency = 0.0;
+    unsigned int buffer_size = DEFAULT_FRAMES_PER_BUFFER;
+    dlb_pmd_bool file_based_mode = PMD_FALSE;
+    dlb_pmd_bool am824_mode = PMD_FALSE;
+    char *file_to_load = NULL;
+
+    /* initialize the system random number generator */
+    srand((unsigned int)time(NULL));
 
     /*
      * assign values to obj and pres count in their respective studio fields based on the initial values
      * found in limits
      */
-    s->pmd_studio_audio_bed_count = INIT_AUDIO_BEDS;
-    s->pmd_studio_audio_object_count = INIT_AUDIO_OBJECTS;
-    s->pmd_studio_audio_presentation_count = INIT_AUDIO_PRESENTATIONS;
-    s->pmd_studio_audio_presentation_count_import = -1;
-    s->pmd_studio_audio_object_count_import = -1;
+
+    for (i = 1; i < argc; i++)
+    {
+        if (!strcmp(argv[i], "-fb"))
+        {
+            file_based_mode = PMD_TRUE;
+        }
+        else if (!strcmp(argv[i], "-di"))
+        {
+            if (input_device != paNoDevice)
+            {
+                fprintf(stderr, "Error: Selected input device multiple times\n");
+                print_usage();
+                exit(-8);
+            }
+            if (i == (argc - 1))
+            {
+                fprintf(stderr, "Error: Can't find soundcard index\n");
+                print_usage();
+                exit(-1);
+            }
+            input_device = atoi(argv[i + 1]);
+            // We increment i here to step over the next parameter
+            // which has been parsed as the value
+            i++;
+        }
+        else if (!strcmp(argv[i], "-do"))
+        {
+            if (output_device != paNoDevice)
+            {
+                fprintf(stderr, "Error: Selected output device multiple times\n");
+                print_usage();
+                exit(-9);
+            }
+            if (i == (argc - 1))
+            {
+                fprintf(stderr, "Error: Can't find soundcard index\n");
+                print_usage();
+                exit(-1);
+            }
+            output_device = atoi(argv[i + 1]);
+            // We increment i here to step over the next parameter
+            // which has been parsed as the value
+            i++;
+        }
+        else if (!strcmp(argv[i], "-dl"))
+        {
+            Pa_Initialize();
+            pmd_studio_device_list();
+            Pa_Terminate();
+            exit(0);
+        }
+        else if (!strcmp(argv[i], "-l"))
+        {
+            latency = (float)atof(argv[i + 1]);
+        }
+        else if (!strcmp(argv[i], "-am824"))
+        {
+            am824_mode = PMD_TRUE;
+        }
+        else if (!strcmp(argv[i], "-buf"))
+        {
+            buffer_size = atoi(argv[i + 1]);
+            if (buffer_size > MAX_FRAMES_PER_BUFFER)
+            {
+                fprintf(stderr, "Error: Buffer size %u exceeds maximum allowed size of channels: %u\n", buffer_size, MAX_FRAMES_PER_BUFFER);
+                print_usage();
+                exit(-1);                
+            }            
+            if (buffer_size < MIN_FRAMES_PER_BUFFER)
+            {
+                fprintf(stderr, "Error: Buffer size %u exceeds maximum allowed size of channels: %u\n", buffer_size, MIN_FRAMES_PER_BUFFER);
+                print_usage();
+                exit(-1);                
+            }
+            i++;        
+        }
+        else if (!strcmp(argv[i], "-f"))
+        {
+            file_to_load = argv[i + 1];
+            if ((strlen(file_to_load) == 0) || strlen(file_to_load) > DLB_PMD_MAX_NAME_LENGTH)
+            {
+                fprintf(stderr, "Error: Invalid file name");
+                print_usage();
+                exit(-1);
+            }
+            i++;
+        }
+        else if (!strcmp(argv[i], "-c"))
+        {
+            num_channels = atoi(argv[i + 1]);
+            if (num_channels > MAX_CHANNELS)
+            {
+                fprintf(stderr, "Error: Number of specified channels %u exceeds maximum number of channels: %u\n", num_channels, MAX_CHANNELS);
+                print_usage();
+                exit(-1);                
+            }
+            i++;
+        }
+        else if (!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help"))
+        {
+            print_usage();
+            exit(0);
+        }
+        else
+        {
+            fprintf(stderr, "Error: Unknown option\n");
+            print_usage();
+            exit(-1);
+        }
+    }
 
     if (model_init(&s->pmd))
     {
@@ -381,33 +472,66 @@ pmd_studio_init
         return PMD_FAIL;
     }
 
-    s->window = uiNewWindow("Professional Metadata Studio v" PMD_STUDIO_VERSION, 640, 480, 1);
+    s->window = uiNewWindow(get_version_string("Professional Metadata Studio "), 640, 480, 1);
 
     uiWindowOnClosing(s->window, onClosing, s);
     uiOnShouldQuit(onShouldQuit, s);
 
-    vbox = uiNewVerticalBox();
-    uiWindowSetChild(s->window, uiControl(vbox));
+    toplevelbox = uiNewVerticalBox();
+    rowbox = uiNewHorizontalBox();
+    column1box = uiNewVerticalBox();
+    column2box = uiNewVerticalBox();
+    uiBoxSetPadded(toplevelbox, 1);
+    uiBoxSetPadded(rowbox, 1);
+    //uiBoxSetPadded(column1box, 1);
+    //uiBoxSetPadded(column2box, 1);
+    uiWindowSetChild(s->window, uiControl(toplevelbox));
     uiWindowSetMargined(s->window, 1);
 
-    hbox = uiNewHorizontalBox();
-    uiBoxAppend(hbox, uiControl(uiNewLabel("Title ")), 0);
+    titlebox = uiNewHorizontalBox();
+    uiBoxAppend(titlebox, uiControl(uiNewLabel("Title ")), 0);
     s->title_entry = uiNewEntry();
 
     snprintf(s->title, sizeof(s->title), "<untitled>");
     uiEntrySetText(s->title_entry, s->title);
     uiEntryOnChanged(s->title_entry, onTitleChanged, s);
-    uiBoxAppend(hbox, uiControl(s->title_entry), 1);
-    uiBoxAppend(vbox, uiControl(hbox), 0);    
+    uiBoxAppend(toplevelbox, uiControl(titlebox), 0);
+    uiBoxAppend(toplevelbox, uiControl(rowbox), 0);
+    uiBoxAppend(rowbox, uiControl(column1box), 0);
+    uiBoxAppend(rowbox, uiControl(uiNewVerticalSeparator()), 0);
+    uiBoxAppend(rowbox, uiControl(column2box), 0);   
+    uiBoxAppend(titlebox, uiControl(s->title_entry), 1);
 
-    return pmd_studio_audio_beds_init(&s->audio_beds, s->window, vbox, s)
-        || pmd_studio_audio_objects_init(&s->audio_objects, s->window, vbox, s)
-        || pmd_studio_audio_presentations_init(&s->audio_presentations, s->window, vbox, s)
-        ;
+    if (pmd_studio_audio_beds_init(&s->audio_beds, s->window, column1box, s)
+        || pmd_studio_audio_objects_init(&s->audio_objects, s->window, column2box, s)
+        || pmd_studio_audio_presentations_init(&s->audio_presentations, s->window, column1box, s))
+    {
+        return(PMD_FAIL);
+    }
+    else
+    {
+        /* Try to bring up the audio subsystem, if this fails then revert to file only */
+        if (!file_based_mode && !pmd_studio_device_init(&s->device, input_device, output_device, num_channels, latency, buffer_size, am824_mode))
+        {
+            pmd_studio_outputs_init(&s->outputs, s->window, column2box, s);
+        }
+        else
+        {
+            // Explicitly signal that outputs are disabled
+            s->outputs = NULL;
+            s->device = NULL;
+        }
+
+        if (file_to_load != NULL)
+        {
+            pmd_studio_open_file(s, file_to_load);
+        }
+        return(PMD_SUCCESS);
+    }
 }
 
 
-static inline
+static
 void
 pmd_studio_run
     (pmd_studio *s
@@ -418,21 +542,24 @@ pmd_studio_run
 }
 
 
-static inline
+static
 void
 pmd_studio_finish
     (pmd_studio *s
     )
 {
-    /* todo */
-    (void)s;
+    pmd_studio_audio_beds_finish(s->audio_beds);
+    pmd_studio_audio_objects_finish(s->audio_objects);
+    pmd_studio_audio_presentations_finish(s->audio_presentations);
+    pmd_studio_outputs_finish(s->outputs);
+    pmd_studio_device_close(s->device);
 }
 
 
 /*
  * refresh_ui is called upon making a new studio (via the UI menu) or importing an xml.
 */
-static inline
+static
 void
 refresh_ui
     (pmd_studio *s
@@ -446,11 +573,38 @@ refresh_ui
         snprintf(s->title, sizeof(s->title), "%s", title);
     }
 
-    pmd_studio_audio_beds_refresh_ui(&s->audio_beds);
-    pmd_studio_audio_objects_refresh_ui(&s->audio_objects);
-    pmd_studio_audio_presentations_refresh_ui(&s->audio_presentations);
+    pmd_studio_audio_beds_refresh_ui(s->audio_beds);
+    pmd_studio_audio_objects_refresh_ui(s->audio_objects);
+    pmd_studio_audio_presentations_refresh_ui(s->audio_presentations);
+    pmd_studio_outputs_refresh_ui(s->outputs);
 }
 
+/* Public functions */
+
+pmd_studio_audio_presentations *pmd_studio_get_presentations(pmd_studio *studio)
+{
+    return(studio->audio_presentations);
+}
+
+pmd_studio_audio_beds *pmd_studio_get_beds(pmd_studio *studio)
+{
+    return(studio->audio_beds);
+}
+
+pmd_studio_audio_objects *pmd_studio_get_objects(pmd_studio *studio)
+{
+    return(studio->audio_objects);
+}
+
+pmd_studio_outputs *pmd_studio_get_outputs(pmd_studio *studio)
+{
+    return(studio->outputs);
+}
+
+pmd_studio_device *pmd_studio_get_device(pmd_studio *studio)
+{
+    return(studio->device);
+}
 
 void
 pmd_studio_reset
@@ -461,9 +615,9 @@ pmd_studio_reset
     snprintf(s->title, sizeof(s->title), "<untitled>");
     uiEntrySetText(s->title_entry, s->title);
     
-    pmd_studio_audio_beds_reset(&s->audio_beds);
-    pmd_studio_audio_objects_reset(&s->audio_objects);
-    pmd_studio_audio_presentations_reset(&s->audio_presentations);
+    pmd_studio_audio_beds_reset(s->audio_beds);
+    pmd_studio_audio_objects_reset(s->audio_objects);
+    pmd_studio_audio_presentations_reset(s->audio_presentations);
     refresh_ui(s);
 }
 
@@ -473,10 +627,24 @@ pmd_studio_import
     (pmd_studio *s
     )
 {   
-    int presentation_count_import, object_count_import;
     dlb_pmd_model *m = s->pmd.model;
     const char *title;
+    
+    pmd_studio_audio_beds_reset(s->audio_beds);
+    pmd_studio_audio_objects_reset(s->audio_objects);
+    pmd_studio_audio_presentations_reset(s->audio_presentations);
 
+    if (   pmd_studio_audio_beds_import(s->audio_beds, m)
+        || pmd_studio_audio_objects_import(s->audio_objects, m)
+        || pmd_studio_audio_presentations_import(s->audio_presentations, m))
+    {
+        uiMsgBoxError(s->window, "error importing model", dlb_pmd_error(m));
+        dlb_pmd_reset(m);
+    }
+    refresh_ui(s);
+    /* The code below was moved from the top of the function because its position there was ineffective on linux */
+    /* It is unkown why exactly but it is thought to be to do with timing and the closing of the */
+    /* file opening dialogue box */
     if (dlb_pmd_title(m, &title))
     {
         uiEntrySetText(s->title_entry, "<unknown>");
@@ -486,86 +654,103 @@ pmd_studio_import
         snprintf(s->title, sizeof(s->title), "%s", title);
         uiEntrySetText(s->title_entry, s->title);
     }
-    
-    pmd_studio_audio_beds_reset(&s->audio_beds);
-    pmd_studio_audio_objects_reset(&s->audio_objects);
-    pmd_studio_audio_presentations_reset(&s->audio_presentations);
-
-    if (   pmd_studio_audio_beds_import(&s->audio_beds, m)
-        || pmd_studio_audio_objects_import(&s->audio_objects, m)
-        || pmd_studio_audio_presentations_import(&s->audio_presentations, m))
-    {
-        uiMsgBoxError(s->window, "error importing model", dlb_pmd_error(m));
-        dlb_pmd_reset(m);
-    }
-    presentation_count_import = dlb_pmd_num_presentations(m);
-    object_count_import =dlb_pmd_num_objects(m);
-    setImportObjectCount(s, object_count_import);
-    setImportPresentationCount(s, presentation_count_import);
-    refresh_ui(s);
 }
 
+
+void
+generate_random_bytes
+    (unsigned char  *bytes
+    ,size_t          count
+    )
+{
+    size_t i;
+
+    for (i = 0; i < count; i++)
+    {
+        int r_int = rand() % 256;
+        bytes[i] = (unsigned char)(r_int & 0xff);
+    }
+}
+
+
+typedef unsigned char numeric_uuid[16];
+typedef char string_uuid[37];
+
+void
+generate_random_uuid
+    (string_uuid    random_uuid
+    )
+{
+    numeric_uuid uuid;
+    char *p = random_uuid;
+    size_t i, j, u;
+
+    generate_random_bytes(uuid, sizeof(uuid));
+    uuid[6] = (uuid[6] & 0x0f) | 0x40;
+    uuid[8] = (uuid[8] & 0x3f) | 0x80;
+
+    for (u = 0, i = 0; i < 4; i++)
+    {
+        sprintf(p, "%02hhx", uuid[u++]);
+        p += 2;
+    }
+    sprintf(p++, "-");
+
+    for (j = 0; j < 3; j++)
+    {
+        for (i = 0; i < 2; i++)
+        {
+            sprintf(p, "%02hhx", uuid[u++]);
+            p += 2;
+        }
+        sprintf(p++, "-");
+    }
+
+    for (i = 0; i < 6; i++)
+    {
+        sprintf(p, "%02hhx", uuid[u++]);
+        p += 2;
+    }
+}
 
 void
 pmd_studio_update_model
     (pmd_studio *s
     )
 {
-    pmd_studio_audio_bed *abed;
-    pmd_studio_audio_object *aobj;
-    pmd_studio_audio_presentation *apres;
+    string_uuid random_uuid;
     dlb_pmd_model *m = s->pmd.model;
-    int i;
+
+    memset(&random_uuid, 0, sizeof(random_uuid));
+    generate_random_uuid(random_uuid);
    
     if (   dlb_pmd_reset(m)
-        || dlb_pmd_add_signals(s->pmd.model, MAX_AUDIO_SIGNALS)
+        || dlb_pmd_add_signals(m, MAX_AUDIO_SIGNALS)
         || dlb_pmd_set_title(m, s->title)
-        || dlb_pmd_iat_add(s->pmd.model, (uint64_t)0u))
+        || dlb_pmd_iat_add(m, (uint64_t)0u)
+        || dlb_pmd_iat_content_id_uuid(m, random_uuid))
     {
         uiMsgBoxError(s->window, "error updating model", dlb_pmd_error(m));
         return;
     }
-        
-    abed = s->audio_beds.beds;
-    for (i = 0; i != MAX_AUDIO_BEDS; ++i, ++abed)
-    {
-        if (abed->enabled)
-        {
-            if (dlb_pmd_set_bed(m, &abed->bed))
-            {
-                uiMsgBoxError(s->window, "error setting bed", dlb_pmd_error(m));
-            }
-        }
-    }
 
-    aobj = s->audio_objects.objects;
-    /*
-    CHANGED from MAX_AUDIO_OBJECTS to obtain count from studio field
-    */
-    for (i = 0; i != s->pmd_studio_audio_object_count; ++i, ++aobj)
+    pmd_studio_audio_beds_update_model(s->audio_beds, m);
+    pmd_studio_audio_objects_update_model(s->audio_objects, m);
+    pmd_studio_audio_presentations_update_model(s->audio_presentations, m);
+
+    // If we have an audio subsystem up and running then update the mix matrix
+    if (s->outputs)
     {
-        if (aobj->enabled)
-        {
-            if (dlb_pmd_set_object(m, &aobj->object))
-            {
-                uiMsgBoxError(s->window, "error setting object", dlb_pmd_error(m));
-            }
-        }
+        pmd_studio_device_update_mix_matrix(s);
     }
-    /* 
-    Same as above but for presentations
-    */
-    apres = s->audio_presentations.presentations;
-    for (i = 0; i != s->pmd_studio_audio_presentation_count ; ++i, ++apres)
-    {
-        if (apres->enabled)
-        {
-            if (dlb_pmd_set_presentation(m, &apres->presentation))
-            {
-                uiMsgBoxError(s->window, "error setting presentation", dlb_pmd_error(m));
-            }
-        }
-    }
+}
+
+dlb_pmd_model
+*pmd_studio_get_model
+    (pmd_studio *studio
+    )
+{
+    return(studio->pmd.model);
 }
 
 
@@ -660,14 +845,31 @@ pmd_studio_save_file
     }
 }
 
+/* Application Main */
+
+static const char *LOCALE_SPECIFIER = "en-US";
 
 int
 main
-    (void
-    )
+    (int argc,
+     char **argv)
 {
+    char *locale = setlocale(LC_ALL, LOCALE_SPECIFIER); /* Prevent use of ',' for numeric decimal points */;
+    const struct lconv *lc = localeconv();
     pmd_studio s;
-    if (!pmd_studio_init(&s))
+
+    if (locale && strcmp(locale, LOCALE_SPECIFIER))
+    {
+        printf("WARNING: attempt to set locale to %s failed!\n", locale);
+    }
+
+    if (lc && lc->decimal_point[0] != '.')
+    {
+        printf("ERROR: decimal point character is set to '%c' instead of '.'!\n", lc->decimal_point[0]);
+        return 1;
+    }
+
+    if (!pmd_studio_init(&s, argc, argv))
     {
         pmd_studio_run(&s);
     }

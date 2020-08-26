@@ -114,7 +114,36 @@ idref_table_lookup
     (idref_table *irt         /**< [in] id reference table */
     ,const unsigned char *id  /**< [in] name of reference */
     ,dlb_sadm_idref_type ty   /**< [in] type of reference */
-    ,void **ptr               /**< [in] the entity being referred to */
+    ,dlb_sadm_idref *idrefp   /**< [out] idref -- may be NULL */
+    ,void **ptr               /**< [out] the entity being referred to */
+    );
+
+
+/**
+ * @brief check to see if an idref points to nothing
+ */
+dlb_pmd_bool                  /** @return PMD_TRUE if the reference is null, PMD_FALSE otherwise */
+idref_is_null
+    (const dlb_sadm_idref i   /**< [in] idref to check */
+    );
+
+
+/**
+ * @brief check to see if an idref is for a common definition
+ */
+dlb_pmd_bool                  /** @return PMD_TRUE if the reference is non-null and refers to a common definition */
+idref_is_common_def
+    (const dlb_sadm_idref i   /**< [in] idref to check */
+    );
+
+
+/**
+ * @brief set whether an idref is for a common definition
+ */
+dlb_pmd_success               /** @return PMD_SUCCESS if ok, PMD_FAIL otherwise */
+idref_set_is_common_def
+    (dlb_sadm_idref i         /**< [in/out] idref to modify */
+    ,dlb_pmd_bool is_common   /**< [in] value to set */
     );
 
 
@@ -145,6 +174,17 @@ idref_name
 dlb_pmd_success               /** @return PMD_SUCCESS if fully defined, PMD_FAIL otherwise */
 idref_defined
     (dlb_sadm_idref i         /**< [in] idref to check */
+    );
+
+
+/**
+ * @brief are the two idrefs referring to the same entity?  Note: checks the ids, not the
+ *        entity pointer values!
+ */
+dlb_pmd_bool                  /** @return PMD_TRUE if equal, PMD_FALSE otherwise */
+idref_equal
+    (dlb_sadm_idref i1        /**< [in] first idref */
+    ,dlb_sadm_idref i2        /**< [in] second idref */
     );
 
 

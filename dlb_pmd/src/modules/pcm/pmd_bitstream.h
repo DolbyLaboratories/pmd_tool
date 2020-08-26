@@ -43,39 +43,20 @@
  */
 
 #include "dlb_pmd_klv.h"
+#include "pmd_smpte_337m.h"
 
 /**
- * @brief inline helper function to encapsulate the process of generating an pmd
- * bitstream
+ * @brief helper function to encapsulate the process of generating a PMD bitstream
  */
-static inline
 int                                /** @return bytes used */
 generate_pmd_bitstream
     (pmd_s337m *s337m
     ,const dlb_pmd_model *model
     ,unsigned int block
-    ,unsigned int maxblock
+    ,unsigned int block_count
     ,dlb_klvpmd_universal_label ul
     ,uint8_t *klvbuf
-    )
-{
-    int max_bytes = s337m->pair ? MAX_PMD_DATA_BYTES_PAIR : MAX_PMD_DATA_BYTES_CHAN;
-    int byte_size;
-
-    s337m->framelen = DLB_PCMPMD_BLOCK_SIZE;
-    if (0 == block || maxblock-1 == block)
-    {
-        max_bytes = s337m->pair ? MAX_PMD_DATA_BYTES_PAIR_BLOCK0 : MAX_PMD_DATA_BYTES_CHAN_BLOCK0;
-        s337m->framelen = DLB_PCMPMD_BLOCK_SIZE - GUARDBAND;
-    }
-    
-    byte_size = dlb_klvpmd_write_block((dlb_pmd_model*)model, DLB_PMD_NO_ED2_STREAM_INDEX,
-                                       block, klvbuf, max_bytes, ul);
-    assert(byte_size <= max_bytes);
-    return (byte_size == (int)dlb_klvpmd_min_block_size())
-        ? 0
-        : byte_size;
-}
+    );
 
 
 #endif /* S337M_PMD_BITSTREAM_ */

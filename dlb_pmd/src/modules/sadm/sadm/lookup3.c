@@ -68,6 +68,10 @@ on 1 byte), but shoehorning those bytes into integers efficiently is messy.
 #define hashmask(n) (hashsize(n)-1)
 #define rot(x,k) (((x)<<(k)) | ((x)>>(32-(k))))
 
+#ifdef _MSC_VER
+#pragma warning (disable : 4127)    // warning C4127: conditional expression is constant
+#endif
+
 /*
 -------------------------------------------------------------------------------
 mix -- mix 3 32-bit values reversibly.

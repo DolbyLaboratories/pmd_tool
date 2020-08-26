@@ -149,10 +149,19 @@ dlb_pcmpmd_augmentor_query_mem2
     )
 {
     size_t sz = sizeof(struct dlb_pcmpmd_augmentor);
+
     if (sadm)
     {
-        sz += sadm_bitstream_encoder_query_mem(limits);
+        if (limits == NULL)
+        {
+            sz = 0;
+        }
+        else
+        {
+            sz += sadm_bitstream_encoder_query_mem(limits);
+        }
     }
+
     return sz;
 }
 
@@ -213,7 +222,7 @@ dlb_pcmpmd_augmentor_init2
         dlb_pmd_get_constraints(model, &limits);
         sadm_bitstream_encoder_init(&limits, (void*)(aug+1), &aug->senc);
     }
-    pmd_s337m_init(&aug->s337m, stride, pcm_next_block, aug, ispair, start, mark_empty_blocks, sadm);
+    pmd_s337m_init(&aug->s337m, (sadm ? 24 : 20), stride, pcm_next_block, aug, ispair, start, mark_empty_blocks, sadm);
 }
 
 
@@ -223,6 +232,41 @@ dlb_pcmpmd_augmentor_finish
     )
 {
     (void)aug;
+}
+
+
+size_t
+dlb_pcmpmd_augmentor_try_frame_query_mem
+    (dlb_pcmpmd_augmentor *aug
+    )
+{
+    size_t sz = 0;
+
+    if (aug != NULL)
+    {
+        sz = dlb_pcmpmd_augmentor_model_try_frame_query_mem(aug->model, aug->sadm);
+    }
+
+    return sz;
+}
+
+
+size_t
+dlb_pcmpmd_augmentor_model_try_frame_query_mem
+    (dlb_pmd_model        *model
+    ,dlb_pmd_bool          sadm
+    )
+{
+    size_t sz = 0;
+
+    if (model != NULL)
+    {
+        dlb_pmd_model_constraints limits;
+        dlb_pmd_get_constraints(model, &limits);
+        sz = dlb_pcmpmd_augmentor_query_mem2(sadm, &limits);
+    }
+
+    return sz;
 }
 
 
@@ -268,6 +312,7 @@ try_frame_test_xyz
 dlb_pcmpmd_write_status
 dlb_pcmpmd_augmentor_model_try_frame
     (dlb_pmd_model        *model
+    ,void                 *mem
     ,uint32_t             *buf
     ,unsigned int          num_channels
     ,unsigned int          num_samples
@@ -279,11 +324,11 @@ dlb_pcmpmd_augmentor_model_try_frame
     dlb_pcmpmd_write_status s;
     pmd_model_write_state write_state;
     unsigned int n_pmd, min_frame;
-    dlb_pcmpmd_augmentor faux;
+    dlb_pcmpmd_augmentor *faux = (dlb_pcmpmd_augmentor *)mem;
     try_frame_cbarg cbarg;
 
     /* Check argument values */
-    if (model == NULL || buf == NULL || rate > DLB_PMD_FRAMERATE_LAST)
+    if (model == NULL || buf == NULL || mem == NULL || rate > DLB_PMD_FRAMERATE_LAST)
     {
         return DLB_PCMPMD_WRITE_STATUS_ERROR;
     }
@@ -300,51 +345,67 @@ dlb_pcmpmd_augmentor_model_try_frame
     memset(&model->write_state, 0, sizeof(model->write_state));
     pmd_apn_list_iterator_init(&model->write_state.apni, &model->apn_list);
 
-    /* Set up a faux copy of the augmentor, initialized to beginning of a frame */
-    memset(&faux, 0, sizeof(faux));
-    faux.model = model;
-    faux.rate = rate;
-    faux.ul = DLB_PMD_KLV_UL_ST2109;
-    faux.block = ~0u;
-    faux.sadm = sadm;
-    faux.numchannels = num_channels;
-    faux.maxblock = sadm ? 1 : (min_frame / DLB_PCMPMD_BLOCK_SIZE);
-    faux.klvchan = 0;
-    pmd_s337m_init(&faux.s337m, num_channels, pcm_next_block, &faux, pair, 0, PMD_FALSE, PMD_FALSE);
-
-    /* Set up callback data */
-    cbarg.model = model;
-    memset(&cbarg.final_state, 0, sizeof(cbarg.final_state));
-
-    /* Augment a full frame */
-    dlb_pcmpmd_augment2(&faux, buf, min_frame, 0, try_frame_callback, &cbarg);
-
-    /* How much did we write? */
-    s = DLB_PCMPMD_WRITE_STATUS_RED;
-    if ((!model->esd_present || (model->esd_present && cbarg.final_state.esd_written)) &&
-        (cbarg.final_state.abd_written == model->num_abd) &&
-        (cbarg.final_state.aod_written == model->num_elements - cbarg.final_state.abd_written) && /* TODO: other kinds of elements? */
-        (cbarg.final_state.apd_written == model->num_apd) &&
-        (cbarg.final_state.hed_written == model->num_hed) &&
-        (model->iat == NULL || !(model->iat->options & PMD_IAT_PRESENT) || (cbarg.final_state.iat_written)) &&
-        (try_frame_test_xyz(model->num_xyz, &cbarg.final_state.xyz_written)) &&
-        (cbarg.final_state.eep_written == model->num_eep) &&
-        (cbarg.final_state.etd_written == model->num_etd) &&
-        (cbarg.final_state.pld_written == model->num_pld)
-        )
+    /* Set up a faux augmentor, initialized to beginning of a frame */
+    memset(faux, 0, sizeof(*faux));
+    faux->model = model;
+    faux->rate = rate;
+    faux->ul = DLB_PMD_KLV_UL_ST2109;
+    faux->block = ~0u;
+    faux->sadm = sadm;
+    faux->numchannels = num_channels;
+    faux->maxblock = sadm ? 1 : (min_frame / DLB_PCMPMD_BLOCK_SIZE);
+    faux->klvchan = 0;
+    if (sadm)
     {
-        s = DLB_PCMPMD_WRITE_STATUS_YELLOW;
-        if ((cbarg.final_state.apn_written == model->apn_list.num) &&
-            (cbarg.final_state.aen_written == model->num_elements) &&
-            (!model->esd || (cbarg.final_state.esn_written == model->esd->count))
-            )
+        dlb_pmd_model_constraints limits;
+        dlb_pmd_get_constraints(model, &limits);
+        sadm_bitstream_encoder_init(&limits, (void *)(faux + 1), &faux->senc);
+    }
+    pmd_s337m_init(&faux->s337m, (sadm ? 24 : 20), num_channels, pcm_next_block, faux, pair, 0, PMD_FALSE, sadm);
+
+    s = DLB_PCMPMD_WRITE_STATUS_RED;
+    if (sadm)
+    {
+        if (faux->s337m.databits > 0)   /* If the encoded model is too big, the sADM encoder sets databits to 0 */
         {
             s = DLB_PCMPMD_WRITE_STATUS_GREEN;
         }
-    }
+    } 
+    else
+    {
+        /* Set up callback data */
+        cbarg.model = model;
+        memset(&cbarg.final_state, 0, sizeof(cbarg.final_state));
 
-    /* Restore the model's write state */
-    memcpy(&model->write_state, &write_state, sizeof(model->write_state));
+        /* Augment a full frame */
+        dlb_pcmpmd_augment2(faux, buf, min_frame, 0, try_frame_callback, &cbarg);
+
+        /* How much did we write? */
+        if ((!model->esd_present || (model->esd_present && cbarg.final_state.esd_written)) &&
+            (cbarg.final_state.abd_written == model->num_abd) &&
+            (cbarg.final_state.aod_written == model->num_elements - cbarg.final_state.abd_written) && /* TODO: other kinds of elements? */
+            (cbarg.final_state.apd_written == model->num_apd) &&
+            (cbarg.final_state.hed_written == model->num_hed) &&
+            (model->iat == NULL || !(model->iat->options & PMD_IAT_PRESENT) || (cbarg.final_state.iat_written)) &&
+            (try_frame_test_xyz(model->num_xyz, &cbarg.final_state.xyz_written)) &&
+            (cbarg.final_state.eep_written == model->num_eep) &&
+            (cbarg.final_state.etd_written == model->num_etd) &&
+            (cbarg.final_state.pld_written == model->num_pld)
+            )
+        {
+            s = DLB_PCMPMD_WRITE_STATUS_YELLOW;
+            if ((cbarg.final_state.apn_written == model->apn_list.num) &&
+                (cbarg.final_state.aen_written == model->num_elements) &&
+                (!model->esd || (cbarg.final_state.esn_written == model->esd->count))
+                )
+            {
+                s = DLB_PCMPMD_WRITE_STATUS_GREEN;
+            }
+        }
+
+        /* Restore the model's write state */
+        memcpy(&model->write_state, &write_state, sizeof(model->write_state));
+    }
 
     return s;
 }
@@ -353,17 +414,18 @@ dlb_pcmpmd_augmentor_model_try_frame
 dlb_pcmpmd_write_status
 dlb_pcmpmd_augmentor_try_frame
     (dlb_pcmpmd_augmentor *aug
+    ,void                 *mem
     ,uint32_t             *buf
     ,unsigned int          num_channels
     ,unsigned int          num_samples
     )
 {
-    if (aug == NULL || buf == NULL || num_channels == 0 || num_samples == 0)
+    if (aug == NULL || buf == NULL || mem == NULL || num_channels == 0 || num_samples == 0)
     {
         return DLB_PCMPMD_WRITE_STATUS_ERROR;
     }
 
-    return dlb_pcmpmd_augmentor_model_try_frame(aug->model, buf, num_channels, num_samples, aug->rate, aug->s337m.pair, aug->sadm);
+    return dlb_pcmpmd_augmentor_model_try_frame(aug->model, mem, buf, num_channels, num_samples, aug->rate, aug->s337m.pair, aug->sadm);
 }
 
 

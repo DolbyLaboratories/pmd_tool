@@ -96,13 +96,17 @@
 <ClCompile Include="..\..\..\src\api\dlb_pmd_equal.c" />
 <ClCompile Include="..\..\..\src\api\dlb_pmd_metadata_set.c" />
 <ClCompile Include="..\..\..\src\model\pmd_language.c" />
+<ClCompile Include="..\..\..\src\modules\capture\pmd_capture.c" />
 <ClCompile Include="..\..\..\src\modules\generate\pmd_random_generator.c" />
 <ClCompile Include="..\..\..\src\modules\klv\pmd_crc32.c" />
 <ClCompile Include="..\..\..\src\modules\klv\pmd_klv_reader.c" />
 <ClCompile Include="..\..\..\src\modules\klv\pmd_klv_writer.c" />
+<ClCompile Include="..\..\..\src\modules\pcm\pmd_bitstream.c" />
 <ClCompile Include="..\..\..\src\modules\pcm\pmd_pcm_augmentor.c" />
 <ClCompile Include="..\..\..\src\modules\pcm\pmd_pcm_extractor.c" />
 <ClCompile Include="..\..\..\src\modules\pcm\pmd_smpte_337m.c" />
+<ClCompile Include="..\..\..\src\modules\pcm\sadm_bitstream_decoder.c" />
+<ClCompile Include="..\..\..\src\modules\pcm\sadm_bitstream_encoder.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\idmap.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_generator.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_ingester.c" />
@@ -112,6 +116,7 @@
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_file.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_string.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_writer.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_common_definitions.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_model.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_read_file.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_read_string.c" />
@@ -129,8 +134,10 @@
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_writer.c" /></ItemGroup>
 <ItemGroup>
 <ClInclude Include="..\..\..\include\dlb_pmd_api.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_capture.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_generate.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_klv.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_lib_dll.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h" />
@@ -140,6 +147,7 @@
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h" />
 <ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h" />
 <ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h" />
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model_type.h" />
 <ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h" />
 <ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h" />
 <ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h" />
@@ -197,6 +205,7 @@
 <ClInclude Include="..\..\..\src\modules\sadm\idmap.h" />
 <ClInclude Include="..\..\..\src\modules\sadm\pmd_sadm_generator.h" />
 <ClInclude Include="..\..\..\src\modules\sadm\pmd_sadm_ingester.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_common_definitions.h" />
 <ClInclude Include="..\..\..\src\modules\sadm\sadm\idrefs.h" />
 <ClInclude Include="..\..\..\src\modules\sadm\sadm\lookup3.h" />
 <ClInclude Include="..\..\..\src\modules\sadm\sadm\memstuff.h" />

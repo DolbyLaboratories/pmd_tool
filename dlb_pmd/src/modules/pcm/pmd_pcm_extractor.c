@@ -61,7 +61,7 @@
 #  include <inttypes.h>
 #endif
 
-//#define TRACE_BLOCKS
+/*#define TRACE_BLOCKS*/
 #ifdef TRACE_BLOCKS
 #  define TRACE(x) printf x
 #else
@@ -95,6 +95,8 @@ struct dlb_pcmpmd_extractor
     size_t               frame_start;               /**< sample count of start of current frame, or NO_PA_FOUND */
 
     dlb_pcmpmd_new_frame         callback;
+    dlb_pcmpmd_new_sadm          sadm_callback;
+    char                        *sadm_xml_buf;
     void                        *cbarg;
     dlb_pmd_bool                 sadm;
     sadm_bitstream_decoder      *sdec;
@@ -111,6 +113,7 @@ struct dlb_pcmpmd_extractor
  * block size (160 samples), then the second PA must be the PA
  * position of the first PMD block of a new frame.
  */
+static
 void
 found_pa
     (void   *cb_arg
@@ -149,6 +152,26 @@ found_pa
 }
 
 
+static
+void
+sadm_dec_callback
+    (void *user_data
+    ,sadm_dec_state state
+    )
+{
+    dlb_pcmpmd_extractor *ext = (dlb_pcmpmd_extractor*)user_data;
+
+    if (ext->sadm_callback)
+    {
+        if (state != SADM_DECOMPRESS_ERR)
+        {
+            memcpy(ext->sadm_xml_buf, ext->sdec->xmlbuf, ext->sdec->size);
+        }
+        ext->sadm_callback(ext->cbarg, ext->sadm_xml_buf, ext->sdec->size, (dlb_pcmsadm_status)state);
+    }
+}
+
+
 /**
  * @brief callback for SMPTE 337m wrapper to get next block
  */
@@ -173,7 +196,15 @@ pcm_next_block
         /* neither init time nor callback with 0 data */
         if (s337m->sadm)
         {
-            ok = !sadm_bitstream_decoder_decode(ext->sdec, ext->klv_buf, datasize, ext->model);
+            if (ext->sdec != NULL)
+            {
+                ok = !sadm_bitstream_decoder_decode(ext->sdec, ext->klv_buf, datasize, ext->model, sadm_dec_callback, s337m->nextarg);
+            } 
+            else
+            {
+                TRACE(("Serial ADM detected but there is no sADM decoder!\n"));
+                ok = PMD_FALSE;
+            }
             s337m->framelen = pmd_s337m_min_frame_size(ext->rate);
         }
         else 
@@ -272,7 +303,7 @@ dlb_pcmpmd_extractor_init2
         sadm_bitstream_decoder_init(&limits, (void*)(ext+1), &ext->sdec);
     }
 
-    pmd_s337m_init(&ext->s337m, stride, pcm_next_block, ext, ext->klv_pair, ext->klv_chan, 0, 0);
+    pmd_s337m_init(&ext->s337m, (sadm ? 24 : 20), stride, pcm_next_block, ext, ext->klv_pair, ext->klv_chan, 0, sadm);
     ext->s337m.pa_found_cb = found_pa;
     ext->s337m.pa_found_cb_arg = ext;
 }
@@ -312,7 +343,8 @@ extract_block
     
     if (ext->no_vsync)
     {
-        /* TODO: This is communicating PA position with respect to the block of samples, is that what we want? */
+        /* This is communicating Pa position with respect to the start of the block of samples,
+           which is not quite the same as frame start */
         *video_sync = ext->s337m.pa_found;
     }
     else
@@ -337,6 +369,10 @@ dlb_pcmpmd_extract
 
     error_reset(ext->model);
 
+    ext->callback = NULL;
+    ext->sadm_callback = NULL;
+    ext->sadm_xml_buf = NULL;
+    ext->cbarg = NULL;
     ext->no_vsync = 0;
     pcm += ext->klv_chan;
     if (ext->waiting)
@@ -372,11 +408,13 @@ dlb_pcmpmd_extract
 
 
 dlb_pmd_success
-dlb_pcmpmd_extract2
+dlb_pcmpmd_extract3
     (dlb_pcmpmd_extractor *ext
     ,uint32_t             *pcm
     ,size_t                num_samples
     ,dlb_pcmpmd_new_frame  callback
+    ,dlb_pcmpmd_new_sadm   sadm_callback
+    ,char                 *sadm_xml_buf
     ,void                 *cbarg
     ,size_t               *video_sync
     )
@@ -387,6 +425,17 @@ dlb_pcmpmd_extract2
 
     ext->callback = callback;
     ext->cbarg = cbarg;
+
+    if (ext->sadm)
+    {
+        ext->sadm_callback = sadm_callback;
+        ext->sadm_xml_buf = sadm_xml_buf;
+    }
+    else
+    {
+        ext->sadm_callback = NULL;
+        ext->sadm_xml_buf = NULL;
+    }
 
     vs = (ext->prev_pa == NO_PA_FOUND) ? 0 : NO_PA_FOUND;
     error_reset(ext->model);
@@ -422,4 +471,18 @@ dlb_pcmpmd_extract2
 
     /* return 0 (success) if there is no error */
     return ext->model->error[0] != '\0';
+}
+
+
+dlb_pmd_success
+dlb_pcmpmd_extract2
+    (dlb_pcmpmd_extractor *ext
+    ,uint32_t             *pcm
+    ,size_t                num_samples
+    ,dlb_pcmpmd_new_frame  callback
+    ,void                 *cbarg
+    ,size_t               *video_sync
+    )
+{
+    return dlb_pcmpmd_extract3(ext, pcm, num_samples, callback, NULL, NULL, cbarg, video_sync);
 }

@@ -53,6 +53,7 @@ extern "C" {
 /**
  * @brief decide whether the given XML buffer contains PMD or not
  */
+DLB_DLL_ENTRY
 dlb_pmd_bool                 /** @return 1 if buffer has contentMetadata tag, 0 otherwise */
 dlb_xmlpmd_file_is_sadm
      (const char *filename   /**< [in] name of file to check */
@@ -68,6 +69,7 @@ dlb_xmlpmd_file_is_sadm
  * see the note on #dlb_xmlpmd_parse for an explanation of the #strict
  * field.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success          /** @return 0 if file read and parsed successfully, 1 otherwise */
 dlb_pmd_sadm_file_read
    (const char                *filename      /**< [in] file to read */
@@ -84,6 +86,7 @@ dlb_pmd_sadm_file_read
  * to fill.  When the callback is invoked, it is safe to write the
  * existing data to file.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                     /** @return 0 on success, 1 on failure */
 dlb_pmd_sadm_file_write
    (const char    *filename         /**< [in] file to write */

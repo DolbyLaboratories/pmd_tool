@@ -1,0 +1,60 @@
+Release Notes
+==============
+
+v1.0.3 2017-06-06
+===========================
+* Report XML parsing errors in error callback
+
+
+v1.0.0 2013-12-10
+===========================
+* Dolby Code Convention Compliant API
+* Add version indication and query function
+* Introduce dedicated boolean and status types
+* Add indent in trace application
+
+v0.6 2013-11-12
+===========================
+* Increment max text size from 132 to 2048
+
+v0.5 2013-06-18
+===========================
+* Added resilience for entities to parser
+* Add simple invocation app, 'xml_trace'
+
+v0.4 2013-06-06
+===========================
+* Ported into own project, 'dlb_xml' library.
+
+v0.3 2013-05-29
+===========================
+* Moved, still as C source, into DPF2 PRM reader node 
+
+v0.2 2013-05-28
+===========================
+* Added support for attributes and comments
+* API improvments
+
+v0.1 2013-05-24
+===========================
+* Initial version, C helper code in Harmony 'datmos'
+  frontend application
+* Only supports elements with text, not attributes
+
+
+
+Known Issues
+============
+
+* Does not handle Entities nor their refrences
+* Does not support character reference
+* Does not support URI escapes
+* Does not support Unicode, other than UTF-8 in strings
+
+
+
+Testing
+=======
+
+TBD
+

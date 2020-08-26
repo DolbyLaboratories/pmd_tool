@@ -1,0 +1,85 @@
+Release Notes
+=============
+
+Dependencies
+============
+None
+
+v1.1.0
+===========================
+- new API to support memory mapped files (fixed and variable size)
+
+v1.1.1
+===========================
+- remove couple of warnings 
+
+Known Issues
+============
+No testing was done as part of this release for:
+CHAR_BIT != 8 e.g. Sharc systems
+
+
+Testing
+=======
+Tested indirectly by dlb_wave m-unit tests.
+dlb_wave unit test output:
+/
+  riff
+  wave_foramt
+  wave_data
+    wd_16int_dir
+      load_transcode_3
+.....        passed: 1/1
+      load_transcode_1
+.....        passed: 1/1
+      load_transcode_2
+.....        passed: 1/1
+      dlb_buffer_short16
+................................................................................        passed: 1/1
+      dlb_buffer_float
+................................................................................        passed: 1/1
+      dlb_buffer_double
+................................................................................        passed: 1/1
+      dlb_buffer_int_left
+................................................................................        passed: 1/1
+      dlb_buffer_long32
+................................................................................        passed: 1/1
+    wd_32int_dir
+      dlb_buffer_long32
+................................................................................        passed: 1/1
+      dlb_buffer_float
+................................................................................        passed: 1/1
+      dlb_buffer_double
+................................................................................        passed: 1/1
+      dlb_buffer_short16
+................................................................................        passed: 1/1
+      dlb_buffer_int_left
+................................................................................        passed: 1/1
+    wd_24int_dir
+      dlb_buffer_double
+................................................................................        passed: 1/1
+      dlb_buffer_float
+................................................................................        passed: 1/1
+      dlb_buffer_short16
+................................................................................        passed: 1/1
+      dlb_buffer_int_left
+................................................................................        passed: 1/1
+      dlb_buffer_long32
+................................................................................        passed: 1/1
+  wave_mem
+    wave_mem_read_write_fixed
+      passed: 2/2
+    wave_mem_read_write_variable
+      passed: 2/2
+  memfile
+    memfile_read_fixed
+      passed: 48/48
+    memfile_write_fixed
+      passed: 42/42
+    memfile_read_write_variable
+      passed: 1844/1844
+    memfile_seek_tell
+      passed: 44/44
+    memfile_pos
+      passed: 8/8
+TOTAL: passed 2008/2008

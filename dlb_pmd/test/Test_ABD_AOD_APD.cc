@@ -40,10 +40,12 @@
 
 #include "dlb_pmd_api.h"
 #include "src/model/pmd_model.h"
+
 extern "C"
 {
-#include "pmd_test_langs.h"    
+#include "pmd_test_langs.h"
 }
+
 #include "TestModel.hh"
 #include "gtest/gtest.h"
 
@@ -73,9 +75,9 @@ static const int MAX_BED_CHANS = 16;
  * doesn't seem likely in practice, and we only have a max of 255 input
  * signals
  */
-static const int MAX_INTERNAL_BEDS = 4;
-static const int MAX_INTERNAL_OBJS = 32;
-static const int MAX_INTERNAL_PRES = 16;
+static const int MAX_BASIC_BEDS = 4;
+static const int MAX_BASIC_OBJS = 32;
+static const int MAX_BASIC_PRES = 16;
 
 static const int MAX_BEDS = 128;
 static const int MAX_OBJS = 128;
@@ -93,6 +95,8 @@ static const int BLOCK_OVERHEAD = (16  /* UL */
                                    + 4 /* version*/
                                    + 6 /* CRC */
                                    );
+
+static const int PCM_FACTOR = 2;
 
 /**
  * @brief report available bits
@@ -174,8 +178,7 @@ static BitCapacity estimate_test_capacity(TestModel::TestType t)
         case TestModel::TEST_PCM_CHAN_11988: return estimate_pcmklv_capacity( 400, false);
         case TestModel::TEST_PCM_CHAN_12000: return estimate_pcmklv_capacity( 400, false);
 
-        case TestModel::TEST_SADM:           return BitCapacity(0, ~0u);
-
+        case TestModel::TEST_SADM:         return BitCapacity(0, ~0u);
         default:
             return BitCapacity(0, ~0u);
     }
@@ -234,11 +237,17 @@ static BitCapacity estimate_bit_requirement(unsigned int num_beds,
  * able to transport the data completely. We adjust the test
  * parameters to account for this.
  */
-static void configure_test_params(TestModel& m, TestModel::TestType t,
+static void configure_test_params(TestModel& m,
+                                  TestModel::TestType t,
                                   unsigned int& num_beds,
                                   unsigned int& num_objs,
                                   unsigned int& num_pres)
 {
+    if (num_pres > DLB_PMD_MAX_PRESENTATIONS)
+    {
+        num_pres = DLB_PMD_MAX_PRESENTATIONS;
+    }
+
     BitCapacity req = estimate_bit_requirement(num_beds, num_objs, num_pres);
     BitCapacity capacity = estimate_test_capacity(t);
     unsigned int req_bits;
@@ -646,17 +655,17 @@ TEST_P(ElementTest, combo_testing)
 
 
 INSTANTIATE_TEST_CASE_P(PMD_ElementPresPCM, ElementTest,
-           testing::Combine(testing::Range(MAX_INTERNAL_BEDS/4, MAX_BEDS/4+1),
-                            testing::Range(MAX_INTERNAL_OBJS/4, MAX_OBJS/4+1),
-                            testing::Range(MAX_INTERNAL_PRES/4, MAX_PRES/16+1),
+           testing::Combine(testing::Range(MAX_BASIC_BEDS/4, MAX_BEDS/4+1),
+                            testing::Range(MAX_BASIC_OBJS/4, MAX_OBJS/4+1),
+                            testing::Range(MAX_BASIC_PRES/4, MAX_PRES/16+1, 2),
                             testing::Range(TestModel::FIRST_TEST_TYPE,
                                            TestModel::TEST_PCM_CHAN_12000+1)));
 
 
 INSTANTIATE_TEST_CASE_P(PMD_SADM_ElementPres, ElementTest,
-           testing::Combine(testing::Range(MAX_INTERNAL_BEDS/4, MAX_BEDS/4+1),
-                            testing::Range(MAX_INTERNAL_OBJS/4, MAX_OBJS/4+1),
-                            testing::Range(MAX_INTERNAL_PRES/4, MAX_PRES/16+1),
+           testing::Combine(testing::Range(MAX_BASIC_BEDS/4, MAX_BEDS/4+1),
+                            testing::Range(MAX_BASIC_OBJS/4, MAX_OBJS/4+1),
+                            testing::Range(MAX_BASIC_PRES/4, MAX_PRES/16+1, 2),
                             testing::Range((int)TestModel::TEST_SADM,
                                            TestModel::TEST_SADM+1)));
 
@@ -665,11 +674,11 @@ INSTANTIATE_TEST_CASE_P(PMD_SADM_ElementPres, ElementTest,
  * range of tests
  */
 INSTANTIATE_TEST_CASE_P(PMD_SADM_ElementPresPCM, ElementTest,
-           testing::Combine(testing::Range(1, MAX_INTERNAL_BEDS/4+1),
-                            testing::Range(1, MAX_INTERNAL_OBJS/4+1),
-                            testing::Range(1, MAX_INTERNAL_PRES/32+1),
+           testing::Combine(testing::Range(1, MAX_BASIC_BEDS/4+1),
+                            testing::Range(1, MAX_BASIC_OBJS/4+1),
+                            testing::Range(1, MAX_BASIC_PRES/32+1),     // TODO: range is [1, 1], is that what we want?
                             testing::Range((int)TestModel::TEST_SADM_PCM_PAIR_2398,
-                                           TestModel::TEST_SADM_PCM_CHAN_3000+1)));
+                                           (int)TestModel::TEST_SADM_PCM_CHAN_3000+1)));
 #endif
 
 

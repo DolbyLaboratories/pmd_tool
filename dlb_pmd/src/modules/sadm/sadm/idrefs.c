@@ -67,9 +67,10 @@
  */
 typedef struct
 {
-    dlb_sadm_idref_type type;         /**< type of structure pointed to */
+    dlb_sadm_idref_type type;       /**< type of structure pointed to */
     dlb_sadm_id id;
     unsigned int lineno;
+    dlb_pmd_bool common;            /**< true if this refers to a common definition */
     void *ptr;
 } idref;
 
@@ -212,11 +213,11 @@ idref_table_reinit
 dlb_pmd_success
 idref_table_insert
     (idref_table *irt
-    ,const unsigned char *id      
+    ,const unsigned char *id
     ,dlb_sadm_idref_type ty
     ,unsigned int lineno
     ,void *ptr
-    ,void **result
+    ,void **result              /* F---ing *seriously*, Andrew? */
     )
 {
     if (irt->num < irt->max)
@@ -239,6 +240,7 @@ idref_table_insert
                     ref->type = ty;
                     ref->ptr = ptr ? ptr : FORWARD_REFERENCE;
                     ref->lineno = lineno;
+                    ref->common = PMD_FALSE;
                     memmove(ref->id.data, id, sizeof(ref->id.data));
                     TRACE(("IDREF: insert (id=%s,ty=%u) %s at entry %u\n",
                            id, ty, ptr ? "definition" : "forward ref", idx));
@@ -264,19 +266,24 @@ idref_table_lookup
     (idref_table *irt
     ,const unsigned char *id      
     ,dlb_sadm_idref_type ty
+    ,dlb_sadm_idref *idrefp
     ,void **ptr
     )
 {
     unsigned int i;
-        
+
     for (i = 0; i != irt->num; ++i)
     {
         uint32_t hash = compute_hash(ty, (const char*)id, i);
-        uint32_t idx = hash & (irt->max-1);
+        uint32_t idx = hash & (irt->max - 1);
         idref *ref = &irt->entries[idx];
-        
+
         if (ref->ptr == NULL || REF_EQUAL(ref, ty, id))
         {
+            if (idrefp != NULL)
+            {
+                *idrefp = ref;
+            }
             *ptr = ref->ptr;
             return (ref->ptr == NULL || ref->ptr == FORWARD_REFERENCE)
                 ? PMD_FAIL
@@ -284,6 +291,51 @@ idref_table_lookup
         }
     }
     return PMD_FAIL;
+}
+
+
+dlb_pmd_bool
+idref_is_null
+    (const dlb_sadm_idref i
+    )
+{
+    return 0 == i;
+}
+
+
+dlb_pmd_bool
+idref_is_common_def
+    (const dlb_sadm_idref i
+    )
+{
+    dlb_pmd_bool is_common = PMD_FALSE;
+    idref *iref = (idref*)i;
+
+    if (0 != iref)
+    {
+        is_common = iref->common;
+    }
+
+    return is_common;
+}
+
+
+dlb_pmd_success
+idref_set_is_common_def
+    (dlb_sadm_idref i
+    ,dlb_pmd_bool is_common
+    )
+{
+    dlb_pmd_success success = PMD_FAIL;
+    idref *iref = (idref*)i;
+
+    if (0 != iref)
+    {
+        iref->common = is_common;
+        success = PMD_SUCCESS;
+    }
+
+    return success;
 }
 
 
@@ -295,7 +347,7 @@ idref_unpack
     )
 {
     idref *iref = (idref*)i;
-    if (iref->type != ty)
+    if (NULL == iref || iref->type != ty)
     {
         return PMD_FAIL;
     }
@@ -327,6 +379,23 @@ idref_defined
         return PMD_FAIL;
     }
     return PMD_SUCCESS;
+}
+
+
+dlb_pmd_bool
+idref_equal
+    (dlb_sadm_idref i1
+    ,dlb_sadm_idref i2
+    )
+{
+    idref *r1 = (idref*)i1;
+    idref *r2 = (idref*)i2;
+
+    if (r1->type == r2->type && strncmp((const char *)r1->id.data, (const char *)r2->id.data, sizeof(r1->id.data)) == 0)
+    {
+        return PMD_TRUE;
+    }
+    return PMD_FALSE;
 }
 
 

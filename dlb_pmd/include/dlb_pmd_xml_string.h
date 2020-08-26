@@ -52,6 +52,7 @@ extern "C" {
 /**
  * @brief helper routine to write PMD XML to a string
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if string written successfully, 1 otherwise */
 dlb_xmlpmd_string_write
    (const dlb_pmd_model  *pmd_model     /**< [in] PMD model struct to write */
@@ -70,6 +71,7 @@ dlb_xmlpmd_string_write
  * see the note on #dlb_xmlpmd_parse for an explanation of the #strict
  * field.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if string read and parsed successfully, 1 otherwise */
 dlb_xmlpmd_string_read
    (const char                *data          /**< [in] data to read */

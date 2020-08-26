@@ -50,6 +50,7 @@
 #include "dlb_xml/include/dlb_xml.h"
 
 #include "sadm/dlb_sadm_reader.h"
+#include "dlb_sadm_common_definitions.h"
 #include "memstuff.h"
 
 #include <limits.h>
@@ -105,6 +106,16 @@ __pragma(warning(disable:4127))
 
 
 /**
+ * @def IGNORE_AUDIO_FORMAT_CUSTOM_ELEMENT
+ *
+ * @brief If this is defined, we'll ignore entirely the audioFormatCustom
+ * element. Otherwise, we'll try to parse it.  But we only know about one
+ * kind of custom audioFormatCustomSet, and the reader will break if there
+ * is another kind of audioFormatCustomSet present.  So, ignore it for now.
+ */
+#define IGNORE_AUDIO_FORMAT_CUSTOM_ELEMENT
+
+/**
  * @brief identify coordinate when parsing audioBlockFormat position tags
  */
 typedef enum
@@ -113,8 +124,12 @@ typedef enum
     COORD_X,
     COORD_Y,
     COORD_Z,
+    COORD_AZIMUTH,
+    COORD_ELEVATION,
+    COORD_DISTANCE
 } coordinate_type;
 
+static const char *coordinate_type_names[] = { "X", "Y", "Z", "azimuth", "elevation", "distance" };
 
 /**
  * @brief record relationship between track_uid and channel number (for forward references in transportTrackFormat)
@@ -124,6 +139,23 @@ typedef struct
     dlb_sadm_id track_uid;
     unsigned int channel_number;
 } track_uid_to_channel_record;
+
+/**
+ * @brief record information about parsing audioBlockFormat coordinates
+ */
+typedef struct 
+{
+    dlb_pmd_bool got_cartesian;
+
+    dlb_pmd_bool got_x;
+    dlb_pmd_bool got_y;
+    dlb_pmd_bool got_z;
+
+    dlb_pmd_bool got_azimuth;
+    dlb_pmd_bool got_elevation;
+    dlb_pmd_bool got_distance;
+
+} block_format_state;
 
 
 /**
@@ -148,6 +180,7 @@ struct dlb_sadm_reader
     size_t channel_assignment_count;
 
     /* temporary attribute parsing */
+    unsigned int ignore_attributes;
     uint8_t current_name[DLB_PMD_NAME_ARRAY_SIZE];
     uint8_t current_id  [DLB_PMD_NAME_ARRAY_SIZE];
     uint8_t mixed_content_kind[DLB_PMD_NAME_ARRAY_SIZE];
@@ -158,6 +191,7 @@ struct dlb_sadm_reader
     coordinate_type current_coordinate_type;
     unsigned int current_track_id;
     dlb_pmd_bool gain_unit_db;
+    block_format_state blkfmt_state;
 
     dlb_sadm_programme programme;
     dlb_sadm_content content;
@@ -165,10 +199,14 @@ struct dlb_sadm_reader
     dlb_sadm_pack_format packfmt;
     dlb_sadm_channel_format chanfmt;
     dlb_sadm_block_format blkfmt;
+    dlb_sadm_stream_format streamfmt;
+    dlb_sadm_track_format trackfmt;
     dlb_sadm_track_uid track_uid;
 
     dlb_sadm_programme_label *programme_labels;
     dlb_sadm_idref *programme_contents;
+    dlb_sadm_idref *content_objects;
+    dlb_sadm_idref *object_objects;
     dlb_sadm_idref *object_track_uids;
     dlb_sadm_idref *packfmt_chanfmts;
     dlb_sadm_idref *chanfmt_blkfmts;
@@ -263,12 +301,47 @@ report_error
     }
 }
 
+/**
+ * @brief copy the ID and ensure same upper case across xml
+ * TODO: Implement a much better way to do this
+ */
+static
+void
+copy_current_id
+    (char   *destination
+    ,char   *source         /* must be terminated with NUL! */
+    ,size_t  size
+    )
+{
+    char *tmp = source;
+    size_t i = 0;
+
+    while (*tmp  && i < size)
+    {
+        *tmp = (char)toupper((int) *tmp);
+        ++tmp;
+        ++i;
+    }
+    if (destination != source)
+    {
+        if (i < size)
+        {
+            memset(destination, 0, size);
+        }
+        else if (i > size)
+        {
+            i = size;
+        }
+        memmove(destination, source, i);
+    }
+}
+
 
 /* ------------------------ COROUTINE MACROS ------------------------- */
 /* The dlb_xml library walks through the XML file and invokes its
  * element_callback whenever it discovers a new tag.  However, we also
  * want to write the recursive descent parser in a manner that reflects
- * the grammer - the shape of the XML we want to parse.  We use a
+ * the grammar - the shape of the XML we want to parse.  We use a
  * coroutine approach to allow both.
  *
  * see http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html
@@ -330,6 +403,16 @@ is_closed_tag
     return !strcasecmp(tag, literal) && NULL != text;
 }
 
+static
+int
+is_tag_present
+    (tag_stack  *stack
+    ,const char *tag
+    )
+{
+    tagloc *top = tag_stack_top(stack);
+    return !strcasecmp(tag, top->tag);
+}
 
 
 #define next_tag()           COROUTINE_RETURN(0)
@@ -339,14 +422,15 @@ is_closed_tag
 #define push_tag()           tag_stack_push(&p->tagstack, tag, p->lineno, NULL)
 #define push_action_tag(a)   tag_stack_push(&p->tagstack, tag, p->lineno, a)
 #define pop_tag()            if (tag_stack_pop(&p->tagstack, (parser*)p)) error()
+#define check_tag_presence() (is_tag_present(&p->tagstack, tag))
     
+
 #define loop_until_closed(name)                     \
     push_tag();                                     \
     while (!closed_tag(name))                       \
     {                                               \
         parser_trace(p, "loop tag <%s>\n", name);   \
 
-                                                          
 #define end_loop()                              \
     }                                           \
     pop_tag();
@@ -419,6 +503,28 @@ is_closed_tag
     pop_tag();                                  \
     next_tag();                                 \
 
+
+#define if_ignore_optional_tag_block(name)      \
+    if (open_tag(name))                         \
+    {                                           \
+        parser_trace(p, "ignoring body of <%s> tag\n", name); \
+        p->ignore_attributes = 1;                             \
+        push_tag();                                           \
+        next_tag();                                           \
+        while(!closed_tag(name))                              \
+        {                                                     \
+            parser_trace(p, "ignoring body of <%s> sub-tag\n", tag); \
+            return 0;                                         \
+        }                                                     \
+        p->ignore_attributes = 0;                             \
+
+#define end_ignore_optional_tag_block()         \
+    }                                           \
+    if (check_tag_presence())                   \
+    {                                           \
+        pop_tag();                              \
+        next_tag();                             \
+    }                                           \
 
 
 /* -------------------------------------- PARSE TYPES ----------------------------- */
@@ -546,7 +652,7 @@ write_utf8_char
 static
 int                      /** @return 0 on failure, 1 on success */
 decode_string
-    (dlb_sadm_reader *p           /**< [in] parser state */
+    (dlb_sadm_reader *p  /**< [in] parser state */
     ,const char *text    /**< [in] text to parse */
     ,uint8_t *buf        /**< [in] array to store string */
     ,unsigned int maxlen /**< [in] max allowed string name */
@@ -637,7 +743,7 @@ decode_enum
  * @brief parse a generic boolean
  */
 static
-int                               /** @return 0 on failure, 1 on success */
+int
 decode_bool
     (dlb_sadm_reader *p           /**< [in] parser state */
     ,const char *text             /**< [in] text to parse */
@@ -714,8 +820,8 @@ decode_coordinate_type_attribute
     ,coordinate_type *ty           /**< [out] coordinate type */
     )
 {
-    static const char *names[] = { "X", "Y", "Z" };
-    int res = decode_enum(text, names, sizeof(names)/sizeof(names[0]));
+    int res = decode_enum(
+        text, coordinate_type_names, sizeof(coordinate_type_names)/sizeof(coordinate_type_names[0]));
 
     (void)p;
     if (res >= 0)
@@ -725,44 +831,6 @@ decode_coordinate_type_attribute
     }
     return 0;
 }
-
-
-#if 0
-/**
- * @brief parse the string for a PMD co-ordinate
- *
- * accepted values: -1.0 - 1.0
- * X: -1.0 = left, 1.0 = right
- * Y: -1.0 = front, 1.0 = back
- * Z: -1.0 = floor, 0.0 = horizon, 1.0 = ceiling
- */
-static 
-int                     /** @return 0 on failure, 1 on success */
-decode_coordinate
-    (dlb_sadm_reader *p          /**< [in] parser state */
-    ,const char *text   /**< [in] text to parse */
-    ,float *pos         /**< [out] co-ordinate */
-    )
-{
-    char *endp;
-    float f;
-    
-    if (NULL == text)
-    {
-        errmsg(p, "Malformed tag");
-        return 0;
-    }
-
-    f = (float)strtod(text, &endp);
-    if (f < -1.0f || f > 1.0f || endp == text)
-    {
-        errmsg(p, "Invalid co-ordinate: \"%s\"",  text);
-        return 0;
-    }
-    *pos = f;
-    return 1;
-}
-#endif
 
 
 /**
@@ -793,28 +861,6 @@ decode_language
 }
 
 
-#if 0
-static
-int
-decode_language
-    (dlb_sadm_reader *p                    /**< [in] parser state */
-    ,const char *text             /**< [in] text to parse */
-    ,char *lang                   /**< [out] language code */
-    )
-{
-    pmd_langcode code = 0;
-
-    memset(lang, '\0', 4);
-    if (decode_langcode(p, text, &code))
-    {
-        memmove(lang, text, 4);
-        return 1;
-    }
-    return 0;
-}
-#endif
-
-
 static
 int                        /** @return 1 on success, 0 on failure */
 decode_programme_label
@@ -843,6 +889,27 @@ decode_programme_label
 
 
 static
+int                        /** @return 1 on success, 0 on failure */
+decode_content_label
+    (dlb_sadm_reader *p
+    ,const char *text
+    )
+{
+    dlb_sadm_content_label *label;
+
+    label = &p->content.label;
+    if (!decode_string(p, text, label->name.data, sizeof(label->name.data)))
+    {
+        return 0;
+    }
+    memmove(label->language, p->current_language, sizeof(p->current_language));
+    p->current_language[0] = '\0';
+
+    return 1;
+}
+
+
+static
 int
 decode_idref
     (dlb_sadm_reader *p
@@ -857,6 +924,7 @@ decode_idref
     {
         return 0;
     }
+    copy_current_id((char *)id.data, (char *)id.data, sizeof(id.data));
     
     if (dlb_sadm_lookup_reference(p->model, id.data, type, p->lineno, idref))
     {
@@ -884,6 +952,7 @@ decode_idref_entry
     {
         return 0;
     }
+    copy_current_id((char *)id.data, (char *)id.data, sizeof(id.data));
     
     assert(num);
     if (*num >= max)
@@ -904,6 +973,25 @@ decode_idref_entry
 
 static
 int
+decode_cartesian
+    (dlb_sadm_reader *p
+    ,const char *text
+    ,pmd_bool *b
+    )
+{
+    int status = decode_bool(p, text, b);
+
+    if (status)
+    {
+        p->blkfmt_state.got_cartesian = PMD_TRUE;
+    }
+
+    return status;
+}
+
+
+static
+int
 decode_position
     (dlb_sadm_reader *p
     ,const char *text
@@ -918,29 +1006,80 @@ decode_position
         errmsg(p, "Malformed tag");
         return 0;
     }
-
-    f = (float)strtod(text, &endp);
-    if (f < -1.0f || f > 1.0f || endp == text)
+    else if (p->current_coordinate_type == COORD_NONE)
     {
-        errmsg(p, "Invalid co-ordinate: \"%s\"",  text);
+        errmsg(p, "coordinate type attribute not set");
         return 0;
     }
 
+    f = (float)strtod(text, &endp);
     switch (p->current_coordinate_type)
     {
-        case COORD_X:
-            blkfmt->azimuth_or_x = f;
-            break;
-        case COORD_Y:
-            blkfmt->elevation_or_y = f;
-            break;
-        case COORD_Z:
-            blkfmt->distance_or_z = f;
-            break;
-        default:
-            errmsg(p, "coordinate type attribute not set");
+    case COORD_X:
+        if (f < -1.0f || f > 1.0f || endp == text)
+        {
+            errmsg(p, "Invalid X coordinate value: \"%s\"", text);
             return 0;
+        }
+        p->blkfmt_state.got_x = PMD_TRUE;
+        blkfmt->azimuth_or_x = f;
+        break;
+
+    case COORD_Y:
+        if (f < -1.0f || f > 1.0f || endp == text)
+        {
+            errmsg(p, "Invalid Y coordinate value: \"%s\"", text);
+            return 0;
+        }
+        p->blkfmt_state.got_y = PMD_TRUE;
+        blkfmt->elevation_or_y = f;
+        break;
+
+    case COORD_Z:
+        if (f < -1.0f || f > 1.0f || endp == text)
+        {
+            errmsg(p, "Invalid Z coordinate value: \"%s\"", text);
+            return 0;
+        }
+        p->blkfmt_state.got_z = PMD_TRUE;
+        blkfmt->distance_or_z = f;
+        break;
+
+    case COORD_AZIMUTH:
+        if (f <= -180.0f || f >= 180.0f || endp == text)
+        {
+            errmsg(p, "Invalid azimuth coordinate value: \"%s\"", text);
+            return 0;
+        }
+        p->blkfmt_state.got_azimuth = PMD_TRUE;
+        blkfmt->azimuth_or_x = f;
+        break;
+
+    case COORD_ELEVATION:
+        if (f <= -90.0f || f >= 90.0f || endp == text)
+        {
+            errmsg(p, "Invalid elevation coordinate value: \"%s\"", text);
+            return 0;
+        }
+        p->blkfmt_state.got_elevation = PMD_TRUE;
+        blkfmt->elevation_or_y = f;
+        break;
+
+    case COORD_DISTANCE:
+        if (f < 0.0f || f > 1.0f || endp == text)
+        {
+            errmsg(p, "Invalid distance coordinate value: \"%s\"", text);
+            return 0;
+        }
+        p->blkfmt_state.got_distance = PMD_TRUE;
+        blkfmt->distance_or_z = f;
+        break;
+
+    default:
+        errmsg(p, "Invalid coordinate type value: %d", (int)p->current_coordinate_type);
+        return 0;
     }
+
     p->current_coordinate_type = COORD_NONE;
     return 1;
 }
@@ -971,6 +1110,7 @@ decode_gain
     )
 {
     char *endp;
+    float gain_value;
     
     if (NULL == text)
     {
@@ -978,26 +1118,44 @@ decode_gain
         return 0;
     }
 
+    gain_value = (float)strtod(text, &endp);
     if (!p->gain_unit_db)
     {
-        errmsg(p, "linear gain not currently supported\n");
-        return 0;
+        /* Convert linear gain to dB */
+        if (gain_value > 0)
+        {
+            gain_value = 20 * log10f(gain_value);
+        }
+        else if (gain_value == 0)
+        {
+            *gain = -INFINITY;
+            return 1;
+        }
+        else
+        {
+            errmsg(p, "linear gain out of range %s\n", text);
+            return 0;
+        }
     }
-    p->gain_unit_db = 0;
-
-    if (text_is_minf_db(text))
+    else
     {
-        *gain = -INFINITY;
-        return 1;
+        /* Process dB gain */
+        if (text_is_minf_db(text))
+        {
+            *gain = -INFINITY;
+            return 1;
+        }
     }
+
+    p->gain_unit_db = 0;    /* Reset to default */
     
-    *gain = (float)strtod(text, &endp);
-    if (*gain < -25.0f || *gain > 6.0f || endp == text)
+    if (gain_value < -25.0f || gain_value > 6.0f || endp == text)
     {
         errmsg(p, "Invalid gain: \"%s\"",  text);
         return 0;
     }
     
+    *gain = gain_value;
     return 1;
 }
 
@@ -1010,7 +1168,7 @@ decode_dialogue_value
     ,unsigned int *dialogue_value
     )
 {
-    if (!decode_uint(p, text, "dialogue", 1, 2, dialogue_value))
+    if (!decode_uint(p, text, "dialogue", 0, 2, dialogue_value))
     {
         errmsg(p, "Error: unknown dialogue value \"%s\"\n", text);
         return 0;
@@ -1025,19 +1183,24 @@ decode_dialogue_value
 #define parse_idref(id, ty)           if (!decode_idref(p, text, &id, ty)) error()
 #define parse_idref_entry(a, ty)      if (!decode_idref_entry(p, text, a.array, ty, a.max, &a.num)) error()
 #define parse_progref(id)             parse_idref(id, DLB_SADM_PROGRAMME)
-#define parse_objref(id)              parse_idref(id, DLB_SADM_OBJECT)
 #define parse_trackref(id)            parse_idref(id, DLB_SADM_TRACKUID)
 #define parse_packref(id)             parse_idref(id, DLB_SADM_PACKFMT)
 #define parse_chanref(id)             parse_idref(id, DLB_SADM_CHANFMT)
+#define parse_objref_entry(arr)       parse_idref_entry(arr, DLB_SADM_OBJECT)
 #define parse_packref_entry(arr)      parse_idref_entry(arr, DLB_SADM_PACKFMT)
 #define parse_trackref_entry(arr)     parse_idref_entry(arr, DLB_SADM_TRACKUID)
 #define parse_chanref_entry(arr)      parse_idref_entry(arr, DLB_SADM_CHANFMT)
 #define parse_contentref_entry(arr)   parse_idref_entry(arr, DLB_SADM_CONTENT)
 
 #define parse_programme_label()       if (!decode_programme_label(p, text)) error()
+#define parse_content_label()         if (!decode_content_label(p, text)) error()
 #define parse_blkfmt_speaker_label(l) if (!decode_string(p, text, l, sizeof(l))) error()
+#define parse_blkfmt_gain(g)          if (!decode_gain(p, text, &g)) error()
+#define parse_blkfmt_cartesian(c)     if (!decode_cartesian(p, text, &c)) error()
 #define parse_blkfmt_position(blkfmt) if (!decode_position(p, text, &blkfmt)) error()
-#define parse_blkfmt_cartesian(c)     if (!decode_bool(p, text, &c)) error()
+#define parse_blkfmt_width(blkfmt)
+#define parse_blkfmt_height(blkfmt)
+#define parse_blkfmt_depth(blkfmt)
 
 #define parse_dialogue(d)             if (!decode_dialogue_value(p, text, &d)) error()
 #define parse_object_gain(g)          if (!decode_gain(p, text, &g)) error()
@@ -1052,10 +1215,9 @@ decode_dialogue_value
 static
 dlb_pmd_success           /** @return 1 on failure, 0 on success */
 new_programme
-    (dlb_sadm_reader *ctx
+    (dlb_sadm_reader *p
     )
 {
-    dlb_sadm_reader *p = (dlb_sadm_reader *)ctx;
     dlb_sadm_idref idref;
     dlb_pmd_success res = PMD_FAIL;
     
@@ -1132,6 +1294,10 @@ new_content
         /* assign values based on previously parsed attributes */
         memmove(p->content.id.data,   p->current_id, sizeof(p->current_id));
         memmove(p->content.name.data, p->current_name, sizeof(p->current_name));
+        p->content.type = DLB_SADM_CONTENT_UNSET;
+        p->content.objects.num = 0;
+        p->content.objects.max = (unsigned int)p->limits.max_content_objects;
+        p->content.objects.array = p->content_objects;
         res = PMD_SUCCESS;
     }
     else
@@ -1140,6 +1306,7 @@ new_content
     }
     p->current_id[0] = 0;
     p->current_name[0] = 0;
+    p->current_language[0] = 0;
     return res;
 }
 
@@ -1190,7 +1357,11 @@ new_object
         
         /* assign values based on previously parsed attributes */
         memmove(p->object.id.data,         p->current_id, sizeof(p->current_id));
-        memmove(p->object.name.data,       p->current_name, sizeof(p->current_name));
+        memmove(p->object.name.data, p->current_name, sizeof(p->current_name));
+
+        p->object.object_refs.num = 0;
+        p->object.object_refs.max = (unsigned int)p->limits.max_object_objects;
+        p->object.object_refs.array = p->object_objects;
         
         p->object.track_uids.num = 0;
         p->object.track_uids.max = (unsigned int)p->limits.max_object_track_uids;
@@ -1267,12 +1438,15 @@ new_packfmt
             || (type_label != 1 && type_label != 3)
             )
         {
-            errmsg(p, "type label \"%s\" not recognised at line\n", p->type_label);
+            errmsg(p, "audioPackFormat type label \"%s\" not recognised at line\n", p->type_label);
         }
-        else if ((type_label == 1 && strcasecmp((char*)p->type_definition, "DirectSpeakers"))
-                 || (type_label == 3 && strcasecmp((char*)p->type_definition, "Objects")))
+        else if (  p->type_definition[0] != 0
+                && (  (type_label == 1 && strcasecmp((char*)p->type_definition, "DirectSpeakers"))
+                   || (type_label == 3 && strcasecmp((char*)p->type_definition, "Objects"))
+                   )
+                )
         {
-            errmsg(p, "type label \"%s\" and type definition \"%s\" do not agree\n",
+            errmsg(p, "audioPackFormat type label \"%s\" and type definition \"%s\" do not agree\n",
                    p->type_label, p->type_definition);
         }
         else
@@ -1332,6 +1506,8 @@ new_chanfmt
 {
     dlb_sadm_idref idref;
     dlb_pmd_success res = PMD_FAIL;
+    int type_label;
+    char *endp;
 
     if (   dlb_sadm_lookup_reference(p->model, p->current_id, DLB_SADM_CHANFMT, 0, &idref)
         || dlb_sadm_idref_defined(idref))
@@ -1343,6 +1519,25 @@ new_chanfmt
         p->chanfmt.blkfmts.num = 0;
         p->chanfmt.blkfmts.max = (unsigned int)p->limits.max_chanfmt_blkfmts;
         p->chanfmt.blkfmts.array = p->chanfmt_blkfmts;
+
+        type_label = strtol((char*)p->type_label, &endp, 0);
+        if (endp == (char*)p->type_label
+            || (type_label != 1 && type_label != 3)
+            )
+        {
+            errmsg(p, "audioChannelFormat type label \"%s\" not recognised at line\n", p->type_label);
+        }
+
+        if (  p->type_definition[0] != 0
+              && (  (type_label == 1 && strcasecmp((char*)p->type_definition, "DirectSpeakers"))
+                 || (type_label == 3 && strcasecmp((char*)p->type_definition, "Objects"))
+                 )
+           )
+        {
+            errmsg(p, "audioChannelFormat type label \"%s\" and type definition \"%s\" do not agree\n",
+                   p->type_label, p->type_definition);
+        }
+
         res = PMD_SUCCESS;
     }
     else
@@ -1352,6 +1547,8 @@ new_chanfmt
     
     p->current_id[0] = 0;
     p->current_name[0] = 0;
+    p->type_definition[0] = 0;
+    p->type_label[0] = 0;
     return res;
 }
 
@@ -1408,7 +1605,8 @@ new_blkfmt
     {
         errmsg(p, "block format \"%s\" has already been defined\n", p->current_id);
     }
-        
+
+    memset(&p->blkfmt_state, 0, sizeof(p->blkfmt_state));
     p->current_id[0] = 0;
     return res;
 }
@@ -1431,7 +1629,32 @@ publish_blkfmt
     )
 {
     dlb_sadm_reader *p = (dlb_sadm_reader *)ctx;
+    block_format_state *attr = &p->blkfmt_state;
     dlb_sadm_idref idref;
+
+    if (attr->got_x || attr->got_y || attr->got_z || p->blkfmt.cartesian_coordinates)
+    {
+        if (!attr->got_x || !attr->got_y || !attr->got_z || !attr->got_cartesian || !p->blkfmt.cartesian_coordinates)
+        {
+            errmsg(p, "Inconsistent or missing cartesian coordinates for block format \"%s\"",
+                   p->blkfmt.id.data);
+            return 1;
+        }
+    }
+    else if (attr->got_azimuth || attr->got_elevation || attr->got_distance)
+    {
+        if (!attr->got_azimuth || !attr->got_elevation || !attr->got_distance /*|| p->blkfmt.cartesian_coordinates*/)
+        {
+            errmsg(p, "Inconsistent or missing spherical coordinates for block format \"%s\"",
+                   p->blkfmt.id.data);
+            return 1;
+        }
+    } 
+    else
+    {
+        errmsg(p, "Missing coordinates for block format \"%s\"", p->blkfmt.id.data);
+        return 1;
+    }
 
     if (dlb_sadm_set_block_format(p->model, &p->blkfmt, NULL))
     {
@@ -1455,6 +1678,120 @@ publish_blkfmt
     p->chanfmt.blkfmts.array[p->chanfmt.blkfmts.num] = idref;
     p->chanfmt.blkfmts.num += 1;
     return 0;
+}
+
+
+/**
+ * @brief prepare a new audio stream format definition for population while parsing
+ * audioStreamFormat tag
+ */
+static
+dlb_pmd_success           /** @return 1 on failure, 0 on success */
+new_streamfmt
+    (dlb_sadm_reader *p
+    )
+{
+    /* TODO: do we need stream format sometimes, and not others? */
+
+    // dlb_sadm_idref idref;
+    // dlb_pmd_success res = PMD_FAIL;
+
+    // if (   dlb_sadm_lookup_reference(p->model, p->current_id, DLB_SADM_STREAMFMT, 0, &idref)
+    //     || dlb_sadm_idref_defined(idref))
+    // {
+    //     memset(&p->streamfmt, '\0', sizeof(p->streamfmt));
+    //     /* assign values based on previously parsed attributes */
+    //     memmove(p->streamfmt.id.data, p->current_id, sizeof(p->current_id));
+    //     res = PMD_SUCCESS;
+    // }
+    // else
+    // {
+    //     errmsg(p, "stream format \"%s\" has already been defined\n", p->current_id);
+    // }
+        
+    // p->current_id[0] = 0;
+    // return res;
+    (void)p;
+    return PMD_SUCCESS; 
+}
+
+
+/**
+ * @def alloc_streamfmt(p)
+ * @brief call new_streamfmt(p) and report error if any
+ */
+#define alloc_streamfmt(p) if (new_streamfmt(p)) error()
+
+
+/**
+ * @brief attempt to add a newly constructed audio block format definition to the sADM model
+ */
+static
+dlb_pmd_success
+publish_streamfmt
+    (parser *ctx
+    )
+{
+    //TODO: implement correctly
+    (void)ctx;
+    return PMD_SUCCESS;
+}
+
+
+/**
+ * @brief prepare a new audio track format definition for population while parsing
+ * audioTrackFormat tag
+ */
+static
+dlb_pmd_success           /** @return 1 on failure, 0 on success */
+new_trackfmt
+    (dlb_sadm_reader *p
+    )
+{
+    /* TODO: do we need track format sometimes, and not others? */
+
+    // dlb_sadm_idref idref;
+    // dlb_pmd_success res = PMD_FAIL;
+
+    // if (   dlb_sadm_lookup_reference(p->model, p->current_id, DLB_SADM_TRACKFMT, 0, &idref)
+    //     || dlb_sadm_idref_defined(idref))
+    // {
+    //     memset(&p->trackfmt, '\0', sizeof(p->trackfmt));
+    //     /* assign values based on previously parsed attributes */
+    //     memmove(p->trackfmt.id.data, p->current_id, sizeof(p->current_id));
+    //     res = PMD_SUCCESS;
+    // }
+    // else
+    // {
+    //     errmsg(p, "block format \"%s\" has already been defined\n", p->current_id);
+    // }
+        
+    // p->current_id[0] = 0;
+    // return res;
+    (void)p;
+    return PMD_SUCCESS;
+}
+
+
+/**
+ * @def alloc_trackfmt(p)
+ * @brief call new_trackfmt(p) and report error if any
+ */
+#define alloc_trackfmt(p) if (new_trackfmt(p)) error()
+
+
+/**
+ * @brief attempt to add a newly constructed audio block format definition to the sADM model
+ */
+static
+dlb_pmd_success
+publish_trackfmt
+    (parser *ctx
+    )
+{
+    //TODO: implement correctly
+    (void)ctx;
+    return PMD_SUCCESS;
 }
 
 
@@ -1516,6 +1853,26 @@ publish_track_uid
 }
 
 
+static
+dlb_pmd_success
+clear_current_track_id
+ (parser *ctx
+    )
+{
+    dlb_sadm_reader *p = (dlb_sadm_reader *)ctx;
+
+    p->current_track_id = 0;
+    return 0;
+}
+
+
+/**
+ * @def clear_track_id(p)
+ * @brief call clear_current_track_id(p) and report error if any
+ */
+#define clear_track_id(p) if (clear_current_track_id(p)) error()
+
+
 /**
  * @brief attempt to associate a channel number with a given track UID
  */
@@ -1529,15 +1886,18 @@ set_track_uid_channel
     dlb_sadm_track_uid track_uid;
     dlb_sadm_idref idref;
     dlb_sadm_idref idref2;
-    const unsigned char *uref = (const unsigned char *)ref;
+    char up_buf[13];
 
+    strncpy(up_buf, ref, sizeof(up_buf));
+    copy_current_id(up_buf, up_buf, sizeof(up_buf));
+    
     if (0 == p->current_track_id)
     {
         errmsg(p, "No trackID attribute specified for audio Track UID Ref");
         return PMD_FAIL;
     }
 
-    if (dlb_sadm_lookup_reference(p->model, uref, DLB_SADM_TRACKUID, 0, &idref))
+    if (dlb_sadm_lookup_reference(p->model, (const unsigned char *)up_buf, DLB_SADM_TRACKUID, 0, &idref))
     {
         errmsg(p, "Could not look up track uid \"%s\"", ref);
         return PMD_FAIL;
@@ -1553,14 +1913,12 @@ set_track_uid_channel
             return PMD_FAIL;
         }
         r = &p->channel_assignments[p->channel_assignment_count++];
-        memmove(&r->track_uid, uref, sizeof(r->track_uid));
+        memmove(&r->track_uid, up_buf, sizeof(r->track_uid));
         r->channel_number = p->current_track_id;
-        p->current_track_id = 0;
     }
     else
     {
         track_uid.channel_idx = p->current_track_id;
-        p->current_track_id = 0;
 
         if (dlb_sadm_set_track_uid(p->model, &track_uid, &idref2))
         {
@@ -1576,6 +1934,32 @@ set_track_uid_channel
     return PMD_SUCCESS;
 }
 
+
+static
+dlb_pmd_success
+publish_nop
+    (parser *ctx
+    )
+{
+    (void)ctx;
+    return PMD_SUCCESS;
+}
+
+static
+dlb_pmd_success           /** @return 1 on failure, 0 on success */
+alloc_nop
+    (dlb_sadm_reader *p
+    )
+{
+    (void)p;
+    return PMD_SUCCESS;
+}
+
+/**
+ * @def process_nop()
+ * @brief wrap nop operation
+ */
+#define process_nop(p) if (alloc_nop(p)) error()
 
 /** -------------------------- PARSER XML LAYOUT ------------------------------ */
 
@@ -1601,7 +1985,8 @@ element_callback
         {
             if_begin_tag("frameFormat",)
             {
-                if_begin_tag("changedIDs",)
+                if_tag("chunkAdmElement") process_nop(p);
+                elif_begin_tag("changedIDs",)
                 {
                     if_tag("audioProgrammeIDRef");
                     elif_tag("audioContentIDRef");
@@ -1609,11 +1994,12 @@ element_callback
                     elif_tag("audioPackFormatIDRef");
                     elif_tag("audioTrackUIDRef");
                     elif_tag("audioChannelFormatIDRef");
+                    elif_tag("audioTrackFormatIDRef");
                     endif();
                 }
-                elif_begin_tag("transportTrackFormat",)
+                elif_begin_tag("transportTrackFormat",)     /* PMDLIB-108: keeping this for backwards compatibility */
                 {
-                    if_begin_tag("audioTrack",)
+                    if_begin_popaction_tag("audioTrack", NULL, clear_current_track_id)
                     {
                         if_tag("audioTrackUIDRef") set_track_uid_channel(p, text);
                         endif();
@@ -1622,20 +2008,200 @@ element_callback
                 }
                 endif();
             }
+            elif_begin_tag("transportTrackFormat",)         /* PMDLIB-108: correct placement is here */
+            {
+                if_begin_popaction_tag("audioTrack", NULL, clear_current_track_id)
+                {
+                    if_tag("audioTrackUIDRef") set_track_uid_channel(p, text);
+                    endif();
+                }
+                endif();
+            }
             endif();
         }
-        elif_begin_tag("audioFormatExtended",)
+        /* TODO: ebuCoreMain? */
+        elif_begin_tag("coreMetadata",)
+        {
+            if_begin_tag("format",)
+            {
+                if_begin_tag("audioFormatExtended",)       /* Optional wrapping by coreMetadata and format */
+                {
+                    if_begin_popaction_tag("audioProgramme", alloc_programme(p), publish_programme)
+                    {
+                        if_tag("audioProgrammeLabel") parse_programme_label();
+                        elif_tag("audioContentIDRef") parse_contentref_entry(p->programme.contents);
+                        elif_begin_popaction_tag("loudnessMetadata", process_nop(p), publish_nop)
+                        {
+                            if_tag("integratedLoudness") process_nop(p);
+                            elif_tag("loudnessRange")    process_nop(p);
+                            elif_tag("maxTruePeak")      process_nop(p);
+                            elif_tag("maxMomentary")     process_nop(p);
+                            elif_tag("maxShortTerm")     process_nop(p);
+                            elif_tag("dialogueLoudness") process_nop(p);
+                            endif();
+                        }
+                        elif_begin_popaction_tag("authoringInformation", process_nop(p), publish_nop)
+                        {
+                            if_begin_popaction_tag("referenceLayout", process_nop(p), publish_nop)
+                            {
+                                if_tag("audioPackFormatIDRef") process_nop(p);
+                                endif();
+                            }
+                            elif_begin_popaction_tag("renderer", process_nop(p), publish_nop)
+                            {
+                                if_tag("audioPackFormatIDRef") process_nop(p);
+                                endif();
+                            }
+                            endif();
+                        }
+                        endif();
+                    }
+                    elif_begin_popaction_tag("audioContent", alloc_content(p), publish_content)
+                    {
+                        if_tag("audioObjectIDRef")    parse_objref_entry(p->content.objects);
+                        elif_tag("dialogue")          parse_dialogue(p->content.dialogue_value);
+                        elif_tag("audioContentLabel") parse_content_label();
+                        elif_begin_popaction_tag("loudnessMetadata", process_nop(p), publish_nop)
+                        {
+                            if_tag("integratedLoudness") process_nop(p);
+                            elif_tag("loudnessRange")    process_nop(p);
+                            elif_tag("maxTruePeak")      process_nop(p);
+                            elif_tag("maxMomentary")     process_nop(p);
+                            elif_tag("maxShortTerm")     process_nop(p);
+                            elif_tag("dialogueLoudness") process_nop(p);
+                            endif();
+                        }
+                        endif();
+                    }
+                    elif_begin_popaction_tag("audioObject", alloc_object(p), publish_object)
+                    {
+                        if_tag("gain")                   parse_object_gain(p->object.gain);
+                        elif_tag("audioPackFormatIDRef") parse_packref(p->object.pack_format);
+                        elif_tag("audioTrackUIDRef")     parse_trackref_entry(p->object.track_uids);
+                        elif_tag("audioObjectIDRef")     parse_objref_entry(p->object.object_refs);
+                        elif_begin_popaction_tag("audioObjectInteraction", process_nop(p), publish_nop)
+                        {
+                            if_tag("gainInteractionRange") process_nop(p);
+                            endif();
+                        }
+                        endif();
+                    }
+                    elif_begin_popaction_tag("audioPackFormat", alloc_packfmt(p), publish_packfmt)
+                    {
+                        if_tag("audioChannelFormatIDRef") parse_chanref_entry(p->packfmt.chanfmts);
+                        endif();
+                    }
+                    elif_begin_popaction_tag("audioChannelFormat", alloc_chanfmt(p), publish_chanfmt)
+                    {
+                        if_begin_popaction_tag("audioBlockFormat", alloc_blkfmt(p), publish_blkfmt)
+                        {
+                            if_tag("speakerLabel")    parse_blkfmt_speaker_label(p->blkfmt.speaker_label);
+                            elif_tag("gain")          parse_blkfmt_gain(p->blkfmt.gain);
+                            elif_tag("cartesian")     parse_blkfmt_cartesian(p->blkfmt.cartesian_coordinates);
+                            elif_tag("position")      parse_blkfmt_position(p->blkfmt);
+                            elif_tag("width")         parse_blkfmt_width(p->blkfmt);
+                            elif_tag("height")        parse_blkfmt_height(p->blkfmt);
+                            elif_tag("depth")         parse_blkfmt_depth(p->blkfmt);
+                            endif();
+                        }
+                        endif();
+                    }
+                    elif_begin_popaction_tag("audioStreamFormat", alloc_streamfmt(p), publish_streamfmt)
+                    {
+                        if_tag("audioChannelFormatIDRef");
+                        elif_tag("audioTrackFormatIDRef");
+                        endif();
+                    }
+                    elif_begin_popaction_tag("audioTrackFormat", alloc_trackfmt(p), publish_trackfmt)
+                    {
+                        if_tag("audioStreamFormatIDRef");
+                        endif();
+                    }
+                    elif_begin_popaction_tag("audioTrackUID", alloc_track_uid(p), publish_track_uid)
+                    {
+                        if_tag("audioChannelFormatIDRef")  parse_chanref(p->track_uid.chanfmt);
+                        elif_tag("audioPackFormatIDRef")   parse_packref(p->track_uid.packfmt);
+                        elif_tag("audioTrackFormatIDRef");
+                        endif();
+                    }
+                    endif();
+                }
+                endif();
+#ifdef IGNORE_AUDIO_FORMAT_CUSTOM_ELEMENT
+                if_ignore_optional_tag_block("audioFormatCustom")
+                end_ignore_optional_tag_block();
+#else
+                elif_begin_tag("audioFormatCustom", )
+                {
+                    if_begin_tag("audioFormatCustomSet", )
+                    {
+                        if_begin_tag("admInformation", )
+                        {
+                            if_begin_tag("profile", )
+                            {
+                                if_tag("levelID");
+                                elif_tag("profileVersion");
+                                elif_tag("profileName");
+                                endif();
+                            }
+                            endif();
+                        }
+                        endif();
+                    }
+                    endif();
+                }
+                endif();
+#endif
+            }
+            endif();
+        }
+        elif_begin_tag("audioFormatExtended",)             /* Non-wrapped version */
         {
             if_begin_popaction_tag("audioProgramme", alloc_programme(p), publish_programme)
             {
-                if_tag("audioProgrammeLabel")  parse_programme_label();
-                elif_tag("audioContentIDRef")  parse_contentref_entry(p->programme.contents);
+                if_tag("audioProgrammeLabel") parse_programme_label();
+                elif_tag("audioContentIDRef") parse_contentref_entry(p->programme.contents);
+                elif_begin_popaction_tag("loudnessMetadata", process_nop(p), publish_nop)
+                {
+                    if_tag("integratedLoudness") process_nop(p);
+                    elif_tag("loudnessRange") process_nop(p);
+                    elif_tag("maxTruePeak") process_nop(p);
+                    elif_tag("maxMomentary") process_nop(p);
+                    elif_tag("maxShortTerm") process_nop(p);
+                    elif_tag("dialogueLoudness") process_nop(p);
+                    endif();
+                }
+                elif_begin_popaction_tag("authoringInformation", process_nop(p), publish_nop)
+                {
+                    if_begin_popaction_tag("referenceLayout", process_nop(p), publish_nop)
+                    {
+                        if_tag("audioPackFormatIDRef") process_nop(p);
+                        endif();
+                    }
+                    elif_begin_popaction_tag("renderer", process_nop(p), publish_nop)
+                    {
+                        if_tag("audioPackFormatIDRef") process_nop(p);
+                        endif();
+                    }
+                    endif();
+                }
                 endif();
             }
             elif_begin_popaction_tag("audioContent", alloc_content(p), publish_content)
             {
-                if_tag("audioObjectIDRef")    parse_objref(p->content.object);
+                if_tag("audioObjectIDRef")    parse_objref_entry(p->content.objects);
                 elif_tag("dialogue")          parse_dialogue(p->content.dialogue_value);
+                elif_tag("audioContentLabel") parse_content_label();
+                elif_begin_popaction_tag("loudnessMetadata", process_nop(p), publish_nop)
+                {
+                    if_tag("integratedLoudness") process_nop(p);
+                    elif_tag("loudnessRange")    process_nop(p);
+                    elif_tag("maxTruePeak")      process_nop(p);
+                    elif_tag("maxMomentary")     process_nop(p);
+                    elif_tag("maxShortTerm")     process_nop(p);
+                    elif_tag("dialogueLoudness") process_nop(p);
+                    endif();
+                }
                 endif();
             }
             elif_begin_popaction_tag("audioObject", alloc_object(p), publish_object)
@@ -1643,6 +2209,12 @@ element_callback
                 if_tag("gain")                   parse_object_gain(p->object.gain);
                 elif_tag("audioPackFormatIDRef") parse_packref(p->object.pack_format);
                 elif_tag("audioTrackUIDRef")     parse_trackref_entry(p->object.track_uids);
+                elif_tag("audioObjectIDRef")     parse_objref_entry(p->object.object_refs);
+                elif_begin_popaction_tag("audioObjectInteraction", process_nop(p), publish_nop)
+                {
+                    if_tag("gainInteractionRange") process_nop(p);
+                    endif();
+                }
                 endif();
             }
             elif_begin_popaction_tag("audioPackFormat", alloc_packfmt(p), publish_packfmt)
@@ -1654,27 +2226,68 @@ element_callback
             {
                 if_begin_popaction_tag("audioBlockFormat", alloc_blkfmt(p), publish_blkfmt)
                 {
-                    if_tag("speakerLabel") parse_blkfmt_speaker_label(p->blkfmt.speaker_label);
-                    elif_tag("position")   parse_blkfmt_position(p->blkfmt);
-                    elif_tag("cartesian")  parse_blkfmt_cartesian(p->blkfmt.cartesian_coordinates);
+                    if_tag("speakerLabel")    parse_blkfmt_speaker_label(p->blkfmt.speaker_label);
+                    elif_tag("gain")          parse_blkfmt_gain(p->blkfmt.gain);
+                    elif_tag("cartesian")     parse_blkfmt_cartesian(p->blkfmt.cartesian_coordinates);
+                    elif_tag("position")      parse_blkfmt_position(p->blkfmt);
+                    elif_tag("width")         parse_blkfmt_width(p->blkfmt);
+                    elif_tag("height")        parse_blkfmt_height(p->blkfmt);
+                    elif_tag("depth")         parse_blkfmt_depth(p->blkfmt);
                     endif();
                 }
+                endif();
+            }
+            elif_begin_popaction_tag("audioStreamFormat", alloc_streamfmt(p), publish_streamfmt)
+            {
+                if_tag("audioChannelFormatIDRef");
+                elif_tag("audioTrackFormatIDRef");
+                endif();
+            }
+            elif_begin_popaction_tag("audioTrackFormat", alloc_trackfmt(p), publish_trackfmt)
+            {
+                if_tag("audioStreamFormatIDRef");
                 endif();
             }
             elif_begin_popaction_tag("audioTrackUID", alloc_track_uid(p), publish_track_uid)
             {
                 if_tag("audioChannelFormatIDRef")  parse_chanref(p->track_uid.chanfmt);
                 elif_tag("audioPackFormatIDRef")   parse_packref(p->track_uid.packfmt);
+                elif_tag("audioTrackFormatIDRef");
                 endif();
             }
             endif();
         }
         endif();
+#ifdef IGNORE_AUDIO_FORMAT_CUSTOM_ELEMENT
+        if_ignore_optional_tag_block("audioFormatCustom")
+        end_ignore_optional_tag_block();
+#else
+        elif_begin_tag("audioFormatCustom",)
+        {
+            if_begin_tag("audioFormatCustomSet",)
+            {
+                if_begin_tag("admInformation",)
+                {
+                    if_begin_tag("profile", )
+                    {
+                        if_tag("levelID");
+                        elif_tag("profileVersion");
+                        elif_tag("profileName");
+                        endif();
+                    }
+                    endif();
+                }
+                endif();
+            }
+            endif();
+        }
+        endif();
+#endif
     }
-    end_if_begin_tag();    
-    
+    end_if_begin_tag();
+
     COROUTINE_END;
-    
+
     return 0;
 }
     
@@ -1689,241 +2302,458 @@ attribute_callback
     )
 {
     dlb_sadm_reader *p = (dlb_sadm_reader *)context;
-
-    if (!strcasecmp(tag, "xml"))
+    /*######################### ADM elements #####################################*/
+    if (p->ignore_attributes == 1)
     {
+        parser_trace(p, "ignoring attribute %s (with value %s) of tag <%s>\n", attribute, value, tag);
         return 0;
     }
 
-    if (!strcasecmp(attribute, "audioProgrammeID"))
+    /************************** audioTrackFormat **********************************/
+    if (!strcasecmp(tag, "audioTrackFormat"))
     {
-        if (0 != p->current_id[0])
-        {
-            errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        memmove(p->current_id, value, sizeof(p->current_id));
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "audioProgrammeName"))
-    {
-        if (0 != p->current_name[0])
-        {
-            errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
-        {
-            errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
-                   value, attribute, tag);
-            return 1;
-        }
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "audioProgrammeLanguage"))
-    {
-        if (0 != p->current_language[0])
-        {
-            errmsg(p, "multiple language attributes specified on tag %s\n", tag);
-            return 1;
-        }
-        if (decode_language(p, value, p->current_language))
+        if (!strcasecmp(attribute, "audioTrackFormatID"))
         {
             return 0;
         }
+        else if (!strcasecmp(attribute, "audioTrackFormatName"))
+        {
+            return 0;
+        }
+        /* formatLabel - handled by common attribute */
+        /* formatDefinition - handled by common attribute */
     }
-    else if (!strcasecmp(attribute, "audioContentID"))
+    /************************** audioStreamFormat *********************************/
+    else if (!strcasecmp(tag, "audioStreamFormat"))
     {
-        if (0 != p->current_id[0])
+        if (!strcasecmp(attribute, "audioStreamFormatID"))
         {
-            errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
-            return 1;
+            return 0;
         }
-        memmove(p->current_id, value, sizeof(p->current_id));
-        return 0;        
+        else if (!strcasecmp(attribute, "audioStreamFormatName"))
+        {
+            return 0;
+        }
+        /* formatLabel - handled by common attribute */
+        /* formatDefinition - handled by common attribute */
     }
-    else if (!strcasecmp(attribute, "audioContentName"))
+    /************************** audioChannelFormat **********************************/
+    else if (!strcasecmp(tag, "audioChannelFormat"))
     {
-        if (0 != p->current_name[0])
+        if (!strcasecmp(attribute, "audioChannelFormatName"))
         {
-            errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
-        {
-            errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
-                   value, attribute, tag);
-            return 1;
-        }
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "mixedContentKind"))
-    {
-        unsigned int tmp;
-        if (!decode_uint(p, value, tag, 0, 3, &tmp))
-        {
-            errmsg(p, "Error: unkown mixedContentKind: \"%s\"", value);
-            return 1;
-        }
-        p->content.type = (dlb_sadm_content_type)(DLB_SADM_CONTENT_MK + tmp);
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "dialogueContentKind"))
-    {
-        unsigned int tmp;
-        if (!decode_uint(p, value, tag, 0, 6, &tmp))
-        {
-            errmsg(p, "Error: unkown dialogueContentKind: \"%s\"", value);
-            return 1;
-        }
-        p->content.type = (dlb_sadm_content_type)(DLB_SADM_CONTENT_DK + tmp);
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "audioObjectID"))
-    {
-        if (0 != p->current_id[0])
-        {
-            errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        memmove(p->current_id, value, sizeof(p->current_id));
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "audioObjectName"))
-    {
-        if (0 != p->current_name[0])
-        {
-            errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
-        {
-            errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
-                   value, attribute, tag);
-            return 1;
-        }
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "audioPackFormatID"))
-    {
-        if (0 != p->current_id[0])
-        {
-            errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        memmove(p->current_id, value, sizeof(p->current_id));
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "audioPackFormatName"))
-    {
-        if (0 != p->current_name[0])
-        {
-            errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
-        {
-            errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
-                   value, attribute, tag);
-            return 1;
-        }
+            if (0 != p->current_name[0])
+            {
+                errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
+            {
+                errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
+                    value, attribute, tag);
+                return 1;
+            }
 
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "typeDefinition"))
-    {
-        memmove(p->type_definition, value, sizeof(p->type_definition));
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "typeLabel"))
-    {
-        memmove(p->type_label, value, sizeof(p->type_label));
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "audioChannelFormatID"))
-    {
-        if (0 != p->current_id[0])
-        {
-            errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        memmove(p->current_id, value, sizeof(p->current_id));
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "audioChannelFormatName"))
-    {
-        if (0 != p->current_name[0])
-        {
-            errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
-        {
-            errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
-                   value, attribute, tag);
-            return 1;
-        }
-
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "audioBlockFormatID"))
-    {
-        if (0 != p->current_id[0])
-        {
-            errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        memmove(p->current_id, value, sizeof(p->current_id));
-        return 0;
-    }
-    else if (!strcasecmp(attribute, "coordinate"))
-    {
-        if (decode_coordinate_type_attribute(p, value, &p->current_coordinate_type))
-        {
             return 0;
         }
-    }
-    else if (!strcasecmp(attribute, "language"))
-    {
-        if (0 != p->current_language[0])
+        else if (!strcasecmp(attribute, "audioChannelFormatID"))
         {
-            errmsg(p, "multiple language attributes specified on tag %s\n", tag);
-            return 1;
-        }
-        if (decode_language(p, value, p->current_language))
-        {
+            if (0 != p->current_id[0])
+            {
+                errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            copy_current_id((char *)p->current_id, value, sizeof(p->current_id));
             return 0;
         }
+        /* typeLabel - handled by common attribute */
+        /* typeDefinition - handled by common attribute */
     }
-    else if (!strcasecmp(attribute, "gainUnit"))
+    /************************** audioBlockFormat **********************************/
+    else if (!strcasecmp(tag, "audioBlockFormat"))
     {
-        if (!strcasecmp(tag, "gain"))
+        if (!strcasecmp(attribute, "audioBlockFormatID"))
         {
-            p->gain_unit_db = 1;
+            if (0 != p->current_id[0])
+            {
+                errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            copy_current_id((char *)p->current_id, value, sizeof(p->current_id));
             return 0;
         }
-    }
-    else if (!strcasecmp(attribute, "UID"))
-    {
-        if (0 != p->current_id[0])
-        {
-            errmsg(p, "multiple track UIDs specified on tag \"%s\"\n", tag);
-            return 1;
-        }
-        memmove(p->current_id, value, sizeof(p->current_id));
-        return 0;
-    }
-    else if (!strcasecmp(tag, "frameFormat"))
-    {
-        if (!strcasecmp(attribute, "frameFormatID"))
-        {
-            return 0;
-        }
-        else if (!strcasecmp(attribute, "start"))
+        else if (!strcasecmp(attribute, "rtime"))
         {
             return 0;
         }
         else if (!strcasecmp(attribute, "duration"))
+        {
+            return 0;
+        }
+        /* BS.2125 elements... */
+        else if (!strcasecmp(attribute, "initializeBlock"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "lstart"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "lduration"))
+        {
+            return 0;
+        }
+        /* ... BS.2125 elements */
+    }
+    /************************** audioPackFormat ***********************************/
+    else if (!strcasecmp(tag, "audioPackFormat"))
+    {
+        if (!strcasecmp(attribute, "audioPackFormatID"))
+        {
+            if (0 != p->current_id[0])
+            {
+                errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            copy_current_id((char *)p->current_id, value, sizeof(p->current_id));
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "audioPackFormatName"))
+        {
+            if (0 != p->current_name[0])
+            {
+                errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
+            {
+                errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
+                    value, attribute, tag);
+                return 1;
+            }
+            return 0;
+        }
+        /* typeLabel - handled by common attribute */
+        /* typeDefinition - handled by common attribute */
+        /* importance - handled by common attribute */
+    }
+        /************************** audioObject ***********************************/
+    else if (!strcasecmp(tag, "audioObject"))
+    {
+        if (!strcasecmp(attribute, "audioObjectID"))
+        {
+            if (0 != p->current_id[0])
+            {
+                errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            copy_current_id((char *)p->current_id, value, sizeof(p->current_id));
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "audioObjectName"))
+        {
+            if (0 != p->current_name[0])
+            {
+                errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
+            {
+                errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
+                    value, attribute, tag);
+                return 1;
+            }
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "dialogue"))
+        {
+            unsigned int tmp;
+            if (!decode_uint(p, value, tag, 0, 2, &tmp))
+            {
+                errmsg(p, "Error: unknown dialogue value \"%s\"\n", value);
+                return 1;
+            }
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "disableDucking"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "interact"))
+        {
+            return 0;
+        }
+        /* start - handled by common attribute */
+        /* duration - handled by common attribute */
+        /* importance - handled by common attribute */
+    }
+    /************************** audioContent **************************************/
+    else if (!strcasecmp(tag, "audioContent"))
+    {
+        if (!strcasecmp(attribute, "audioContentID"))
+        {
+            if (0 != p->current_id[0])
+            {
+                errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            copy_current_id((char *)p->current_id, value, sizeof(p->current_id));
+            return 0;        
+        }
+        else if (!strcasecmp(attribute, "audioContentName"))
+        {
+            if (0 != p->current_name[0])
+            {
+                errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
+            {
+                errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
+                    value, attribute, tag);
+                return 1;
+            }
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "audioContentLanguage"))
+        {
+            if (0 != p->current_language[0])
+            {
+                errmsg(p, "multiple language attributes specified on tag %s\n", tag);
+                return 1;
+            }
+            if (!decode_language(p, value, p->current_language))
+            {
+                errmsg(p, "invalid language attributes specified on tag %s\n", tag);
+                return 1;
+            }
+            return 0;
+        }
+    }
+    /************************** audioProgramme ************************************/
+    else if (!strcasecmp(tag, "audioProgramme"))
+    {
+        if (!strcasecmp(attribute, "audioProgrammeID"))
+        {
+            if (0 != p->current_id[0])
+            {
+                errmsg(p, "multiple IDs specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            copy_current_id((char *)p->current_id, value, sizeof(p->current_id));
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "audioProgrammeName"))
+        {
+            if (0 != p->current_name[0])
+            {
+                errmsg(p, "multiple names specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            if (!decode_string(p, value, p->current_name, sizeof(p->current_name)))
+            {
+                errmsg(p, "could not decode string value \"%s\" for attribute \"%s\" on tag \"%s\"\n",
+                    value, attribute, tag);
+                return 1;
+            }
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "audioProgrammeLanguage"))
+        {
+            if (0 != p->current_language[0])
+            {
+                errmsg(p, "multiple language attributes specified on tag %s\n", tag);
+                return 1;
+            }
+            if (!decode_language(p, value, p->current_language))
+            {
+                errmsg(p, "invalid language attributes specified on tag %s\n", tag);
+                return 1;
+            }
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "end"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "maxDuckingDepth"))
+        {
+            return 0;
+        }
+        /* start - handled by common attribute */
+    }
+    /************************** audioTrackUID *************************************/
+    else if (!strcasecmp(tag, "audioTrackUID"))
+    {
+        if (!strcasecmp(attribute, "UID"))
+        {
+            if (0 != p->current_id[0])
+            {
+                errmsg(p, "multiple track UIDs specified on tag \"%s\"\n", tag);
+                return 1;
+            }
+            copy_current_id((char *)p->current_id, value, sizeof(p->current_id));
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "sampleRate"))
+        {
+            unsigned int tmp;
+            if (decode_uint(p, value, attribute, 48000, 48000, &tmp))
+            {
+                return 0;
+            }
+        }
+        else if (!strcasecmp(attribute, "bitDepth"))
+        {
+            unsigned int tmp;
+            if (decode_uint(p, value, attribute, 16, 24, &tmp))
+            {
+                return 0;
+            }
+        }
+    }
+    /************************** audioFormatExtended *******************************/
+    else if (!strcasecmp(tag, "audioFormatExtended"))
+    {
+        if (!strcasecmp(attribute, "version"))
+        {
+            if (strcasecmp(value, "ITU-R_BS.2076-2"))   /* We support only -2 right now */
+            {
+                errmsg(p, "unsupported audio format version \"%s\"\n", value);
+                return 1;
+            }
+            return 0;
+        }
+    }
+
+#ifndef IGNORE_AUDIO_FORMAT_CUSTOM_ELEMENT
+    /************************** audioFormatCustomSet ******************************/
+    else if (!strcasecmp(tag, "audioFormatCustomSet"))
+    {
+        if (!strcasecmp(attribute, "audioFormatCustomSetID"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "audioFormatCustomSetName"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "audioFormatCustomSetType"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "audioFormatCustomSetVersion"))
+        {
+            return 0;
+        }
+    }
+
+    /************************** profile *******************************************/
+    else if (!strcasecmp(tag, "profile"))
+    {
+        return 0;
+    }
+#endif
+
+    /*######################### General elements #################################*/
+    else if (!strcasecmp(tag, "xml"))
+    {
+        return 0;
+    }
+
+    /************************** ebuCoreMain ***************************************/
+    else if (!strcasecmp(tag, "ebuCoreMain"))
+    {
+        return 0;
+    }
+
+    /*######################### ADM sub-elements #################################*/
+
+    /************************** dialogue ******************************************/
+    else if (!strcasecmp(tag, "dialogue"))
+    {
+        if (!strcasecmp(attribute, "nonDialogueContentKind"))
+        {
+            unsigned int tmp;
+            if (!decode_uint(p, value, tag, 0, 2, &tmp))
+            {
+                errmsg(p, "Error: unkown nonDialogueContentKind: \"%s\"", value);
+                return 1;
+            }
+            p->content.type = (dlb_sadm_content_type)(DLB_SADM_CONTENT_NK + tmp);
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "dialogueContentKind"))
+        {
+            unsigned int tmp;
+            if (!decode_uint(p, value, tag, 0, 6, &tmp))
+            {
+                errmsg(p, "Error: unkown dialogueContentKind: \"%s\"", value);
+                return 1;
+            }
+            p->content.type = (dlb_sadm_content_type)(DLB_SADM_CONTENT_DK + tmp);
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "mixedContentKind"))
+        {
+            unsigned int tmp;
+            if (!decode_uint(p, value, tag, 0, 3, &tmp))
+            {
+                errmsg(p, "Error: unkown mixedContentKind: \"%s\"", value);
+                return 1;
+            }
+            p->content.type = (dlb_sadm_content_type)(DLB_SADM_CONTENT_MK + tmp);
+            return 0;
+        }
+    }
+    /************************** renderer ******************************************/
+    else if (!strcasecmp(tag, "renderer"))
+    {
+        if (!strcasecmp(attribute, "uri"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "name"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "version"))
+        {
+            return 0;
+        }
+    }
+    /************************** loudnessMetadata **********************************/
+    else if (!strcasecmp(tag, "loudnessMetadata"))
+    {
+        if (!strcasecmp(attribute, "loudnessMethod"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "loudnessRecType"))
+        {
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "loudnessCorrectionType"))
+        {
+            return 0;
+        }
+    }
+    /************************** created *******************************************/
+    else if (!strcasecmp(tag, "created"))
+    {
+        if (!strcasecmp(attribute, "startDate"))
+        {
+            return 0;
+        }
+        if (!strcasecmp(attribute, "startTime"))
+        {
+            return 0;
+        }
+    }
+    /************************** frameFormat ***************************************/
+    else if (!strcasecmp(tag, "frameFormat"))
+    {
+        if (!strcasecmp(attribute, "frameFormatID"))
         {
             return 0;
         }
@@ -1937,22 +2767,18 @@ attribute_callback
         }
         else if (!strcasecmp(attribute, "flowID"))
         {
+            dlb_pmd_success success = dlb_sadm_set_flow_id(p->model, value, strlen(value));
+            (void)success;
             return 0;
         }
-    }
-    else if (!strcasecmp(attribute, "status"))
-    {
-        if (!strcasecmp(tag, "audioProgrammeIDRef")
-            || !strcasecmp(tag, "audioContentIDRef")
-            || !strcasecmp(tag, "audioObjectIDRef")
-            || !strcasecmp(tag, "audioPackFormatIDRef")
-            || !strcasecmp(tag, "audioTrackUIDRef")
-            || !strcasecmp(tag, "audioChannelFormatIDRef")
-            )
+        else if (!strcasecmp(attribute, "countToFull"))
         {
             return 0;
         }
+        /* start - handled by common attribute */
+        /* duration - handled by common attribute */
     }
+    /************************** transportTrackFormat ******************************/
     else if (!strcasecmp(tag, "transportTrackFormat"))
     {
         if (!strcasecmp(attribute, "transportID")
@@ -1963,21 +2789,200 @@ attribute_callback
             return 0;
         }
     }
-    else if (!strcasecmp(attribute, "trackID"))
+    /************************** gain **********************************************/
+    else if (!strcasecmp(tag, "gain"))
     {
-        if (decode_uint(p, value, attribute, 1, 255, &p->current_track_id))
+        if (!strcasecmp(attribute, "gainUnit"))
+        {
+            uint8_t tmp[7];
+            const char *v = (const char *)tmp;
+
+            if (!decode_string(p, value, tmp, sizeof(tmp)))
+            {
+                errmsg(p, "Error: invalid gainUnit: \"%s\"", value);
+                return 1;
+            }
+
+            if (!strcasecmp(v, "linear"))
+            {
+                p->gain_unit_db = 0;
+                return 0;
+            }
+            else if (!strcasecmp(v, "dB"))
+            {
+                p->gain_unit_db = 1;
+                return 0;
+            }
+        }
+    }
+    /************************** audioObjectInteraction **********************************/
+    else if (!strcasecmp(tag, "audioObjectInteraction"))
+    {
+        if (!strcasecmp(attribute, "onOffInteract"))
+        {
+            unsigned int tmp;
+            if (!decode_uint(p, value, attribute, 0, 1, &tmp))
+            {
+                errmsg(p, "Error: invalid onOffInteract: \"%s\"", value);
+                return 1;
+            }
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "gainInteract"))
+        {
+            unsigned int tmp;
+            if (!decode_uint(p, value, attribute, 0, 1, &tmp))
+            {
+                errmsg(p, "Error: invalid gainInteract: \"%s\"", value);
+                return 1;
+            }
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "positionInteract"))
+        {
+            unsigned int tmp;
+            if (!decode_uint(p, value, attribute, 0, 1, &tmp))
+            {
+                errmsg(p, "Error: invalid gainInteract: \"%s\"", value);
+                return 1;
+            }
+            return 0;
+        }
+    }
+    /************************** gainInteractionRange ************************************/
+    else if (!strcasecmp(tag, "gainInteractionRange"))
+    {
+        if (!strcasecmp(attribute, "gainUnit"))
+        {
+            uint8_t tmp[7];
+            const char *v = (const char *)tmp;
+
+            if (!decode_string(p, value, tmp, sizeof(tmp)))
+            {
+                errmsg(p, "Error: invalid gainUnit: \"%s\"", value);
+                return 1;
+            }
+
+            if (!strcasecmp(v, "linear"))
+            {
+                p->gain_unit_db = 0;
+                return 0;
+            }
+            else if (!strcasecmp(v, "dB"))
+            {
+                p->gain_unit_db = 1;
+                return 0;
+            }
+            return 0;
+        }
+        else if (!strcasecmp(attribute, "bound"))
+        {
+            uint8_t tmp[7];
+            const char *v = (const char *)tmp;
+
+            if (!decode_string(p, value, tmp, sizeof(tmp)))
+            {
+                errmsg(p, "Error: invalid bound: \"%s\"", value);
+                return 1;
+            }
+
+            if (  strcasecmp(v, "min")
+               && strcasecmp(v, "max"))
+            {
+                errmsg(p, "Error: unsupported bound: \"%s\"", value);
+                return 1;
+            }
+            return 0;
+        }
+        
+    }
+    /************************** audioTrack **********************************************/
+    else if (!strcasecmp(tag, "audioTrack"))
+    {
+        if (!strcasecmp(attribute, "trackID"))
+        {
+            if (decode_uint(p, value, attribute, 1, 255, &p->current_track_id))
+            {
+                return 0;
+            }
+        }
+        /* formatLabel - handled by common attribute */
+        /* formatDefinition - handled by common attribute */
+    }
+
+    /*######################### Common attributes ################################*/
+    if (!strcasecmp(attribute, "status"))
+    {
+        if (!strcasecmp(tag, "audioProgrammeIDRef")
+            || !strcasecmp(tag, "audioContentIDRef")
+            || !strcasecmp(tag, "audioObjectIDRef")
+            || !strcasecmp(tag, "audioPackFormatIDRef")
+            || !strcasecmp(tag, "audioTrackUIDRef")
+            || !strcasecmp(tag, "audioChannelFormatIDRef")
+            || !strcasecmp(tag, "audioTrackFormatIDRef")
+            )
         {
             return 0;
         }
     }
-    else if (!strcasecmp(attribute, "version"))
+    else if (!strcasecmp(attribute, "formatLabel"))
     {
-        if (!strcasecmp(tag, "audioFormatExtended"))
+        return 0;
+    }
+    else if (!strcasecmp(attribute, "formatDefinition"))
+    {
+        return 0;
+    }
+    else if (!strcasecmp(attribute, "typeLabel"))
+    {
+        memmove(p->type_label, value, sizeof(p->type_label));
+        return 0;
+    }
+    else if (!strcasecmp(attribute, "typeDefinition"))
+    {
+        memmove(p->type_definition, value, sizeof(p->type_definition));
+        return 0;
+    }
+    else if (!strcasecmp(attribute, "language"))
+    {
+        if (0 != p->current_language[0])
         {
-            // TODO: anything useful to do here?  Like record the version number or check for compatibility?
+            errmsg(p, "multiple language attributes specified on tag %s\n", tag);
+            return 1;
+        }
+        if (decode_language(p, value, p->current_language))
+        {
             return 0;
         }
     }
+    else if (!strcasecmp(attribute, "start"))
+    {
+        return 0;
+    }
+    else if (!strcasecmp(attribute, "duration"))
+    {
+        return 0;
+    }
+    else if (!strcasecmp(attribute, "lstart"))
+    {
+        return 0;
+    }
+    else if (!strcasecmp(attribute, "lduration"))
+    {
+        return 0;
+    }
+    else if (!strcasecmp(attribute, "importance"))
+    {
+        return 0;
+    }
+    else if (!strcasecmp(attribute, "coordinate"))
+    {
+        if (decode_coordinate_type_attribute(p, value, &p->current_coordinate_type))
+        {
+            return 0;
+        }
+    }
+
     errmsg(p, "Unexpected attribute \"%s\" on tag \"%s\" (with value \"%s\")\n",
            attribute, tag, value);
     return 1;
@@ -2043,7 +3048,7 @@ find_channel_assignment
 /**
  * @brief check whether every track UID has a channel index
  *
- * Channel indices are assigned in the serial ADM footer, under
+ * Channel indices are assigned in the serial ADM header, under
  * the transportTrackFormat tag.  Each 'audioTrack' entry assigns a
  * channel index via its trackID attribute.
  */
@@ -2066,14 +3071,26 @@ check_track_uids
     res = PMD_SUCCESS;
     while (!dlb_sadm_track_uid_iterator_next(&tui, &track_uid))
     {
+        dlb_pmd_bool is_common;
+
+        if (dlb_sadm_track_uid_is_common_def(model, &track_uid, &is_common))
+        {
+            return PMD_FAIL;
+        }
+        if (is_common && track_uid.channel_idx == 0)
+        {
+            /* If the track uid is a common def and has no definite channel assignment, skip it */
+            continue;
+        }
+
         if (0 == track_uid.channel_idx)
         {
             int channel = find_channel_assignment(reader, &track_uid.id);
 
-            if (channel < 0)
+            if (channel < 1)
             {
                 printf("Error: track UID \"%s\" has no assigned channel\n",
-                    (char*)track_uid.id.data);
+                       (char*)track_uid.id.data);
                 res = PMD_FAIL;
             }
             else
@@ -2147,6 +3164,8 @@ dlb_sadm_reader_query_memory
             +  MEMREQ(track_uid_to_channel_record,  c->num_track_uids)
             +  MEMREQ(dlb_sadm_programme_label,     c->max_programme_labels)
             +  MEMREQ(dlb_sadm_idref,               c->max_programme_contents)
+            +  MEMREQ(dlb_sadm_idref,               c->max_content_objects)
+            +  MEMREQ(dlb_sadm_idref,               c->max_object_objects)
             +  MEMREQ(dlb_sadm_idref,               c->max_object_track_uids)
             +  MEMREQ(dlb_sadm_idref,               c->max_packfmt_chanfmts)
             +  MEMREQ(dlb_sadm_idref,               c->max_chanfmt_blkfmts)
@@ -2181,6 +3200,12 @@ dlb_sadm_reader_init
 
     r->programme_contents = (dlb_sadm_idref *)mc;
     mc += MEMREQ(dlb_sadm_idref, c->max_programme_contents);
+
+    r->content_objects = (dlb_sadm_idref *)mc;
+    mc += MEMREQ(dlb_sadm_idref, c->max_content_objects);
+
+    r->object_objects = (dlb_sadm_idref *)mc;
+    mc += MEMREQ(dlb_sadm_idref, c->max_object_objects);
 
     r->object_track_uids = (dlb_sadm_idref *)mc;
     mc += MEMREQ(dlb_sadm_idref, c->max_object_track_uids);
@@ -2228,6 +3253,7 @@ dlb_sadm_reader_read
     reader->lineno = 0;
     reader->model = model;
     reader->gain_unit_db = 0;
+    reader->channel_assignment_count = 0;
 
     if (dlb_sadm_model_limits(model, &reader->limits))
     {
@@ -2245,14 +3271,11 @@ dlb_sadm_reader_read
     count = dlb_sadm_get_undefined_references(model, undefined, NUM_UNDEFINED);
     if (count)
     {
-        static const char *reftypes[] = { "audioProgramme", "audioContent", "audioChannelFormat",
-                                          "audioObject", "audioPackFormat", "audioTrackUID",
-                                          "audioBlockFormat"  };
         size_t i;
         for (i = 0; i < count && i < NUM_UNDEFINED; ++i)
         {
             printf("ERROR: undefined %s reference \"%s\" at line %u\n",
-                   reftypes[undefined[i].type], undefined[i].id, undefined[i].lineno);
+                   ref_types_names[undefined[i].type], undefined[i].id, undefined[i].lineno);
         }
         return PMD_FAIL;
     }

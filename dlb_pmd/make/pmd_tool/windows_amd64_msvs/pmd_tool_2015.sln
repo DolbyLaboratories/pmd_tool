@@ -2,14 +2,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmd_tool", "pmd_tool_2015.vcxproj", "{315E1EE4-7EB3-3937-A552-209F4311BD3F}"
 	ProjectSection(ProjectDependencies) = postProject
-		{888B31BA-E7A4-360D-978E-857D8E4C4BAC} = {888B31BA-E7A4-360D-978E-857D8E4C4BAC}
-		{2A4DF4EE-7136-33B4-B637-60938D184F39} = {2A4DF4EE-7136-33B4-B637-60938D184F39}
+		{1A47DC40-0907-31AB-B1F2-9C35955DD85C} = {1A47DC40-0907-31AB-B1F2-9C35955DD85C}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_pmd_lib", "..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2015.vcxproj", "{888B31BA-E7A4-360D-978E-857D8E4C4BAC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{20895E86-0CC5-376D-A205-153F08960967} = {20895E86-0CC5-376D-A205-153F08960967}
 		{76502233-DBC5-3511-A0CE-193C451A7809} = {76502233-DBC5-3511-A0CE-193C451A7809}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_pmd_tool_lib", "..\..\dlb_pmd_tool_lib\windows_amd64_msvs\dlb_pmd_tool_lib_2015.vcxproj", "{1A47DC40-0907-31AB-B1F2-9C35955DD85C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{888B31BA-E7A4-360D-978E-857D8E4C4BAC} = {888B31BA-E7A4-360D-978E-857D8E4C4BAC}
+		{2A4DF4EE-7136-33B4-B637-60938D184F39} = {2A4DF4EE-7136-33B4-B637-60938D184F39}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_wave_lib", "..\..\dlb_wave_lib\windows_amd64_msvs\dlb_wave_lib_2015.vcxproj", "{2A4DF4EE-7136-33B4-B637-60938D184F39}"
@@ -26,6 +31,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.debug|x64.ActiveCfg = debug|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.debug|x64.Build.0 = debug|x64
+		{1A47DC40-0907-31AB-B1F2-9C35955DD85C}.debug|x64.ActiveCfg = debug|x64
+		{1A47DC40-0907-31AB-B1F2-9C35955DD85C}.debug|x64.Build.0 = debug|x64
 		{2A4DF4EE-7136-33B4-B637-60938D184F39}.debug|x64.ActiveCfg = debug|x64
 		{2A4DF4EE-7136-33B4-B637-60938D184F39}.debug|x64.Build.0 = debug|x64
 		{315E1EE4-7EB3-3937-A552-209F4311BD3F}.debug|x64.ActiveCfg = debug|x64
@@ -36,6 +43,8 @@ Global
 		{76502233-DBC5-3511-A0CE-193C451A7809}.debug|x64.Build.0 = debug|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.release|x64.ActiveCfg = release|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.release|x64.Build.0 = release|x64
+		{1A47DC40-0907-31AB-B1F2-9C35955DD85C}.release|x64.ActiveCfg = release|x64
+		{1A47DC40-0907-31AB-B1F2-9C35955DD85C}.release|x64.Build.0 = release|x64
 		{2A4DF4EE-7136-33B4-B637-60938D184F39}.release|x64.ActiveCfg = release|x64
 		{2A4DF4EE-7136-33B4-B637-60938D184F39}.release|x64.Build.0 = release|x64
 		{315E1EE4-7EB3-3937-A552-209F4311BD3F}.release|x64.ActiveCfg = release|x64

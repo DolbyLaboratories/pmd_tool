@@ -45,6 +45,16 @@
 #include "pmd_sadm_ingester.h"
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include <ctype.h>
+
+#ifdef _MSC_VER
+#  define strcasecmp _stricmp
+#  define strncasecmp _strnicmp
+#  define strtoll _strtoi64
+__pragma(warning(disable:4127))
+#endif
 
 
 /**
@@ -74,7 +84,7 @@ typedef struct
 /**
  * @brief handy failure catch point for debugging
  */
-static inline
+static
 dlb_pmd_success
 pmd_sadm_ingester_failure_catchpoint
     (void
@@ -88,7 +98,11 @@ pmd_sadm_ingester_failure_catchpoint
  * @def FAILURE
  * @brief macro wrapping the failure catchpoint for debuggers
  */
+#ifndef NDEBUG
 #define FAILURE pmd_sadm_ingester_failure_catchpoint()
+#else
+#define FAILURE PMD_FAIL
+#endif
 
 
 static
@@ -103,8 +117,10 @@ channel_target
         { "RC_R",   PMD_SPEAKER_R   },
         { "RC_C",   PMD_SPEAKER_C   },
         { "RC_LFE", PMD_SPEAKER_LFE },
-        { "RC_Lss", PMD_SPEAKER_LS  },
-        { "RC_Rss", PMD_SPEAKER_RS  },
+        { "RC_Ls",  PMD_SPEAKER_LS  },
+        { "RC_Lss", PMD_SPEAKER_LS  },  //@kludge to read in IBC demo content
+        { "RC_Rs",  PMD_SPEAKER_RS  },
+        { "RC_Rss", PMD_SPEAKER_RS  },  //@kludge to read in IBC demo content
         { "RC_Lrs", PMD_SPEAKER_LRS },
         { "RC_Rrs", PMD_SPEAKER_RRS },
 
@@ -117,6 +133,32 @@ channel_target
 
         { "RC_Lfw", PMD_SPEAKER_LFW },
         { "RC_Rfw", PMD_SPEAKER_RFW },
+
+        //spherical names
+        { "M+030",  PMD_SPEAKER_L   },
+        { "M-030",  PMD_SPEAKER_R   },
+        { "M+000",  PMD_SPEAKER_C   },
+        { "LFE",    PMD_SPEAKER_LFE },
+        { "M+110",  PMD_SPEAKER_LS  },
+        { "M+090",  PMD_SPEAKER_LS  },
+        { "M-110",  PMD_SPEAKER_RS  },
+        { "M-090",  PMD_SPEAKER_RS  },
+        { "M+135",  PMD_SPEAKER_LRS },
+        { "M-135",  PMD_SPEAKER_RRS },
+
+        { "U+030",  PMD_SPEAKER_LTF },
+        { "U+045",  PMD_SPEAKER_LTF },
+        { "U-030",  PMD_SPEAKER_RTF },
+        { "U-045",  PMD_SPEAKER_RTF },
+        { "U+090",  PMD_SPEAKER_LTM },
+        { "U-090",  PMD_SPEAKER_RTM },
+        { "U+110",  PMD_SPEAKER_LTR },
+        { "U+135",  PMD_SPEAKER_LTR },
+        { "U-110",  PMD_SPEAKER_RTR },
+        { "U-135",  PMD_SPEAKER_RTR },
+
+        { "M+060",  PMD_SPEAKER_LFW },
+        { "M-060",  PMD_SPEAKER_RFW },
     };
     
     #define NUM_SPEAKER_MAPPINGS ((sizeof(mapping) / sizeof(mapping[0])))
@@ -182,14 +224,19 @@ generate_pmd_bed
     dlb_sadm_idref *trackref;
     dlb_sadm_idref *chanref;
     dlb_sadm_idref idref;
+    dlb_sadm_idref_array blkfmts;
 
     dlb_pmd_source sources[16];
     dlb_pmd_bed bed;
     unsigned int tmp;
     unsigned int i;
+#ifdef ADD_LFE_FOR_DOT_0
+    unsigned int add_lfe = 0;
+#endif
     
     (void)content;
-    
+    memset(&bed, 0, sizeof(bed));
+
     if (1 != sscanf((char*)object->id.data, "AO_%x", &tmp)
         || tmp < 0x1001
         || tmp > 0x1fff)
@@ -214,7 +261,42 @@ generate_pmd_bed
         case 10: bed.config = DLB_PMD_SPEAKER_CONFIG_5_1_4; break;
         case 12: bed.config = DLB_PMD_SPEAKER_CONFIG_7_1_4; break;
         case 16: bed.config = DLB_PMD_SPEAKER_CONFIG_9_1_6; break;            
-        default: return FAILURE;
+        /* Special case */
+        case 11: /* check if this is 7.0.4 */
+            if (packfmt->chanfmts.num != bed.num_sources)
+            {
+                printf("Error: Number of channels defined in bed[%s] (%d) is different than in pack format[%s] (%d) \n"
+                        ,(char*)object->id.data
+                        ,bed.num_sources
+                        ,packfmt->id.data
+                        ,packfmt->chanfmts.num);
+                return FAILURE;
+            }
+            chanref = packfmt->chanfmts.array;
+            for (i = 0; i != packfmt->chanfmts.num; ++i, ++chanref)
+            {
+                dlb_sadm_idref idrefs[128];
+                blkfmts.num = 0;
+                blkfmts.max = sizeof(idrefs)/sizeof(idrefs[0]);
+                blkfmts.array = idrefs;
+                dlb_sadm_channel_format_lookup(c->sm, *chanref, &chanfmt, &blkfmts);
+                if (!strcasecmp((const char *)chanfmt.id.data, "AC_00010004"))  /* This is the ADM common definition ID for the LFE channel */
+                {
+                    /* If there is an LFE this is an error case */
+                    printf("Error: failed to generate PMD bed for audioObject \"%s\"\n", object->name.data);
+                    return FAILURE;
+                }
+            }
+#ifdef ADD_LFE_FOR_DOT_0
+            add_lfe = 1;
+#endif
+            bed.config = DLB_PMD_SPEAKER_CONFIG_7_1_4;
+            break;
+        default: 
+            {
+                printf("Error: failed to generate PMD bed for audioObject \"%s\"\n", object->name.data);
+                return FAILURE;
+            }
     }
 
     if (packfmt->chanfmts.num != object->track_uids.num)
@@ -228,7 +310,6 @@ generate_pmd_bed
     for (i = 0; i != bed.num_sources; ++i, ++chanref, ++trackref)
     {
         dlb_sadm_idref idrefs[128];
-        dlb_sadm_idref_array blkfmts;
 
         blkfmts.num = 0;
         blkfmts.max = sizeof(idrefs)/sizeof(idrefs[0]);
@@ -243,8 +324,26 @@ generate_pmd_bed
             return FAILURE;
         }
         sources[i].source = (dlb_pmd_signal)track.channel_idx;
-        sources[i].gain   = 0.0f; /* todo: handle bed gains */
+        sources[i].gain   = (dlb_pmd_gain)blkfmt.gain;
     }
+
+#ifdef ADD_LFE_FOR_DOT_0
+    if (add_lfe)
+    {
+        const unsigned int LFE_INDEX = 3;
+        bed.num_sources += 1;
+        for (i = bed.num_sources - 1; i != LFE_INDEX; --i)
+        {
+            sources[i].target = sources[i - 1].target;
+            sources[i].source = sources[i - 1].source;
+            sources[i].gain   = sources[i - 1].gain;
+        }
+        sources[LFE_INDEX].target = PMD_SPEAKER_LFE;
+        /* TODO: is it really a good idea to assume channel 16 is correct here? */
+        sources[LFE_INDEX].source = 16;  /* last channel of SDI (after reading S-ADM contains only zeros) */
+        sources[LFE_INDEX].gain = 0;
+    }
+#endif
     
     if (dlb_pmd_set_bed(c->pmd, &bed))
     {
@@ -262,7 +361,9 @@ generate_content_classification
     ,dlb_pmd_object_class *c
     )
 {
-    if (ct < DLB_SADM_CONTENT_DK || ct > DLB_SADM_CONTENT_MK)
+    if (  (ct < DLB_SADM_CONTENT_DK || ct > DLB_SADM_CONTENT_MK)
+       && (ct != DLB_SADM_CONTENT_UNSET)
+       )
     {
         printf("Error: no object can have content type %u\n", ct);
         return FAILURE;
@@ -307,6 +408,8 @@ generate_pmd_object
     float y;
     float z;
 
+    static const double PI_OVER_180 = 3.1415926535897932384626433832795 / 180.0;
+
     blkfmts.num = 0;
     blkfmts.max = sizeof(blkfmts_array)/sizeof(blkfmts_array[0]);
     blkfmts.array = blkfmts_array;
@@ -326,11 +429,14 @@ generate_pmd_object
         return FAILURE;
     }
     
-    assert(chanfmt.blkfmts.num == 1);
+    /* Non-Dolby sources are sometimes generating 2, but we always use the first one */
+    /*assert(chanfmt.blkfmts.num == 1);*/
     if (dlb_sadm_block_format_lookup(c->sm, chanfmt.blkfmts.array[0], &blkfmt))
     {
         return FAILURE;
     }
+
+    /* TODO: do we apply the blkfmt gain somehow? */
     
     if (blkfmt.cartesian_coordinates)
     {
@@ -340,11 +446,20 @@ generate_pmd_object
     }
     else
     {
-        /* todo: convert from polar to cartesian */
-        printf("TODO: Convert polar to cartesian co-ordinates\n");
-        x = blkfmt.azimuth_or_x;
-        y = blkfmt.elevation_or_y;
-        z = blkfmt.distance_or_z;
+        double xy_plane;
+
+        if (blkfmt.distance_or_z == 0)
+        {
+            /* If the distance is zero it means it was not set 
+             * so we should set it to default which is 1
+             */
+            blkfmt.distance_or_z = 1; 
+        }
+        xy_plane = fabs(blkfmt.distance_or_z * cos(blkfmt.elevation_or_y * PI_OVER_180));
+
+        x = (float)(xy_plane * (sin(blkfmt.azimuth_or_x * PI_OVER_180) * -1.0));
+        y = (float)(xy_plane * cos(blkfmt.azimuth_or_x * PI_OVER_180));
+        z = (float)(blkfmt.distance_or_z * sin(blkfmt.elevation_or_y * PI_OVER_180));
     }
     
     if (generate_content_classification(content->type, &obj.object_class))
@@ -386,71 +501,283 @@ generate_pmd_object
 static
 dlb_pmd_success
 generate_pmd_element
-    (pmd_sadm_ingester        *c
-    ,dlb_sadm_content *content
+    (pmd_sadm_ingester  *ingester
+    ,dlb_sadm_content   *content
+    ,dlb_sadm_idref      object_id
     )
 {
+    dlb_pmd_success success;
     dlb_sadm_pack_format packfmt;
     dlb_sadm_object object;
 
     dlb_sadm_idref_array chanfmts;
+    dlb_sadm_idref_array object_refs;
     dlb_sadm_idref_array track_uids;
-    dlb_sadm_idref chanfmts_array[128];
-    dlb_sadm_idref track_uids_array[128];
+    dlb_sadm_idref chanfmts_array[DLB_PMD_MAX_BED_SOURCES];
+    dlb_sadm_idref object_refs_array[MAX_AO_AO];
+    dlb_sadm_idref track_uids_array[DLB_PMD_MAX_BED_SOURCES];
 
     track_uids.num = 0;
     track_uids.max = sizeof(track_uids_array)/sizeof(track_uids_array[0]);
     track_uids.array = track_uids_array;
 
+    object_refs.num = 0;
+    object_refs.max = sizeof(object_refs_array) / sizeof(object_refs_array[0]);
+    object_refs.array = object_refs_array;
+
     chanfmts.num = 0;
     chanfmts.max = sizeof(chanfmts_array)/sizeof(chanfmts_array[0]);
     chanfmts.array = chanfmts_array;
 
-    if (dlb_sadm_object_lookup(c->sm, content->object, &object, &track_uids))
+    if (dlb_sadm_object_lookup(ingester->sm, object_id, &object, &object_refs, &track_uids))
     {
         return FAILURE;
     }
 
-    if (dlb_sadm_pack_format_lookup(c->sm, object.pack_format, &packfmt, &chanfmts))
+    if (object.pack_format != NULL)
+    {
+        if (dlb_sadm_pack_format_lookup(ingester->sm, object.pack_format, &packfmt, &chanfmts))
+        {
+            return FAILURE;
+        }
+    }
+    else if (object.object_refs.num > 0)
+    {
+        size_t i;
+
+        for (i = 0; i < object.object_refs.num; i++)
+        {
+            if (generate_pmd_element(ingester, content, object.object_refs.array[i]))
+            {
+                return FAILURE;
+            }
+        }
+        return PMD_SUCCESS;
+    }
+    else
     {
         return FAILURE;
     }
 
     switch (packfmt.type)
     {
-        case DLB_SADM_PACKFMT_TYPE_DIRECT_SPEAKERS:
-            return generate_pmd_bed(c, content, &object, &packfmt);
-
-        case DLB_SADM_PACKFMT_TYPE_OBJECT:
-            return generate_pmd_object(c, content, &object, &packfmt);
+    case DLB_SADM_PACKFMT_TYPE_DIRECT_SPEAKERS:
+        switch (packfmt.chanfmts.num)
+        {
+        case 0:
+            success = PMD_FAIL;
             break;
-
+        case 1:
+            success = generate_pmd_object(ingester, content, &object, &packfmt);
+            break;
         default:
-            return FAILURE;
+            success = generate_pmd_bed(ingester, content, &object, &packfmt);
             break;
+        }
+        break;
+
+    case DLB_SADM_PACKFMT_TYPE_OBJECT:
+        success = generate_pmd_object(ingester, content, &object, &packfmt);
+        break;
+
+    default:
+        success = PMD_FAIL;
+        break;
     }
+
+    return success;
+}
+
+
+static inline
+dlb_pmd_bool
+config_is_bed
+    (dlb_pmd_speaker_config config
+    )
+{
+    return config <= DLB_PMD_SPEAKER_CONFIG_LAST_BED;
+}
+
+
+static
+dlb_pmd_success
+add_object_elements
+    (pmd_sadm_ingester *ingester
+    ,dlb_sadm_idref object_id
+    ,dlb_pmd_presentation *presentation
+    )
+{
+    dlb_sadm_model *model = ingester->sm;
+    dlb_sadm_object object;
+    dlb_sadm_idref_array objectrefs;
+    dlb_sadm_idref_array track_uids;
+    dlb_sadm_idref object_refs_array[MAX_AO_AO];
+    dlb_sadm_idref track_uids_array[DLB_PMD_MAX_BED_SOURCES];
+
+    objectrefs.num = 0;
+    objectrefs.max = sizeof(object_refs_array) / sizeof(object_refs_array[0]);
+    objectrefs.array = object_refs_array;
+
+    track_uids.num = 0;
+    track_uids.max = sizeof(track_uids_array) / sizeof(track_uids_array[0]);
+    track_uids.array = track_uids_array;
+
+    if (dlb_sadm_object_lookup(model, object_id, &object, &objectrefs, &track_uids))
+    {
+        printf("Error while looking up audio object reference (add_object_elements)\n");
+        return FAILURE;
+    }
+
+    if (object.object_refs.num == 0)    /* this is a leaf element */
+    {
+        dlb_pmd_bed bed;
+        dlb_pmd_source sources[12];
+        const unsigned int max_sources = sizeof(sources) / sizeof(sources[0]);
+        unsigned int elidx;
+        unsigned int elid;
+
+        if (presentation->num_elements >= DLB_PMD_MAX_AUDIO_ELEMENTS)
+        {
+            printf("Error: too many elements in the presentation (add_object_elements)\n");
+            return FAILURE;
+        }
+
+        if (sadm_to_pmd_lookup(object_id, &elid))
+        {
+            printf("Error: element id for object reference not found (add_object_elements)\n");
+            return FAILURE;
+        }
+
+        elidx = presentation->num_elements++;
+        presentation->elements[elidx] = (dlb_pmd_element_id)elid;
+        if (!dlb_pmd_bed_lookup(ingester->pmd, presentation->elements[elidx], &bed, max_sources, sources))
+        {
+            if (presentation->config != bed.config)
+            {
+                dlb_pmd_bool use_larger = PMD_FALSE;
+
+                /* presentation config is uninitialized, use the bed config */
+                if (presentation->config == NUM_PMD_SPEAKER_CONFIGS)
+                {
+                    presentation->config = bed.config;
+                }
+                /* if both are beds, or both are not beds, use the larger value */
+                else if ( config_is_bed(presentation->config) &&  config_is_bed(bed.config) ||
+                         !config_is_bed(presentation->config) && !config_is_bed(bed.config))
+                {
+                    use_larger = PMD_TRUE;
+                }
+                /* if the current object's format is a bed, and the presentation's is not, use the bed */
+                else if (config_is_bed(bed.config))
+                {
+                    presentation->config = bed.config;
+                }
+
+                if (use_larger && bed.config > presentation->config)
+                {
+                    /* TODO: this is a little bothersome for portable v. headphones... */
+                    presentation->config = bed.config;
+                }
+            }
+        }
+    }
+    else        /* this is a compound object, recurse over the component objects */
+    {
+        dlb_pmd_success success;
+        unsigned int i;
+
+        for (i = 0; i < object.object_refs.num; i++)
+        {
+            success = add_object_elements(ingester, object.object_refs.array[i], presentation);
+            if (success != PMD_SUCCESS)
+            {
+                return PMD_FAIL;
+            }
+        }
+    }
+
+    return PMD_SUCCESS;
+}
+
+
+static
+dlb_pmd_success
+add_content_elements
+    (pmd_sadm_ingester *ingester
+    ,dlb_sadm_idref content_id
+    ,dlb_pmd_presentation *presentation
+    )
+{
+    dlb_sadm_model *model = ingester->sm;
+    dlb_sadm_content content;
+    dlb_sadm_idref_array objectrefs;
+    dlb_sadm_idref objectref_array[32];     /* TODO: symbolic constant */
+    dlb_pmd_success success;
+    size_t i;
+
+    objectrefs.num = 0;
+    objectrefs.max = sizeof(objectref_array) / sizeof(objectref_array[0]);
+    objectrefs.array = objectref_array;
+
+    if (dlb_sadm_content_lookup(model, content_id, &content, &objectrefs))
+    {
+        printf("Error while looking up audio content reference (add_content_elements)\n");
+        return FAILURE;
+    }
+
+    for (i = 0; i < content.objects.num; i++)
+    {
+        success = add_object_elements(ingester, content.objects.array[i], presentation);
+        if (success != PMD_SUCCESS)
+        {
+            return PMD_FAIL;
+        }
+    }
+
+    return PMD_SUCCESS;
+}
+
+
+static
+dlb_pmd_success
+add_presentation_elements
+    (pmd_sadm_ingester *ingester
+    ,dlb_sadm_programme *programme
+    ,dlb_pmd_presentation *presentation
+    )
+{
+    dlb_pmd_success success;
+    size_t i;
+
+    presentation->num_elements = 0;
+    for (i = 0; i < programme->contents.num; i++)
+    {
+        success = add_content_elements(ingester, programme->contents.array[i], presentation);
+        if (success != PMD_SUCCESS)
+        {
+            presentation->num_elements = 0;
+            return PMD_FAIL;
+        }
+    }
+
+    return PMD_SUCCESS;
 }
 
 
 static
 dlb_pmd_success
 generate_pmd_presentation
-    (pmd_sadm_ingester          *c
+    (pmd_sadm_ingester  *c
     ,dlb_sadm_programme *programme
     )
 {
     dlb_pmd_element_id elements[DLB_PMD_MAX_AUDIO_ELEMENTS];
     dlb_pmd_presentation_name *name;
     dlb_pmd_presentation pres;
-    dlb_pmd_source sources[12];
-    dlb_pmd_bed bed;
     unsigned int presid;
-    unsigned int elid;
     
     dlb_sadm_idref idref;
-    dlb_sadm_idref *contentrefs;
     dlb_sadm_programme_label *label;
-    dlb_sadm_content content;
     unsigned int tmp;
     unsigned int i;
 
@@ -465,39 +792,18 @@ generate_pmd_presentation
 
     (void)dlb_sadm_lookup_reference(c->sm, programme->id.data, DLB_SADM_PROGRAMME, 0, &idref);
     pres.id             = (dlb_pmd_presentation_id)presid;
-    pres.config         = NUM_PMD_SPEAKER_CONFIGS;
-    pres.num_elements   = programme->contents.num;
+    pres.config         = NUM_PMD_SPEAKER_CONFIGS;  /* TODO: after adding elements, make certain we've set this to a specific config */
+    pres.num_elements   = 0;
     pres.elements       = elements;
     pres.num_names      = programme->num_labels;
 
     memmove(pres.audio_language, programme->language, sizeof(pres.audio_language));
 
-    contentrefs = programme->contents.array;
-    for (i = 0; i != pres.num_elements; ++i, ++contentrefs)
+    if (add_presentation_elements(c, programme, &pres))
     {
-        idref = *contentrefs;
-        if (dlb_sadm_content_lookup(c->sm, idref, &content))
-        {
-            printf("Error: audio content reference not found\n");
-            return FAILURE;
-        }
-        idref = content.object;
-        if (sadm_to_pmd_lookup(/*/c->objmap,*/ content.object, &elid))
-        {
-            printf("Error: object reference not found\n");
-            return FAILURE;
-        }
-        pres.elements[i] = (dlb_pmd_element_id)elid;
-        if (pres.config == NUM_PMD_SPEAKER_CONFIGS)
-        {
-            if (!dlb_pmd_bed_lookup(c->pmd, pres.elements[i], &bed, sizeof(sources)/sizeof(sources[0]),
-                                    sources))
-            {
-                pres.config = bed.config;
-            }
-        }
+        return PMD_FAIL;
     }
-    
+
     if (pres.num_names > DLB_PMD_MAX_PRESENTATION_NAMES)
     {
         pres.num_names = DLB_PMD_MAX_PRESENTATION_NAMES;
@@ -536,8 +842,20 @@ ingest_track_uids
 
     while (!dlb_sadm_track_uid_iterator_next(&tui, &track_uid))
     {
-        (void)dlb_sadm_lookup_reference(c->sm, track_uid.id.data, DLB_SADM_TRACKUID, 0, &idref);
-        if (dlb_pmd_add_signal(c->pmd, (dlb_pmd_signal)track_uid.channel_idx))
+        dlb_pmd_bool is_common;
+
+        if (dlb_sadm_track_uid_is_common_def(c->sm, &track_uid, &is_common))
+        {
+            return PMD_FAIL;
+        }
+        if (is_common && track_uid.channel_idx == 0)
+        {
+            /* If the track uid is a common def and has no definite channel assignment, skip it */
+            continue;
+        }
+
+        if (dlb_sadm_lookup_reference(c->sm, track_uid.id.data, DLB_SADM_TRACKUID, 0, &idref) ||
+            dlb_pmd_add_signal(c->pmd, (dlb_pmd_signal)track_uid.channel_idx))
         {
             return FAILURE;
         }
@@ -559,9 +877,14 @@ ingest_content
     dlb_sadm_content_iterator_init(&ci, c->sm);
     while (!dlb_sadm_content_iterator_next(&ci, &content))
     {
-        if (generate_pmd_element(c, &content))
+        size_t i;
+
+        for (i = 0; i < content.objects.num; i++)
         {
-            return FAILURE;
+            if (generate_pmd_element(c, &content, content.objects.array[i]))
+            {
+                return FAILURE;
+            }
         }
     }
     return PMD_SUCCESS;
@@ -595,6 +918,27 @@ ingest_programmes
     }
     return PMD_SUCCESS;
 #undef MAX_LABELS
+}
+
+
+static
+dlb_pmd_success
+ingest_frame_format
+    (pmd_sadm_ingester *c
+    )
+{
+    dlb_pmd_success success;
+    char uuid[37];
+
+    success = dlb_sadm_get_flow_id(c->sm, uuid, sizeof(uuid));
+    if (success == PMD_SUCCESS && uuid[0] != '\0')
+    {
+        success = 
+            dlb_pmd_iat_add(c->pmd, 0) ||
+            dlb_pmd_iat_content_id_uuid(c->pmd, uuid);
+    }
+
+    return success;
 }
 
 
@@ -657,6 +1001,7 @@ pmd_sadm_ingester_ingest
     return dlb_pmd_set_title(pmd, title)
         || ingest_track_uids(c)
         || ingest_content(c)
-        || ingest_programmes(c);
+        || ingest_programmes(c)
+        || ingest_frame_format(c);
 }
 

@@ -52,6 +52,7 @@ extern "C" {
 /**
  * @brief helper routine to write PMD SADM to a string
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if string written successfully, 1 otherwise */
 dlb_pmd_sadm_string_write
    (dlb_pmd_sadm_writer  *w             /**< [in] sADM writer */
@@ -67,6 +68,7 @@ dlb_pmd_sadm_string_write
  * Upon parse error, this function will return 1, and the error message
  * can be retrieved via dlb_pmd_error().
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if string read and parsed successfully, 1 otherwise */
 dlb_pmd_sadm_string_read
    (dlb_pmd_sadm_reader       *rdr           /**< [in] */

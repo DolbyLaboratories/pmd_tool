@@ -33,7 +33,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
-
 #include "sadm/dlb_sadm_reader.h"
 #include "dlb_pmd_sadm.h"
 #include "pmd_sadm_ingester.h"
@@ -155,8 +154,25 @@ dlb_pmd_sadm_reader_read
 
     if (pmd_sadm_ingester_ingest(rdr->ing, title, model))
     {
+        error(rdr->pmd, "sADM ingest error: %s", dlb_sadm_error(rdr->sadm));
         return PMD_FAIL;
     }
     return PMD_SUCCESS;
+}
+
+
+const dlb_sadm_model *
+dlb_pmd_sadm_reader_get_sadm_model
+    (dlb_pmd_sadm_reader *rdr
+    )
+{
+    const dlb_sadm_model *p = NULL;
+
+    if (rdr != NULL)
+    {
+        p = rdr->sadm;
+    }
+
+    return p;
 }
 

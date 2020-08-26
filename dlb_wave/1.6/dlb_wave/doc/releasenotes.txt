@@ -1,0 +1,115 @@
+Release Notes
+==============
+
+v1.6.2
+===========================
+Version 1.6.1 is a maintenance release and only contains bug fixes.
+
+This release resolves an issue when writing to floating point wave files.
+Certain values were not writable by the float writing code. This would cause
+debug build to assert while release builds would write incorrect output.
+
+History
+~~~~~~~
+
+v1.6.1
+===========================
+Version 1.6.1 is a maintenance release and only contains bug fixes.
+
+JIRA ISSUES RESOLVED
+===========================
+FILEIO-46 Warning "#1035-D: single-precision operand implicitly converted to
+          double-precision" in dlb_wave_float.c
+FILEIO-47 dlb_riff_read_next_chunk() fails on odd-size data chunk
+
+v1.6.0
+===========================
+The release includes the following changes:
+- Nearest-even rounding for all conversions where the bit-depth is reduced.
+- Removed all existing unit tests which relied on external file IO and
+  replaced them with more comprehensive tests.
+- Removed the dlb_wave_transcode and dlb_wave_generate projects.
+- Removed all wave files that were included in releases.
+- Made floating point packing and unpacking code more consistent.
+- Reading and writing waves now correctly respects 2-octet chunk alignment as
+  per RIFF specification. (FILEIO-15)
+- Unit tests have been executed on ARM (Pandaboard), Ubuntu x86/amd64 and
+  Windows VS2010 x86/amd64 - all tests pass.
+
+JIRA ISSUES RESOLVED
+===========================
+FILEIO-8  Signed integer overfloat at compile time in dlb_wave_float.c
+FILEIO-12 Reduce the size of the test vectors
+FILEIO-15 dlb_riff doesn't handle chunk alignment correctly
+FILEIO-20 Add dlb_wave float file testing
+FILEIO-24 dlb_riff_seek_chunk() trashes chunk location
+FILEIO-27 Problems with DLB_BUFFER_LONG_32 on Linux 64 and Mac
+FILEIO-29 dlb_wave manifest files have dependency on intrinsics backends
+FILEIO-36 dlb_wave does not seem to handle denormal floats correctly.
+FILEIO-37 There are a few warnings in dlb_wave after removing all suppressed
+          warning numbers in msvs project file
+FILEIO-39 Address Visual Studio warnings given the new mbuild default warning
+          level.
+FILEIO-43 Buffer conversion to the output bit depth does not apply rounding.
+FILEIO-45 some of the 8 bit wave file conversions are broken
+
+KNOWN ISSUES
+===========================
+FILEIO-3/FILEIO-5/FILEIO-13 Documentation/Doxygen related enhancements
+
+v1.5.2
+===========================
+The release includes the following changes:
+- Fixing precision of 16-bit wavefile writing (replaced truncation by rounding)
+- Remove some compiler warnings
+
+v1.5.1
+===========================
+The release includes the following changes:
+- Workaround for fseek bug in windows libc
+- Avoid undefined behaviour (left shift of signed), which causes runtime traps when built in debug mode with clang.
+- Fixing a bug in reading float wave files in to left aligned dlb_buffer
+- Adding math library dependency in manifest files for dlb_wave_float_ojbects (required by lrintf)
+- Fixing compilation of transcode and generate projects
+
+v1.5
+===========================
+The release include the following changes:
+- Fixing bug FILEIO-24
+- Fixing channel_mask in API to be unsigned long
+- Removing couple of warning in dlb_wave_int.c and dlb_wave_float.d that would show up in ICC compilers
+- Fixing a bug in handling error chunks
+
+v1.4.1
+===========================
+- Removed unlicensed wave files from release.
+
+v1.4
+===========================
+- New API for reporting dlb_version
+- Added Rounding (instead of truncation) when reading float wave files
+- resolved couple of warnings
+- update dlb_buffer to v1.2
+
+v1.3
+===========================
+- new seek api: dlb_wave_seek_frame
+- dlb_wave memory mapped files
+- fix bug related to dlb_wave float read
+
+v1.2
+===========================
+- Support for mbuild 1.2
+- Support for munit 1.2
+- New API for returning number of frames in a file (a frame is single time sample from all channels)
+- Fixed some windows warnings (still some linux warnings remaining).
+- Fix linux warnings (v1.2.1)
+- Fixed test harness compilation for linux
+
+Known Issues
+============
+No testing was done for dlb_wave float files
+
+Testing
+=======
+Tested by dlb_wave munit tests.

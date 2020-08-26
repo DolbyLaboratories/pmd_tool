@@ -294,7 +294,7 @@ encode_string
 /**
  * @brief write an audio channel format reference
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_channel_format_idref
     (writer *w
@@ -304,6 +304,11 @@ write_channel_format_idref
     dlb_sadm_idref_array blkfmts;
     dlb_sadm_idref blkfmts_array[128];
     dlb_sadm_channel_format chanfmt;
+
+    if (dlb_sadm_idref_is_null(idref))  /* Don't try to write a missing reference.  TODO: sometimes this should be a PMD_FAIL? */
+    {
+        return PMD_SUCCESS;
+    }
 
     blkfmts.num = 0;
     blkfmts.max = ARRAYSZ(blkfmts_array);
@@ -317,7 +322,7 @@ write_channel_format_idref
 /**
  * @brief write an audio content reference
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_content_idref
     (writer *w
@@ -325,7 +330,14 @@ write_content_idref
     )
 {
     dlb_sadm_content content;
-    return dlb_sadm_content_lookup(w->model, idref, &content)
+    dlb_sadm_idref_array objectrefs;
+    dlb_sadm_idref objectref_array[32];     /* TODO: symbolic constant */
+
+    objectrefs.num = 0;
+    objectrefs.max = ARRAYSZ(objectref_array);
+    objectrefs.array = objectref_array;
+
+    return dlb_sadm_content_lookup(w->model, idref, &content, &objectrefs)
         || write_line(w, "<audioContentIDRef>%s</audioContentIDRef>", content.id.data);
 }
 
@@ -333,7 +345,7 @@ write_content_idref
 /**
  * @brief write an audio object reference
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_object_idref
     (writer *w
@@ -341,14 +353,20 @@ write_object_idref
     )
 {
     dlb_sadm_object object;
+    dlb_sadm_idref_array object_refs;
     dlb_sadm_idref_array track_uids;
-    dlb_sadm_idref track_uids_array[128];
+    dlb_sadm_idref object_refs_array[MAX_AO_AO];
+    dlb_sadm_idref track_uids_array[DLB_PMD_MAX_BED_SOURCES];
+
+    object_refs.num = 0;
+    object_refs.max = ARRAYSZ(object_refs_array);
+    object_refs.array = object_refs_array;
 
     track_uids.num = 0;
     track_uids.max = ARRAYSZ(track_uids_array);
     track_uids.array = track_uids_array;
 
-    return dlb_sadm_object_lookup(w->model, idref, &object, &track_uids)
+    return dlb_sadm_object_lookup(w->model, idref, &object, &object_refs, &track_uids)
         || write_line(w, "<audioObjectIDRef>%s</audioObjectIDRef>", object.id.data);
 }
 
@@ -356,7 +374,7 @@ write_object_idref
 /**
  * @brief write an audio pack format uid reference
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_pack_format_idref
     (writer *w
@@ -366,6 +384,11 @@ write_pack_format_idref
     dlb_sadm_pack_format packfmt;
     dlb_sadm_idref_array chanfmts;
     dlb_sadm_idref chanfmts_array[128];
+
+    if (dlb_sadm_idref_is_null(idref))  /* Don't try to write a missing reference.  TODO: sometimes this should be a PMD_FAIL? */
+    {
+        return PMD_SUCCESS;
+    }
         
     chanfmts.num = 0;
     chanfmts.max = ARRAYSZ(chanfmts_array);
@@ -379,7 +402,7 @@ write_pack_format_idref
 /**
  * @brief write a track uid reference
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_track_uid_idref
     (writer *w
@@ -394,9 +417,32 @@ write_track_uid_idref
 
 
 /**
+ * @brief write audio objects for a sADM audio content
+ */
+static
+int                                 /** @return 0 on success, 1 on failure */
+write_content_objects
+    (writer *w                      /**< [in] writer state */
+    ,dlb_sadm_content *content      /**< [in] container content */
+    )
+{
+    unsigned int i;
+
+    for (i = 0; i != content->objects.num; ++i)
+    {
+        if (write_object_idref(w, content->objects.array[i]))
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+/**
  * @brief write labels for an sADM audio programme
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_programme_labels
     (writer *w                      /**< [in] writer state */
@@ -426,7 +472,7 @@ write_programme_labels
 /**
  * @brief write sADM audio contents
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_programme_contents
     (writer *w                      /**< [in] writer state */
@@ -449,7 +495,7 @@ write_programme_contents
 /**
  * @brief write sADM audio programmes
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_programmes
     (writer *w                      /**< [in] writer state */
@@ -504,7 +550,7 @@ write_programmes
 /**
  * @brief write sADM audio content dialogue line
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_dialogue
     (writer *w                      /**< [in] writer state */
@@ -536,7 +582,7 @@ write_dialogue
 /**
  * @brief write sADM audio contents
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_contents
     (writer *w                      /**< [in] writer state */
@@ -565,7 +611,7 @@ write_contents
 
         if (   write_line(w, "<audioContent %s>", attributes)
             || write_indent(w)
-            || write_object_idref(w, content.object)
+            || write_content_objects(w, &content)
             || write_dialogue(w, &content)
             || write_outdent(w)
             || write_line(w, "</audioContent>"))
@@ -580,7 +626,7 @@ write_contents
 /**
  * @brief write the track UIDs associated to an object
  */
-static inline
+static
 int                                   /** @return 0 on success, 1 on failure */
 write_object_track_uids
     (writer *w                        /**< [in] writer state */
@@ -601,16 +647,16 @@ write_object_track_uids
 
 
 /**
- * @brief write sADM audio object gain value
+ * @brief write sADM audio object/block format gain value
  */
-static inline
+static
 int                                   /** @return 0 on success, 1 on failure */
 write_gain
     (writer *w                        /**< [in] writer state */
     ,float gain
     )
 {
-    if (isinf(gain) && gain  < 0.0f)
+    if (isinf(gain) && gain < 0.0f)     /* Special case to recognize negative infinity */
     {
         return write_line(w, "<gain gainUnit=\"dB\">-999</gain>");
     }
@@ -622,19 +668,48 @@ write_gain
 
 
 /**
+ * @brief write child audio objects for a sADM audio object
+ */
+static
+int                                 /** @return 0 on success, 1 on failure */
+write_object_object_refs
+    (writer *w                      /**< [in] writer state */
+    ,dlb_sadm_object *object        /**< [in] container content */
+    )
+{
+    unsigned int i;
+
+    for (i = 0; i != object->object_refs.num; ++i)
+    {
+        if (write_object_idref(w, object->object_refs.array[i]))
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+/**
  * @brief write sADM audio objects
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_objects
     (writer *w                      /**< [in] writer state */
     )
 {
     dlb_sadm_object_iterator oi;
+    dlb_sadm_idref_array object_refs;
     dlb_sadm_idref_array track_uids;
-    dlb_sadm_idref track_uids_array[128];
+    dlb_sadm_idref object_refs_array[MAX_AO_AO];
+    dlb_sadm_idref track_uids_array[DLB_PMD_MAX_BED_SOURCES];
     dlb_sadm_object object;
-    uint8_t encoded_string[256];    
+    uint8_t encoded_string[256];
+
+    object_refs.num = 0;
+    object_refs.max = ARRAYSZ(object_refs_array);
+    object_refs.array = object_refs_array;
 
     track_uids.num = 0;
     track_uids.max = ARRAYSZ(track_uids_array);
@@ -645,13 +720,14 @@ write_objects
         return 1;
     }
 
-    while (!dlb_sadm_object_iterator_next(&oi, &object, &track_uids))
+    while (!dlb_sadm_object_iterator_next(&oi, &object, &object_refs, &track_uids))
     {
 #ifndef NDEBUG
+        if (object.object_refs.num == 0)
         {
             dlb_sadm_pack_format packfmt;
             dlb_sadm_idref_array chanfmts;
-            dlb_sadm_idref chanfmts_array[128];
+            dlb_sadm_idref chanfmts_array[DLB_PMD_MAX_BED_SOURCES];
             
             chanfmts.num = 0;
             chanfmts.max = ARRAYSZ(chanfmts_array);
@@ -671,6 +747,7 @@ write_objects
             || write_indent(w)
             || write_gain(w, object.gain)
             || write_pack_format_idref(w, object.pack_format)
+            || write_object_object_refs(w, &object)
             || write_object_track_uids(w, &object.track_uids)
             || write_outdent(w)
             || write_line(w, "</audioObject>"))
@@ -685,7 +762,7 @@ write_objects
 /**
  * @brief write the audio channel format references for an audio pack format
  */
-static inline
+static
 int                                   /** @return 0 on success, 1 on failure */
 write_packfmt_chanfmts
     (writer *w                        /**< [in] writer state */
@@ -708,7 +785,7 @@ write_packfmt_chanfmts
 /**
  * @brief write sADM audio pack formats
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_pack_formats
     (writer *w                      /**< [in] writer state */
@@ -733,6 +810,16 @@ write_pack_formats
     while (!dlb_sadm_pack_format_iterator_next(&pfi, &packfmt, &chanfmts))
     {
         char type_definition[128];
+        dlb_pmd_bool is_common;
+
+        if (dlb_sadm_pack_format_is_common_def(w->model, &packfmt, &is_common))
+        {
+            return 1;
+        }
+        if (is_common)
+        {
+            continue;
+        }
 
         switch (packfmt.type)
         {
@@ -774,22 +861,43 @@ write_pack_formats
 
 
 /**
- * @brief write sADM audio block format speaker label (or cartesian tag)
+ * @brief write sADM audio block format speaker label
  */
-static inline
+static
 int                                   /** @return 0 on success, 1 on failure */
 write_speaker_label
     (writer *w                        /**< [in] writer state */
     ,dlb_sadm_block_format *blkfmt
     )
 {
+    int status = 0;
+
     if (blkfmt->speaker_label[0])
     {
-        return write_line(w, "<speakerLabel>%s</speakerLabel>", blkfmt->speaker_label);
+        status = write_line(w, "<speakerLabel>%s</speakerLabel>", blkfmt->speaker_label);
+    }
+
+    return status;
+}
+
+
+/**
+ * @brief write sADM audio block format cartesian element
+ */
+static
+int                                   /** @return 0 on success, 1 on failure */
+write_cartesian
+    (writer *w                        /**< [in] writer state */
+    ,dlb_pmd_bool cartesian
+    )
+{
+    if (cartesian)
+    {
+        return write_line(w, "<cartesian>1</cartesian>");
     }
     else
     {
-        return write_line(w, "<cartesian>1</cartesian>");
+        return write_line(w, "<cartesian>0</cartesian>");
     }
 }
 
@@ -797,7 +905,7 @@ write_speaker_label
 /**
  * @brief write sADM audio block format coordinate
  */
-static inline
+static
 int                                   /** @return 0 on success, 1 on failure */
 write_position
     (writer *w                        /**< [in] writer state */
@@ -812,7 +920,7 @@ write_position
 /**
  * @brief write sADM audio block formats
  */
-static inline
+static
 int                                   /** @return 0 on success, 1 on failure */
 write_block_formats
     (writer *w                        /**< [in] writer state */
@@ -828,6 +936,8 @@ write_block_formats
             || write_line(w, "<audioBlockFormat audioBlockFormatID=\"%s\">", blkfmt.id.data)
             || write_indent(w)
             || write_speaker_label(w, &blkfmt)
+            || write_gain(w, blkfmt.gain)
+            || write_cartesian(w, blkfmt.cartesian_coordinates)
             || write_position(w, "X", blkfmt.azimuth_or_x)
             || write_position(w, "Y", blkfmt.elevation_or_y)
             || write_position(w, "Z", blkfmt.distance_or_z)
@@ -889,7 +999,7 @@ infer_audio_type_from_id
 /**
  * @brief write sADM audio channel formats
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_channel_formats
     (writer *w                      /**< [in] writer state */
@@ -915,6 +1025,16 @@ write_channel_formats
     {
         dlb_sadm_packfmt_type audio_type;
         char type_definition[128];
+        dlb_pmd_bool is_common;
+
+        if (dlb_sadm_channel_format_is_common_def(w->model, &chanfmt, &is_common))
+        {
+            return 1;
+        }
+        if (is_common)
+        {
+            continue;
+        }
 
         if (   encode_string(w, chanfmt.name.data, encoded_string, sizeof(encoded_string))
             || infer_audio_type_from_id(chanfmt.id, &audio_type))
@@ -958,7 +1078,7 @@ write_channel_formats
 /**
  * @brief write sADM track UIDs
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_track_uids
     (writer *w                      /**< [in] writer state */
@@ -974,6 +1094,17 @@ write_track_uids
 
     while (!dlb_sadm_track_uid_iterator_next(&ti, &track_uid))
     {
+        dlb_pmd_bool is_common;
+
+        if (dlb_sadm_track_uid_is_common_def(w->model, &track_uid, &is_common))
+        {
+            return PMD_FAIL;
+        }
+        if (is_common)
+        {
+            continue;
+        }
+
         if (   write_line(w, "<audioTrackUID UID=\"%s\">", track_uid.id.data)
             || write_indent(w)
             || write_channel_format_idref(w, track_uid.chanfmt)
@@ -992,7 +1123,7 @@ write_track_uids
 /**
  * @brief write source notice
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_source_notice
     (writer *w                      /**< [in] writer state */
@@ -1007,19 +1138,14 @@ write_source_notice
 
     dlb_pmd_library_version(&epoch, &maj, &min, &build, &y, &z);
     snprintf(version_string, 128, "<!--      This file is generated by the PMD Library v%u.%u.%u.%u      -->", epoch, maj, min, build);
-
-    return write_line(w, version_string)
-        || write_line(w, "<!--**************************************************************-->")
-        || write_line(w, "<!--**** WARNING This file contains draft BS.2076-2 elements *****-->")
-        || write_line(w, "<!--****        DO NOT USE OUTSIDE OF A TEST ENVIROMENT      *****-->")
-        || write_line(w, "<!--**************************************************************-->");
+    return write_line(w, version_string);
 }
 
 
 /**
  * @brief write sADM core metadata
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_core_metadata
     (writer *w                      /**< [in] writer state */
@@ -1041,7 +1167,7 @@ write_core_metadata
 /**
  * @brief write sADM frame header's programme idrefs
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_changed_ids_programmes
     (writer *w                      /**< [in] writer state */
@@ -1077,7 +1203,7 @@ write_changed_ids_programmes
 /**
  * @brief write sADM frame header's content idrefs
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_changed_ids_contents
     (writer *w                      /**< [in] writer state */
@@ -1106,7 +1232,7 @@ write_changed_ids_contents
 /**
  * @brief write sADM frame header's object idrefs
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_changed_ids_objects
     (writer *w                      /**< [in] writer state */
@@ -1114,19 +1240,25 @@ write_changed_ids_objects
 {
     dlb_sadm_object_iterator oi;
     dlb_sadm_object object;
+    dlb_sadm_idref_array object_refs;
     dlb_sadm_idref_array track_uids;
-    dlb_sadm_idref track_uids_array[128];
+    dlb_sadm_idref object_refs_array[MAX_AO_AO];
+    dlb_sadm_idref track_uids_array[DLB_PMD_MAX_BED_SOURCES];
 
     if (dlb_sadm_object_iterator_init(&oi, w->model))
     {
         return 1;
     }
 
+    object_refs.num = 0;
+    object_refs.max = ARRAYSZ(object_refs_array);
+    object_refs.array = object_refs_array;
+
     track_uids.num = 0;
-    track_uids.max = sizeof(track_uids_array)/sizeof(track_uids_array[0]);
+    track_uids.max = ARRAYSZ(track_uids_array);
     track_uids.array = track_uids_array;
 
-    while (!dlb_sadm_object_iterator_next(&oi, &object, &track_uids))
+    while (!dlb_sadm_object_iterator_next(&oi, &object, &object_refs, &track_uids))
     {
         if (write_line(w, "<audioObjectIDRef status=\"new\">%s</audioObjectIDRef>",
                        object.id.data))
@@ -1142,7 +1274,7 @@ write_changed_ids_objects
 /**
  * @brief write sADM frame header's pack format idrefs
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_changed_ids_pack_formats
     (writer *w                      /**< [in] writer state */
@@ -1164,6 +1296,16 @@ write_changed_ids_pack_formats
 
     while (!dlb_sadm_pack_format_iterator_next(&pfi, &packfmt, &chanfmts))
     {
+        dlb_pmd_bool is_common;
+
+        if (dlb_sadm_pack_format_is_common_def(w->model, &packfmt, &is_common))
+        {
+            return 1;
+        }
+        if (is_common)
+        {
+            continue;
+        }
         if (write_line(w, "<audioPackFormatIDRef status=\"new\">%s</audioPackFormatIDRef>",
                        packfmt.id.data))
         {
@@ -1178,7 +1320,7 @@ write_changed_ids_pack_formats
 /**
  * @brief write sADM frame header's channel format idrefs
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_changed_ids_channel_formats
     (writer *w                      /**< [in] writer state */
@@ -1200,6 +1342,16 @@ write_changed_ids_channel_formats
 
     while (!dlb_sadm_channel_format_iterator_next(&cfi, &chanfmt, &blkfmts))
     {
+        dlb_pmd_bool is_common;
+
+        if (dlb_sadm_channel_format_is_common_def(w->model, &chanfmt, &is_common))
+        {
+            return 1;
+        }
+        if (is_common)
+        {
+            continue;
+        }
         if (write_line(w, "<audioChannelFormatIDRef status=\"new\">%s</audioChannelFormatIDRef>",
                        chanfmt.id.data))
         {
@@ -1213,7 +1365,7 @@ write_changed_ids_channel_formats
 /**
  * @brief write sADM frame header's track UID idrefs
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_changed_ids_track_uids
     (writer *w                      /**< [in] writer state */
@@ -1229,6 +1381,17 @@ write_changed_ids_track_uids
 
     while (!dlb_sadm_track_uid_iterator_next(&ti, &track_uid))
     {
+        dlb_pmd_bool is_common;
+
+        if (dlb_sadm_track_uid_is_common_def(w->model, &track_uid, &is_common))
+        {
+            return 1;
+        }
+        if (is_common /*&& track_uid.channel_idx == 0*/)
+        {
+            /* TODO: Include track uids that are common defs and have definite channel assignments? */
+            continue;
+        }
         if (write_line(w, "<audioTrackUIDRef status=\"new\">%s</audioTrackUIDRef>",
                        track_uid.id.data))
         {
@@ -1242,12 +1405,27 @@ write_changed_ids_track_uids
 /**
  * @brief write sADM frame header's changed ids block
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_changed_ids
     (writer *w                      /**< [in] writer state */
     )
 {
+    DLB_SADM_FRAME_FORMAT frame_format;
+    dlb_pmd_success success = dlb_sadm_model_frame_format(w->model, &frame_format);
+
+    if (success != PMD_SUCCESS)
+    {
+        return 1;
+    }
+
+    if (frame_format == DLB_SADM_FRAME_FORMAT_FULL ||
+        frame_format == DLB_SADM_FRAME_FORMAT_ALL)
+    {
+        /* No changedIDs element for these */
+        return 0;
+    }
+
     return write_line(w, "<changedIDs>")
         || write_indent(w)
         || write_changed_ids_programmes(w)
@@ -1261,50 +1439,176 @@ write_changed_ids
 }
 
 
+static
+dlb_pmd_success
+count_tracks
+    (const dlb_sadm_model *model
+    ,unsigned int *track_uids
+    ,unsigned int *tracks
+    )
+{
+    const unsigned int n = DLB_PMD_MAX_SIGNALS + 1;
+    uint16_t counts[DLB_PMD_MAX_SIGNALS + 1];
+    dlb_sadm_track_uid_iterator ti;
+    dlb_sadm_track_uid track_uid;
+    unsigned int track_uid_count = 0;
+    unsigned int track_count = 0;
+    unsigned int i;
+
+    memset(counts, 0, sizeof(counts));
+
+    if (dlb_sadm_track_uid_iterator_init(&ti, model))
+    {
+        return PMD_FAIL;
+    }
+
+    while (!dlb_sadm_track_uid_iterator_next(&ti, &track_uid))
+    {
+        dlb_pmd_bool is_common;
+
+        if (dlb_sadm_track_uid_is_common_def(model, &track_uid, &is_common))
+        {
+            return PMD_FAIL;
+        }
+        if (is_common && track_uid.channel_idx == 0)
+        {
+            /* If the track uid is a common def and has no definite channel assignment, skip it */
+            continue;
+        }
+        counts[track_uid.channel_idx] += 1;
+        track_uid_count++;
+    }
+
+    for (i = 1; i < n; i++)     /* Note we are skipping "channel" 0 */
+    {
+        if (counts[i])
+        {
+            track_count++;
+        }
+    }
+
+    *track_uids = track_uid_count;
+    *tracks = track_count;
+
+    return PMD_SUCCESS;
+}
+
+
+/**
+ * @brief write an audioTrack record for one channel containing all of the
+ * audioTrackUIDRefs for that channel
+ */
+static
+int                                 /** @return the number of audioTrackUIDRefs written, -1 on failure */
+write_audio_track
+    (writer *w                      /**< [in] writer state */
+    ,unsigned int channel_number    /**< [in] channel number to write */
+    )
+{
+    /* TODO: This is an inefficient, brute-force way to do this...  Maybe make it better? */
+
+    dlb_sadm_track_uid_iterator ti;
+    dlb_sadm_track_uid track_uid;
+    int write_count = 0;
+
+    if (dlb_sadm_track_uid_iterator_init(&ti, w->model))
+    {
+        return -1;
+    }
+
+    while (!dlb_sadm_track_uid_iterator_next(&ti, &track_uid))
+    {
+        if (track_uid.channel_idx == channel_number)
+        {
+            write_count = 1;
+            break;
+        }
+    }
+
+    if (write_count)
+    {
+        if (   write_line(w, "<audioTrack trackID=\"%d\">", channel_number)
+            || write_indent(w)
+            || write_line(w, "<audioTrackUIDRef>%s</audioTrackUIDRef>", track_uid.id.data))
+        {
+            return -1;
+        }
+
+        while (!dlb_sadm_track_uid_iterator_next(&ti, &track_uid))
+        {
+            if (track_uid.channel_idx == channel_number)
+            {
+                if (write_line(w, "<audioTrackUIDRef>%s</audioTrackUIDRef>", track_uid.id.data))
+                {
+                    return -1;
+                }
+                write_count++;
+            }
+        }
+
+        if (   write_outdent(w)
+            || write_line(w, "</audioTrack>"))
+        {
+            return -1;
+        }
+    }
+
+    return write_count;
+}
+
+
 /**
  * @brief write sADM frame header's transport track format line
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_transport_track_format
     (writer *w                      /**< [in] writer state */
     )
 {
-    dlb_sadm_track_uid_iterator ti;
-    dlb_sadm_track_uid track_uid;
     dlb_sadm_counts sc;
     char attributes[256];
+    unsigned int track_uid_count;
+    unsigned int track_count;
+    unsigned int write_count;
+    unsigned int channel_number;
 
-    if (dlb_sadm_model_counts(w->model, &sc))
+    if (dlb_sadm_model_counts(w->model, &sc) ||
+        count_tracks(w->model, &track_uid_count, &track_count))
     {
         return 1;
     }
-    
+
     snprintf(attributes, sizeof(attributes),
              "transportID=\"TP_0001\" "
              "transportName=\"X\" "
-             "numIDs=\"%d\" "
-             "numTracks=\"%d\"",
-             (int)sc.num_track_uids,
-             (int)sc.num_track_uids);
+             "numIDs=\"%u\" "
+             "numTracks=\"%u\"",
+             track_uid_count,
+             track_count);
 
     if (   write_line(w, "<transportTrackFormat %s>", attributes)
-        || write_indent(w)
-        || dlb_sadm_track_uid_iterator_init(&ti, w->model)
-        )
+        || write_indent(w))
     {
         return 1;
     }
-    
-    while (!dlb_sadm_track_uid_iterator_next(&ti, &track_uid))
+
+    write_count = 0;
+    for (channel_number = 1; channel_number <= 255; channel_number++)   /* TODO: symbolic constant(s) */
     {
-        if (   write_line(w, "<audioTrack trackID=\"%d\">", track_uid.channel_idx)
-            || write_indent(w)
-            || write_line(w, "<audioTrackUIDRef>%s</audioTrackUIDRef>", track_uid.id.data)
-            || write_outdent(w)
-            || write_line(w, "</audioTrack>"))
+        int written = write_audio_track(w, channel_number);
+
+        if (written < 0)
         {
             return 1;
+        }
+        else if (written > 0)
+        {
+            write_count += written;
+            if (write_count >= track_uid_count)
+            {
+                break;
+            }
         }
     }
 
@@ -1316,24 +1620,39 @@ write_transport_track_format
 /**
  * @brief write sADM frame header's frame format line
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_frame_format
     (writer *w                      /**< [in] writer state */
     )
 {
-    char attributes[256];
+    char attributes[512];
+    char uuid[37];
 
-    snprintf(attributes, sizeof(attributes),
-             "frameFormatID=\"FF_00000001\" "
-             "type=\"header\" "
-             "start=\"00:00:00.00000\" "
-             "duration=\"00:00:00.02000\"");  /* todo: check duration frame rate */
+    uuid[0] = '\0';
+    dlb_sadm_get_flow_id(w->model, uuid, sizeof(uuid));
+    if (uuid[0] == '\0')
+    {
+        snprintf(attributes, sizeof(attributes),
+                 "frameFormatID=\"FF_00000000001\" "
+                 "type=\"full\" "
+                 "start=\"00:00:00.00000\" "
+                 "duration=\"00:00:00.02000\"");    /* TODO: check duration frame rate */
+    } 
+    else
+    {
+        snprintf(attributes, sizeof(attributes),
+                 "frameFormatID=\"FF_00000000001\" "
+                 "type=\"full\" "
+                 "start=\"00:00:00.00000\" "
+                 "duration=\"00:00:00.02000\" "     /* TODO: check duration frame rate */
+                 "flowID=\"%s\"",
+                 uuid);
+    }
 
     return write_line(w, "<frameFormat %s>", attributes)
         || write_indent(w)
         || write_changed_ids(w)
-        || write_transport_track_format(w)
         || write_outdent(w)
         || write_line(w, "</frameFormat>");
 }
@@ -1343,7 +1662,7 @@ write_frame_format
 /**
  * @brief write sADM frame header
  */
-static inline
+static
 int                                 /** @return 0 on success, 1 on failure */
 write_frame_header
     (writer *w                      /**< [in] writer state */
@@ -1352,6 +1671,7 @@ write_frame_header
     return write_line(w, "<frameHeader>")
         || write_indent(w)
         || write_frame_format(w)
+        || write_transport_track_format(w)
         || write_outdent(w)
         || write_line(w, "</frameHeader>");
 }

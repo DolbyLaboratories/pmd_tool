@@ -58,6 +58,7 @@ typedef struct dlb_sadm_reader dlb_sadm_reader;
 /**
  * @brief query memory requirements
  */
+DLB_DLL_ENTRY
 size_t                               /** @return size of memory required in bytes */
 dlb_sadm_reader_query_memory
     (dlb_sadm_counts *limits         /**< [in] model limits */
@@ -67,6 +68,7 @@ dlb_sadm_reader_query_memory
 /**
  * @brief initialize an sADM reader
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                        /** @return success or failure */
 dlb_sadm_reader_init
     (dlb_sadm_counts *limits           /**< [in] model limits */
@@ -78,6 +80,7 @@ dlb_sadm_reader_init
 /**
  * @brief finalize an sADM reader
  */
+DLB_DLL_ENTRY
 void
 dlb_sadm_reader_finish
     (dlb_sadm_reader *reader          /**< [in] reader to finish */
@@ -87,6 +90,7 @@ dlb_sadm_reader_finish
 /**
  * @brief decide whether the given XML buffer contains serial ADM or not
  */
+DLB_DLL_ENTRY
 dlb_pmd_bool              /** @return 1 if buffer has coreMetadata tag, 0 otherwise */
 dlb_sadm_reader_check_xml
     (const char *buffer   /**< [in] XML buffer */
@@ -100,6 +104,7 @@ dlb_sadm_reader_check_xml
  * Note that since sADM is an XML format, we re-use definitions from
  * the PMD XML format.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                        
 dlb_sadm_reader_read
    (dlb_sadm_reader *reader

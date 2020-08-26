@@ -51,6 +51,7 @@ extern "C" {
 /**
  * @brief check whether a file contains serial ADM
  */
+DLB_DLL_ENTRY
 dlb_pmd_bool                  /** @return 1 if the file is plausibly a serial ADM file */
 dlb_sadm_file_is_sadm
      (const char *filename    /**< [in] file to check */
@@ -63,6 +64,7 @@ dlb_sadm_file_is_sadm
  * Upon parse error, this function will return 1, and the error message
  * can be retrieved via dlb_pmd_error().
  */
+DLB_DLL_ENTRY
 dlb_pmd_success          /** @return 0 if file read and parsed successfully, 1 otherwise */
 dlb_sadm_file_read
    (const char                *filename      /**< [in] file to read */
@@ -79,6 +81,7 @@ dlb_sadm_file_read
  * to fill.  When the callback is invoked, it is safe to write the
  * existing data to file.
  */
+DLB_DLL_ENTRY
 dlb_pmd_success                      /** @return 0 on success, 1 on failure */
 dlb_sadm_file_write
       (const char     *filename      /**< [in] file to write */

@@ -41,8 +41,8 @@
 #ifndef DLB_PMD_KLV_H
 #define DLB_PMD_KLV_H
 
-#include <stdint.h>
 #include "dlb_pmd_types.h"
+#include "dlb_pmd_lib_dll.h"
 
 
 #ifdef __cplusplus
@@ -86,6 +86,7 @@ dlb_klvpmd_universal_label;
  *
  * This is used to determine if the block carries no actual metadata
  */
+DLB_DLL_ENTRY
 unsigned int
 dlb_klvpmd_min_block_size
     (void
@@ -98,6 +99,7 @@ dlb_klvpmd_min_block_size
  * REQ-0009 MTx(0) shall only contain AudioObjects V1.0 payloads
  *          of type "Object"
  */
+DLB_DLL_ENTRY
 int                               /** @return number bytes written, 0 on failure */
 dlb_klvpmd_write_block
    (dlb_pmd_model *model          /**< [in] model to write */
@@ -113,6 +115,7 @@ dlb_klvpmd_write_block
 /**
  * @brief write a complete ED2-frame of metadata
  */
+DLB_DLL_ENTRY
 int                               /** @return number bytes written, 0 on failure */
 dlb_klvpmd_write_all
    (dlb_pmd_model *model          /**< [in] model to write */
@@ -130,6 +133,7 @@ dlb_klvpmd_write_all
  * that would be stored in a 160-sample block in one pair of
  * SMPTE-337m data.
  */
+DLB_DLL_ENTRY
 int                                /** @return 0 on success, non-zero otherwise */
 dlb_klvpmd_read_payload
     (uint8_t                    *buffer         /**< [in] input buffer */

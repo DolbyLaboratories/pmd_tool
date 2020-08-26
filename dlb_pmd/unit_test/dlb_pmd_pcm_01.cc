@@ -39,16 +39,24 @@
 #include "dlb_pmd/include/dlb_pmd_pcm.h"
 
 #include <stdint.h>
+#include <string.h>
 
 class DlbPmdPcm01 : public testing::Test
 {
 protected:
     static const size_t MODEL_MEMORY_SIZE = 4000000;    // 3734704 on Windows
-    static const size_t AUGMENTOR_MEMORY_SIZE = 12000;  // 10184 on Windows
+    static const size_t AUGMENTOR_MEMORY_SIZE = 13000;  // 12208 on Windows
+    static const size_t EXTRACTOR_MEMORY_SIZE = 13000;  // 12256 on Windows
+    static const size_t TRY_FRAME_MEMORY_SIZE = 13000;  // 12208 on Windows
 
-    uint8_t          mModelMemory[MODEL_MEMORY_SIZE];
+    uint8_t          mModel1Memory[MODEL_MEMORY_SIZE];
+    uint8_t          mModel2Memory[MODEL_MEMORY_SIZE];
     uint8_t          mAugmentorMemory[AUGMENTOR_MEMORY_SIZE];
-    dlb_pmd_model   *mModel;
+    uint8_t          mExtractorMemory[EXTRACTOR_MEMORY_SIZE];
+    uint8_t          mTryFrameMemory[TRY_FRAME_MEMORY_SIZE];
+    uint8_t         *mSadmTryFrameMemory;
+    dlb_pmd_model   *mModel1;
+    dlb_pmd_model   *mModel2;
 
     dlb_pmd_success AddBasicModel()
     {
@@ -56,13 +64,13 @@ protected:
         char obj_name[99];
         char i;
 
-        success = dlb_pmd_add_signals(mModel, 16);
+        success = dlb_pmd_add_signals(mModel1, 16);
         if (success != PMD_SUCCESS)
         {
             return success;
         }
 
-        success = dlb_pmd_add_bed(mModel, 101, "Bed 1", DLB_PMD_SPEAKER_CONFIG_5_1_4, 2, 0);
+        success = dlb_pmd_add_bed(mModel1, 101, "Bed 1", DLB_PMD_SPEAKER_CONFIG_5_1_4, 2, 0);
         if (success != PMD_SUCCESS)
         {
             return success;
@@ -71,7 +79,7 @@ protected:
         for (i = 1; i <= 5; i++)
         {
             sprintf(obj_name, "Object %u", static_cast<unsigned>(i));
-            success = dlb_pmd_add_generic_obj2(mModel, i, obj_name, i + 11, 0.0, 0.0, 0.0);
+            success = dlb_pmd_add_generic_obj2(mModel1, i, obj_name, i + 11, 0.0, 0.0, 0.0);
             if (success != PMD_SUCCESS)
             {
                 return success;
@@ -82,13 +90,13 @@ protected:
         int id_count = sizeof(ids) / sizeof(dlb_pmd_element_id);
 
         success = dlb_pmd_add_presentation(
-            mModel, 1, "en", "Presentation 1", "en", DLB_PMD_SPEAKER_CONFIG_5_1_4, id_count, ids);
+            mModel1, 1, "en", "Presentation 1", "en", DLB_PMD_SPEAKER_CONFIG_5_1_4, id_count, ids);
         if (success != PMD_SUCCESS)
         {
             return success;
         }
  
-        success = dlb_pmd_iat_add(mModel, 0);
+        success = dlb_pmd_iat_add(mModel1, 0);
 
         return success;
     }
@@ -100,7 +108,7 @@ protected:
         char name[99];
         char i;
 
-        success = dlb_pmd_add_signals(mModel, 128);
+        success = dlb_pmd_add_signals(mModel1, 128);
         if (success != PMD_SUCCESS)
         {
             return success;
@@ -109,7 +117,7 @@ protected:
         for (entityId = 101, ch = 2, i = 1; i <= 15; entityId++, ch += 8, i++)
         {
             sprintf(name, "Bed %u", entityId);
-            success = dlb_pmd_add_bed(mModel, static_cast<dlb_pmd_element_id>(entityId), name, DLB_PMD_SPEAKER_CONFIG_5_1_2, ch, 0);
+            success = dlb_pmd_add_bed(mModel1, static_cast<dlb_pmd_element_id>(entityId), name, DLB_PMD_SPEAKER_CONFIG_5_1_2, ch, 0);
             if (success != PMD_SUCCESS)
             {
                 return success;
@@ -124,14 +132,14 @@ protected:
             sprintf(name, "Presentation %u", entityId);
             elementId = static_cast<dlb_pmd_element_id>(bedId);
             success = dlb_pmd_add_presentation(
-                mModel, static_cast<dlb_pmd_presentation_id>(entityId), "en", name, "en", DLB_PMD_SPEAKER_CONFIG_5_1_2, 1, &elementId);
+                mModel1, static_cast<dlb_pmd_presentation_id>(entityId), "en", name, "en", DLB_PMD_SPEAKER_CONFIG_5_1_2, 1, &elementId);
             if (success != PMD_SUCCESS)
             {
                 return success;
             }
         }
 
-        success = dlb_pmd_iat_add(mModel, 0);
+        success = dlb_pmd_iat_add(mModel1, 0);
 
         return success;
     }
@@ -143,7 +151,7 @@ protected:
         char name[99];
         char i;
 
-        success = dlb_pmd_add_signals(mModel, 128);
+        success = dlb_pmd_add_signals(mModel1, 128);
         if (success != PMD_SUCCESS)
         {
             return success;
@@ -152,7 +160,7 @@ protected:
         for (entityId = 101, ch = 2, i = 1; i <= 11; entityId++, ch += 10, i++)
         {
             sprintf(name, "This is a 5.1.4 bed with id = %u", entityId);
-            success = dlb_pmd_add_bed(mModel, static_cast<dlb_pmd_element_id>(entityId), name, DLB_PMD_SPEAKER_CONFIG_5_1_4, ch, 0);
+            success = dlb_pmd_add_bed(mModel1, static_cast<dlb_pmd_element_id>(entityId), name, DLB_PMD_SPEAKER_CONFIG_5_1_4, ch, 0);
             if (success != PMD_SUCCESS)
             {
                 return success;
@@ -162,7 +170,7 @@ protected:
         for (entityId = 1; ch <= 128; entityId++, ch++)
         {
             sprintf(name, "This is a generic object with id = %u", entityId);
-            success = dlb_pmd_add_generic_obj2(mModel, static_cast<dlb_pmd_element_id>(entityId), name, ch, 0.0, 0.0, 0.0);
+            success = dlb_pmd_add_generic_obj2(mModel1, static_cast<dlb_pmd_element_id>(entityId), name, ch, 0.0, 0.0, 0.0);
             if (success != PMD_SUCCESS)
             {
                 return success;
@@ -178,33 +186,51 @@ protected:
             elementIds[1] = static_cast<dlb_pmd_element_id>(entityId);
             sprintf(name, "This is a presentation with id = %u", entityId);
             success = dlb_pmd_add_presentation(
-                mModel, static_cast<dlb_pmd_presentation_id>(entityId), "en", name, "en", DLB_PMD_SPEAKER_CONFIG_5_1_4, 2, elementIds);
+                mModel1, static_cast<dlb_pmd_presentation_id>(entityId), "en", name, "en", DLB_PMD_SPEAKER_CONFIG_5_1_4, 2, elementIds);
             if (success != PMD_SUCCESS)
             {
                 return success;
             }
         }
 
-        success = dlb_pmd_iat_add(mModel, 0);
+        success = dlb_pmd_iat_add(mModel1, 0);
 
         return success;
     }
 
     virtual void SetUp()
     {
-        ::memset(mModelMemory, 0, sizeof(mModelMemory));
+        ::memset(mModel1Memory, 0, sizeof(mModel1Memory));
+        ::memset(mModel2Memory, 0, sizeof(mModel2Memory));
         ::memset(mAugmentorMemory, 0, sizeof(mAugmentorMemory));
+        ::memset(mExtractorMemory, 0, sizeof(mExtractorMemory));
+        ::memset(mTryFrameMemory, 0, sizeof(mTryFrameMemory));
 
-        mModel = NULL;
-        dlb_pmd_init(&mModel, mModelMemory);
+        mSadmTryFrameMemory = NULL;
+
+        mModel1 = NULL;
+        dlb_pmd_init(&mModel1, mModel1Memory);
+
+        mModel2 = NULL;
+        dlb_pmd_init(&mModel2, mModel2Memory);
     }
 
     virtual void TearDown()
     {
-        if (mModel != NULL)
+        if (mModel2 != NULL)
         {
-            dlb_pmd_finish(mModel);
-            mModel = NULL;
+            dlb_pmd_finish(mModel2);
+            mModel2 = NULL;
+        }
+        if (mModel1 != NULL)
+        {
+            dlb_pmd_finish(mModel1);
+            mModel1 = NULL;
+        }
+        if (mSadmTryFrameMemory != NULL)
+        {
+            delete[] mSadmTryFrameMemory;
+            mSadmTryFrameMemory = NULL;
         }
     }
 };
@@ -213,6 +239,8 @@ TEST_F(DlbPmdPcm01, MemoryCheck)
 {
     size_t model_sz = MODEL_MEMORY_SIZE;
     size_t aug_sz = AUGMENTOR_MEMORY_SIZE;
+    size_t ext_sz = EXTRACTOR_MEMORY_SIZE;
+    size_t try_sz = TRY_FRAME_MEMORY_SIZE;
     size_t n = dlb_pmd_query_mem();
 
     if (MODEL_MEMORY_SIZE < n)
@@ -227,6 +255,38 @@ TEST_F(DlbPmdPcm01, MemoryCheck)
         printf("Memory needed for augmentor: %u\n", (unsigned)n);
     }
     EXPECT_LE(n, aug_sz);
+
+    n = dlb_pcmpmd_extractor_query_mem();
+    if (EXTRACTOR_MEMORY_SIZE < n)
+    {
+        printf("Memory needed for extractor: %u\n", (unsigned)n);
+    }
+    EXPECT_LE(n, ext_sz);
+
+    dlb_pmd_success success = AddLargeModel();
+    ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
+    n = dlb_pcmpmd_augmentor_model_try_frame_query_mem(mModel1, PMD_FALSE);
+    if (TRY_FRAME_MEMORY_SIZE < n)
+    {
+        printf("Memory needed for augmentor try frame: %u\n", (unsigned)n);
+    }
+    EXPECT_LE(n, try_sz);
+}
+
+TEST(DlbPmdPcm, MallocatedModel)
+{
+    try
+    {
+        dlb_pmd_model *m = NULL;
+
+        dlb_pmd_init(&m, NULL);
+        EXPECT_NE(nullptr, m);
+        dlb_pmd_finish(m);
+    }
+    catch (...)
+    {
+        FAIL();
+    }
 }
 
 static unsigned int calc_min_samples(dlb_pmd_frame_rate frame_rate)
@@ -302,7 +362,7 @@ TEST_F(DlbPmdPcm01, ModelTryFrame_Bad_Small)
     static const size_t FRAME_SIZE = 400;
     static const size_t CHANNEL_COUNT = 2;
 
-    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];    // TODO: make certain this works on Linux
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
     dlb_pcmpmd_write_status write_status;
     dlb_pmd_success success;
 
@@ -310,22 +370,25 @@ TEST_F(DlbPmdPcm01, ModelTryFrame_Bad_Small)
     success = AddBasicModel();
     ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
 
-    write_status = dlb_pcmpmd_augmentor_model_try_frame(NULL, NULL, 0, 0, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(NULL, NULL, NULL, 0, 0, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
-    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel, NULL, 0, 0, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel1, NULL, NULL, 0, 0, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
-    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel, buffer, 0, 0, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel1, mTryFrameMemory, NULL, 0, 0, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
-    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel, buffer, CHANNEL_COUNT, 0, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel1, mTryFrameMemory, buffer, 0, 0, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
-    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel, buffer, CHANNEL_COUNT, FRAME_SIZE, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel1, mTryFrameMemory, buffer, CHANNEL_COUNT, 0, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
-
-    /* Not enough samples for 30fps... */
-    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_3000, PMD_FALSE, PMD_FALSE);
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel1, mTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE, NUM_PMD_FRAMERATES, PMD_FALSE, PMD_FALSE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
 
-    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_12000, PMD_FALSE, PMD_FALSE);
+    // Not enough samples for 30fps...
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel1, mTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_3000, PMD_FALSE, PMD_FALSE);
+    EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
+
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel1, mTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_12000, PMD_FALSE, PMD_FALSE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_GREEN, write_status);
 }
 
@@ -334,7 +397,7 @@ TEST_F(DlbPmdPcm01, ModelTryFrame_Medium)
     static const size_t FRAME_SIZE = 400;
     static const size_t CHANNEL_COUNT = 2;
 
-    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];    // TODO: make certain this works on Linux
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
     dlb_pcmpmd_write_status write_status;
     dlb_pmd_success success;
 
@@ -342,7 +405,8 @@ TEST_F(DlbPmdPcm01, ModelTryFrame_Medium)
     success = AddMediumModel();
     ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
 
-    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_12000, false, false);
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel1, mTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_12000, false, false);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_YELLOW, write_status);
 }
 
@@ -351,7 +415,7 @@ TEST_F(DlbPmdPcm01, ModelTryFrame_Large)
     static const size_t FRAME_SIZE = 400;
     static const size_t CHANNEL_COUNT = 2;
 
-    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];    // TODO: make certain this works on Linux
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
     dlb_pcmpmd_write_status write_status;
     dlb_pmd_success success;
 
@@ -359,7 +423,8 @@ TEST_F(DlbPmdPcm01, ModelTryFrame_Large)
     success = AddLargeModel();
     ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
 
-    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_12000, false, false);
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(mModel1, mTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_12000, false, false);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_RED, write_status);
 }
 
@@ -368,7 +433,7 @@ TEST_F(DlbPmdPcm01, TryFrame_Bad_Small)
     static const size_t FRAME_SIZE = 400;
     static const size_t CHANNEL_COUNT = 2;
 
-    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];    // TODO: make certain this works on Linux
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
     dlb_pcmpmd_augmentor *aug = NULL;
     dlb_pcmpmd_write_status write_status;
     dlb_pmd_success success;
@@ -378,20 +443,23 @@ TEST_F(DlbPmdPcm01, TryFrame_Bad_Small)
     ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
 
     dlb_pcmpmd_augmentor_init(
-        &aug, mModel, mAugmentorMemory,
+        &aug, mModel1, mAugmentorMemory,
         DLB_PMD_FRAMERATE_12000, DLB_PMD_KLV_UL_ST2109,
         false, CHANNEL_COUNT, CHANNEL_COUNT, false, 0);
 
-    write_status = dlb_pcmpmd_augmentor_try_frame(NULL, NULL, 0, 0);
+    write_status = dlb_pcmpmd_augmentor_try_frame(NULL, NULL, NULL, 0, 0);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
-    write_status = dlb_pcmpmd_augmentor_try_frame(aug, NULL, 0, 0);
+    write_status = dlb_pcmpmd_augmentor_try_frame(aug, NULL, NULL, 0, 0);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
-    write_status = dlb_pcmpmd_augmentor_try_frame(aug, buffer, 0, 0);
+    write_status = dlb_pcmpmd_augmentor_try_frame(aug, mTryFrameMemory, NULL, 0, 0);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
-    write_status = dlb_pcmpmd_augmentor_try_frame(aug, buffer, CHANNEL_COUNT, 0);
+    write_status = dlb_pcmpmd_augmentor_try_frame(aug, mTryFrameMemory, buffer, 0, 0);
+    EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
+    write_status = dlb_pcmpmd_augmentor_try_frame(aug, mTryFrameMemory, buffer, CHANNEL_COUNT, 0);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_ERROR, write_status);
 
-    write_status = dlb_pcmpmd_augmentor_try_frame(aug, buffer, CHANNEL_COUNT, FRAME_SIZE);
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_try_frame(aug, mTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_GREEN, write_status);
 }
 
@@ -400,7 +468,7 @@ TEST_F(DlbPmdPcm01, TryFrame_Medium)
     static const size_t FRAME_SIZE = 400;
     static const size_t CHANNEL_COUNT = 2;
 
-    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];    // TODO: make certain this works on Linux
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
     dlb_pcmpmd_augmentor *aug = NULL;
     dlb_pcmpmd_write_status write_status;
     dlb_pmd_success success;
@@ -410,11 +478,12 @@ TEST_F(DlbPmdPcm01, TryFrame_Medium)
     ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
 
     dlb_pcmpmd_augmentor_init(
-        &aug, mModel, mAugmentorMemory,
+        &aug, mModel1, mAugmentorMemory,
         DLB_PMD_FRAMERATE_12000, DLB_PMD_KLV_UL_ST2109,
         false, CHANNEL_COUNT, CHANNEL_COUNT, false, 0);
 
-    write_status = dlb_pcmpmd_augmentor_try_frame(aug, buffer, CHANNEL_COUNT, FRAME_SIZE);
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_try_frame(aug, mTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_YELLOW, write_status);
 }
 
@@ -423,7 +492,7 @@ TEST_F(DlbPmdPcm01, TryFrame_Large)
     static const size_t FRAME_SIZE = 400;
     static const size_t CHANNEL_COUNT = 2;
 
-    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];    // TODO: make certain this works on Linux
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
     dlb_pcmpmd_augmentor *aug = NULL;
     dlb_pcmpmd_write_status write_status;
     dlb_pmd_success success;
@@ -433,10 +502,155 @@ TEST_F(DlbPmdPcm01, TryFrame_Large)
     ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
 
     dlb_pcmpmd_augmentor_init(
-        &aug, mModel, mAugmentorMemory,
+        &aug, mModel1, mAugmentorMemory,
         DLB_PMD_FRAMERATE_12000, DLB_PMD_KLV_UL_ST2109,
         false, CHANNEL_COUNT, CHANNEL_COUNT, false, 0);
 
-    write_status = dlb_pcmpmd_augmentor_try_frame(aug, buffer, CHANNEL_COUNT, FRAME_SIZE);
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_try_frame(aug, mTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE);
     EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_RED, write_status);
+}
+
+TEST_F(DlbPmdPcm01, ModelTryFrame_Small_sADM_30_fps)
+{
+    static const size_t FRAME_SIZE = 1600;
+    static const size_t CHANNEL_COUNT = 2;
+
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
+    dlb_pcmpmd_write_status write_status;
+    dlb_pmd_success success;
+
+    ::memset(buffer, 0, sizeof(buffer));
+    success = AddBasicModel();
+    ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
+
+    // Allocate memory
+    size_t sz = dlb_pcmpmd_augmentor_model_try_frame_query_mem(mModel1, PMD_TRUE);
+    mSadmTryFrameMemory = new uint8_t[sz];
+    ASSERT_NE(nullptr, mSadmTryFrameMemory);
+
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(
+        mModel1, mSadmTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_3000, PMD_FALSE, PMD_TRUE);
+    EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_GREEN, write_status);
+}
+
+TEST_F(DlbPmdPcm01, ModelTryFrame_Medium_sADM_30_fps)
+{
+    static const size_t FRAME_SIZE = 1600;
+    static const size_t CHANNEL_COUNT = 2;
+
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
+    dlb_pcmpmd_write_status write_status;
+    dlb_pmd_success success;
+
+    ::memset(buffer, 0, sizeof(buffer));
+    success = AddMediumModel();
+    ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
+
+    // Allocate memory
+    size_t sz = dlb_pcmpmd_augmentor_model_try_frame_query_mem(mModel1, PMD_TRUE);
+    mSadmTryFrameMemory = new uint8_t[sz];
+    ASSERT_NE(nullptr, mSadmTryFrameMemory);
+
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(
+        mModel1, mSadmTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_3000, PMD_FALSE, PMD_TRUE);
+    EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_GREEN, write_status);
+}
+
+TEST_F(DlbPmdPcm01, ModelTryFrame_Large_sADM_60_fps)
+{
+    static const size_t FRAME_SIZE = 800;
+    static const size_t CHANNEL_COUNT = 2;
+
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
+    dlb_pcmpmd_write_status write_status;
+    dlb_pmd_success success;
+
+    ::memset(buffer, 0, sizeof(buffer));
+    success = AddLargeModel();
+    ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
+
+    // Allocate memory
+    size_t sz = dlb_pcmpmd_augmentor_model_try_frame_query_mem(mModel1, PMD_TRUE);
+    mSadmTryFrameMemory = new uint8_t[sz];
+    ASSERT_NE(nullptr, mSadmTryFrameMemory);
+
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(
+        mModel1, mSadmTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_6000, PMD_FALSE, PMD_TRUE);
+    EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_RED, write_status);
+}
+
+TEST_F(DlbPmdPcm01, ModelTryFrame_Large_sADM_24fps)
+{
+    static const size_t FRAME_SIZE = 2000;
+    static const size_t CHANNEL_COUNT = 2;
+
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
+    dlb_pcmpmd_write_status write_status;
+    dlb_pmd_success success;
+
+    ::memset(buffer, 0, sizeof(buffer));
+    success = AddLargeModel();
+    ASSERT_EQ((dlb_pmd_success)PMD_SUCCESS, success);
+
+    // Allocate memory
+    size_t sz = dlb_pcmpmd_augmentor_model_try_frame_query_mem(mModel1, PMD_TRUE);
+    mSadmTryFrameMemory = new uint8_t[sz];
+    ASSERT_NE(nullptr, mSadmTryFrameMemory);
+
+    // Try it
+    write_status = dlb_pcmpmd_augmentor_model_try_frame(
+        mModel1, mSadmTryFrameMemory, buffer, CHANNEL_COUNT, FRAME_SIZE, DLB_PMD_FRAMERATE_2400, PMD_FALSE, PMD_TRUE);
+    EXPECT_EQ(DLB_PCMPMD_WRITE_STATUS_GREEN, write_status);
+}
+
+TEST_F(DlbPmdPcm01, ReadPresentationIdAndLoudnessCorrectionType)    // PMDLIB-138, PMDLIB-139
+{
+    static const size_t FRAME_SIZE = 1600;
+    static const size_t CHANNEL_COUNT = 2;
+    static const dlb_pmd_presentation_id PRESENTATION_ID = 7;       // Somewhere in the middle of all the presentations
+
+    uint32_t buffer[FRAME_SIZE * CHANNEL_COUNT];
+    dlb_pcmpmd_augmentor *aug = NULL;
+    dlb_pcmpmd_extractor *ext = NULL;
+    dlb_pmd_success success;
+
+    ::memset(buffer, 0, sizeof(buffer));
+    success = AddMediumModel();
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    dlb_pmd_loudness pld;
+
+    ::memset(&pld, 0, sizeof(pld));
+    pld.presid = 7;
+    pld.loud_prac_type = PMD_PLD_LOUDNESS_PRACTICE_CONSUMER_LEVELLER;
+    pld.loudcorr_type = PMD_PLD_CORRECTION_REALTIME;
+    success = dlb_pmd_set_loudness(mModel1, &pld);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    dlb_pcmpmd_augmentor_init(
+        &aug, mModel1, mAugmentorMemory,
+        DLB_PMD_FRAMERATE_3000, DLB_PMD_KLV_UL_ST2109,
+        false, CHANNEL_COUNT, CHANNEL_COUNT, true, 0);
+
+    dlb_pcmpmd_augment(aug, buffer, FRAME_SIZE, 0);
+
+    dlb_pcmpmd_extractor_init(
+        &ext, mExtractorMemory, DLB_PMD_FRAMERATE_3000, 0, CHANNEL_COUNT, true, mModel2, nullptr);
+
+    success = dlb_pcmpmd_extract(ext, buffer, FRAME_SIZE, 0);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    dlb_pmd_loudness_iterator it;
+
+    success = dlb_pmd_loudness_iterator_init(&it, mModel2);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+    ::memset(&pld, 0, sizeof(pld));
+    success = dlb_pmd_loudness_iterator_next(&it, &pld);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+    EXPECT_EQ(7, pld.presid);                                   // PMDLIB-138
+    EXPECT_EQ(PMD_PLD_CORRECTION_REALTIME, pld.loudcorr_type);  // PMDLIB-139
 }

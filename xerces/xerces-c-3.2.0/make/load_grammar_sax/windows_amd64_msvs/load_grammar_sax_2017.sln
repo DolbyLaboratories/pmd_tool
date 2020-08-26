@@ -1,0 +1,28 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "load_grammar_sax", "load_grammar_sax_2017.vcxproj", "{B2DCABFE-466A-3AB9-89F6-D616AAD91552}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1} = {F3113CD3-1EEE-3755-88A8-9D430022FDA1}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xerces_3_2_0_lib", "..\..\xerces_3_2_0_lib\windows_amd64_msvs\xerces_3_2_0_lib_2017.vcxproj", "{F3113CD3-1EEE-3755-88A8-9D430022FDA1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		debug|x64 = debug|x64
+		release|x64 = release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B2DCABFE-466A-3AB9-89F6-D616AAD91552}.debug|x64.ActiveCfg = debug|x64
+		{B2DCABFE-466A-3AB9-89F6-D616AAD91552}.debug|x64.Build.0 = debug|x64
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1}.debug|x64.ActiveCfg = debug|x64
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1}.debug|x64.Build.0 = debug|x64
+		{B2DCABFE-466A-3AB9-89F6-D616AAD91552}.release|x64.ActiveCfg = release|x64
+		{B2DCABFE-466A-3AB9-89F6-D616AAD91552}.release|x64.Build.0 = release|x64
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1}.release|x64.ActiveCfg = release|x64
+		{F3113CD3-1EEE-3755-88A8-9D430022FDA1}.release|x64.Build.0 = release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

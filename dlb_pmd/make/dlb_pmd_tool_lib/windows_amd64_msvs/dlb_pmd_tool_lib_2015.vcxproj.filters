@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+<Filter Include="dlb_pmd">
+<UniqueIdentifier>{ce4f8a46-b718-3a47-9a29-b30eb0bee44e}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\frontend">
+<UniqueIdentifier>{b690ab19-6783-384e-8cac-cce801778be4}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\frontend\pmd_tool">
+<UniqueIdentifier>{aa0c4d0c-e36d-34e2-bd24-c9d0b4cb3e6a}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\include">
+<UniqueIdentifier>{579370b4-f054-3050-9e97-fb058c837d53}</UniqueIdentifier></Filter>
+<Filter Include="dlb_pmd\include\sadm">
+<UniqueIdentifier>{b7c16b3b-5a5f-3038-82d2-7e90afa13190}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave">
+<UniqueIdentifier>{31928a1c-effb-3779-9a04-abf5d55dc5e5}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6">
+<UniqueIdentifier>{a857c9b8-1566-32c0-b876-e9c26439e042}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6\dlb_wave">
+<UniqueIdentifier>{9c0116df-55a2-39c3-9225-426e3d5d5379}</UniqueIdentifier></Filter>
+<Filter Include="dlb_wave\1.6\dlb_wave\include">
+<UniqueIdentifier>{571b123e-f0f2-329a-8daf-c79b44e1dd77}</UniqueIdentifier></Filter></ItemGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\frontend\pmd_tool\pcm.c">
+<Filter>dlb_pmd\frontend\pmd_tool</Filter></ClCompile>
+<ClCompile Include="..\..\..\frontend\pmd_tool\pmd_tool.c">
+<Filter>dlb_pmd\frontend\pmd_tool</Filter></ClCompile>
+<ClCompile Include="..\..\..\frontend\pmd_tool\pmd_tool_klv.c">
+<Filter>dlb_pmd\frontend\pmd_tool</Filter></ClCompile>
+<ClCompile Include="..\..\..\frontend\pmd_tool\xml.c">
+<Filter>dlb_pmd\frontend\pmd_tool</Filter></ClCompile></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\frontend\pmd_tool\pcm.h">
+<Filter>dlb_pmd\frontend\pmd_tool</Filter></ClInclude>
+<ClInclude Include="..\..\..\frontend\pmd_tool\pmd_tool.h">
+<Filter>dlb_pmd\frontend\pmd_tool</Filter></ClInclude>
+<ClInclude Include="..\..\..\frontend\pmd_tool\pmd_tool_build_version.h">
+<Filter>dlb_pmd\frontend\pmd_tool</Filter></ClInclude>
+<ClInclude Include="..\..\..\frontend\pmd_tool\pmd_tool_klv.h">
+<Filter>dlb_pmd\frontend\pmd_tool</Filter></ClInclude>
+<ClInclude Include="..\..\..\frontend\pmd_tool\xml.h">
+<Filter>dlb_pmd\frontend\pmd_tool</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_api.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_capture.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_generate.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_klv.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_lib_dll.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_pcm.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_types.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_xml.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_xml_file.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model_type.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h">
+<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_riff.h">
+<Filter>dlb_wave\1.6\dlb_wave\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_wave\1.6\dlb_wave\include\dlb_wave.h">
+<Filter>dlb_wave\1.6\dlb_wave\include</Filter></ClInclude></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup /></Project>

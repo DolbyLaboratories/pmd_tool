@@ -251,6 +251,7 @@ typedef enum
     DLB_PMD_SPEAKER_CONFIG_7_1_4,     /**< L, R, C, Lfe, Ls, Rs, Lrs, Rrs, Ltf, Rtf, Ltr, Rtr */
     DLB_PMD_SPEAKER_CONFIG_9_1_6,     /**< L, R, C, Lfe, Ls, Rs, Lrs, Rrs, Lfw, Rfw,
                                        *                         Ltf, Rtf, Ltm, Rtm, Ltr, Rtr */
+    DLB_PMD_SPEAKER_CONFIG_LAST_BED = DLB_PMD_SPEAKER_CONFIG_9_1_6,
 
     DLB_PMD_SPEAKER_CONFIG_PORTABLE,  /**< L, R, portable speakers   */
     DLB_PMD_SPEAKER_CONFIG_HEADPHONE, /**< L, R, portable headphones */
@@ -455,7 +456,7 @@ typedef struct dlb_pmd_source
 
 
 /**
- * @brief desciption of a single Audio Bed
+ * @brief description of a single Audio Bed
  *
  * A bed is a collection of channels that are assigned to well-known
  * speaker positions. A bed may be:
@@ -475,13 +476,13 @@ typedef struct dlb_pmd_source
  */
 typedef struct dlb_pmd_bed
 {
-    dlb_pmd_element_id      id;          /**< PMD element being described                */
-    dlb_pmd_speaker_config  config;      /**< target speaker configuration               */
-    dlb_pmd_bed_type        bed_type;    /**< original bed, or derived from another?     */
-    dlb_pmd_element_id      source_id;   /**< if derived, the source bed id derived from */
-    uint8_t                 num_sources; /**< number of input source mappings used       */
-    dlb_pmd_source         *sources;     /**< list of source channel mappings            */
-    dlb_pmd_element_name    name;        /**< element name                               */
+    dlb_pmd_element_id       id;          /**< PMD element being described                */
+    dlb_pmd_speaker_config   config;      /**< target speaker configuration               */
+    dlb_pmd_bed_type         bed_type;    /**< original bed, or derived from another?     */
+    dlb_pmd_element_id       source_id;   /**< if derived, the source bed id derived from */
+    uint8_t                  num_sources; /**< number of input source mappings used       */
+    dlb_pmd_source          *sources;     /**< list of source channel mappings            */
+    dlb_pmd_element_name     name;        /**< element name                               */
 } dlb_pmd_bed;
 
 
@@ -512,18 +513,18 @@ typedef enum
  */
 typedef struct dlb_pmd_object
 {
-    dlb_pmd_element_id   id;              /**< unique identifier                            */
-    dlb_pmd_object_class object_class;    /**< object class                                 */
-    dlb_pmd_bool         dynamic_updates; /**< does it change?                              */
-    dlb_pmd_coordinate   x;               /**< x coordinate of location in perceptual space */
-    dlb_pmd_coordinate   y;               /**< y coordinate of location in perceptual space */
-    dlb_pmd_coordinate   z;               /**< z coordinate of location in perceptual space */
-    dlb_pmd_size         size;            /**< perceived size of object in perceptual field */
-    dlb_pmd_bool         size_3d;         /**< is object flat or spherical?                 */
-    dlb_pmd_bool         diverge;         /**< spread object energy across fronts?          */
-    dlb_pmd_signal       source;          /**< source PCM track                             */
-    dlb_pmd_gain         source_gain;     /**< gain to apply to source track                */
-    dlb_pmd_element_name name;            /**< element name                                 */
+    dlb_pmd_element_id      id;              /**< unique identifier                            */
+    dlb_pmd_object_class    object_class;    /**< object class                                 */
+    dlb_pmd_bool            dynamic_updates; /**< does it change?                              */
+    dlb_pmd_coordinate      x;               /**< x coordinate of location in perceptual space */
+    dlb_pmd_coordinate      y;               /**< y coordinate of location in perceptual space */
+    dlb_pmd_coordinate      z;               /**< z coordinate of location in perceptual space */
+    dlb_pmd_size            size;            /**< perceived size of object in perceptual field */
+    dlb_pmd_bool            size_3d;         /**< is object flat or spherical?                 */
+    dlb_pmd_bool            diverge;         /**< spread object energy across fronts?          */
+    dlb_pmd_signal          source;          /**< source PCM track                             */
+    dlb_pmd_gain            source_gain;     /**< gain to apply to source track                */
+    dlb_pmd_element_name    name;            /**< element name                                 */
 } dlb_pmd_object;
 
 
@@ -1369,6 +1370,7 @@ typedef struct dlb_pmd_model_constraints
     dlb_pmd_metadata_count max;                    /**< max entity count                                           */
     unsigned int           max_elements;           /**< if not 0, upper bound for (max.num_beds + max_num_objects) */
     unsigned int           max_presentation_names; /**< max count of presentation names                            */
+    dlb_pmd_bool           use_adm_common_defs;    /**< use ADM common definitions for serial ADM                  */
 } dlb_pmd_model_constraints;
 
 

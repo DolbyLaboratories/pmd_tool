@@ -45,9 +45,33 @@
 
 #include "pmd_smpte_337m.h"
 #include "pmd_error_helper.h"
-#include "dlb_pmd_sadm.h"
 #include "dlb_pmd_sadm_string.h"
-#include "zlib.h"
+
+#include "dlb_pmd/include/dlb_pmd_lib_dll.h"
+
+#define TEST_DLL_ENTRY DLB_DLL_ENTRY
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+/**
+ * @brief status of sADM bitstream decoder
+ */
+typedef enum
+{
+    SADM_OK,
+    SADM_PARSE_ERR,
+    SADM_DECOMPRESS_ERR,
+} sadm_dec_state;
+
+
+/**
+ * @brief callback function type for obtaining status of sADM bitstream decoder
+ */
+typedef void (*sadm_bitstream_dec_callback) (void *arg, sadm_dec_state state);
 
 
 /**
@@ -58,131 +82,64 @@ typedef struct
     unsigned int error_line;
     dlb_pmd_model *model;
 
-    char xmlbuf[MAX_DATA_BYTES*4]; /**< sADM precompression buffer */
+    char xmlbuf[MAX_DATA_BYTES * DLB_PMD_SADM_XML_COMPRESSION]; /**< sADM decompression buffer */
     size_t size;
     dlb_pmd_sadm_reader *r;
 } sadm_bitstream_decoder;
 
 
-static
-void
-sadm_bitstream_decoder_error_callback
-    (const char *msg
-    ,void *arg
-    )
-{
-    sadm_bitstream_decoder *dec = (sadm_bitstream_decoder *)arg;
-
-    error(dec->model, "Could not read SADM: %s at line %u", msg, dec->error_line);
-}
-
-
 /**
  * @brief determine memory requirements for the sADM bitstream decoder
  */
-static inline
+TEST_DLL_ENTRY
 size_t                                    /** @return size of memory required */
 sadm_bitstream_decoder_query_mem
     (dlb_pmd_model_constraints *limits    /**< [in] PMD model limits */
-    )
-{
-    return sizeof(sadm_bitstream_decoder)
-        + dlb_pmd_sadm_reader_query_mem(limits);
-}
+    );
 
 
 /**
  * @brief initialize the sADM bitstream decoder
  */
-static inline
+TEST_DLL_ENTRY
 dlb_pmd_success
 sadm_bitstream_decoder_init
     (dlb_pmd_model_constraints *limits
     ,void *mem
     ,sadm_bitstream_decoder **dec
-    )
-{
-    sadm_bitstream_decoder *d;
-    uintptr_t mc = (uintptr_t)mem;
-
-    d = (sadm_bitstream_decoder*)mc;
-    mc += sizeof(sadm_bitstream_decoder);
-    
-    if (dlb_pmd_sadm_reader_init(&d->r, limits, (void*)mc))
-    {
-        return PMD_FAIL;
-    }
-    *dec = d;
-    return PMD_SUCCESS;
-}
+    );
 
 
 /**
  * @brief helper function to compress the decoder's XML buffer to the
  * given byte buffer
  */
-static inline
+TEST_DLL_ENTRY
 int                                /** @return bytes used */
 decompress_sadm_xml
    (sadm_bitstream_decoder *dec    /**< [in] bitstream decoder */
    ,uint8_t *buf                   /**< [in] input compressed data */
    ,size_t datasize                /**< [in] size of compressed input in bytes */
-   )
-{
-    z_stream s;
-    int res;
-
-    s.zalloc = 0;
-    s.zfree = 0;
-    s.next_in = buf;
-    s.avail_in = (uInt)datasize;
-    s.next_out = (uint8_t*)dec->xmlbuf;
-    s.avail_out = sizeof(dec->xmlbuf);
-
-    if (inflateInit2(&s, 15+32))
-    {
-        return 0;
-    }
-
-    res = inflate(&s, Z_NO_FLUSH);
-    if (Z_OK != res && Z_STREAM_END != res)
-    {
-#ifndef NEBUG
-        printf("zlib error: %s\n", s.msg);
-#endif
-        s.total_out = 0;
-    }
-
-    inflateEnd(&s);
-    return s.total_out;
-}
+   );
 
 
 /**
- * @brief inline helper function to encapsulate the process of generating an sADM
- * bitstream
+ * @brief function to encapsulate the process of generating an sADM bitstream
  */
-static inline
 dlb_pmd_success                     /** @return 0 on success, 1 on failure */
 sadm_bitstream_decoder_decode
-    (sadm_bitstream_decoder *dec    /**< [in] bitstream decoder */
-    ,uint8_t *bitstream             /**< [in] bits to decode */
-    ,size_t datasize                /**< [in] number of bytes in bitstream */
-    ,dlb_pmd_model *model           /**< [in] model to write */
-    )
-{
-    int size;
+    (sadm_bitstream_decoder *dec            /**< [in] bitstream decoder */
+    ,uint8_t *bitstream                     /**< [in] bits to decode */
+    ,size_t datasize                        /**< [in] number of bytes in bitstream */
+    ,dlb_pmd_model *model                   /**< [in] model to write */
+    ,sadm_bitstream_dec_callback callback   /**< [in] status callback function - may be NULL */
+    ,void *cbarg                            /**< [in] callback state argument */
+    );
 
-    dec->model = model;
-    size = decompress_sadm_xml(dec, bitstream, datasize);
-    if (!size)
-    {
-        return PMD_FAIL;
-    }
-    return dlb_pmd_sadm_string_read(dec->r, "decompressed", dec->xmlbuf, size,
-                                    model, sadm_bitstream_decoder_error_callback, dec,
-                                    &dec->error_line);
+
+#ifdef __cplusplus
 }
+#endif
 
 
 #endif /* S337M_SADM_BITSTREAM_DECODER_H_ */

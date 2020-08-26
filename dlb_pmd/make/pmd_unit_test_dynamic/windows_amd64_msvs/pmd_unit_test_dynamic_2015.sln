@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmd_unit_test_dynamic", "pmd_unit_test_dynamic_2015.vcxproj", "{AABE35A7-7407-3262-906B-D29DDEBE5571}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A4DF4EE-7136-33B4-B637-60938D184F39} = {2A4DF4EE-7136-33B4-B637-60938D184F39}
+		{602C0A1F-8131-3469-935E-83C6D155FCDE} = {602C0A1F-8131-3469-935E-83C6D155FCDE}
+		{B4C84256-BB70-3A94-8652-67784173D102} = {B4C84256-BB70-3A94-8652-67784173D102}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_pmd_lib_dynamic", "..\..\dlb_pmd_lib_dynamic\windows_amd64_msvs\dlb_pmd_lib_dynamic_2015.vcxproj", "{602C0A1F-8131-3469-935E-83C6D155FCDE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_wave_lib", "..\..\dlb_wave_lib\windows_amd64_msvs\dlb_wave_lib_2015.vcxproj", "{2A4DF4EE-7136-33B4-B637-60938D184F39}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "googletest", "..\..\..\..\googletest\1.8.0\make\googletest\windows_amd64_msvs\googletest_2015.vcxproj", "{B4C84256-BB70-3A94-8652-67784173D102}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		debug|x64 = debug|x64
+		release|x64 = release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{602C0A1F-8131-3469-935E-83C6D155FCDE}.debug|x64.ActiveCfg = debug|x64
+		{602C0A1F-8131-3469-935E-83C6D155FCDE}.debug|x64.Build.0 = debug|x64
+		{2A4DF4EE-7136-33B4-B637-60938D184F39}.debug|x64.ActiveCfg = debug|x64
+		{2A4DF4EE-7136-33B4-B637-60938D184F39}.debug|x64.Build.0 = debug|x64
+		{AABE35A7-7407-3262-906B-D29DDEBE5571}.debug|x64.ActiveCfg = debug|x64
+		{AABE35A7-7407-3262-906B-D29DDEBE5571}.debug|x64.Build.0 = debug|x64
+		{B4C84256-BB70-3A94-8652-67784173D102}.debug|x64.ActiveCfg = debug|x64
+		{B4C84256-BB70-3A94-8652-67784173D102}.debug|x64.Build.0 = debug|x64
+		{602C0A1F-8131-3469-935E-83C6D155FCDE}.release|x64.ActiveCfg = release|x64
+		{602C0A1F-8131-3469-935E-83C6D155FCDE}.release|x64.Build.0 = release|x64
+		{2A4DF4EE-7136-33B4-B637-60938D184F39}.release|x64.ActiveCfg = release|x64
+		{2A4DF4EE-7136-33B4-B637-60938D184F39}.release|x64.Build.0 = release|x64
+		{AABE35A7-7407-3262-906B-D29DDEBE5571}.release|x64.ActiveCfg = release|x64
+		{AABE35A7-7407-3262-906B-D29DDEBE5571}.release|x64.Build.0 = release|x64
+		{B4C84256-BB70-3A94-8652-67784173D102}.release|x64.ActiveCfg = release|x64
+		{B4C84256-BB70-3A94-8652-67784173D102}.release|x64.Build.0 = release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -43,6 +43,8 @@
 #include "pmd_model.h"
 #include "pmd_error_helper.h"
 
+#include <math.h>
+
 
 /**
  * @def ALIGN_TO(size,A)
@@ -74,6 +76,23 @@ dlb_pmd_library_version
     *build   = DLB_PMD_VERSION_BUILD;
     *bs_maj  = PMD_BITSTREAM_VERSION_MAJOR;
     *bs_min  = PMD_BITSTREAM_VERSION_MINOR;
+}
+
+
+void
+dlb_pmd_max_constraints
+    (dlb_pmd_model_constraints  *c
+    ,dlb_pmd_bool                use_adm_common_defs
+    )
+{
+    if (NULL != c)
+    {
+        pmd_profile p;
+
+        pmd_profile_max(&p);
+        p.constraints.use_adm_common_defs = use_adm_common_defs;
+        memcpy(c, &p.constraints, sizeof(*c));
+    }
 }
 
 
@@ -149,8 +168,26 @@ dlb_pmd_init_constrained
     ,      void *memvoid
     )
 {
+    pmd_bool mallocated = PMD_FALSE;
+
+    if (modelptr == NULL || constraints == NULL)
+    {
+        return;
+    }
+
+    if (memvoid == NULL)
+    {
+        size_t sz = dlb_pmd_query_mem_constrained(constraints);
+
+        memvoid = malloc(sz);
+        if (memvoid != NULL)
+        {
+            mallocated = PMD_TRUE;
+        }
+    }
+
     *modelptr = NULL;
-    if (memvoid && constraints)
+    if (memvoid)
     {
         const dlb_pmd_metadata_count *max = &constraints->max;
         uint8_t *mem = (uint8_t*)memvoid;
@@ -182,6 +219,7 @@ dlb_pmd_init_constrained
         model->version_avail = 1;
         model->version_maj = PMD_BITSTREAM_VERSION_MAJOR;
         model->version_min = PMD_BITSTREAM_VERSION_MINOR;
+        model->mallocated = mallocated;
         *modelptr = model;
     }
 }
@@ -268,6 +306,10 @@ dlb_pmd_finish
     )
 {
     pmd_mutex_finish(&model->lock);
+    if (model->mallocated)
+    {
+        free(model);
+    }
     return;
 }
 
@@ -303,6 +345,7 @@ constraints_larger
     COMPARE(model, larger, smaller, max.num_ed2_system);
     COMPARE(model, larger, smaller, max.num_ed2_turnarounds);
     COMPARE(model, larger, smaller, max.num_headphone_desc);
+    /* TODO: compare use_adm_common_defs? */
     return 1;
 }
 
@@ -362,6 +405,7 @@ dlb_pmd_copy
     {
         return PMD_FAIL;
     }
+    scon.use_adm_common_defs = src->limits.use_adm_common_defs;
 
     /* tmp will be a clone of dest until we fix it up */
     memmove(&tmp, dest, sizeof(tmp));
@@ -578,4 +622,12 @@ dlb_pmd_clear_payload_set_status
         payload_set_status->frame_count = frame_count;
         payload_set_status->burst_count = burst_count;
     }
+}
+
+/* This is just a convenient place to put this */
+dlb_pmd_bool
+is_infinity
+    (float f)
+{
+    return (dlb_pmd_bool)isinf(f);
 }

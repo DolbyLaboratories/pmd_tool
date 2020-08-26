@@ -47,6 +47,7 @@
 #include "pmd_studio_limits.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 /**
  * @brief encapsulate model and its creation

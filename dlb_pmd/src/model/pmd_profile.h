@@ -153,6 +153,7 @@ pmd_profile_max
     p->constraints.max.num_eac3           = MAX_EAC3_ENCODING_PARAMETERS;
     p->constraints.max.num_ed2_turnarounds= MAX_ED2_TURNAROUNDS;
     p->constraints.max.num_headphone_desc = DLB_PMD_MAX_HEADPHONE;
+    p->constraints.use_adm_common_defs    = PMD_FALSE;
 }
 
 

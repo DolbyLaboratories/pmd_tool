@@ -45,6 +45,7 @@
 - (CGFloat)paddingAmount;
 - (void)establishOurConstraints;
 - (void)append:(gridChild *)gc;
+- (void)delete:(gridChild *)gc;
 - (void)insert:(gridChild *)gc after:(uiControl *)c at:(uiAt)at;
 - (int)isPadded;
 - (void)setPadded:(int)p;
@@ -562,6 +563,24 @@ struct uiGrid {
 	[gc release];		// we don't need the initial reference now
 }
 
+- (void)delete:(uiControl *)c
+{
+	BOOL found;
+	gridChild *gc;
+
+	found = NO;
+	for (gc in self->children)
+		if (gc.c == c) {
+			found = YES;
+			break;
+		}
+	if (!found)
+		uiprivUserBug("Existing control %p is not in grid %p; you cannot add other controls next to it", c, self->g);
+
+	[self->children remove:gc];
+	[gc release];
+}
+
 - (void)insert:(gridChild *)gc after:(uiControl *)c at:(uiAt)at
 {
 	gridChild *other;
@@ -768,6 +787,11 @@ void uiGridAppend(uiGrid *g, uiControl *c, int left, int top, int xspan, int ysp
 	gc.left = left;
 	gc.top = top;
 	[g->view append:gc];
+}
+
+void uiGridDelete(uiGrid *g, uiControl *c)
+{
+	[g->view delete:c];
 }
 
 void uiGridInsertAt(uiGrid *g, uiControl *c, uiControl *existing, uiAt at, int xspan, int yspan, int hexpand, uiAlign halign, int vexpand, uiAlign valign)

@@ -62,6 +62,7 @@
  * Defines which components of PMD should be considered
  * during comparison.
  */
+DLB_DLL_ENTRY
 const uint32_t PMD_COMPARE_MASK = PMD_EQUAL_MASK_SIGNALS
                                 | PMD_EQUAL_MASK_BEDS
                                 | PMD_EQUAL_MASK_OBJECTS

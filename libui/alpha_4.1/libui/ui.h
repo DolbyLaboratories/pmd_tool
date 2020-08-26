@@ -1122,6 +1122,7 @@ _UI_ENUM(uiAt) {
 typedef struct uiGrid uiGrid;
 #define uiGrid(this) ((uiGrid *) (this))
 _UI_EXTERN void uiGridAppend(uiGrid *g, uiControl *c, int left, int top, int xspan, int yspan, int hexpand, uiAlign halign, int vexpand, uiAlign valign);
+_UI_EXTERN void uiGridDelete(uiGrid *g, uiControl *c);
 _UI_EXTERN void uiGridInsertAt(uiGrid *g, uiControl *c, uiControl *existing, uiAt at, int xspan, int yspan, int hexpand, uiAlign halign, int vexpand, uiAlign valign);
 _UI_EXTERN int uiGridPadded(uiGrid *g);
 _UI_EXTERN void uiGridSetPadded(uiGrid *g, int padded);

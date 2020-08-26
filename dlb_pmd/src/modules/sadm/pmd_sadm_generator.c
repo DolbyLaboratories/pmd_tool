@@ -44,6 +44,7 @@
 #include "dlb_pmd_api.h"
 #include "pmd_error_helper.h"
 #include "pmd_sadm_generator.h"
+#include "xml_uuid.h"
 #include <stdio.h>
 
 
@@ -81,7 +82,7 @@
  * @def ADM_DIALOGUE_VALUE_FOR_GENERIC_OBJECT
  * @brief magic number for ADM's content dialogue attribute value denoting generic objects
  */
-#define ADM_DIALOGUE_VALUE_FOR_GENERIC_OBJECT (1)
+#define ADM_DIALOGUE_VALUE_FOR_GENERIC_OBJECT (2)
 
 
 /**
@@ -91,6 +92,29 @@ static unsigned int SPEAKER_CONFIG_COUNT[NUM_PMD_SPEAKER_CONFIGS] =
 {
     2, 3, 6, 8, 10, 12, 16, 2, 2
 };
+
+
+/**
+ * @brief table of audioPackFormat names for PMD speaker configs
+ */
+static const char *speaker_config_names[NUM_PMD_SPEAKER_CONFIGS] =
+{
+    "RoomCentric_2.0",
+    "RoomCentric_3.0",
+    "RoomCentric_5.1",
+    "RoomCentric_5.1.2",
+    "RoomCentric_5.1.4",
+    "RoomCentric_7.1.4",
+    "RoomCentric_9.1.6",
+    "PortableSpeakers",
+    "Headphones"
+};
+
+
+/**
+ * @brief audioPackFormat name for non-standard 7.0.4 config
+ */
+static const char *speaker_config_7_0_4_name = "RoomCentric_7.0.4";
 
 
 /**
@@ -107,26 +131,36 @@ typedef struct
 
     
 /**
- * @brief sADM speaker block format information
+ * @brief sADM speaker block format information for formats using Lss/Rss
  */
 static speaker_blkfmt SPEAKER_BLKFMT[PMD_NUM_SPEAKERS] =
 {
-    /* L */    { "RoomCentricLeft",              "RC_L",   -1.0f,  1.0f,  0.0f },
-    /* R */    { "RoomCentricRight",             "RC_R",    1.0f,  1.0f,  0.0f },
-    /* C */    { "RoomCentricCenter",            "RC_C",    0.0f,  1.0f,  0.0f },
-    /* Lfe */  { "RoomCentricLFE",               "RC_LFE", -1.0f,  1.0f, -1.0f },
-    /* Ls */   { "RoomCentricLeftSideSurround",  "RC_Lss", -1.0f,  0.0f,  0.0f },
-    /* Rs */   { "RoomCentricRightSideSurround", "RC_Rss",  1.0f,  0.0f,  0.0f },
-    /* Lrs */  { "RoomCentricLeftReadSurround",  "RC_Lrs", -1.0f, -1.0f,  0.0f },
-    /* Rrs */  { "RoomCentricRigntRearSurround", "RC_Rrs",  1.0f, -1.0f,  0.0f },
-    /* Ltf */  { "RoomCentricLeftTopFront",      "RC_Ltf", -1.0f,  1.0f,  1.0f },
-    /* Rtf */  { "RoomCentricRightTopFront",     "RC_Rtf",  1.0f,  1.0f,  1.0f },
-    /* Ltm */  { "RoomCentricLeftTopMiddle",     "RC_Ltm", -1.0f,  0.0f,  1.0f },
-    /* Rtm */  { "RoomCentricRigthTopMiddle",    "RC_Rtm",  1.0f,  0.0f,  1.0f },
-    /* Ltr */  { "RoomCentricLeftTopRear",       "RC_Ltr", -1.0f,  0.0f,  1.0f },
-    /* Rtr */  { "RoomCentricRightTopRear",      "RC_Rtr",  1.0f,  0.0f,  1.0f },
-    /* Lw */   { "RoomCentricLeftFrontWide",     "RC_Lfw", -1.0f, -1.0f,  0.0f },
-    /* Rw */   { "RoomCentricRightFrontWide",    "RC_Rfw",  1.0f, -1.0f,  0.0f },
+    /* L */    { "RoomCentricLeft",              "RC_L",   -1.0f,  1.0f,    0.0f },
+    /* R */    { "RoomCentricRight",             "RC_R",    1.0f,  1.0f,    0.0f },
+    /* C */    { "RoomCentricCenter",            "RC_C",    0.0f,  1.0f,    0.0f },
+    /* Lfe */  { "RoomCentricLFE",               "RC_LFE", -1.0f,  1.0f,   -1.0f },
+    /* Lss */  { "RoomCentricLeftSideSurround",  "RC_Lss", -1.0f,  0.0f,    0.0f },
+    /* Rss */  { "RoomCentricRightSideSurround", "RC_Rss",  1.0f,  0.0f,    0.0f },
+    /* Lrs */  { "RoomCentricLeftRearSurround",  "RC_Lrs", -1.0f, -1.0f,    0.0f },
+    /* Rrs */  { "RoomCentricRightRearSurround", "RC_Rrs",  1.0f, -1.0f,    0.0f },
+    /* Ltf */  { "RoomCentricLeftTopFront",      "RC_Ltf", -1.0f,  1.0f,    1.0f },
+    /* Rtf */  { "RoomCentricRightTopFront",     "RC_Rtf",  1.0f,  1.0f,    1.0f },
+    /* Ltm */  { "RoomCentricLeftTopMiddle",     "RC_Ltm", -1.0f,  0.0f,    1.0f },
+    /* Rtm */  { "RoomCentricRightTopMiddle",    "RC_Rtm",  1.0f,  0.0f,    1.0f },
+    /* Ltr */  { "RoomCentricLeftTopRear",       "RC_Ltr", -1.0f, -1.0f,    1.0f },
+    /* Rtr */  { "RoomCentricRightTopRear",      "RC_Rtr",  1.0f, -1.0f,    1.0f },
+    /* Lw */   { "RoomCentricLeftFrontWide",     "RC_Lfw", -1.0f,  0.677f,  0.0f },
+    /* Rw */   { "RoomCentricRightFrontWide",    "RC_Rfw",  1.0f,  0.677f,  0.0f },
+};
+
+    
+/**
+ * @brief sADM speaker block format information for Ls/Rs
+ */
+static speaker_blkfmt SPEAKER_BLKFMT_LS_RS[] =
+{
+    /* Ls */   { "RoomCentricLeftSurround",  "RC_Ls", -1.0f,  -1.0f,  0.0f },
+    /* Rs */   { "RoomCentricRightSurround", "RC_Rs",  1.0f,  -1.0f,  0.0f },
 };
 
 
@@ -165,6 +199,7 @@ struct pmd_sadm_generator
     dlb_sadm_model *sadm;
     unsigned int next_track_uid;
     dlb_sadm_idref bed_packformats[NUM_PMD_SPEAKER_CONFIGS];
+    dlb_sadm_idref bed_7_0_4_packformat;
 };
 
 
@@ -560,6 +595,25 @@ generate_bed_channel_format
     dlb_sadm_block_format blkfmt;
     dlb_sadm_idref blkfmt_idref;
     speaker_blkfmt *sb = &SPEAKER_BLKFMT[bed->sources[idx].target-1];
+
+    if (!alt_spkrs)
+    {
+        /* !alt_spkrs means 2.0 - 5.1.4 (i.e., no rear surrounds)
+         * when no rear surrounds, Ls and Rs take the Lrs and Rrs
+         * speaker positions, plus shorter names
+         */
+        switch (bed->sources[idx].target)
+        {
+        case PMD_SPEAKER_LS:
+            sb = &SPEAKER_BLKFMT_LS_RS[0];
+            break;
+        case PMD_SPEAKER_RS:
+            sb = &SPEAKER_BLKFMT_LS_RS[1];
+            break;
+        default:
+            break;
+        }
+    }
     
     generate_channel_format_id(g, type, 0, bed->sources[idx].target, &chanfmt.id);
     memmove(chanfmt.name.data, sb->name, sizeof(chanfmt.name.data));
@@ -570,31 +624,13 @@ generate_bed_channel_format
 
     generate_block_format_id(g, type, 0, bed->sources[idx].target, 1, &blkfmt.id);
     memmove(blkfmt.speaker_label, sb->label, MIN(sizeof(blkfmt.speaker_label), sizeof(sb->label)));
-        
+
+    blkfmt.gain = bed->sources[idx].gain;
+
     blkfmt.cartesian_coordinates = 1;
     blkfmt.azimuth_or_x          = sb->x;
     blkfmt.elevation_or_y        = sb->y;
     blkfmt.distance_or_z         = sb->z;
-
-    if (!alt_spkrs)
-    {
-        /* !alt_spkrs means 2.0 - 5.1.4 (i.e., no rear surrounds)
-         * when no rear surrounds, Ls and Rs take the Lrs and Rrs
-         * speaker positions
-         */
-        if (bed->sources[idx].target == PMD_SPEAKER_LS ||
-            bed->sources[idx].target == PMD_SPEAKER_RS)
-        {
-            sb->y = -1.0f;
-        }
-    }
-
-    if (bed->sources[idx].gain != 0.0f)
-    {
-        error(g->pmd, "sADM generator failure: bed %u gains must be non-zero\n",
-              bed->id);
-        return FAILURE;
-    }
 
     if (dlb_sadm_set_block_format(g->sadm, &blkfmt, &blkfmt_idref))
     {
@@ -610,6 +646,166 @@ generate_bed_channel_format
 }
 
 
+static
+dlb_pmd_bool
+is_bed_7_0_4
+    (dlb_pmd_bed *bed
+    )
+{
+    dlb_pmd_bool bed_is_7_0_4 = (bed->num_sources == 11);   /* Preliminary guess */
+    dlb_pmd_source *source;
+    size_t i;
+
+    if (bed_is_7_0_4)                       /* Now check all the sources */
+    {
+        dlb_pmd_bool got_L = PMD_FALSE;
+        dlb_pmd_bool got_R = PMD_FALSE;
+        dlb_pmd_bool got_C = PMD_FALSE;
+        dlb_pmd_bool got_Lss = PMD_FALSE;
+        dlb_pmd_bool got_Rss = PMD_FALSE;
+        dlb_pmd_bool got_Lrs = PMD_FALSE;
+        dlb_pmd_bool got_Rrs = PMD_FALSE;
+        dlb_pmd_bool got_LTF = PMD_FALSE;
+        dlb_pmd_bool got_RTF = PMD_FALSE;
+        dlb_pmd_bool got_LTR = PMD_FALSE;
+        dlb_pmd_bool got_RTR = PMD_FALSE;
+
+        source = bed->sources;
+        for (i = 0; i < bed->num_sources && bed_is_7_0_4; i++, source++)
+        {
+            switch (source->target)
+            {
+            case PMD_SPEAKER_L:
+                if (got_L)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_L = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_R:
+                if (got_R)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_R = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_C:
+                if (got_C)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_C = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_LS:
+                if (got_Lss)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_Lss = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_RS:
+                if (got_Rss)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_Rss = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_LRS:
+                if (got_Lrs)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_Lrs = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_RRS:
+                if (got_Rrs)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_Rrs = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_LTF:
+                if (got_LTF)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_LTF = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_RTF:
+                if (got_RTF)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_RTF = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_LTR:
+                if (got_LTR)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_LTR = PMD_TRUE;
+                }
+                break;
+
+            case PMD_SPEAKER_RTR:
+                if (got_RTR)
+                {
+                    bed_is_7_0_4 = PMD_FALSE;
+                }
+                else
+                {
+                    got_RTR = PMD_TRUE;
+                }
+                break;
+
+            default:
+                bed_is_7_0_4 = PMD_FALSE;
+                break;
+            }
+        }
+    }
+
+    return bed_is_7_0_4;
+}
+
 /**
  * @brief generate an sADM audioObject for a PMD bed element
  */
@@ -622,12 +818,14 @@ generate_bed_object
     )
 {
     dlb_sadm_object object;
-    dlb_sadm_idref tracks[128];
+    dlb_sadm_idref tracks[DLB_PMD_MAX_BED_SOURCES];
     dlb_sadm_pack_format packfmt;
-    dlb_sadm_idref chanfmt_idrefs[128];
+    dlb_sadm_idref object_ref;
+    dlb_sadm_idref chanfmt_idrefs[DLB_PMD_MAX_BED_SOURCES];
     dlb_sadm_idref *chanfmt;
     dlb_pmd_source *source;
     dlb_pmd_bool alt_spkrs;
+    dlb_pmd_bool bed_is_7_0_4 = PMD_FALSE;
     unsigned int i;
 
     packfmt.type           = DLB_SADM_PACKFMT_TYPE_DIRECT_SPEAKERS; /* can't handle mixed */
@@ -638,8 +836,13 @@ generate_bed_object
 
     if (bed->num_sources != SPEAKER_CONFIG_COUNT[bed->config])
     {
-        error(g->pmd, "serial ADM beds must have exactly one source per target speaker\n");
-        return FAILURE;
+        bed_is_7_0_4 = is_bed_7_0_4(bed);      /* Special case for 7.0.4 */
+
+        if (!bed_is_7_0_4)
+        {
+            error(g->pmd, "serial ADM beds must have exactly one source per target speaker\n");
+            return FAILURE;
+        }
     }
     if (bed->bed_type != PMD_BED_ORIGINAL)
     {
@@ -652,7 +855,25 @@ generate_bed_object
         return FAILURE;
     }
 
-    object.pack_format = g->bed_packformats[bed->config];
+    for (i = bed->num_sources - 1; i > 0; i--)
+    {
+        if (bed->sources[i].gain != bed->sources[0].gain)
+        {
+            error(g->pmd, "sources of serial ADM beds must all have the same gain\n");
+            return FAILURE;
+        }
+    }
+    object.gain = bed->sources[0].gain;
+    //printf("bed object gain %f\n", object.gain);
+
+    if (bed_is_7_0_4)
+    {
+        object.pack_format = g->bed_7_0_4_packformat;
+    } 
+    else
+    {
+        object.pack_format = g->bed_packformats[bed->config];
+    }
     if (object.pack_format != NULL)
     {
         /* look up pack format if previously generated */
@@ -665,8 +886,18 @@ generate_bed_object
     else
     {
         alt_spkrs = (bed->config > DLB_PMD_SPEAKER_CONFIG_5_1_4);
+        const char *pack_fmt_name;
 
-        memmove(packfmt.name.data, bed->name, sizeof(packfmt.name.data));
+        if (bed_is_7_0_4)
+        {
+            pack_fmt_name = speaker_config_7_0_4_name;
+        } 
+        else
+        {
+            pack_fmt_name = speaker_config_names[bed->config];
+        }
+        sprintf((char *)packfmt.name.data, "%s", pack_fmt_name);
+
         for (i = 0; i != bed->num_sources; ++i)
         {
             if (generate_bed_channel_format(g, packfmt.type, bed, i, &chanfmt_idrefs[i], alt_spkrs))
@@ -674,21 +905,30 @@ generate_bed_object
                 return FAILURE;
             }
         }
-        
+
         if (dlb_sadm_set_pack_format(g->sadm, &packfmt, &object.pack_format))
         {
             error(g->pmd, "sADM generator failure: %s", dlb_sadm_error(g->sadm));
             return FAILURE;
         }
-        g->bed_packformats[bed->config] = object.pack_format;
+        if (bed_is_7_0_4)
+        {
+            g->bed_7_0_4_packformat = object.pack_format;
+        } 
+        else
+        {
+            g->bed_packformats[bed->config] = object.pack_format;
+        }
     }
-    
+
     generate_object_id(g, bed->id, &object.id);
     memmove(object.name.data, bed->name, sizeof(object.name.data));
-    object.track_uids.num   = bed->num_sources;
-    object.track_uids.max   = ARRAYSZ(tracks);
-    object.track_uids.array = tracks;
-    object.gain = 0.0f;
+    object.object_refs.num   = 0;
+    object.object_refs.max   = 1;
+    object.object_refs.array = &object_ref;
+    object.track_uids.num    = bed->num_sources;
+    object.track_uids.max    = ARRAYSZ(tracks);
+    object.track_uids.array  = tracks;
     
     if (bed->num_sources != object.track_uids.num)
     {
@@ -705,7 +945,6 @@ generate_bed_object
             return FAILURE;
         }
     }
-
     return dlb_sadm_set_object(g->sadm, &object, object_idref);
 }
 
@@ -761,6 +1000,7 @@ generate_nonbed_object
 {
     dlb_sadm_object object;
     dlb_sadm_pack_format packfmt;
+    dlb_sadm_idref object_ref;
     dlb_sadm_idref chanfmt_idref;
     dlb_sadm_idref packfmt_idref;
     dlb_sadm_idref track;
@@ -812,10 +1052,13 @@ generate_nonbed_object
         return FAILURE;
     }
 
-    object.pack_format      = packfmt_idref;
-    object.track_uids.num   = 1;
-    object.track_uids.max   = 1;
-    object.track_uids.array = &track;
+    object.pack_format       = packfmt_idref;
+    object.object_refs.num   = 0;
+    object.object_refs.max   = 1;
+    object.object_refs.array = &object_ref;
+    object.track_uids.num    = 1;
+    object.track_uids.max    = 1;
+    object.track_uids.array  = &track;
     if (generate_track_uid(g, packfmt_idref, chanfmt_idref, obj->source, &track))
     {
         return FAILURE;
@@ -838,8 +1081,6 @@ generate_contents_beds
     dlb_pmd_source sources[128];
     dlb_pmd_bed bed;
 
-    dlb_sadm_content content;
-
     if (dlb_pmd_bed_iterator_init(&bi, g->pmd))
     {
         return FAILURE;
@@ -847,10 +1088,16 @@ generate_contents_beds
 
     while (!dlb_pmd_bed_iterator_next(&bi, &bed, ARRAYSZ(sources), sources))
     {
-        if (generate_bed_object(g, &bed, &content.object))
+        dlb_sadm_idref objref;
+        dlb_sadm_content content;
+
+        if (generate_bed_object(g, &bed, &objref))
         {
             return FAILURE;
         }
+        content.objects.array = &objref;
+        content.objects.max = 1;
+        content.objects.num = 1;
         
         generate_content_id(g, bed.id, &content.id);
         memmove(&content.name, &bed.name, sizeof(content.name));
@@ -878,8 +1125,6 @@ generate_contents_objects
     dlb_pmd_object_iterator oi;
     dlb_pmd_object object;
 
-    dlb_sadm_content content;
-
     if (dlb_pmd_object_iterator_init(&oi, g->pmd))
     {
         return FAILURE;
@@ -887,10 +1132,16 @@ generate_contents_objects
 
     while (!dlb_pmd_object_iterator_next(&oi, &object))
     {
-        if (generate_nonbed_object(g, &object, &content.object))
+        dlb_sadm_idref objref;
+        dlb_sadm_content content;
+
+        if (generate_nonbed_object(g, &object, &objref))
         {
             return FAILURE;
         }
+        content.objects.array = &objref;
+        content.objects.max = 1;
+        content.objects.num = 1;
         
         generate_content_id(g, object.id, &content.id);
         memmove(&content.name, &object.name, sizeof(content.name));
@@ -911,7 +1162,7 @@ generate_contents_objects
                 break;
             case PMD_CLASS_GENERIC:
                 content.dialogue_value = ADM_DIALOGUE_VALUE_FOR_GENERIC_OBJECT;
-                content.type           = DLB_SADM_CONTENT_MK;
+                content.type           = DLB_SADM_CONTENT_MK_UNDEFINED;
                 break;
             case PMD_CLASS_SUBTITLE:
                 content.dialogue_value = ADM_DIALOGUE_VALUE_FOR_OBJECT;
@@ -950,6 +1201,32 @@ generate_contents
 {
     return generate_contents_beds(g)
         || generate_contents_objects(g);
+}
+
+
+/**
+ * @brief generate frameFormat elements
+ */
+static inline
+dlb_pmd_success              /** @return PMD_SUCCESS(=1) on success and PMD_FAIL(=0) otherwise */
+generate_frame_format
+    (pmd_sadm_generator *g   /**< [in] PMD -> sADM model converter */
+    )
+{
+    dlb_pmd_identity_and_timing iat;
+    dlb_pmd_success iat_success = dlb_pmd_iat_lookup(g->pmd, &iat);
+    dlb_pmd_success success = PMD_SUCCESS;
+
+    if (iat_success == PMD_SUCCESS && iat.content_id.size > 0)
+    {
+        char uuid[37];
+
+        memset(uuid, 0, sizeof(uuid));
+        write_uuid(iat.content_id.data, uuid);
+        success = dlb_sadm_set_flow_id(g->sadm, uuid, sizeof(uuid));
+    }
+
+    return success;
 }
 
 
@@ -1010,6 +1287,7 @@ pmd_sadm_generator_init
     {
         g->bed_packformats[i] = NULL;
     }
+    g->bed_7_0_4_packformat = NULL;
     *cptr = g;
     return PMD_SUCCESS;
 }
@@ -1045,6 +1323,7 @@ pmd_sadm_generator_generate
 
     return generate_programmes(g)
         || generate_contents(g)
+        || generate_frame_format(g)
         || verify(g)
         ;
 }

@@ -36,6 +36,8 @@
 #ifndef PMD_XML_UUID_H_
 #define PMD_XML_UUID_H_
 
+#include "xml_hex.h"
+
 /**
  * @file xml_uuid.h
  * @brief helper function to write/parse UUIDs

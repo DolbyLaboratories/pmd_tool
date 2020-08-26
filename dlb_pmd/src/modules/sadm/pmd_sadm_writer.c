@@ -33,7 +33,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
-
 #include "sadm/dlb_sadm_model.h"
 #include "sadm/dlb_sadm_writer.h"
 #include "dlb_pmd_sadm.h"
@@ -134,5 +133,17 @@ dlb_pmd_sadm_writer_write
 }
 
 
+const dlb_sadm_model *
+dlb_pmd_sadm_writer_get_sadm_model
+   (dlb_pmd_sadm_writer *w
+    )
+{
+    const dlb_sadm_model *p = NULL;
 
+    if (w != NULL)
+    {
+        p = w->sadm;
+    }
 
+    return p;
+}

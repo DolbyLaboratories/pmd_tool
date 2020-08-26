@@ -49,21 +49,20 @@
 #define MAX_AUDIO_SIGNALS (32)
 #define MAX_AUDIO_PRESENTATIONS (4)
 #define INIT_AUDIO_PRESENTATIONS (1)
+#define INIT_AUDIO_OUTPUTS (1)
+#define MAX_AUDIO_OUTPUTS (8)
+#define MAX_CHANNELS (32)
+#define MAX_INPUT_CHANNELS MAX_CHANNELS
+#define MAX_OUTPUT_CHANNELS MAX_CHANNELS
+#define MAX_CONFIG_CHANNELS (16)
 
+#if MAX_OUTPUT_CHANNELS < MAX_CONFIG_CHANNELS
+#error Number of output channels must exceed largest configuration channel count
+#endif
 
-/**
- * @brief list of supported languages in the UI
- *
- * for a complete list of languages supported by the library, see
- * pmd_language.c source code file
- */
-static const char *SUPPORTED_LANGUAGES[] =
-{
-    "eng", "ger", "fra", "spa", "pol", "gre", "rus", "swe", "fin", "dan", "und"
-};
-
-#define NUM_SUPPORTED_LANGUAGES (sizeof(SUPPORTED_LANGUAGES)/sizeof(SUPPORTED_LANGUAGES[0]))
-
+#define MAX_METADATA_OUTPUTS (4)
+#define INIT_METADATA_OUTPUTS (1)
+#define MAX_LABEL_LENGTH (32)
 
 
 #endif /* PMD_STUDIO_LIMITS_H_ */

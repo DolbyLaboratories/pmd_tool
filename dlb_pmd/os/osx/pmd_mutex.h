@@ -39,6 +39,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
 struct pmd_mutex
 {

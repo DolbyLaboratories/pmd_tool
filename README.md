@@ -1,5 +1,5 @@
 # pmd_tool (dlb_pmd_lib)
-# version 1.7.1
+# version 1.7.2
 
 pmd_tool is a command line utility that converts between
 the following representations of SMPTE RDD49 metadata
@@ -15,7 +15,7 @@ the following representations of SMPTE RDD49 metadata
 The tool is built around the dlb_pmd_lib library, whose API can be
 found in dlb_pmd/include. The purpose of this code is to help speed
 development of software and products that use SMPTE RDD49 for audio
-metadata carriage in professional applications.
+metadata carriage in professional applications. 
 
 For more information see the release notes.
 

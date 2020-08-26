@@ -147,6 +147,7 @@ typedef struct
 struct dlb_pmd_model
 {
     pmd_mutex lock;             /**< protect concurrent access */
+    pmd_bool  mallocated;       /**< true if memory allocated by malloc() */
 
     char error[PMD_ERROR_SIZE]; /**< error string, if any */
 
