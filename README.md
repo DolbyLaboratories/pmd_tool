@@ -107,7 +107,7 @@ using the real-time features of PMD Studio.
 - 5.1.4
 Basic usage of the command line when launching PMD Studio is obtained using '-h'.
 
-![Screenshot of PMD Studio](https://github.com/DolbyLaboratories/pmd_tool/edit/master/pmd_studio.png)
+![Screenshot of PMD Studio](pmd_studio.png)
 
 ## Testing the library
 
