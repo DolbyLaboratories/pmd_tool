@@ -1,21 +1,17 @@
 # pmd_tool (dlb_pmd_lib)
 # version 1.7.2
 
-pmd_tool is a command line utility that converts between
-the following representations of SMPTE RDD49 metadata
+This project provides applications modules to assist with conversion between
+various professional audio metadata formats and containers.
 
- - a human-readable XML file matching the schema in
-   dlb_pmd/include/dlb_pmd_3_2_1.xsd
+pmd_tool is a command line utility that converts between the following
+representations of professional audio metadata:
 
- - a serialized binary payload
+- PMD as defined in SMPTE RDD49 metadata
+- ADM/Serial ADM Metadata as defined in ITU Rec. BS. 2076/2125 and SMPTE ST 2116
 
- - SMPTE-337m encoded binary payload carried on a PCM pair (or
-   channel) in a .WAV file
-
-The tool is built around the dlb_pmd_lib library, whose API can be
-found in dlb_pmd/include. The purpose of this code is to help speed
-development of software and products that use SMPTE RDD49 for audio
-metadata carriage in professional applications. 
+PMD Studio is an application that provides a user interface for authoring
+professional audio metadata in either file or streaming formats.
 
 For more information see the release notes.
 
@@ -31,9 +27,6 @@ running on your local machine for development and testing purposes.
 - **ReleaseNotes.md** Release notes.
 
 - **LICENSE** Terms of use.
-
-- **dlb_bitbuf/** A component which provides sequential access
-  to single or multiple bits in a bitstream.
 
 - **dlb_buffer/** Buffer management component.
 
@@ -71,7 +64,8 @@ For Linux, 32-bit platforms are supported.
 
 #### Using the GNU makefiles
 
-Use the makefiles located in dlb_pmd/make/pmd_tool. Go to the
+Use the makefiles located in dlb_pmd/make. Go to the appropriate directory for
+the application and the platform and run GNU make. Go to the
 appropriate directory and run GNU make. Release and debug executables
 are created in the same directory as the makefile.
 
@@ -89,10 +83,31 @@ Alternatively, run msbuild from the Windows command line:
 >msbuild pmd_tool_2015.sln /property:Configuration=release
 ```
 
-## Running the tool
+## Running the applications
 
+Several applications are available. However, we think the following two will are the most useful. 
+
+### PMD Tool
 pmd_tool is a command line utility and detailed usage is provided by
-running the tool with no options.
+running the tool with no options. This should be used for file conversion
+operations. This application does not provide any real-time or streaming
+funcionality other than writing wav files that may be streamed by another
+application.
+
+### PMD Studio (Linux Only)
+PMD Studio is an application for authoring professional metadata.
+It provides a simple user interface for configuring audio beds, objects
+and presentations. The authored metadata may be saved as an XML file in
+either sADM or PMD formats or streamed using a professional sound card.  
+PMD Studio also supports monitoring of the audio with the authored
+metadata applied. The folowing three speaker configurations are supported when
+using the real-time features of PMD Studio.
+- Stereo
+- 5.1
+- 5.1.4
+Basic usage of the command line when launching PMD Studio is obtained using '-h'.
+
+![Screenshot of PMD Studio](https://github.com/DolbyLaboratories/pmd_tool/edit/master/pmd_studio.png)
 
 ## Testing the library
 
@@ -119,4 +134,3 @@ information on additional applications and features.
 
 This project is licensed under the BSD-3 License - see the
 [LICENSE](LICENSE) file for details
-
