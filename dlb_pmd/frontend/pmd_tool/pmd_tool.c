@@ -131,7 +131,7 @@ void dlb_pmd_tool_usage
     printf("        -mark-pcm-blocks - insert SMPTE 337m NULL-frames at PCM block boundaries\n");
     printf("                          even when there is no data for that PCM block\n");
     printf("        -sadm           - generate serial ADM output in XML output mode\n");
-    printf("                          EXPERIMENTAL!\n");
+    printf("                          \n");
     printf("        -sadm-common    - use ADM common definitions for serial ADM\n");
     printf("                          EXPERIMENTAL!\n");
     printf("\n");
