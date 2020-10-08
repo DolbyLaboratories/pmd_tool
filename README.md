@@ -105,6 +105,7 @@ using the real-time features of PMD Studio.
 - Stereo
 - 5.1
 - 5.1.4
+
 Basic usage of the command line when launching PMD Studio is obtained using '-h'.
 
 ![Screenshot of PMD Studio](pmd_studio.png)
