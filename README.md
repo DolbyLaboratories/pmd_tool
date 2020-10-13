@@ -60,6 +60,9 @@ makefiles. For windows, Visual Studio 2015 projects and solutions
 are provided. For all platforms, 64-bit targets are supported.
 For Linux, 32-bit platforms are supported.
 
+The following packages are required when building under Ubuntu/Debian
+sudo apt-get install build-essential libgtk-3-dev
+
 ### Build instructions
 
 #### Using the GNU makefiles
@@ -125,6 +128,9 @@ hours to run.
 pmd_fuzz is an experimental model-based fuzzer that generates random
 models and tests that serialization/deserialization works correctly.
 
+## Known Limitations
+
+PMD Studio is not capable of ingesting ADM XML from other sources. This will be fixed in the next release.
 
 ## Release Notes
 
