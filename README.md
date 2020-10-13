@@ -61,7 +61,7 @@ are provided. For all platforms, 64-bit targets are supported.
 For Linux, 32-bit platforms are supported.
 
 The following packages are required when building under Ubuntu/Debian
-sudo apt-get install build-essential libgtk-3-dev
+sudo apt-get install build-essential libgtk-3-dev libasound2-dev libjack-dev
 
 ### Build instructions
 
