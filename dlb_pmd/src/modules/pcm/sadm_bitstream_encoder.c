@@ -43,6 +43,7 @@
 #include "zlib.h"
 
 #include <assert.h>
+#include <string.h>
 
 
 /**

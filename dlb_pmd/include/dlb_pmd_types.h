@@ -168,6 +168,13 @@ extern "C" {
 
 
 /**
+ * @def DLB_PMD_DEFAULT_COORDINATE_PRECISION
+ * @brief default precision (number of decimal places) for printing coordinate and size values
+ */
+#define DLB_PMD_DEFAULT_COORDINATE_PRECISION (2)
+
+
+/**
  * @brief simple boolean type
  */
 typedef uint8_t dlb_pmd_bool;
@@ -1378,6 +1385,23 @@ typedef struct dlb_pmd_model_constraints
  * @brief abstract type representing the internal PMD model
  */
 typedef struct dlb_pmd_model dlb_pmd_model;
+
+
+/**
+ * @brief PMD model error callback argument type
+ */
+typedef void *dlb_pmd_model_error_callback_arg;
+
+
+/**
+ * @brief PMD model error callback type
+ */
+typedef
+void
+(*dlb_pmd_model_error_callback)
+    (dlb_pmd_model_error_callback_arg    cbarg
+    ,dlb_pmd_model                      *model
+    );
 
 
 /** -----------------  payload set read/write status  ------------------------- */

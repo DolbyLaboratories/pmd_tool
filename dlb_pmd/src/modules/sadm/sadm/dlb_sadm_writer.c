@@ -55,6 +55,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <locale.h>
 
 
 #if defined(_MSC_VER) 
@@ -85,6 +86,8 @@ typedef struct
     unsigned int indent;           /**< indentation level */
     char *pos;                     /**< current write position */
     char *end;                     /**< 1st byte after buffer */
+
+    char saved_locale[128];        /**< locale setting at start of write operation */
 } writer;
 
 
@@ -101,6 +104,15 @@ writer_init
    ,      unsigned int indent        /**< [in] initial indentation of 1st tag */
    )
 {
+    char *l = setlocale(LC_ALL, NULL);
+
+    memset(w, 0, sizeof(*w));
+    strncpy(w->saved_locale, l, sizeof(w->saved_locale));
+    if (strcmp(l, "C") != 0)
+    {
+        setlocale(LC_ALL, "C");
+    }
+
     w->model = model;
     w->getbuf = gb;
     w->cbarg = cbarg;
@@ -120,6 +132,10 @@ writer_finish
    )
 {
     w->getbuf(w->cbarg, w->pos, NULL, NULL);
+    if (strcmp(w->saved_locale, "C") != 0)
+    {
+        setlocale(LC_ALL, w->saved_locale);
+    }
 }
 
 
@@ -913,7 +929,10 @@ write_position
     ,float val
     )
 {
-    return write_line(w, "<position coordinate=\"%s\">%f</position>", label, val);
+    int precision;
+
+    (void)dlb_sadm_model_get_coordinate_print_precision(w->model, &precision);
+    return write_line(w, "<position coordinate=\"%s\">%.*f</position>", label, precision, val);
 }
 
 

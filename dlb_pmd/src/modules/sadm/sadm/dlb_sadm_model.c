@@ -767,6 +767,21 @@ dlb_sadm_model_frame_format
     return PMD_SUCCESS;
 }
 
+dlb_pmd_success
+dlb_sadm_model_get_coordinate_print_precision
+    (const dlb_sadm_model *model
+    ,int *precision
+    )
+{
+    if (model == NULL || precision == NULL)
+    {
+        return PMD_FAIL;
+    }
+    *precision = DLB_PMD_DEFAULT_COORDINATE_PRECISION;
+
+    return PMD_SUCCESS;
+}
+
 
 dlb_pmd_success
 dlb_sadm_model_limits

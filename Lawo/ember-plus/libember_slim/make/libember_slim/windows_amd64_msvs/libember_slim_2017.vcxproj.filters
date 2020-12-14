@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+<Filter Include="Lawo">
+<UniqueIdentifier>{16695359-586e-3d29-93f2-c4a7b808e58a}</UniqueIdentifier></Filter>
+<Filter Include="Lawo\ember-plus">
+<UniqueIdentifier>{fa8ec8af-5f9b-39f4-8190-145cd89fd827}</UniqueIdentifier></Filter>
+<Filter Include="Lawo\ember-plus\libember_slim">
+<UniqueIdentifier>{63d78250-cd50-397a-9191-748d95f8c2c1}</UniqueIdentifier></Filter>
+<Filter Include="Lawo\ember-plus\libember_slim\Source">
+<UniqueIdentifier>{314d50dc-faaa-3489-9eb9-5c5661502c3c}</UniqueIdentifier></Filter></ItemGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\Source\ber.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\berio.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\berreader.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\bertag.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\bytebuffer.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\ember.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\emberasyncreader.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\emberframing.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\emberinternal.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\glow.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\glowrx.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile>
+<ClCompile Include="..\..\..\Source\glowtx.c">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClCompile></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\Source\api.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\ber.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\berio.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\berreader.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\bertag.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\bertypes.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\bytebuffer.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\ember.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\emberasyncreader.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\emberframing.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\emberinternal.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\emberplus.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\glow.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\glowrx.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude>
+<ClInclude Include="..\..\..\Source\glowtx.h">
+<Filter>Lawo\ember-plus\libember_slim\Source</Filter></ClInclude></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup /></Project>

@@ -84,6 +84,7 @@ typedef struct
 /**
  * @brief handy failure catch point for debugging
  */
+#ifndef NDEBUG
 static
 dlb_pmd_success
 pmd_sadm_ingester_failure_catchpoint
@@ -92,6 +93,7 @@ pmd_sadm_ingester_failure_catchpoint
 {
     return PMD_FAIL;
 }
+#endif
 
 
 /**
@@ -662,8 +664,8 @@ add_object_elements
                     presentation->config = bed.config;
                 }
                 /* if both are beds, or both are not beds, use the larger value */
-                else if ( config_is_bed(presentation->config) &&  config_is_bed(bed.config) ||
-                         !config_is_bed(presentation->config) && !config_is_bed(bed.config))
+                else if (( config_is_bed(presentation->config) &&  config_is_bed(bed.config)) ||
+                         (!config_is_bed(presentation->config) && !config_is_bed(bed.config)))
                 {
                     use_larger = PMD_TRUE;
                 }

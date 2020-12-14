@@ -43,18 +43,15 @@
 
 
 #define MAX_AUDIO_OBJECTS (4)
-#define INIT_AUDIO_OBJECTS (1)
 #define MAX_AUDIO_BEDS (4)
-#define INIT_AUDIO_BEDS (4)
-#define MAX_AUDIO_SIGNALS (32)
+#define MAX_STUDIO_AUDIO_SIGNALS (32)
 #define MAX_AUDIO_PRESENTATIONS (4)
-#define INIT_AUDIO_PRESENTATIONS (1)
-#define INIT_AUDIO_OUTPUTS (1)
 #define MAX_AUDIO_OUTPUTS (8)
 #define MAX_CHANNELS (32)
 #define MAX_INPUT_CHANNELS MAX_CHANNELS
 #define MAX_OUTPUT_CHANNELS MAX_CHANNELS
 #define MAX_CONFIG_CHANNELS (16)
+#define MAX_BED_SOURCES (16)
 
 #if MAX_OUTPUT_CHANNELS < MAX_CONFIG_CHANNELS
 #error Number of output channels must exceed largest configuration channel count
@@ -62,7 +59,7 @@
 
 #define MAX_METADATA_OUTPUTS (4)
 #define INIT_METADATA_OUTPUTS (1)
-#define MAX_LABEL_LENGTH (32)
+#define MAX_LABEL_LENGTH (256)
 
 
 #endif /* PMD_STUDIO_LIMITS_H_ */

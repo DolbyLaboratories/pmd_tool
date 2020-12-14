@@ -1,7 +1,7 @@
 # pmd_tool (dlb_pmd_lib)
-# version 1.7.2
+# version 1.7.3
 
-This project provides applications modules to assist with conversion between
+This project provides applications and libraries to assist with conversion between
 various professional audio metadata formats and containers.
 
 pmd_tool is a command line utility that converts between the following
@@ -13,7 +13,7 @@ representations of professional audio metadata:
 PMD Studio is an application that provides a user interface for authoring
 professional audio metadata in either file or streaming formats.
 
-For more information see the release notes.
+For more information see the [release notes](ReleaseNotes.md).
 
 ## Getting Started
 
@@ -25,6 +25,8 @@ running on your local machine for development and testing purposes.
 - **README.md** This file.
 
 - **ReleaseNotes.md** Release notes.
+
+- **PmdStudioQsg.md** Quick Start Guide for PMD Studio.
 
 - **LICENSE** Terms of use.
 
@@ -44,6 +46,8 @@ running on your local machine for development and testing purposes.
 
 - **googletest/** C++ test framework from Google.
 
+- **Lawo/** Ember+ console integration library from Lawo.
+
 - **libui/** Cross-platform GUI library.
 
 - **portaudio/** Portable real-time audio library.
@@ -55,9 +59,9 @@ running on your local machine for development and testing purposes.
 
 ### Prerequisites
 
-For Linux and OSX, the library and tool can be built using GNU
-makefiles. For windows, Visual Studio 2015 projects and solutions
-are provided. For all platforms, 64-bit targets are supported.
+For Linux and OSX, the library and tool can be built using GNU makefiles.
+For Windows, Visual Studio 2015 and 2017 projects and solutions are provided.
+For all platforms, 64-bit targets are supported.
 For Linux, 32-bit platforms are supported.
 
 The following packages are required when building under Ubuntu/Debian
@@ -67,16 +71,15 @@ sudo apt-get install build-essential libgtk-3-dev libasound2-dev libjack-dev
 
 #### Using the GNU makefiles
 
-Use the makefiles located in dlb_pmd/make. Go to the appropriate directory for
-the application and the platform and run GNU make. Go to the
-appropriate directory and run GNU make. Release and debug executables
-are created in the same directory as the makefile.
+Use the makefiles located in dlb_pmd/make. Go to the appropriate directory
+and run GNU make. Release and debug executables are created in the same
+directory as the makefile.
 
 #### Using Microsoft Visual Studio (on Windows)
 
 Go to the 64 bit Windows MSVS directory under dlb_pmd/make/pmd_tool.
-In Visual Studio 2015, open the solution file (.sln).  Select build solution
-in MSVS.
+In Visual Studio 2015 or 2017, open the corresponding solution file (.sln).
+Select build solution in MSVS.
 
 Alternatively, run msbuild from the Windows command line:
 
@@ -88,7 +91,8 @@ Alternatively, run msbuild from the Windows command line:
 
 ## Running the applications
 
-Several applications are available. However, we think the following two will are the most useful. 
+Several applications are available. However, we think the following two
+are the most useful.
 
 ### PMD Tool
 pmd_tool is a command line utility and detailed usage is provided by
@@ -97,17 +101,13 @@ operations. This application does not provide any real-time or streaming
 funcionality other than writing wav files that may be streamed by another
 application.
 
-### PMD Studio (Linux Only)
+### PMD Studio
 PMD Studio is an application for authoring professional metadata.
 It provides a simple user interface for configuring audio beds, objects
 and presentations. The authored metadata may be saved as an XML file in
 either sADM or PMD formats or streamed using a professional sound card.  
-PMD Studio also supports monitoring of the audio with the authored
-metadata applied. The folowing three speaker configurations are supported when
-using the real-time features of PMD Studio.
-- Stereo
-- 5.1
-- 5.1.4
+
+Please see the [PMD Studio Quick Start Guide](PmdStudioQsg.md)
 
 Basic usage of the command line when launching PMD Studio is obtained using '-h'.
 
@@ -130,7 +130,8 @@ models and tests that serialization/deserialization works correctly.
 
 ## Known Limitations
 
-PMD Studio is not capable of ingesting ADM XML from other sources. This will be fixed in the next release.
+The ADM XML output does not support or use common definitions as defined
+in ITU.R BS 2094.
 
 ## Release Notes
 

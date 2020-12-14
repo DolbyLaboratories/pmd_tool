@@ -249,7 +249,7 @@ public:
      * @brief set the ED2 system info to that of another
      */
     void set_ed2_system (const TestModel& other);
-    
+
     /**
      * @brief apply updates to the model
      */

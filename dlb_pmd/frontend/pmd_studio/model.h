@@ -89,7 +89,7 @@ model_init
     memset(&mc, '\0', sizeof(mc));
     mc.max_elements           = MAX_AUDIO_OBJECTS + MAX_AUDIO_BEDS;
     mc.max_presentation_names = MAX_AUDIO_PRESENTATIONS * 16;
-    mc.max.num_signals        = MAX_AUDIO_SIGNALS;
+    mc.max.num_signals        = MAX_STUDIO_AUDIO_SIGNALS;
     mc.max.num_beds           = MAX_AUDIO_BEDS;
     mc.max.num_objects        = MAX_AUDIO_OBJECTS;
     mc.max.num_presentations  = MAX_AUDIO_PRESENTATIONS;

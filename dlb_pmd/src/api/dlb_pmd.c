@@ -300,6 +300,25 @@ dlb_pmd_reset
 }
 
 
+dlb_pmd_success
+dlb_pmd_set_error_callback
+    (dlb_pmd_model                      *model
+    ,dlb_pmd_model_error_callback        fn
+    ,dlb_pmd_model_error_callback_arg    cbarg
+    )
+{
+    if (model == NULL)
+    {
+        return PMD_FAIL;
+    }
+
+    model->error_callback = fn;
+    model->error_cbarg = cbarg;
+
+    return PMD_SUCCESS;
+}
+
+
 void
 dlb_pmd_finish
     (dlb_pmd_model *model

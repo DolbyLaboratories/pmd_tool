@@ -559,6 +559,17 @@ dlb_sadm_model_frame_format
 
 
 /**
+ * @brief get model's coordinate print precision
+ */
+DLB_DLL_ENTRY
+dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL otherwise */
+dlb_sadm_model_get_coordinate_print_precision
+    (const dlb_sadm_model *model        /**< [in] model to query */
+    ,int                  *precision    /**< [out] precision */
+    );
+
+
+/**
  * @brief get model's limits
  */
 DLB_DLL_ENTRY

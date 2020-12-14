@@ -53,6 +53,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <locale.h>
 
 
 #if defined(_MSC_VER)
@@ -76,6 +77,8 @@ typedef struct
     unsigned int indent;           /**< indentation level */
     char *pos;                     /**< current write position */
     char *end;                     /**< 1st byte after buffer */
+
+    char saved_locale[128];        /**< locale setting at start of write operation */
 } writer;
 
 
@@ -92,6 +95,15 @@ writer_init
    ,      unsigned int indent        /**< [in] initial indentation of 1st tag */
    )
 {
+    char *l = setlocale(LC_ALL, NULL);
+
+    memset(w, 0, sizeof(*w));
+    strncpy(w->saved_locale, l, sizeof(w->saved_locale));
+    if (strcmp(l, "C") != 0)
+    {
+        setlocale(LC_ALL, "C");
+    }
+
     w->model = model;
     w->getbuf = gb;
     w->cbarg = cbarg;
@@ -111,6 +123,10 @@ writer_finish
    )
 {
     w->getbuf(w->cbarg, w->pos, NULL, NULL);
+    if (strcmp(w->saved_locale, "C") != 0)
+    {
+        setlocale(LC_ALL, w->saved_locale);
+    }
 }
 
 
@@ -530,7 +546,7 @@ write_coordinate
     )
 {
     float p = pmd_decode_position(pos);
-    return write_line(w, "<%s>%.02f</%s>", tag, p, tag);
+    return write_line(w, "<%s>%.*f</%s>", tag, w->model->coordinate_print_precision, p, tag);
 }
 
 
@@ -545,7 +561,7 @@ write_size
     )
 {
     double s = (double)size / 31.0;
-    return write_line(w, "<Size>%.02f</Size>", s);
+    return write_line(w, "<Size>%.*f</Size>", w->model->coordinate_print_precision, s);
 }
 
 

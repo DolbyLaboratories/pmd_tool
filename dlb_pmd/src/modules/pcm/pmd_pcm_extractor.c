@@ -245,9 +245,10 @@ dlb_pcmpmd_extractor_query_mem2
 
 
 void
-dlb_pcmpmd_extractor_init2
+dlb_pcmpmd_extractor_init3
     (dlb_pcmpmd_extractor **extptr
     ,void *mem
+    ,unsigned int wrap_depth
     ,dlb_pmd_frame_rate rate
     ,unsigned int chan
     ,unsigned int stride
@@ -258,9 +259,22 @@ dlb_pcmpmd_extractor_init2
     )
 {
     dlb_pcmpmd_extractor *ext = mem;
+    unsigned int wd;       /** s337m wrapping bit depth */
     unsigned int vfsize;   /** video frame size in samples */
 
     memset(mem, 0, sizeof(dlb_pcmpmd_extractor));
+
+    switch (wrap_depth)
+    {
+    case 16:
+    case 20:
+    case 24:
+        wd = wrap_depth;
+        break;
+    default:
+        wd = (sadm ? 24 : 20);
+        break;
+    }
 
     *extptr = ext;
     ext->model = model;
@@ -303,9 +317,43 @@ dlb_pcmpmd_extractor_init2
         sadm_bitstream_decoder_init(&limits, (void*)(ext+1), &ext->sdec);
     }
 
-    pmd_s337m_init(&ext->s337m, (sadm ? 24 : 20), stride, pcm_next_block, ext, ext->klv_pair, ext->klv_chan, 0, sadm);
+    pmd_s337m_init(&ext->s337m, wd, stride, pcm_next_block, ext, ext->klv_pair, ext->klv_chan, 0, sadm);
     ext->s337m.pa_found_cb = found_pa;
     ext->s337m.pa_found_cb_arg = ext;
+}
+
+
+void
+dlb_pcmpmd_extractor_init2
+    (dlb_pcmpmd_extractor **extptr
+    ,void *mem
+    ,dlb_pmd_frame_rate rate
+    ,unsigned int chan
+    ,unsigned int stride
+    ,dlb_pmd_bool ispair
+    ,dlb_pmd_model *model
+    ,dlb_pmd_payload_set_status *status
+    ,dlb_pmd_bool sadm
+    )
+{
+    dlb_pcmpmd_extractor_init3(extptr, mem, 0, rate, chan, stride, ispair, model, status, sadm);
+}
+
+
+void
+dlb_pcmpmd_extractor_init
+    (dlb_pcmpmd_extractor          **extptr     /**< [out] PCM extractor to initialize */
+    ,void                           *mem        /**< [in]  memory to use to initialize extractor */
+    ,dlb_pmd_frame_rate              rate       /**< [in]  video frame rate */
+    ,unsigned int                    chan       /**< [in]  channel (or 1st channel of pair) to decode */
+    ,unsigned int                    nstride    /**< [in]  PCM stride */
+    ,dlb_pmd_bool                    ispair     /**< [in]  1: extract a pair, 0: extract single channel */
+    ,dlb_pmd_model                  *model      /**< [in]  model to populate */
+    ,dlb_pmd_payload_set_status     *status     /**< [out] payload set status, may be NULL; if given,
+                                                           must be initialized properly */
+    )
+{
+    dlb_pcmpmd_extractor_init2(extptr, mem, rate, chan, nstride, ispair, model, status, 0);
 }
 
     

@@ -45,7 +45,7 @@
 - (CGFloat)paddingAmount;
 - (void)establishOurConstraints;
 - (void)append:(gridChild *)gc;
-- (void)delete:(gridChild *)gc;
+- (void)delete:(uiControl *)c;
 - (void)insert:(gridChild *)gc after:(uiControl *)c at:(uiAt)at;
 - (int)isPadded;
 - (void)setPadded:(int)p;
@@ -575,10 +575,9 @@ struct uiGrid {
 			break;
 		}
 	if (!found)
-		uiprivUserBug("Existing control %p is not in grid %p; you cannot add other controls next to it", c, self->g);
+		uiprivUserBug("Trying to delete %p which is not in grid %p", c, self->g);
 
-	[self->children remove:gc];
-	[gc release];
+	[self->children removeObject:gc];
 }
 
 - (void)insert:(gridChild *)gc after:(uiControl *)c at:(uiAt)at
@@ -791,6 +790,8 @@ void uiGridAppend(uiGrid *g, uiControl *c, int left, int top, int xspan, int ysp
 
 void uiGridDelete(uiGrid *g, uiControl *c)
 {
+	uiControlSetParent(c, NULL);
+	uiDarwinControlSetSuperview(uiDarwinControl(c), nil);
 	[g->view delete:c];
 }
 

@@ -42,7 +42,7 @@
 <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='release|x64'">false</LinkIncremental></PropertyGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..\include;..\..\..\os;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\pcm;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\..\Lawo\ember-plus\libember_slim\Source;..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..\include;..\..\..\os;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\pcm;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
 <BufferSecurityCheck>true</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
@@ -72,7 +72,7 @@
 <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers></Link></ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..\include;..\..\..\os;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\pcm;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\..\Lawo\ember-plus\libember_slim\Source;..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..\include;..\..\..\os;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\pcm;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>Default</BasicRuntimeChecks>
 <BufferSecurityCheck>false</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
@@ -107,6 +107,7 @@
 <ClCompile Include="..\..\..\unit_test\dlb_pmd_pcm_01.cc" />
 <ClCompile Include="..\..\..\unit_test\dlb_pmd_sadm_01.cc" />
 <ClCompile Include="..\..\..\unit_test\dlb_pmd_sadm_02.cc" />
+<ClCompile Include="..\..\..\unit_test\libember_slim_01.cc" />
 <ClCompile Include="..\..\..\unit_test\pmd_unit_test.cc" /></ItemGroup>
 <ItemGroup>
 <ClInclude Include="..\..\..\include\dlb_pmd_api.h" />
@@ -149,6 +150,9 @@
 <ItemGroup>
 <ProjectReference Include="..\..\dlb_wave_lib\windows_amd64_msvs\dlb_wave_lib_2017.vcxproj">
 <Project>{2A4DF4EE-7136-33B4-B637-60938D184F39}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\Lawo\ember-plus\libember_slim\make\libember_slim\windows_amd64_msvs\libember_slim_2017.vcxproj">
+<Project>{D30FDE59-F772-3718-BDAB-EFC45FBFAA5F}</Project>
 <ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
 <ProjectReference Include="..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2017.vcxproj">
 <Project>{888B31BA-E7A4-360D-978E-857D8E4C4BAC}</Project>
