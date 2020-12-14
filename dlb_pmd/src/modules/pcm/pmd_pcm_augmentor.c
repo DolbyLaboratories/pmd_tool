@@ -167,10 +167,11 @@ dlb_pcmpmd_augmentor_query_mem2
 
 
 void
-dlb_pcmpmd_augmentor_init2
+dlb_pcmpmd_augmentor_init3
     (dlb_pcmpmd_augmentor **augptr
     ,dlb_pmd_model *model
     ,void *mem
+    ,unsigned int wrap_depth
     ,dlb_pmd_frame_rate rate
     ,dlb_klvpmd_universal_label ul
     ,dlb_pmd_bool mark_empty_blocks
@@ -182,9 +183,22 @@ dlb_pcmpmd_augmentor_init2
     )
 {
     dlb_pcmpmd_augmentor *aug = mem;
+    unsigned int wd;       /** s337m wrapping bit depth */
     unsigned int vfsize;   /** video frame size in samples */
 
     memset(mem, '\0', sizeof(dlb_pcmpmd_augmentor));
+
+    switch (wrap_depth)
+    {
+    case 16:
+    case 20:
+    case 24:
+        wd = wrap_depth;
+        break;
+    default:
+        wd = (sadm ? 24 : 20);
+        break;
+    }
 
     *augptr    = aug;
     aug->model = model;
@@ -222,7 +236,48 @@ dlb_pcmpmd_augmentor_init2
         dlb_pmd_get_constraints(model, &limits);
         sadm_bitstream_encoder_init(&limits, (void*)(aug+1), &aug->senc);
     }
-    pmd_s337m_init(&aug->s337m, (sadm ? 24 : 20), stride, pcm_next_block, aug, ispair, start, mark_empty_blocks, sadm);
+    pmd_s337m_init(&aug->s337m, wd, stride, pcm_next_block, aug, ispair, start, mark_empty_blocks, sadm);
+}
+
+
+void
+dlb_pcmpmd_augmentor_init2
+    (dlb_pcmpmd_augmentor **aug
+    ,dlb_pmd_model *model
+    ,void *mem
+    ,dlb_pmd_frame_rate rate
+    ,dlb_klvpmd_universal_label ul
+    ,dlb_pmd_bool mark_empty_blocks
+    ,unsigned int numchannels
+    ,unsigned int stride
+    ,dlb_pmd_bool is_pair
+    ,unsigned int start
+    ,dlb_pmd_bool sadm
+    )
+{
+    dlb_pcmpmd_augmentor_init3(aug, model, mem, 0, rate, ul, mark_empty_blocks,
+                               numchannels, stride, is_pair, start,
+                               sadm);
+}
+
+
+void
+dlb_pcmpmd_augmentor_init
+    (dlb_pcmpmd_augmentor **aug
+    ,dlb_pmd_model *model
+    ,void *mem
+    ,dlb_pmd_frame_rate rate
+    ,dlb_klvpmd_universal_label ul
+    ,dlb_pmd_bool mark_empty_blocks
+    ,unsigned int numchannels
+    ,unsigned int stride
+    ,dlb_pmd_bool is_pair
+    ,unsigned int start
+    )
+{
+    dlb_pcmpmd_augmentor_init2(aug, model, mem, rate, ul, mark_empty_blocks,
+                               numchannels, stride, is_pair, start,
+                               0);
 }
 
 

@@ -33,6 +33,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
+#ifndef __AM824_FRAMER_H__
+#define __AM824_FRAMER_H__
+
 #include <stdint.h>
 
 #define CHANNEL_STATUS_BYTES 24
@@ -77,7 +80,7 @@ static inline void crcTableInit(AM824Framer *framer)
 {
     uint8_t remainder;
 
-    for (uint8_t dividend = 0; dividend < 256; ++dividend)
+    for (uint16_t dividend = 0; dividend < 256; ++dividend)
     {
     	remainder = dividend << (WIDTH - 8);
     	for (uint8_t bit = 0; bit < 8; bit++)
@@ -312,3 +315,5 @@ static inline void testCRC(AM824Framer *framer)
 		printf("Example 2 - failed, expecting 0x32, got 0x%x\n",framer->channelStatus[23]);
 	}		
 }
+
+#endif

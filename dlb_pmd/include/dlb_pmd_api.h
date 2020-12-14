@@ -281,6 +281,22 @@ dlb_pmd_success                /** @return PMD_SUCCESS always */
 dlb_pmd_reset
     (dlb_pmd_model *model      /**< [in] reinitialize model structure */
     );
+    
+
+/**
+ * @brief add an error callback to a dlb_pmd model
+ *
+ * The function will be called when there is an error. 
+ *
+ * Invalid parameters cause undefined behaviour.
+ */
+DLB_DLL_ENTRY
+dlb_pmd_success                /** @return 0 if succeeded, 1 if not */
+dlb_pmd_set_error_callback
+    (dlb_pmd_model                      *model  /**< [in] model */
+    ,dlb_pmd_model_error_callback        fn     /**< [in] callback function pointer, or NULL */
+    ,dlb_pmd_model_error_callback_arg    cbarg  /**< [in] callback function argument, may be NULL */
+    );
 
 
 /**

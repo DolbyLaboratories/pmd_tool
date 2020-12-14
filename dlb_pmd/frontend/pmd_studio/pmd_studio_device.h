@@ -37,24 +37,107 @@
 #define __PMD_STUDIO_DEVICE_H__
 
 #include "pmd_studio.h"
+#include "am824_framer.h"
+#include <mutex>
+#include "pmd_studio_audio_outputs.h"
 
-typedef struct pmd_studio_device pmd_studio_device;
+struct pmd_studio_device;
+struct pmd_studio_ring_buffer_struct;
 
-#define DEFAULT_FRAMES_PER_BUFFER (128)
 #define MIN_FRAMES_PER_BUFFER (128)
 #define MAX_FRAMES_PER_BUFFER (4096)
+#define MAX_DEVICE_NAME_LENGTH (48)
+#define MAX_DEVICES (128)
+#define CURRENT_DEVICE (-1)
+#define MAX_LATENCY_MS 1000000
 
+class PMDStudioDeviceRingBufferHandler;
+
+class PMDStudioDeviceRingBuffer{
+    public:
+    uint32_t *pcmbuf;
+    unsigned int pcmbufsize;
+    PMDStudioDeviceRingBufferHandler *parent;
+
+    ~PMDStudioDeviceRingBuffer();
+
+    static 
+    PMDStudioDeviceRingBuffer *
+    newBufferFromRingBufferStruct
+        (pmd_studio_ring_buffer_struct *output_buf_struct
+        );
+
+    /**
+     * Queue this ring buffer via it's parent PMDStudioDeviceRingBufferHandler.
+     */
+    void 
+    push();
+
+    private:
+    PMDStudioDeviceRingBuffer(PMDStudioDeviceRingBufferHandler *parent);
+
+};
+
+class PMDStudioDeviceRingBufferHandler{
+    public:
+
+    // Constructor/destructor
+    PMDStudioDeviceRingBufferHandler(unsigned int startchannel, unsigned int num_channels, unsigned int pcmbufsize);
+    ~PMDStudioDeviceRingBufferHandler();
+
+    // From pmd_studio_device_ring_buffer struct (for backward compatibility)
+    unsigned int startchannel;
+    unsigned int num_channels;
+    unsigned int index;
+    AM824Framer am824framer;
+    unsigned int pcmbufsize;
+    std::mutex queued_mutex;
+
+    PMDStudioDeviceRingBuffer *newBuffer();
+    void queueNewBuffer(PMDStudioDeviceRingBuffer *buf);
+    void updateBuffer();
+
+    /**
+     * Get next buffer sample without advancing pointer
+     */
+    uint32_t peek();
+
+    /**
+     * Get next buffer sample and advance pointer buffer
+     */
+    uint32_t next();
+
+    PMDStudioDeviceRingBuffer *getActiveBuffer();
+
+    private:
+    PMDStudioDeviceRingBuffer   *active;
+    PMDStudioDeviceRingBuffer   *queued;
+};
+
+
+struct pmd_studio_device_settings
+{
+    char input_device[MAX_DEVICE_NAME_LENGTH];
+    char output_device[MAX_DEVICE_NAME_LENGTH];
+    int num_channels;
+    float latency;
+    unsigned int frames_per_buffer;
+    dlb_pmd_bool am824_mode;
+};
+
+
+void
+pmd_studio_device_init_settings(
+    pmd_studio_device_settings *settings
+    );
 
 dlb_pmd_success
 pmd_studio_device_init(
-	pmd_studio_device **s,
-	int input_device,
-	int output_device,
-	unsigned int num_channels,
-	float latency,
-	unsigned int frames_per_buffer,
-	dlb_pmd_bool am824_mode
-	);
+    pmd_studio_device **retdevice,
+    pmd_studio_device_settings *settings,
+    uiWindow *win,
+    pmd_studio *studio
+    );
 
 dlb_pmd_success
 pmd_studio_device_update_mix_matrix(
@@ -63,23 +146,43 @@ pmd_studio_device_update_mix_matrix(
 
 void
 pmd_studio_device_list(
-	void
-	);
+    void
+    );
+
 
 dlb_pmd_success
 pmd_studio_device_add_ring_buffer(
-        unsigned int startchannel,         // output channel index starting at 0
-        unsigned int num_channels,         // number of channels (1/2)
-        uint32_t pcmbuf[],                 // base pointer for ring buffer 
-        unsigned int pcmbufsize,           // size is in 32 bit words/samples
-        unsigned int *ring_buffer_handle,  // returned handle that can be used to disable/delete later
-        pmd_studio *studio
+    unsigned int startchannel,         // output channel index starting at 0
+    unsigned int num_channels,         // number of channels (1/2)
+    unsigned int pcm_bufsize,
+    pmd_studio *studio,
+    pmd_studio_ring_buffer_struct **assigned_struct
     );
+
+// dlb_pmd_success
+// pmd_studio_device_delete_ring_buffer(
+//     unsigned int ring_buffer_handle,
+//     pmd_studio *studio
+//     );
 
 dlb_pmd_success
 pmd_studio_device_delete_ring_buffer(
-        unsigned int ring_buffer_handle,
-        pmd_studio *studio
+    pmd_studio_ring_buffer_struct *ring_buffer_handle,
+    pmd_studio *studio
+    );
+
+dlb_pmd_success
+pmd_studio_get_input_device_name(
+    char **name,
+    pmd_studio *studio,
+    int device_index
+    );
+
+dlb_pmd_success
+pmd_studio_get_output_device_name(
+    char **name,
+    pmd_studio *studio,
+    int device_index
     );
 
 void

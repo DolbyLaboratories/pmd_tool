@@ -36,6 +36,7 @@
 #ifndef PMD_STUDIO_FILE_MENU_H_
 #define PMD_STUDIO_FILE_MENU_H_
 
+#include <stdio.h>
 
 #include "ui.h"
 #include "dlb_pmd_api.h"
@@ -48,13 +49,13 @@ typedef struct
     uiMenuItem *open_model;
     uiMenuItem *save_pmd;
     uiMenuItem *save_sadm;
-    uiMenuItem *quit;
     uiMenuItem *update;
+    uiMenuItem *settings;
+    uiMenuItem *quit;
 #ifndef NDEBUG
     uiMenuItem *debug;
 #endif
 } pmd_studio_file_menu;
-    
 
 static
 void
@@ -84,10 +85,10 @@ open_model
     char *filename;
 
     (void)item;
-
     filename = uiOpenFile(window);
     if (filename)
     {
+        pmd_studio_reset(s);
         pmd_studio_open_file(s, filename);
     }
 }
@@ -186,12 +187,11 @@ print_debug
 
     (void)item;
     (void)w;
-	pmd_studio_outputs_print_debug(s);
-    pmd_studio_device_print_debug(s);
+    pmd_studio_debug(s);
 }
 #endif
 
-
+MAY_BE_UNUSED
 static
 dlb_pmd_success
 pmd_studio_file_menu_init
@@ -206,6 +206,7 @@ pmd_studio_file_menu_init
     fm->save_sadm  = uiMenuAppendItem(fm->menu, "Save sADM");
     uiMenuAppendSeparator(fm->menu);
     fm->update     = uiMenuAppendItem(fm->menu, "Update");
+    fm->settings   = uiMenuAppendItem(fm->menu, "Settings");
     fm->quit       = uiMenuAppendItem(fm->menu, "Quit");
 #ifndef NDEBUG
     fm->debug      = uiMenuAppendItem(fm->menu, "Debug");
@@ -215,6 +216,7 @@ pmd_studio_file_menu_init
     uiMenuItemOnClicked(fm->save_pmd,   save_model_pmd,  s);
     uiMenuItemOnClicked(fm->save_sadm,  save_model_sadm, s);
     uiMenuItemOnClicked(fm->update,     do_update,  s);
+    uiMenuItemOnClicked(fm->settings,   edit_settings, s);
     uiMenuItemOnClicked(fm->quit,       do_quit,    NULL);
 #ifndef NDEBUG
     uiMenuItemOnClicked(fm->debug,       print_debug,    s);

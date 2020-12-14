@@ -1,11 +1,11 @@
-PMD 1.7.2 release notes
+PMD 1.7.3 release notes
 =======================
 
 Professional Metadata (PMD) is a format for specifying and
 transmitting 'next-generation' audio authoring metadata in
 low-latency, real-time broadcaster workflows. For example, an
 outside-broadcast mixing truck might encode Atmos-enabled content
-using this format before it transmits their content to the studio.
+using this format before it transmits the content to the studio.
 
 PMD is conveyed either in XML, for human-readable, file-based
 workflows, or a compact binary representation for low-latency
@@ -15,11 +15,11 @@ to and from this binary format.
 
 The PMD library contains support for conversion between PMD and an
 object-based audio subset of the serialized Audio Definition Model
-(sADM) format.
+(S-ADM) format.
 
 Supported/Tested Platforms:
 ---------------------------
-- 64-bit Windows, Microsoft Visual Studio 2015 compiler
+- 64-bit Windows, Microsoft Visual Studio 2015 and 2017 compilers
 - 64-bit OSX, clang compiler
 - 64-bit Linux, GNU compiler
 - 32-bit Linux, GNU compiler
@@ -31,8 +31,9 @@ Components:
 - pmd_tool library: higher-level file-based operations, static and dynamic
   link versions
 - pmd_tool application: convert between various file-based representations
-- pmd_studio application: GUI-based tool for creating PMD and sADM XML files
-  and streaming audio containing PMD or sADM metadata
+- pmd_studio application: GUI-based tool for creating PMD and S-ADM XML files,
+  streaming audio containing PMD or S-ADM metadata, and interfacing with
+  Lawo consoles and applications via the Ember+ library
 - pmd_realtime application: experimental code for streaming PMD with PCM
 
 Test applications:
@@ -41,20 +42,29 @@ Test applications:
 - pmd_test application: extensive test of library features, will run for a
   very long time!
 - pmd_fuzz application: "fuzz" testing for PMD
-- sadm_fuzz application: "fuzz" testing for sADM
+- sadm_fuzz application: "fuzz" testing for S-ADM
 
 Known issues:
 -------------
 - To build the test applications on Linux, you need the ICU unicode library and
   header files (http://site.icu-project.org/home)
 - For pmd_realtime on Linux you need ALSA (https://alsa-project.org/wiki/Main_Page)
-- PMDLIB-173:  If you are running the applications on a machine with a locale
-  setting that includes using the comma character as the decimal separator for
-  floating point numbers (for example, 1,00 instead of 1.00), generated PMD and
-  sADM XML files will contain numbers in this format, which is contrary to their
-  respective specifications.  These XML files will work in similar locales, but
-  will fail elsewhere.  Please set your locale (at least for number format) such
-  that the period character is used for the decimal separator.
+- pmd_studio will not build on Windows
+
+Changes since 1.7.2:
+--------------------
+- Major improvements to the pmd_studio application.
+- PMDLIB-197: Improve error handling.  Added an error callback mechanism in the
+  PMD library API.
+- PMDLIB-193: object coordinates are slightly inaccurate in S-ADM.  Compensate
+  in S-ADM output for quantization of coordinate values in the PMD model.
+- PMDLIB-180: S-ADM Stereo 2.0 beds have illegal audioPackFormatID value of
+  AP_00011000.  Start the counter at 1001 instead of 1000.
+- PMDLIB-173: XML files may contain numbers with comma for decimal point in
+  certain locales.  Locale-proofed the XML writers.
+- PMDLIB-167: Add s337m wrapping bit depth configuration.  Added a function to
+  the PMD library API to control wrapping bit depth.
+- PMDLIB-146: Change pmd_studio language codes to bibliographic.
 
 Changes since 1.7.1:
 --------------------
@@ -67,34 +77,34 @@ Changes since 1.7.1:
 - Added bit depth 24 SMPTE 337m unwrapping (previously only 20-bit was supported).
 - Added support for ADM common definitions, and increased the number of serial ADM
   tags that are recognized.
-- PMDLIB-108: sADM transportTrackFormat element was, incorrectly, a child of
+- PMDLIB-108: S-ADM transportTrackFormat element was, incorrectly, a child of
   frameFormat; when writing, move it out one level to be a child of frameHeader
   instead. Allow reading of transportTrackFormat in the old positioning for
   backwards compatibility.
-- PMDLIB-109: sADM frameFormat ID is specified to have 11 hexadecimal digits.
+- PMDLIB-109: S-ADM frameFormat ID is specified to have 11 hexadecimal digits.
   Changed the code to read 11 digits, and also 8 for backwards compatibility,
   and write 11.
-- PMDLIB-101: sADM -- Allow multiple audioObject instances in an audioContent.
-- PMDLIB-130: sADM encoding -- the SMPTE 337m encoder was saying it was not
+- PMDLIB-101: S-ADM -- Allow multiple audioObject instances in an audioContent.
+- PMDLIB-130: S-ADM encoding -- the SMPTE 337m encoder was saying it was not
   including an assemble info (AI) word, but writing it anyway, causing the decoder
   to be unable to read the bitstream.
-- PMDLIB-129: sADM decoding -- If the PCM+PMD extractor was not initialized for
-  sADM, and encountered sADM, the library would crash with a memory access error. 
-  Now it just ignores the sADM.
+- PMDLIB-129: S-ADM decoding -- If the PCM+PMD extractor was not initialized for
+  S-ADM, and encountered S-ADM, the library would crash with a memory access error. 
+  Now it just ignores the S-ADM.
 - Added the frame capture module: dlb_pmd_frame_captor_xxx().  This will find and
   extract PMD from a capture of a PCM+PMD stream.
 - Changed the compiler toolchain from GNU to clang on OSX.
 - Moved pmd_tool functionality into a library named dlb_pmd_tool_lib, leaving
-  just main() in the application.  This makes file-based PMD and sADM operations
+  just main() in the application.  This makes file-based PMD and S-ADM operations
   available to other applications by linking to the library.  Added a DLL/shared
   object version of the library and a version of pmd_tool (pmd_tool_dynamic) that
   uses it.
 - PMDLIB-127: Improve the documentation for using the DLB_PMD_VSYNC_NONE value
   for the video sync parameter in the PCM+PMD augmentor and extractor.
-- PMDLIB-131: sADM decoding -- reject multi-burst transmission mode; reject use of
+- PMDLIB-131: S-ADM decoding -- reject multi-burst transmission mode; reject use of
   assemble info (AI) word for full-frame mode.  In other words, reject use of the
   AI word, at least until we support multi-burst mode.
-- PMDLIB-133: sADM decoding -- frame format (FF) word must be present and must
+- PMDLIB-133: S-ADM decoding -- frame format (FF) word must be present and must
   indicate gzip format, otherwise reject the data burst.
 - pmd_studio: Added real-time streaming functionality to support metadata emulation
   and monitoring.
@@ -104,37 +114,37 @@ Changes since 1.7.1:
 - PMDLIB-139: Reading PLD incorrectly associates loudness correction type with
   dialog gating practice.
 - PMDLIB-125: Enhance the "try frame" feature to work with serial ADM.
-- PMDLIB-149: sADM -- count correctly the number of tracks for generating the
+- PMDLIB-149: S-ADM -- count correctly the number of tracks for generating the
   transportTrackFormat element.
-- sADM: added support for additional elements and attributes needed for the EBU
-  trials held in March and June, 2020 (PMDLIB-155).  Changed sADM output encoding
+- S-ADM: added support for additional elements and attributes needed for the EBU
+  trials held in March and June, 2020 (PMDLIB-155).  Changed S-ADM output encoding
   to use bit depth 24 SMPTE 337m wrapping (PMDLIB-62).
-- PMDLIB-140: sADM -- always write the cartesian element for audioBlockFormat.
-- PMDLIB-164: Don't write out sADM common definitions.
+- PMDLIB-140: S-ADM -- always write the cartesian element for audioBlockFormat.
+- PMDLIB-164: Don't write out S-ADM common definitions.
 - PMDLIB-148: In pmd_studio, change the flowID/IAT UUID each time we change the
   model.
-- PMDLIB-159: sADM -- write out changedIDs element only when necessary; don't
+- PMDLIB-159: S-ADM -- write out changedIDs element only when necessary; don't
   write it in full-frame transmission mode.
-- PMDLIB-156: sADM -- correct the audioContent dialog element for objects of type
+- PMDLIB-156: S-ADM -- correct the audioContent dialog element for objects of type
   generic.
-- PMDLIB-160: sADM -- audioObject must be able to refer to multiple children.
-- PMDLIB-162: sADM -- handle audio object grouping correctly.
-- PMDLIB-163: sADM -- detect incomplete or inconsistent usage of coordinate type
+- PMDLIB-160: S-ADM -- audioObject must be able to refer to multiple children.
+- PMDLIB-162: S-ADM -- handle audio object grouping correctly.
+- PMDLIB-163: S-ADM -- detect incomplete or inconsistent usage of coordinate type
   and cartesian element in audioBlockFormat.
-- PMDLIB-145: sADM -- added preliminary support for audioFormatCustom element.
-- sADM -- detect custom PMD 7.0.4 bed representation and generate the correct sADM
+- PMDLIB-145: S-ADM -- added preliminary support for audioFormatCustom element.
+- S-ADM -- detect custom PMD 7.0.4 bed representation and generate the correct S-ADM
   structures.
 - PMDLIB-174: pmd_tool -- add "--version" command line argument, and update how
   the version information is printed.
-- PMDLIB-177: sADM -- some generated audioChannelFormat/audoBlockFormat objects for
+- PMDLIB-177: S-ADM -- some generated audioChannelFormat/audoBlockFormat objects for
   DirectSpeakers had incorrect names, speaker labels, and/or positions.
-- PMDLIB-178: sADM -- gzip header is missing from SMPTE-wrapped, compressed
+- PMDLIB-178: S-ADM -- gzip header is missing from SMPTE-wrapped, compressed
   databurst.
 
 Changes since 1.7.0:
 --------------------
 - Fixed a bug in the PCM extractor causing framing errors.
-- Updated the sADM implementation to be consistent with the ITU-R BS.2076-2 and
+- Updated the S-ADM implementation to be consistent with the ITU-R BS.2076-2 and
   BS.2125-0 specification documents.
 
 Changes since 1.6.0:
@@ -167,9 +177,9 @@ Changes since 1.5.0:
 - [DPF-2423] bug to make sure APN are transmitted out of ED2 decoder
 - serial ADM support (Dolby Profile)
     - XML reader/writer
-    - sADM-in-SMPTE 337m PCM reader/writer
+    - S-ADM-in-SMPTE 337m PCM reader/writer
     - converter to and from PMD with unit tests
-    - sADM positive XML fuzzer
+    - S-ADM positive XML fuzzer
 - experimental 'pmd_studio' UI that authors very simple metadata, up to 4 beds, 4 objects
   and 4 presentations only.
 

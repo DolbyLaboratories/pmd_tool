@@ -48,6 +48,8 @@
 <Filter>dlb_pmd\unit_test</Filter></ClCompile>
 <ClCompile Include="..\..\..\unit_test\dlb_pmd_sadm_02.cc">
 <Filter>dlb_pmd\unit_test</Filter></ClCompile>
+<ClCompile Include="..\..\..\unit_test\libember_slim_01.cc">
+<Filter>dlb_pmd\unit_test</Filter></ClCompile>
 <ClCompile Include="..\..\..\unit_test\pmd_unit_test.cc">
 <Filter>dlb_pmd\unit_test</Filter></ClCompile></ItemGroup>
 <ItemGroup>

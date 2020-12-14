@@ -150,6 +150,8 @@ struct dlb_pmd_model
     pmd_bool  mallocated;       /**< true if memory allocated by malloc() */
 
     char error[PMD_ERROR_SIZE]; /**< error string, if any */
+    dlb_pmd_model_error_callback error_callback;
+    dlb_pmd_model_error_callback_arg error_cbarg;
 
     uint8_t title[DLB_PMD_TITLE_SIZE]; /**< title of overall content */
     
@@ -210,6 +212,11 @@ struct dlb_pmd_model
      * SMPTE 2109
      */
     pmd_smpte2109 smpte2109;    /**< SMPTE 2109 specific information */
+
+    /**
+     * Miscellaneous
+     */
+    int coordinate_print_precision;
 };
 
 
@@ -268,6 +275,7 @@ pmd_model_init
     )
 {
     pmd_model_new_frame(model);
+    model->coordinate_print_precision = DLB_PMD_DEFAULT_COORDINATE_PRECISION;
 
     pmd_profile_init(&model->profile, &model->limits);
 

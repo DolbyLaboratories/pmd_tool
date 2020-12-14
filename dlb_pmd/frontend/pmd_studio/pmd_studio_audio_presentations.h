@@ -62,6 +62,25 @@ pmd_studio_audio_presentations_refresh_ui
     (pmd_studio_audio_presentations *apres
     );
 
+/**
+ * Handle nlang settings changes (and apply changes to model)
+ */
+void
+pmd_studio_audio_presentations_update_nlang
+    (pmd_studio_audio_presentations *apres
+    );
+
+void
+pmd_studio_audio_presentations_enable
+    (pmd_studio_audio_presentations *apres
+    );
+
+void
+pmd_studio_audio_presentations_disable
+    (pmd_studio_audio_presentations *apres,
+    bool live_mode = false
+    );
+
 dlb_pmd_success
 pmd_studio_audio_presentations_import
     (pmd_studio_audio_presentations *apres
@@ -74,45 +93,31 @@ pmd_studio_audio_presentations_reset
     );
 
 unsigned int
-pmd_studio_audio_presentations_get_count
-    (pmd_studio *studio
-    );
-
-const char
-*pmd_studio_audio_presentation_get_name
+pmd_studio_audio_presentation_get_enabled
     (pmd_studio *studio,
-     unsigned int index
-    );
-
-const char
-*pmd_studio_audio_presentation_get_name_by_id
-    (pmd_studio *studio,
-     unsigned int id
-    );
-
-dlb_pmd_success
-pmd_studio_audio_presentation_enabled_by_id
-    (pmd_studio *studio,
-     unsigned int id,
-     unsigned int *enabled
-    );
-
-unsigned int
-pmd_studio_audio_presentation_get_id
-    (pmd_studio *studio,
-     unsigned int index
-    );
-
-unsigned int get_studio_presentation_ids
-    (pmd_studio *studio,
-    unsigned int **ids
+    dlb_pmd_element_id (**ids)[MAX_AUDIO_PRESENTATIONS],
+    char* (**names)[MAX_AUDIO_PRESENTATIONS]
     );
 
 void
-addAudioObjectToPresentations
+pmd_studio_presentations_bed_enable
+    (dlb_pmd_element_id eid,
+     dlb_pmd_bool enable,
+     pmd_studio *studio
+    );
+
+void
+pmd_studio_presentations_add_audio_object_to_presentations
     (pmd_studio *studio,
-     unsigned int object_count
+     dlb_pmd_element_id eid
      );
+
+void
+pmd_studio_presentations_object_enable
+    (dlb_pmd_element_id eid,
+     dlb_pmd_bool enable,
+     pmd_studio *studio
+    );
 
 void
 pmd_studio_audio_presentations_update_model
@@ -126,10 +131,39 @@ dlb_pmd_success pmd_studio_audio_presentations_get_mix_matrix(
     pmd_studio_mix_matrix mix_matrix,
     pmd_studio *studio);
 
+void pmd_studio_audio_presentations_handle_element_eid_update 
+    (pmd_studio *studio
+    ,dlb_pmd_element_id old_eid
+    ,dlb_pmd_element_id new_eid
+    );
+
+void
+pmd_studio_audio_presentations_print_debug(
+    pmd_studio *studio);
+
 void
 pmd_studio_audio_presentations_finish
     (pmd_studio_audio_presentations *apres
     );
 
+
+/**
+ * Get array of supported languages
+ * @param lang_ptr pointer to be set
+ * @returns number of entries in the array
+ */
+unsigned int
+pmd_studio_get_supported_languages
+    (const char ***lang_ptr
+    );
+
+unsigned int
+pmd_studio_get_default_language_index
+    ();
+
+int
+pmd_studio_language_index_from_lang
+    (const char *lang
+    );
 
 #endif /* PMD_STUDIO_AUDIO_PRESENTATIONS_H_ */

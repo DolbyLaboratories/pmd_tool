@@ -50,6 +50,12 @@ audio_object_dynamic_import
     (int obj_import_count
     );
 
+void
+onObjectGainUpdated
+    (uiCombobox *c
+    ,void *data
+    );
+
 dlb_pmd_success
 pmd_studio_audio_objects_init
     (pmd_studio_audio_objects **ao1
@@ -89,14 +95,44 @@ dlb_pmd_success pmd_studio_audio_objects_get_mix_matrix(
     pmd_studio *studio);
 
 void
+pmd_studio_audio_objects_print_debug(
+    pmd_studio *studio);
+
+void
 pmd_studio_audio_objects_finish(
     pmd_studio_audio_objects *aobj
     );
 
-unsigned int
-pmd_studio_object_get_count
-    (pmd_studio *studio
+void
+pmd_studio_audio_objects_disable
+    (pmd_studio_audio_objects *aobjs,
+    bool live_mode = false
     );
+
+void
+pmd_studio_audio_objects_enable
+    (pmd_studio_audio_objects *aobjs
+    );
+    
+/**
+ * Get list of available object element ids
+ * @param enabled_only list enabled objects only
+ */
+unsigned int 
+pmd_studio_audio_objects_get_eids(
+    dlb_pmd_element_id **eid_list,
+    pmd_studio *s,
+    bool enabled_only = true
+    );
+
+
+dlb_pmd_success 
+pmd_studio_set_obj_gain
+    (pmd_studio *studio
+    ,dlb_pmd_element_id obj_eid
+    ,float gain_db
+    );
+
 
 
 #endif /* PMD_STUDIO_AUDIO_OBJECTS_H_ */

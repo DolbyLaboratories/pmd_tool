@@ -313,8 +313,8 @@ generate_pack_format_id
 {
     unsigned int yyyy = (unsigned int)type;
     unsigned int xxxx = type < DLB_SADM_PACKFMT_TYPE_OBJECT
-        ? (unsigned int)cfg + 0x1000
-        : (unsigned int)eid + 0x1000;
+        ? (unsigned int)cfg + 0x1001    /* PMDLIB-180: cfg is 0-based, pack ID must be 1001-based */
+        : (unsigned int)eid + 0x1000;   /* element ID starts at 1, so it is OK like this */
     (void)g;
 
     snprintf((char*)id->data, sizeof(id->data), "AP_%04x%04x", yyyy, xxxx);
@@ -1016,11 +1016,11 @@ generate_nonbed_object
     }
     if (obj->size != 0.0f)
     {
-        error(g->pmd, "sADM generator failure: object %u has non-point size (%.2f), "
-              "which are not supported\n", obj->id, obj->size);
+        error(g->pmd, "sADM generator failure: object %u has non-point size (%.*f), "
+              "which is not supported\n", obj->id, g->pmd->coordinate_print_precision, obj->size);
         return FAILURE;
     }
-    if (obj->size_3d != 0)
+    if (obj->size_3d != PMD_FALSE)
     {
         error(g->pmd, "sADM generator failure: object %u specifies 3D objects "
               "which are not supported\n", obj->id);

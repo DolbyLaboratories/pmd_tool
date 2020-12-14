@@ -358,7 +358,7 @@ void TestModel::test_(TestType type, const char *n, int p, bool m, bool au)
         case TEST_PCM_CHAN_6000:  test_pcm_(n, p, 7, true, m, au, false); break;  
         case TEST_PCM_CHAN_10000: test_pcm_(n, p, 8, true, m, au, false); break;  
         case TEST_PCM_CHAN_11988: test_pcm_(n, p, 9, true, m, au, false); break;  
-        case TEST_PCM_CHAN_12000: test_pcm_(n, p,10, true, m, au, false); break;
+        case TEST_PCM_CHAN_12000: test_pcm_(n, p,10, true, m, au, false); break; 
 
         case TEST_SADM:               test_sadm_(n, p, m);                    break;   
         case TEST_SADM_PCM_PAIR_2398: test_pcm_(n, p, 0, false, m, au, true); break;  

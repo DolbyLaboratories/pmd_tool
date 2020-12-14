@@ -66,6 +66,11 @@ error
     va_start(args, fmt);
     (void)vsnprintf(m->error, sizeof(m->error), fmt, args);
     va_end(args);
+
+    if (m->error_callback != NULL)
+    {
+        m->error_callback(m->error_cbarg, m);
+    }
 }
 
 
