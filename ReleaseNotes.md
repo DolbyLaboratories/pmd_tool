@@ -1,5 +1,5 @@
-PMD 1.7.3 release notes
-=======================
+PMD 1.7.3.34 release notes
+==========================
 
 Professional Metadata (PMD) is a format for specifying and
 transmitting 'next-generation' audio authoring metadata in
@@ -50,6 +50,14 @@ Known issues:
   header files (http://site.icu-project.org/home)
 - For pmd_realtime on Linux you need ALSA (https://alsa-project.org/wiki/Main_Page)
 - pmd_studio will not build on Windows
+
+Changes since 1.7.3.33:
+-----------------------
+- Revise a section of documentation in the PmdStudioQsg.md file.
+- Add "por" to the list of supported language codes in pmd_studio.
+- Rewrite audioChannelFormat parsing code in the S-ADM reader to make typeLabel
+  and typeDefinition optional; and if both are present, check that they are
+  consistent.
 
 Changes since 1.7.2:
 --------------------

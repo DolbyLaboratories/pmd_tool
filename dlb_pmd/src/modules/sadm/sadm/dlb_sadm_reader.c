@@ -1506,7 +1506,12 @@ new_chanfmt
 {
     dlb_sadm_idref idref;
     dlb_pmd_success res = PMD_FAIL;
-    int type_label;
+    dlb_pmd_bool got_type_label;
+    dlb_pmd_bool got_type_definition;
+    dlb_pmd_bool good_type_label = PMD_TRUE;
+    dlb_pmd_bool good_type_definition = PMD_TRUE;
+    int type_label = 0;
+    int type_definition = 0;
     char *endp;
 
     if (   dlb_sadm_lookup_reference(p->model, p->current_id, DLB_SADM_CHANFMT, 0, &idref)
@@ -1521,21 +1526,39 @@ new_chanfmt
         p->chanfmt.blkfmts.array = p->chanfmt_blkfmts;
 
         type_label = strtol((char*)p->type_label, &endp, 0);
-        if (endp == (char*)p->type_label
-            || (type_label != 1 && type_label != 3)
+        got_type_label = (endp != (char*)p->type_label);
+        if (got_type_label
+            && (type_label != 1 && type_label != 3)
             )
         {
-            errmsg(p, "audioChannelFormat type label \"%s\" not recognised at line\n", p->type_label);
+            errmsg(p, "audioChannelFormat type label \"%s\" not recognised at line %u\n", p->type_label, p->lineno);
+            good_type_label = PMD_FALSE;
         }
 
-        if (  p->type_definition[0] != 0
-              && (  (type_label == 1 && strcasecmp((char*)p->type_definition, "DirectSpeakers"))
-                 || (type_label == 3 && strcasecmp((char*)p->type_definition, "Objects"))
-                 )
+        got_type_definition = (p->type_definition[0] != 0);
+        if (got_type_definition)
+        {
+            if (!strcasecmp((char*)p->type_definition, "DirectSpeakers"))
+            {
+                type_definition = 1;
+            }
+            else if (!strcasecmp((char*)p->type_definition, "Objects"))
+            {
+                type_definition = 3;
+            } 
+            else
+            {
+                errmsg(p, "audioChannelFormat type definition \"%s\" not recognised at line %u\n", (char *)p->type_definition, p->lineno);
+                good_type_label = PMD_FALSE;
+            }
+        }
+
+        if (got_type_label && good_type_label && got_type_definition && good_type_definition
+              && type_definition != type_label
            )
         {
-            errmsg(p, "audioChannelFormat type label \"%s\" and type definition \"%s\" do not agree\n",
-                   p->type_label, p->type_definition);
+            errmsg(p, "audioChannelFormat type label \"%s\" and type definition \"%s\" do not agree at line %u\n",
+                   p->type_label, (char *)p->type_definition, p->lineno);
         }
 
         res = PMD_SUCCESS;
