@@ -205,36 +205,14 @@ metadata configuration is fixed except for gain and positional settings.
 ### Ember+ client
 
 PMD Studio 1.7.3 introduces a simple Ember+ consumer (client) that allows an Ember+ 
-provider (server) on the same network to control a restricted set of metadata values. 
+provider (server) on the same network to control a restricted set of metadata values*.
 The server IP address and port are configured from the settings panel under the 
 file menu. Connection to the server or console is initiated using the Connect option 
 under "Console" on the menu-bar.
 
-This Ember+ client is hard coded to interface with "AvatusMD Connector" (software) as 
-a proof of concept, however there are (untested!) ways in which one could use PMD Studio
-to interface with other servers.
 
-#### Getting the Ember+ client to work with other servers
-*NOTE: The Ember+ client in PMD Studio is made for, and tested against, AvatusMD
-Connector only. Any use outside of this constraint is not guaranteed to work.*
-
-* **Option 1 - Modifying the server:** If the target Ember+ server is flexible enough to
-change the Ember+ structure, it could be modified to mirror that of AvatusMD Connector:  
-`/AvatusMDConnector/Fader <x>/Gain`  
-Where `<x>` is an integer in the range 1<= x <= 8 (values 1-4 control bed gains and 
-5-8 object gains), and "Gain" is an Integer-type Ember+ parameter, optionally bound to 
-the range -26 and 6 (dB) (as values less than -25 or greater than 6 are clipped to -inf
-and 6 respectively).
-
-* **Option 2 - Modifying PMD Studio:** If, for whatever reason, you can't modify the
-server, you could try modifying PMD Studio's source code to target different Ember+
-parameter addresses (in the file "dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.cpp"):
-    1. Near the top of the file: The eight PATH_AVATUS_FADER_*_GAIN variables contain the 
-    identifier paths to each of AvatusMD Connector's parameters as a string array. Edit these to 
-    match the identifier path of the desired parameter in the server.
-    2. In the PMDStudioConsoleEmberPlus constructor: Change the value (currently '`3`') of the 
-	second argument of each of the calls to PMDStudioConsoleEmberPlus::CallbackManager::queue(), 
-	to equal the new length of each of the arrays; for example, `["foo", "bar"]` has length 2.
+**NOTE: The module is currently hard-coded for provider software that is not publicly 
+available, and so not intended for use by the average user.*
 
 ## Known Limitations
 

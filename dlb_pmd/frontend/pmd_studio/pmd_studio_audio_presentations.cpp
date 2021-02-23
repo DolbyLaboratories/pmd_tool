@@ -55,8 +55,8 @@
  */
 static const char *SUPPORTED_LANGUAGES[] =
 {
-    "alb", "bul",  "cze", "dan", "dut", "eng", "est", "fin", "fre", "ger", "gre", "hun", "ice", "ita",
-    "lav", "lit", "nor", "pol", "rum", "rus", "slo", "slv", "spa", "srp",  "swe", "ukr", "und",
+    "alb", "bul", "cze", "dan", "dut", "eng", "est", "fin", "fre", "ger", "gre", "hun", "ice", "ita",
+    "lav", "lit", "nor", "pol", "por", "rum", "rus", "slo", "slv", "spa", "srp", "swe", "ukr", "und"
 };
 
 #define NUM_SUPPORTED_LANGUAGES (sizeof(SUPPORTED_LANGUAGES)/sizeof(SUPPORTED_LANGUAGES[0]))
