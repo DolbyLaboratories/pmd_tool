@@ -8,8 +8,8 @@ ARFLAGS = -rc
 CCDEP = $(CC)
 CFLAGS_debug = -D_GNU_SOURCE -msse2 -g -ggdb3 -O0 -fPIC -m32 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CFLAGS_release = -D_GNU_SOURCE -msse2 -O3 -ftree-vectorize -fPIC -m32 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
-DEFINES_debug = -DHAVE_HIDDEN=1 -D_LARGEFILE64_SOURCE=1
-DEFINES_release = -DHAVE_HIDDEN=1 -DNDEBUG=1 -D_LARGEFILE64_SOURCE=1
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_HIDDEN=1 -D_LARGEFILE64_SOURCE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_HIDDEN=1 -DNDEBUG=1 -D_LARGEFILE64_SOURCE=1
 INCLUDES = -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE)dlb_pmd/frontend -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd/src/model -I$(BASE)dlb_pmd/src/modules/klv -I$(BASE)dlb_pmd/src/modules/pcm -I$(BASE)dlb_pmd/src/modules/sadm -I$(BASE)dlb_pmd/src/modules/xml -I$(BASE)dlb_wave/1.6 -I$(BASE)dlb_xmllib/1.0.4 -I$(BASE). -I$(BASE). -I$(BASE)zlib/1.2.11/zlib-1.2.11
 
 COMMON_FILES = $(TMP)dlb_octfile/1.1/dlb_octfile/src/dlb_octfile $(TMP)dlb_octfile/1.1/dlb_octfile/src/dlb_octfile_disk $(TMP)dlb_octfile/1.1/dlb_octfile/src/dlb_octfile_memory\

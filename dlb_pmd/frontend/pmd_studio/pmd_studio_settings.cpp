@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,8 @@ extern "C"{
 #include "pmd_studio_audio_presentations_pvt.h"
 
 #define CONFIG_FILENAME "pmd_studio.cfg"
+#define DEFAULT_LATENCY (1.0)
+
 
 const char* NLANG_BEHAVIOUR_DESC_STR[(int) PMD_STUDIO_NLANG_BEHAVIOUR::NUM_BEHAVIOURS]
 {
@@ -59,17 +61,15 @@ const char* NLANG_BEHAVIOUR_DESC_STR[(int) PMD_STUDIO_NLANG_BEHAVIOUR::NUM_BEHAV
 
 static
 void
-onApplyButtonClicked
+onSettingsApplyButtonClicked
     (uiButton *c
     ,void *data
     )
 {
     pmd_studio_settings_window *s = (pmd_studio_settings_window*)data;
     int index;
-    char *indevname, *outdevname;
     dlb_pmd_success result;
     char *text;
-    int channels; // Because PortAudio uses int
     unsigned int latency_ms, frames_per_buffer;
     char label[MAX_LABEL_SIZE];
     struct sockaddr_in sa;
@@ -81,51 +81,24 @@ onApplyButtonClicked
 
     if (pmd_studio_get_mode(s->studio) != PMD_STUDIO_MODE_FILE_EDIT)
     {
-
-        index = uiComboboxSelected(s->indevice);
-        result =  pmd_studio_get_input_device_name(&indevname, s->studio, index);
-        if (result != PMD_SUCCESS)
-        {
-            uiMsgBoxError(s->window, "PMD Studio Settings Error", "Error setting input device");
-            return;
-        }
-        index = uiComboboxSelected(s->outdevice);    
-        result =  pmd_studio_get_output_device_name(&outdevname, s->studio, index);
-        if (result != PMD_SUCCESS)
-        {
-            uiMsgBoxError(s->window, "PMD Studio Settings Error", "Error setting output device");
-            return;
-        }
-
-        text = uiEntryText(s->channels);
-        channels = atoi(text);
-        if ((channels == 0) || (channels > MAX_CHANNELS))
-        {
-            uiMsgBoxError(s->window, "PMD Studio Settings Error", "Number of channels invalid");
-            // Revert back to original setting
-            snprintf(label, MAX_LABEL_SIZE, "%u", s->settings->device_settings.num_channels);
-            uiEntrySetText(s->channels, label);
-            return;
-        }
-
         text = uiEntryText(s->latency);
         latency_ms = atoi(text);
         if (latency_ms > MAX_LATENCY_MS)
         {
             uiMsgBoxError(s->window, "PMD Studio Settings Error", "Latency invalid");
             // Revert back to original setting
-            snprintf(label, MAX_LABEL_SIZE, "%u", (unsigned int)(s->settings->device_settings.latency * 1000.0));
+            snprintf(label, MAX_LABEL_SIZE, "%u", (unsigned int)(s->settings->common_device_settings.latency * 1000.0));
             uiEntrySetText(s->latency, label);
             return;
         }
 
         text = uiEntryText(s->frames_per_buffer);
         frames_per_buffer = atoi(text);
-        if ((frames_per_buffer > MAX_FRAMES_PER_BUFFER) || (frames_per_buffer < MIN_FRAMES_PER_BUFFER))
+        if ((frames_per_buffer != 0) && ((frames_per_buffer > MAX_FRAMES_PER_BUFFER) || (frames_per_buffer < MIN_FRAMES_PER_BUFFER)))
         {
             uiMsgBoxError(s->window, "PMD Studio Settings Error", "Buffer Size invalid");
             // Revert back to original setting
-            snprintf(label, MAX_LABEL_SIZE, "%u", s->settings->device_settings.frames_per_buffer);
+            snprintf(label, MAX_LABEL_SIZE, "%u", s->settings->common_device_settings.frames_per_buffer);
             uiEntrySetText(s->frames_per_buffer, label);
             return;
         }
@@ -157,16 +130,8 @@ onApplyButtonClicked
             return;
         }
 
-        strcpy(s->settings->device_settings.input_device, indevname);
-        strcpy(s->settings->device_settings.output_device, outdevname);
-        if (s->settings->device_settings.num_channels != channels)
-        {
-            uiMsgBox(s->window, "PMD Studio Settings", "Changing Channels Requires Reset");
-            pmd_studio_reset(s->studio);
-        }
-        s->settings->device_settings.num_channels = channels;        
-        s->settings->device_settings.latency = latency_ms / 1000.0;        
-        s->settings->device_settings.frames_per_buffer = frames_per_buffer;        
+        s->settings->common_device_settings.latency = latency_ms / 1000.0;        
+        s->settings->common_device_settings.frames_per_buffer = frames_per_buffer;        
         s->settings->console_settings.address.sin_addr = sa.sin_addr;        
         s->settings->console_settings.address.sin_port = sa.sin_port;
     }
@@ -195,9 +160,7 @@ onSettingsWindowClosing
     ,void *data
     )
 {
-    pmd_studio_settings_window *s = (pmd_studio_settings_window*)data;
-
-    free(s);
+    free(data);
     uiControlDestroy(uiControl(w));
     return(0);   
 }
@@ -221,6 +184,30 @@ onNlangBehaviourUpdate
     }
 }
 
+static
+void
+pmd_studio_settings_init_common_device_settings
+    (pmd_studio_common_device_settings *settings
+    )
+{
+    settings->latency = DEFAULT_LATENCY;
+    settings->frames_per_buffer = AUTO_FRAMES_PER_BUFFER;
+}
+
+/* Public functions */
+
+void
+pmd_studio_settings_edit_device_settings
+    (uiMenuItem *item
+    ,uiWindow *w
+    ,void *data
+    )
+{
+    pmd_studio *s = (pmd_studio*)data;
+    pmd_studio_settings *settings = pmd_studio_get_settings(s);
+    pmd_studio_device_edit_settings(&settings->device_settings, w, s);
+}
+
 void
 edit_settings
     (uiMenuItem *item
@@ -232,12 +219,8 @@ edit_settings
     uiGrid *grid;
     uiBox *vbox;
     unsigned int row = 0;
-    unsigned int i, currentdev;
+    unsigned int i;
     pmd_studio_settings_window *settings;
-    char *name;
-    char *currentindevname;
-    char *currentoutdevname;
-    dlb_pmd_success status;
     char ipaddress_text[INET_ADDRSTRLEN];
     char label_text[MAX_LABEL_SIZE];
 
@@ -266,62 +249,16 @@ edit_settings
 
     if (pmd_studio_get_mode(s) != PMD_STUDIO_MODE_FILE_EDIT)
     {
-        uiGridAppend(grid, uiControl(uiNewLabel("Input Device")), 0, row, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
-        settings->indevice = uiNewCombobox();
-        // Get current device name so we initialize combobox
-        status = pmd_studio_get_input_device_name(&currentindevname, s, CURRENT_DEVICE);
-        // Get first name
-        status = pmd_studio_get_input_device_name(&name, s, 0);
-        currentdev = 0;
-        for (i = 0; (name != NULL) && (status == PMD_SUCCESS); i++)
-        {
-            uiComboboxAppend(settings->indevice, name);
-            if (!strncmp(name, currentindevname, MAX_DEVICE_NAME_LENGTH - 1))
-            {
-                currentdev = i;
-            }
-            status = pmd_studio_get_input_device_name(&name, s, i+1);
-        }
-
-        uiComboboxSetSelected(settings->indevice, currentdev);
-        uiGridAppend(grid, uiControl(settings->indevice), 2, row++, 2, 1, 1, uiAlignFill, 0, uiAlignFill);
-
-        uiGridAppend(grid, uiControl(uiNewLabel("Output Device")), 0, row, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
-        settings->outdevice = uiNewCombobox();
-
-        // Get current device name so we initialize combobox
-        status = pmd_studio_get_output_device_name(&currentoutdevname, s, CURRENT_DEVICE);
-        // Get first name
-        status = pmd_studio_get_output_device_name(&name, s, 0);
-        for (i = 0; (name != NULL) && (status == PMD_SUCCESS); i++)
-        {
-            uiComboboxAppend(settings->outdevice, name);
-            if (!strncmp(name, currentoutdevname, MAX_DEVICE_NAME_LENGTH - 1))
-            {
-                currentdev = i;
-            }
-            status = pmd_studio_get_output_device_name(&name, s, i+1);
-        }
-
-        uiComboboxSetSelected(settings->outdevice, currentdev);
-        uiGridAppend(grid, uiControl(settings->outdevice), 2, row++, 2, 1, 1, uiAlignFill, 0, uiAlignFill);
-
-        uiGridAppend(grid, uiControl(uiNewLabel("Number of Channels")), 0, row, 2, 1, 1, uiAlignFill, 0, uiAlignFill);
-        settings->channels = uiNewEntry();
-        uiGridAppend(grid, uiControl(settings->channels), 2, row++, 1, 1, 0, uiAlignEnd, 0, uiAlignFill);
-        snprintf(label_text, MAX_LABEL_SIZE, "%u", settings->settings->device_settings.num_channels);
-        uiEntrySetText(settings->channels, label_text);
-
         uiGridAppend(grid, uiControl(uiNewLabel("Requested Latency (ms)")), 0, row, 2, 1, 1, uiAlignFill, 0, uiAlignFill);
         settings->latency = uiNewEntry();
         uiGridAppend(grid, uiControl(settings->latency), 2, row++, 1, 1, 0, uiAlignEnd, 0, uiAlignFill);
-        snprintf(label_text, MAX_LABEL_SIZE, "%u", (unsigned int)(settings->settings->device_settings.latency * 1000.0));    
+        snprintf(label_text, MAX_LABEL_SIZE, "%u", (unsigned int)(settings->settings->common_device_settings.latency * 1000.0));    
         uiEntrySetText(settings->latency, label_text);
 
         uiGridAppend(grid, uiControl(uiNewLabel("Frames per Buffer")), 0, row, 2, 1, 1, uiAlignFill, 0, uiAlignFill);
         settings->frames_per_buffer = uiNewEntry();
         uiGridAppend(grid, uiControl(settings->frames_per_buffer), 2, row++, 1, 1, 0, uiAlignEnd, 0, uiAlignFill);
-        snprintf(label_text, MAX_LABEL_SIZE, "%u", settings->settings->device_settings.frames_per_buffer);
+        snprintf(label_text, MAX_LABEL_SIZE, "%u", settings->settings->common_device_settings.frames_per_buffer);
         uiEntrySetText(settings->frames_per_buffer, label_text);
 
         // Ember+ section   
@@ -380,7 +317,7 @@ edit_settings
     uiBoxAppend(vbox, uiControl(uiNewHorizontalSeparator()), 0);
     settings->applybutton = uiNewButton("Apply");
     uiBoxAppend(vbox, uiControl(settings->applybutton), 0);
-    uiButtonOnClicked(settings->applybutton, onApplyButtonClicked, settings);
+    uiButtonOnClicked(settings->applybutton, onSettingsApplyButtonClicked, settings);
 
     uiControlShow(uiControl(settings->window));
 }
@@ -393,20 +330,29 @@ pmd_studio_settings_read_config_file
 {
     FILE *cfgFile;
     size_t result;
-
-    printf("Reading config file...\n");
+    size_t file_size;
 
     cfgFile = fopen(CONFIG_FILENAME, "rb");
     if (!cfgFile)
     {
-        pmd_studio_warning("Can't open config file for reading");
+        pmd_studio_information("Can't open config file for reading");
+        return(PMD_FAIL);
+    }
+    fseek(cfgFile, 0L, SEEK_END);
+    file_size = ftell(cfgFile);
+
+    if (file_size != sizeof(pmd_studio_settings))
+    {
+        pmd_studio_error(PMD_STUDIO_ERR_UI, "Incompatible config file\nProbably from an different version, delete and try again\nUsing default settings");
+        fclose(cfgFile);
         return(PMD_FAIL);
     }
 
+    rewind(cfgFile);  
     result = fread(settings, sizeof(pmd_studio_settings), 1, cfgFile);
     if (!result)
     {
-        pmd_studio_error(PMD_STUDIO_ERR_FILE, "Reading of application settings unsuccessful");
+        pmd_studio_error(PMD_STUDIO_ERR_UI, "Reading of application settings unsuccessful\nIgnoring config file\nUsing default settings");
         fclose(cfgFile);
         return(PMD_FAIL);       
     }
@@ -423,8 +369,6 @@ pmd_studio_settings_write_config_file
 {
     FILE *cfgFile;
     size_t result;
-
-    printf("Writing config file...\n");
 
     cfgFile = fopen(CONFIG_FILENAME, "w");
     if (!cfgFile)
@@ -458,8 +402,10 @@ pmd_studio_settings_init(pmd_studio_settings **settings)
     }
 
     // Set to safe defaults in case config file read fails
+    pmd_studio_settings_init_common_device_settings(&(*settings)->common_device_settings);
     pmd_studio_device_init_settings(&(*settings)->device_settings);
     pmd_studio_console_init_settings(&(*settings)->console_settings);
+
 
     // Set default nlang fields
     (*settings)->nlang_settings.behaviour = PMD_STUDIO_NLANG_BEHAVIOUR::FOLLOW_LANG;

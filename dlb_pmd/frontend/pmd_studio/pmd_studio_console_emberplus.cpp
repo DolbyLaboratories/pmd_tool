@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
+
 
 #include "pmd_studio_console_emberplus.h"
 #include "pmd_studio_console.h"
@@ -76,7 +77,7 @@ handleAvatusParam
         // BED
         dlb_pmd_element_id *eids;
         unsigned int *labels;
-        unsigned int nbeds = pmd_studio_audio_beds_get_eids(&eids, &labels, studio, false);
+        int nbeds = pmd_studio_audio_beds_get_eids(&eids, &labels, studio, false);
 
         if(nbeds > id-1)
         {
@@ -87,7 +88,7 @@ handleAvatusParam
     {
         // Object
         dlb_pmd_element_id *eids;
-        unsigned int nobjs = pmd_studio_audio_objects_get_eids(&eids, studio, false);
+        int nobjs = pmd_studio_audio_objects_get_eids(&eids, studio, false);
 
         int objectno = id-5;
         if(nobjs > objectno)

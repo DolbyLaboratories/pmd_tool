@@ -7,7 +7,8 @@ TMP=$(BASE)
 CCDEP = $(CC)
 CFLAGS_debug = -g -O0 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
 CFLAGS_release = -O3 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
-DEFINES_release = -DNDEBUG=1
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
 INCLUDES = -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/frontend -I$(BASE)dlb_pmd/frontend/pmd_realtime -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/os -I$(BASE)dlb_socket/0.1/dlb_socket/include/osx -I$(BASE)dlb_socket/0.1/dlb_socket/include -I$(BASE)dlb_socket/0.1 -I$(BASE)dlb_wave/1.6 -I$(BASE). -I$(BASE). -I$(BASE)portaudio/19.6/portaudio/include
 LD = $(CC)
 LDFLAGS_debug = -arch x86_64 -dead_strip
@@ -33,8 +34,8 @@ pmd_realtime_release: $(INPUTS_COMMON_LINK_release) $(DEP_PROJ_LINK_release)
 	$(LD) $(LDFLAGS_release) -o $@ $+ $(LDLIBS)
 
 $(TMP)%.pmd_realtime_osx_amd64_clang_debug.o: $(BASE)%.c | $(TMP)%/..
-	$(CCDEP) -arch x86_64 -MM $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
-	$(CC) $(CFLAGS_debug) $(INCLUDES) -o $@ $<
+	$(CCDEP) -arch x86_64 -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CC) $(CFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.pmd_realtime_osx_amd64_clang_release.o: $(BASE)%.c | $(TMP)%/..
 	$(CCDEP) -arch x86_64 -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<

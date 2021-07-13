@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -47,15 +47,7 @@
 #define MAX_STUDIO_AUDIO_SIGNALS (32)
 #define MAX_AUDIO_PRESENTATIONS (4)
 #define MAX_AUDIO_OUTPUTS (8)
-#define MAX_CHANNELS (32)
-#define MAX_INPUT_CHANNELS MAX_CHANNELS
-#define MAX_OUTPUT_CHANNELS MAX_CHANNELS
-#define MAX_CONFIG_CHANNELS (16)
 #define MAX_BED_SOURCES (16)
-
-#if MAX_OUTPUT_CHANNELS < MAX_CONFIG_CHANNELS
-#error Number of output channels must exceed largest configuration channel count
-#endif
 
 #define MAX_METADATA_OUTPUTS (4)
 #define INIT_METADATA_OUTPUTS (1)

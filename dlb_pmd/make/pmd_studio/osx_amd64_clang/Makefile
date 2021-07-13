@@ -8,10 +8,11 @@ CCDEP = $(CC)
 CFLAGS_debug = -g -O0 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
 CFLAGS_release = -O3 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
 CXXDEP = $(CXX)
-CXXFLAGS_debug = -std=c++11 -g -O0 -arch x86_64 -fPIC -c -Wall
-CXXFLAGS_release = -std=c++11 -O3 -arch x86_64 -fPIC -c -Wall
-DEFINES_release = -DNDEBUG=1
-INCLUDES = -I$(BASE)Lawo/ember-plus/libember_slim/Source -I$(BASE)Lawo/ember-plus -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/frontend -I$(BASE)dlb_pmd/frontend/pmd_studio/ember_connector -I$(BASE)dlb_pmd/frontend/pmd_studio/ember_connector/utils -I$(BASE)dlb_pmd/frontend/pmd_studio -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE)dlb_pmd/frontend -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd/src/model -I$(BASE)dlb_pmd/src/modules/klv -I$(BASE)dlb_pmd/src/modules/pcm -I$(BASE)dlb_pmd/src/modules/sadm -I$(BASE)dlb_pmd/src/modules/xml -I$(BASE)dlb_socket/0.1/dlb_socket/include/osx -I$(BASE)dlb_socket/0.1/dlb_socket/include -I$(BASE)dlb_socket/0.1 -I$(BASE)dlb_wave/1.6 -I$(BASE)dlb_xmllib/1.0.4 -I$(BASE)libui/alpha_4.1/libui -I$(BASE). -I$(BASE). -I$(BASE)portaudio/19.6/portaudio/include -I$(BASE)zlib/1.2.11/zlib-1.2.11
+CXXFLAGS_debug = -std=c++11 -std=c++17 -g -O0 -arch x86_64 -fPIC -c -Wall
+CXXFLAGS_release = -std=c++11 -std=c++17 -O3 -arch x86_64 -fPIC -c -Wall
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
+INCLUDES = -I$(BASE)Lawo/ember-plus/libember_slim/Source -I$(BASE)Lawo/ember-plus -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/frontend -I$(BASE)dlb_pmd/frontend/pmd_studio/ember_connector -I$(BASE)dlb_pmd/frontend/pmd_studio/ember_connector/utils -I$(BASE)dlb_pmd/frontend/pmd_studio -I$(BASE)dlb_pmd/frontend/pmd_studio/portaudio -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE)dlb_pmd/frontend -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd/src/model -I$(BASE)dlb_pmd/src/modules/klv -I$(BASE)dlb_pmd/src/modules/pcm -I$(BASE)dlb_pmd/src/modules/sadm -I$(BASE)dlb_pmd/src/modules/xml -I$(BASE)dlb_socket/0.1/dlb_socket/include/osx -I$(BASE)dlb_socket/0.1/dlb_socket/include -I$(BASE)dlb_socket/0.1 -I$(BASE)dlb_wave/1.6 -I$(BASE)dlb_xmllib/1.0.4 -I$(BASE)libui/alpha_4.1/libui -I$(BASE). -I$(BASE). -I$(BASE)portaudio/19.6/portaudio/include -I$(BASE)zlib/1.2.11/zlib-1.2.11
 LD = $(CXX)
 LDFLAGS_debug = -arch x86_64 -dead_strip
 LDFLAGS_release = -arch x86_64 -dead_strip -O2
@@ -54,7 +55,8 @@ INPUTS_LINK_debug = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_os
                     $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_beds.pmd_studio_osx_amd64_clang_debug.o $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_objects.pmd_studio_osx_amd64_clang_debug.o\
                     $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_outputs.pmd_studio_osx_amd64_clang_debug.o $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_presentations.pmd_studio_osx_amd64_clang_debug.o\
                     $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console.pmd_studio_osx_amd64_clang_debug.o $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_osx_amd64_clang_debug.o\
-                    $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_device.pmd_studio_osx_amd64_clang_debug.o $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_debug.o
+                    $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_debug.o $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device.pmd_studio_osx_amd64_clang_debug.o\
+                    $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device_settings.pmd_studio_osx_amd64_clang_debug.o
 INPUTS_LINK_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_osx_amd64_clang_release.o $(TMP)Lawo/ember-plus/libember_slim/Source/berio.pmd_studio_osx_amd64_clang_release.o\
                       $(TMP)Lawo/ember-plus/libember_slim/Source/berreader.pmd_studio_osx_amd64_clang_release.o $(TMP)Lawo/ember-plus/libember_slim/Source/bertag.pmd_studio_osx_amd64_clang_release.o\
                       $(TMP)Lawo/ember-plus/libember_slim/Source/bytebuffer.pmd_studio_osx_amd64_clang_release.o $(TMP)Lawo/ember-plus/libember_slim/Source/ember.pmd_studio_osx_amd64_clang_release.o\
@@ -92,7 +94,8 @@ INPUTS_LINK_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_objects.pmd_studio_osx_amd64_clang_release.o $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_outputs.pmd_studio_osx_amd64_clang_release.o\
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_presentations.pmd_studio_osx_amd64_clang_release.o\
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console.pmd_studio_osx_amd64_clang_release.o $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_osx_amd64_clang_release.o\
-                      $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_device.pmd_studio_osx_amd64_clang_release.o $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_release.o
+                      $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_release.o $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device.pmd_studio_osx_amd64_clang_release.o\
+                      $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device_settings.pmd_studio_osx_amd64_clang_release.o
 
 DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a $(BASE)libui/alpha_4.1/libui/make/libui_alpha4_1/osx_amd64_clang/libui_alpha4_1_debug.a $(BASE)libui/alpha_4.1/libui/make/libui_impl_alpha4_1/osx_amd64_clang/libui_impl_alpha4_1_debug.a $(BASE)portaudio/19.6/portaudio/make/portaudio_19_6_lib/osx_amd64_clang/portaudio_19_6_lib_debug.a
 DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_release.a $(BASE)libui/alpha_4.1/libui/make/libui_alpha4_1/osx_amd64_clang/libui_alpha4_1_release.a $(BASE)libui/alpha_4.1/libui/make/libui_impl_alpha4_1/osx_amd64_clang/libui_impl_alpha4_1_release.a $(BASE)portaudio/19.6/portaudio/make/portaudio_19_6_lib/osx_amd64_clang/portaudio_19_6_lib_release.a
@@ -106,12 +109,12 @@ pmd_studio_release: $(INPUTS_LINK_release) $(DEP_PROJ_LINK_release)
 	$(LD) $(LDFLAGS_release) -o $@ $+ $(LDLIBS)
 
 $(TMP)%.pmd_studio_osx_amd64_clang_debug.o: $(BASE)%.c | $(TMP)%/..
-	$(CCDEP) -arch x86_64 -MM $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
-	$(CC) $(CFLAGS_debug) $(INCLUDES) -o $@ $<
+	$(CCDEP) -arch x86_64 -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CC) $(CFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.pmd_studio_osx_amd64_clang_debug.o: $(BASE)%.cpp | $(TMP)%/..
-	$(CXXDEP) -std=c++11 -arch x86_64 -MM $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
-	$(CXX) $(CXXFLAGS_debug) $(INCLUDES) -o $@ $<
+	$(CXXDEP) -std=c++11 -arch x86_64 -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CXX) $(CXXFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.pmd_studio_osx_amd64_clang_release.o: $(BASE)%.c | $(TMP)%/..
 	$(CCDEP) -arch x86_64 -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
@@ -157,7 +160,8 @@ CLEAN_COMPILE_debug = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_beds.pmd_studio_osx_amd64_clang_debug.d $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_objects.pmd_studio_osx_amd64_clang_debug.d\
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_outputs.pmd_studio_osx_amd64_clang_debug.d $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_presentations.pmd_studio_osx_amd64_clang_debug.d\
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console.pmd_studio_osx_amd64_clang_debug.d $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_device.pmd_studio_osx_amd64_clang_debug.d $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_debug.d
+                      $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_debug.d $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device.pmd_studio_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device_settings.pmd_studio_osx_amd64_clang_debug.d
 CLEAN_COMPILE_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_osx_amd64_clang_release.d $(TMP)Lawo/ember-plus/libember_slim/Source/berio.pmd_studio_osx_amd64_clang_release.d\
                         $(TMP)Lawo/ember-plus/libember_slim/Source/berreader.pmd_studio_osx_amd64_clang_release.d $(TMP)Lawo/ember-plus/libember_slim/Source/bertag.pmd_studio_osx_amd64_clang_release.d\
                         $(TMP)Lawo/ember-plus/libember_slim/Source/bytebuffer.pmd_studio_osx_amd64_clang_release.d $(TMP)Lawo/ember-plus/libember_slim/Source/ember.pmd_studio_osx_amd64_clang_release.d\
@@ -197,7 +201,8 @@ CLEAN_COMPILE_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studi
                         $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_outputs.pmd_studio_osx_amd64_clang_release.d\
                         $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_presentations.pmd_studio_osx_amd64_clang_release.d\
                         $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console.pmd_studio_osx_amd64_clang_release.d $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_osx_amd64_clang_release.d\
-                        $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_device.pmd_studio_osx_amd64_clang_release.d $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_release.d
+                        $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_release.d $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device.pmd_studio_osx_amd64_clang_release.d\
+                        $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device_settings.pmd_studio_osx_amd64_clang_release.d
 
 cleandeps:
 	$(RM) $(CLEAN_COMPILE_debug)
@@ -303,8 +308,9 @@ include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_outputs.pm
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_presentations.pmd_studio_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console.pmd_studio_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_osx_amd64_clang_debug.d)
-include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_device.pmd_studio_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device.pmd_studio_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device_settings.pmd_studio_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/berio.pmd_studio_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/berreader.pmd_studio_osx_amd64_clang_release.d)
@@ -375,8 +381,9 @@ include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_outputs.pm
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_presentations.pmd_studio_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console.pmd_studio_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_osx_amd64_clang_release.d)
-include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_device.pmd_studio_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device.pmd_studio_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/portaudio/pmd_studio_device_settings.pmd_studio_osx_amd64_clang_release.d)
 
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a \

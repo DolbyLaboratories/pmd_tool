@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -978,6 +978,11 @@ phase_read_sadm_ff
     }
     else
     {
+        /* Reset s337m->databits value to buffer size. Dereferencing the extractor buffer will cause the next() call
+        to only reset the s337m struct (and not try to decode the buffer contents) */
+        s337m->data = 0;
+        s337m->next(s337m);            
+
         s337m->phase = S337M_PHASE_PREAMBLEA;
     }
 
@@ -1083,6 +1088,14 @@ phase_read_preamble_pd
     {
         /* datasize too large for input buffer, ignoring */
         databits = 0;
+
+        /* Reset s337m->databits value to max buffer size. Dereferencing the extractor buffer will cause the next() call
+        to only reset the s337m struct (and not try to decode the buffer contents) */
+        s337m->data = 0;
+        s337m->next(s337m);       
+
+        s337m->phase = S337M_PHASE_PREAMBLEA;
+        return(pcm);
     }
     
     if (s337m->sadm)
@@ -1525,6 +1538,7 @@ pmd_s337m_unwrap
         default:
             assert(  S337M_PHASE_VSYNC <= s337m->phase
                   || S337M_PHASE_DATA  >= s337m->phase);
+            s337m->phase = S337M_PHASE_PREAMBLEA;
             break;
         }
     }

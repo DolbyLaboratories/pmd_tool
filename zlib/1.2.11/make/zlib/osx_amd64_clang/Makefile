@@ -8,8 +8,8 @@ ARFLAGS = -rc -s
 CCDEP = $(CC)
 CFLAGS_debug = -g -O0 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
 CFLAGS_release = -O3 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
-DEFINES_debug = -DHAVE_HIDDEN=1 -D_LARGEFILE64_SOURCE=1
-DEFINES_release = -DHAVE_HIDDEN=1 -DNDEBUG=1 -D_LARGEFILE64_SOURCE=1
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_HIDDEN=1 -D_LARGEFILE64_SOURCE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_HIDDEN=1 -DNDEBUG=1 -D_LARGEFILE64_SOURCE=1
 INCLUDES = -I$(BASE)zlib/1.2.11/zlib-1.2.11
 
 COMMON_FILES = $(TMP)zlib/1.2.11/zlib-1.2.11/adler32 $(TMP)zlib/1.2.11/zlib-1.2.11/compress $(TMP)zlib/1.2.11/zlib-1.2.11/crc32\

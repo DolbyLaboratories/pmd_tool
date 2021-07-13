@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #include "ui.h"
 #include "dlb_pmd_api.h"
 #include "pmd_studio.h"
+#include "pmd_studio_device.h"
 
 typedef struct
 {
@@ -51,6 +52,7 @@ typedef struct
     uiMenuItem *save_sadm;
     uiMenuItem *update;
     uiMenuItem *settings;
+    uiMenuItem *device_settings;
     uiMenuItem *quit;
 #ifndef NDEBUG
     uiMenuItem *debug;
@@ -207,6 +209,7 @@ pmd_studio_file_menu_init
     uiMenuAppendSeparator(fm->menu);
     fm->update     = uiMenuAppendItem(fm->menu, "Update");
     fm->settings   = uiMenuAppendItem(fm->menu, "Settings");
+    fm->device_settings = uiMenuAppendItem(fm->menu, pmd_studio_device_get_settings_menu_name());
     fm->quit       = uiMenuAppendItem(fm->menu, "Quit");
 #ifndef NDEBUG
     fm->debug      = uiMenuAppendItem(fm->menu, "Debug");
@@ -217,6 +220,7 @@ pmd_studio_file_menu_init
     uiMenuItemOnClicked(fm->save_sadm,  save_model_sadm, s);
     uiMenuItemOnClicked(fm->update,     do_update,  s);
     uiMenuItemOnClicked(fm->settings,   edit_settings, s);
+    uiMenuItemOnClicked(fm->device_settings,    pmd_studio_settings_edit_device_settings, s);
     uiMenuItemOnClicked(fm->quit,       do_quit,    NULL);
 #ifndef NDEBUG
     uiMenuItemOnClicked(fm->debug,       print_debug,    s);

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -79,12 +79,12 @@ typedef void (*sadm_bitstream_dec_callback) (void *arg, sadm_dec_state state);
  */
 typedef struct
 {
-    unsigned int error_line;
-    dlb_pmd_model *model;
+    unsigned int             error_line;
+    dlb_pmd_model           *model;
 
-    char xmlbuf[MAX_DATA_BYTES * DLB_PMD_SADM_XML_COMPRESSION]; /**< sADM decompression buffer */
-    size_t size;
-    dlb_pmd_sadm_reader *r;
+    char                     xmlbuf[MAX_DATA_BYTES * DLB_PMD_SADM_XML_COMPRESSION]; /**< sADM decompression buffer */
+    size_t                   size;
+    dlb_pmd_sadm_reader     *r;
 } sadm_bitstream_decoder;
 
 
@@ -94,7 +94,7 @@ typedef struct
 TEST_DLL_ENTRY
 size_t                                    /** @return size of memory required */
 sadm_bitstream_decoder_query_mem
-    (dlb_pmd_model_constraints *limits    /**< [in] PMD model limits */
+    (dlb_pmd_model_constraints  *limits    /**< [in] PMD model limits */
     );
 
 
@@ -104,36 +104,36 @@ sadm_bitstream_decoder_query_mem
 TEST_DLL_ENTRY
 dlb_pmd_success
 sadm_bitstream_decoder_init
-    (dlb_pmd_model_constraints *limits
-    ,void *mem
-    ,sadm_bitstream_decoder **dec
+    (dlb_pmd_model_constraints  *limits
+    ,void                       *mem
+    ,sadm_bitstream_decoder    **dec
     );
 
 
 /**
- * @brief helper function to compress the decoder's XML buffer to the
- * given byte buffer
+ * @brief helper function to decompress the input buffer to the decoder's
+ * XML buffer.
  */
 TEST_DLL_ENTRY
-int                                /** @return bytes used */
+int                                 /** @return bytes used */
 decompress_sadm_xml
-   (sadm_bitstream_decoder *dec    /**< [in] bitstream decoder */
-   ,uint8_t *buf                   /**< [in] input compressed data */
-   ,size_t datasize                /**< [in] size of compressed input in bytes */
-   );
+    (sadm_bitstream_decoder *dec        /**< [in] bitstream decoder */
+    ,uint8_t                *buf        /**< [in] input compressed data */
+    ,size_t                  datasize   /**< [in] size of compressed input in bytes */
+    );
 
 
 /**
- * @brief function to encapsulate the process of generating an sADM bitstream
+ * @brief function to encapsulate the process of decoding an sADM bitstream
  */
 dlb_pmd_success                     /** @return 0 on success, 1 on failure */
 sadm_bitstream_decoder_decode
-    (sadm_bitstream_decoder *dec            /**< [in] bitstream decoder */
-    ,uint8_t *bitstream                     /**< [in] bits to decode */
-    ,size_t datasize                        /**< [in] number of bytes in bitstream */
-    ,dlb_pmd_model *model                   /**< [in] model to write */
-    ,sadm_bitstream_dec_callback callback   /**< [in] status callback function - may be NULL */
-    ,void *cbarg                            /**< [in] callback state argument */
+    (sadm_bitstream_decoder         *dec        /**< [in] bitstream decoder */
+    ,uint8_t                        *bitstream  /**< [in] bits to decode */
+    ,size_t                          datasize   /**< [in] number of bytes in bitstream */
+    ,dlb_pmd_model                  *model      /**< [in] model to write */
+    ,sadm_bitstream_dec_callback     callback   /**< [in] status callback function - may be NULL */
+    ,void *cbarg                                /**< [in] callback state argument */
     );
 
 

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -157,4 +157,285 @@ protected:
 
 };
 
-// TODO...
+#ifdef _WIN32
+TEST_F(DlbPmdCapture02, SliceItChan0)
+{
+    static const char *testFileName = "D:\\data\\PMD\\PMDLIB-120\\8ch_square_1min_chan0_klv.wav";
+    FILE *f = ::fopen(testFileName, "r");
+
+    if (f != nullptr)
+    {
+        // TODO: sanity checks on the captured metadata set...
+
+        ::fclose(f);
+
+        bool opened;
+        int status;
+
+        opened = OpenWaveFile(testFileName);
+        ASSERT_TRUE(waveFileIsOpen);
+
+        size_t channelCount = dlb_wave_get_channel_count(&theWaveFile);
+        size_t bitDepth = dlb_wave_get_bit_depth(&theWaveFile);
+        size_t frameCount = dlb_wave_get_num_frames(&theWaveFile);
+        size_t frameByteCount = (bitDepth / CHAR_BIT) * channelCount;
+        size_t bufferByteCount = frameByteCount * sampleCount;
+        size_t startFrame = (frameCount / 3) - 299;
+        size_t readCount;
+
+        bufferMemory = new char[bufferByteCount];
+        ASSERT_NE(nullptr, bufferMemory);
+        ::memset(bufferMemory, 0, bufferByteCount);
+
+        status = dlb_wave_seek_to_frame(&theWaveFile, startFrame);
+        ASSERT_EQ(0, status);
+        status = dlb_wave_read_data(&theWaveFile, bufferMemory, bufferByteCount, &readCount);
+        ASSERT_EQ(0, status);
+        ASSERT_EQ(bufferByteCount, readCount);
+
+        status = OpenFrameCaptor();
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+
+        dlb_pmd_metadata_set *pmds = nullptr;
+        dlb_pmd_blob_descriptor descr;
+
+        ::memset(&descr, 0, sizeof(descr));
+        descr.number_of_samples = sampleCount;
+        descr.number_of_channels = static_cast<uint16_t>(channelCount);
+        descr.bit_depth = static_cast<uint8_t>(bitDepth);
+        status = dlb_pmd_frame_captor_capture(&pmds, theCaptor, &descr, bufferMemory);
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+    }
+}
+
+TEST_F(DlbPmdCapture02, SliceItPair2)
+{
+    static const char *testFileName = "D:\\data\\PMD\\PMDLIB-120\\8ch_square_1min_pair2_klv.wav";
+    FILE *f = ::fopen(testFileName, "r");
+
+    if (f != nullptr)
+    {
+        // TODO: sanity checks on the captured metadata set...
+
+        ::fclose(f);
+
+        bool opened;
+        int status;
+
+        opened = OpenWaveFile(testFileName);
+        ASSERT_TRUE(waveFileIsOpen);
+
+        size_t channelCount = dlb_wave_get_channel_count(&theWaveFile);
+        size_t bitDepth = dlb_wave_get_bit_depth(&theWaveFile);
+        size_t frameCount = dlb_wave_get_num_frames(&theWaveFile);
+        size_t frameByteCount = (bitDepth / CHAR_BIT) * channelCount;
+        size_t bufferByteCount = frameByteCount * sampleCount;
+        size_t startFrame = (frameCount / 2) + 2;
+        size_t readCount;
+
+        bufferMemory = new char[bufferByteCount];
+        ASSERT_NE(nullptr, bufferMemory);
+        ::memset(bufferMemory, 0, bufferByteCount);
+
+        status = dlb_wave_seek_to_frame(&theWaveFile, startFrame);
+        ASSERT_EQ(0, status);
+        status = dlb_wave_read_data(&theWaveFile, bufferMemory, bufferByteCount, &readCount);
+        ASSERT_EQ(0, status);
+        ASSERT_EQ(bufferByteCount, readCount);
+
+        status = OpenFrameCaptor();
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+
+        dlb_pmd_metadata_set *pmds = nullptr;
+        dlb_pmd_blob_descriptor descr;
+
+        ::memset(&descr, 0, sizeof(descr));
+        descr.number_of_samples = sampleCount;
+        descr.number_of_channels = static_cast<uint16_t>(channelCount);
+        descr.bit_depth = static_cast<uint8_t>(bitDepth);
+        status = dlb_pmd_frame_captor_capture(&pmds, theCaptor, &descr, bufferMemory);
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+    }
+}
+
+TEST_F(DlbPmdCapture02, SliceItChan7)
+{
+    static const char *testFileName = "D:\\data\\PMD\\PMDLIB-120\\8ch_square_1min_chan7_klv.wav";
+    FILE *f = ::fopen(testFileName, "r");
+
+    if (f != nullptr)
+    {
+        // TODO: sanity checks on the captured metadata set...
+
+        ::fclose(f);
+
+        bool opened;
+        int status;
+
+        opened = OpenWaveFile(testFileName);
+        ASSERT_TRUE(waveFileIsOpen);
+
+        size_t channelCount = dlb_wave_get_channel_count(&theWaveFile);
+        size_t bitDepth = dlb_wave_get_bit_depth(&theWaveFile);
+        size_t frameCount = dlb_wave_get_num_frames(&theWaveFile);
+        size_t frameByteCount = (bitDepth / CHAR_BIT) * channelCount;
+        size_t bufferByteCount = frameByteCount * sampleCount;
+        size_t startFrame = ((frameCount * 2) / 3) - 42;
+        size_t readCount;
+
+        bufferMemory = new char[bufferByteCount];
+        ASSERT_NE(nullptr, bufferMemory);
+        ::memset(bufferMemory, 0, bufferByteCount);
+
+        status = dlb_wave_seek_to_frame(&theWaveFile, startFrame);
+        ASSERT_EQ(0, status);
+        status = dlb_wave_read_data(&theWaveFile, bufferMemory, bufferByteCount, &readCount);
+        ASSERT_EQ(0, status);
+        ASSERT_EQ(bufferByteCount, readCount);
+
+        status = OpenFrameCaptor();
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+
+        dlb_pmd_metadata_set *pmds = nullptr;
+        dlb_pmd_blob_descriptor descr;
+
+        ::memset(&descr, 0, sizeof(descr));
+        descr.number_of_samples = sampleCount;
+        descr.number_of_channels = static_cast<uint16_t>(channelCount);
+        descr.bit_depth = static_cast<uint8_t>(bitDepth);
+        status = dlb_pmd_frame_captor_capture(&pmds, theCaptor, &descr, bufferMemory);
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+    }
+}
+
+#if 0
+TEST_F(DlbPmdCapture02, SliceItSadm)
+{
+    // TODO: test signal needs to be regenerated
+    static const char *testFileName = "D:\\data\\PMD\\PMDLIB-120\\8ch_square_1min_sadm.wav";
+    FILE *f = ::fopen(testFileName, "r");
+
+    if (f != nullptr)
+    {
+        // TODO: sanity checks on the captured metadata set...
+
+        ::fclose(f);
+
+        bool opened;
+        int status;
+
+        opened = OpenWaveFile(testFileName);
+        ASSERT_TRUE(waveFileIsOpen);
+
+        size_t channelCount = dlb_wave_get_channel_count(&theWaveFile);
+        size_t bitDepth = dlb_wave_get_bit_depth(&theWaveFile);
+        size_t frameCount = dlb_wave_get_num_frames(&theWaveFile);
+        size_t frameByteCount = (bitDepth / CHAR_BIT) * channelCount;
+        size_t bufferByteCount = frameByteCount * sampleCount;
+        size_t startFrame = (frameCount / 3) - 299;
+        size_t readCount;
+
+        bufferMemory = new char[bufferByteCount];
+        ASSERT_NE(nullptr, bufferMemory);
+        ::memset(bufferMemory, 0, bufferByteCount);
+
+        status = dlb_wave_seek_to_frame(&theWaveFile, startFrame);
+        ASSERT_EQ(0, status);
+        status = dlb_wave_read_data(&theWaveFile, bufferMemory, bufferByteCount, &readCount);
+        ASSERT_EQ(0, status);
+        ASSERT_EQ(bufferByteCount, readCount);
+
+        status = OpenFrameCaptor();
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+
+        dlb_pmd_metadata_set *pmds = nullptr;
+        dlb_pmd_blob_descriptor descr;
+
+        ::memset(&descr, 0, sizeof(descr));
+        descr.number_of_samples = sampleCount;
+        descr.number_of_channels = static_cast<uint16_t>(channelCount);
+        descr.bit_depth = static_cast<uint8_t>(bitDepth);
+        status = dlb_pmd_frame_captor_capture(&pmds, theCaptor, &descr, bufferMemory);
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+    }
+}
+#endif
+
+TEST_F(DlbPmdCapture02, SliceItPmdRaw)
+{
+    static const char *testFileName = "D:\\data\\PMD\\PMDLIB-120\\pmd.raw";
+
+    theBinaryFile = ::fopen(testFileName, "rb");
+    if (theBinaryFile != nullptr)
+    {
+        // TODO: sanity checks on the captured metadata set...
+
+        size_t channelCount = 2;
+        size_t bitDepth = 32;
+        size_t frameByteCount = (bitDepth / CHAR_BIT) * channelCount;
+        size_t bufferByteCount = frameByteCount * sampleCount;
+        size_t readCount;
+        int status;
+
+        bufferMemory = new char[bufferByteCount];
+        ASSERT_NE(nullptr, bufferMemory);
+        ::memset(bufferMemory, 0, bufferByteCount);
+
+        readCount = ::fread(bufferMemory, 1, bufferByteCount, theBinaryFile);
+        ASSERT_EQ(bufferByteCount, readCount);
+
+        status = OpenFrameCaptor();
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+
+        dlb_pmd_metadata_set *pmds = nullptr;
+        dlb_pmd_blob_descriptor descr;
+
+        ::memset(&descr, 0, sizeof(descr));
+        descr.number_of_samples = sampleCount;
+        descr.number_of_channels = static_cast<uint16_t>(channelCount);
+        descr.bit_depth = static_cast<uint8_t>(bitDepth);
+        descr.big_endian = PMD_TRUE;
+        status = dlb_pmd_frame_captor_capture(&pmds, theCaptor, &descr, bufferMemory);
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+    }
+}
+
+TEST_F(DlbPmdCapture02, SliceItSadmRaw)
+{
+    static const char *testFileName = "D:\\data\\PMD\\PMDLIB-120\\sadm.raw";
+
+    theBinaryFile = ::fopen(testFileName, "rb");
+    if (theBinaryFile != nullptr)
+    {
+        // TODO: sanity checks on the captured metadata set...
+
+        size_t channelCount = 2;
+        size_t bitDepth = 32;
+        size_t frameByteCount = (bitDepth / CHAR_BIT) * channelCount;
+        size_t bufferByteCount = frameByteCount * sampleCount;
+        size_t readCount;
+        int status;
+
+        bufferMemory = new char[bufferByteCount];
+        ASSERT_NE(nullptr, bufferMemory);
+        ::memset(bufferMemory, 0, bufferByteCount);
+
+        readCount = ::fread(bufferMemory, 1, bufferByteCount, theBinaryFile);
+        ASSERT_EQ(bufferByteCount, readCount);
+
+        status = OpenFrameCaptor();
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+
+        dlb_pmd_metadata_set *pmds = nullptr;
+        dlb_pmd_blob_descriptor descr;
+
+        ::memset(&descr, 0, sizeof(descr));
+        descr.number_of_samples = sampleCount;
+        descr.number_of_channels = static_cast<uint16_t>(channelCount);
+        descr.bit_depth = static_cast<uint8_t>(bitDepth);
+        descr.big_endian = PMD_TRUE;
+        status = dlb_pmd_frame_captor_capture(&pmds, theCaptor, &descr, bufferMemory);
+        ASSERT_EQ(DLB_PMD_FRAME_CAPTOR_STATUS_OK, status);
+    }
+}
+#endif

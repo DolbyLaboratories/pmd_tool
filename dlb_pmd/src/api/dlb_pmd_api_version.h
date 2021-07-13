@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 
 #define DLB_PMD_VERSION_EPOCH (1)
 #define DLB_PMD_VERSION_MAJOR (7)
-#define DLB_PMD_VERSION_MINOR (3)
-#define DLB_PMD_VERSION_BUILD (34)
+#define DLB_PMD_VERSION_MINOR (4)
+#define DLB_PMD_VERSION_BUILD (5)
 
 #endif /*__DLB_PMD_API_VERSION_H__ */

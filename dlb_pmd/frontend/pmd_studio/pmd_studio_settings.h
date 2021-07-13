@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,23 @@
 
 struct pmd_studio_settings;
 
+
+/* This module has to own the common device settings as devices could be swapped in and out */
+/* This could be moved to a pmd_studio_common_device.h in the future */
+
+struct pmd_studio_common_device_settings
+{
+    float latency;
+    unsigned int frames_per_buffer;
+};
+
+void
+pmd_studio_settings_edit_device_settings
+    (uiMenuItem *item
+    ,uiWindow *w
+    ,void *data
+    );
+
 void
 edit_settings
     (uiMenuItem *item
@@ -56,11 +73,16 @@ edit_settings
     ,void *data
     );
 
+
 dlb_pmd_success
 pmd_studio_settings_init(pmd_studio_settings **settings);
 
 dlb_pmd_success
 pmd_studio_settings_close(pmd_studio_settings *settings);
+
+
+
+
 
 
 #endif /* PMD_STUDIO_SETTINGS_H_ */

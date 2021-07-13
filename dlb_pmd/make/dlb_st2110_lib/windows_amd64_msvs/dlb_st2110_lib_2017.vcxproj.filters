@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+<Filter Include="dlb_st2110">
+<UniqueIdentifier>{38912cde-d607-3607-979e-274c431a3f52}</UniqueIdentifier></Filter>
+<Filter Include="dlb_st2110\0.9">
+<UniqueIdentifier>{bfed4c39-adb5-3fb0-8b71-0b219d8b9444}</UniqueIdentifier></Filter>
+<Filter Include="dlb_st2110\0.9\dlb_st2110">
+<UniqueIdentifier>{5c6f12d5-c268-38aa-a992-8411124efb19}</UniqueIdentifier></Filter>
+<Filter Include="dlb_st2110\0.9\dlb_st2110\src">
+<UniqueIdentifier>{a6b7eb4b-6371-32b3-b35c-5c92f93f736f}</UniqueIdentifier></Filter></ItemGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\audio_buffer.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_aoip_services.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_hardware.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_logging.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_receiver.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_sdp.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_transmitter.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\easylogging++.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\mclock.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\rav_discovery.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\sap_discovery.cpp">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClCompile></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\am824_framer.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\audio_buffer.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_aoip_services.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_api.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_hardware.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_logging.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_receiver.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_sdp.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\dlb_st2110_transmitter.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\easylogging++.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\mclock.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\rav_discovery.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_st2110\0.9\dlb_st2110\src\sap_discovery.h">
+<Filter>dlb_st2110\0.9\dlb_st2110\src</Filter></ClInclude></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup /></Project>

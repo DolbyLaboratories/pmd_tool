@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@ extern "C"{
 #include "pmd_studio.h"
 #include "pmd_studio_device.h"
 #include "pmd_studio_pvt.h"
+#include "mix_matrix.h"
 
 #include "pmd_studio_audio_outputs.h"
 #include "pmd_studio_audio_outputs_pvt.h"
@@ -1433,6 +1434,8 @@ pmd_studio_audio_outputs_update_metadata_output
         }
         else
         {
+            free(mem);
+
             // Force disable metadata output
             uiCheckboxSetChecked(mout->enable, 0);
             onEnableMetadataOutput(mout->enable, mout);

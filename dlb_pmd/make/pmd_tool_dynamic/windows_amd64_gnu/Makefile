@@ -7,8 +7,8 @@ TMP=$(BASE)
 CCDEP = $(CC)
 CFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
-DEFINES_debug = -DWIN32=1 -DWIN64=1 -D_CONSOLE=1
-DEFINES_release = -DNDEBUG=1 -DWIN32=1 -DWIN64=1 -D_CONSOLE=1
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1 -DWIN32=1 -DWIN64=1 -D_CONSOLE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1 -DWIN32=1 -DWIN64=1 -D_CONSOLE=1
 INCLUDES = -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE).
 LD = $(CC)
 LDFLAGS_debug = -m64

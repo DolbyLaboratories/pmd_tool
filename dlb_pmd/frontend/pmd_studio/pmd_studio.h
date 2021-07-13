@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,6 @@ extern "C"{
     #include "dlb_pmd_api.h"
     #include "ui.h"
     #include "model.h"
-    #include "portaudio.h"
 }
 
 #ifdef __GNUC__
@@ -55,13 +54,15 @@ extern "C"{
 #endif
 
 #define MAX_EIDS (MAX_AUDIO_BEDS + MAX_AUDIO_OBJECTS)
+#define PMD_STUDIO_MAX_FILENAME_LENGTH (256) // 256 covers limits of Windows, MacOS and Linux.
+
+#include "pmd_studio_device_consts.h" // get channel counts from device
+#include "pmd_studio_error.h"
 
 /**
  * @brief abstract pmd_studio type
  */ 
 typedef struct pmd_studio pmd_studio;
-typedef float pmd_studio_mix_matrix[][MAX_OUTPUT_CHANNELS];
-typedef float pmd_studio_mix_matrix_array[MAX_INPUT_CHANNELS][MAX_OUTPUT_CHANNELS];
 
 enum 
 pmd_studio_mode
@@ -77,6 +78,7 @@ pmd_studio_mode
 #include "pmd_studio_audio_outputs.h"
 #include "pmd_studio_device.h"
 #include "pmd_studio_settings.h"
+
 
 /* Conversion function get context back from pmd_studio but without exposing top level structure */
 pmd_studio_audio_presentations *pmd_studio_get_presentations(pmd_studio *studio);
@@ -96,130 +98,8 @@ typedef struct
        const dlb_pmd_speaker (*config_channels)[16];
 } pmd_studio_config;
 
-
-/* Mix Matrix type and methods */
-        
-static inline
-void
-pmd_studio_mix_matrix_reset
-	(pmd_studio_mix_matrix mix_matrix)
-{
-	unsigned int i,j;
-	for (i = 0 ; i < MAX_INPUT_CHANNELS ; i++)
-	{
-		for (j = 0 ; j < MAX_OUTPUT_CHANNELS ; j++)
-		{
-			mix_matrix[i][j] = 0.0;
-		}
-	}
-}
-
-static inline
-void
-pmd_studio_mix_matrix_unity
-    (pmd_studio_mix_matrix mix_matrix)
-{
-    unsigned int i,j;
-    for (i = 0 ; i < MAX_INPUT_CHANNELS ; i++)
-    {
-        for (j = 0 ; j < MAX_OUTPUT_CHANNELS ; j++)
-        {
-            if (i == j)
-            {
-                mix_matrix[i][j] = 1.0;
-            }
-            else
-            {
-                mix_matrix[i][j] = 0.0;
-            }
-        }
-    }
-}
-
-static inline
-void
-pmd_studio_mix_matrix_print
-	(pmd_studio_mix_matrix mix_matrix)
-{
-	unsigned int i,j;
-
-    printf("Outputs\tMix Matrix\n\t==== ======\n");
-    printf("|\tInputs---->\n|\n|\nV\n   ");
-    for (j = 0 ; j < MAX_INPUT_CHANNELS ; j++)
-    {
-        printf("%5u",j + 1);
-    }
-    printf("\n");
-    for (i = 0 ; i < (MAX_INPUT_CHANNELS * 5) + 3 ; i++)
-    {
-        printf("-");
-    }
-    printf("\n");
-    for (i = 0 ; i < MAX_OUTPUT_CHANNELS ; i++)
-    {
-        printf("%2u| ",i + 1);
-        for (j = 0 ; j < MAX_INPUT_CHANNELS ; j++)
-        {
-            printf("%2.2f ", mix_matrix[j][i]);
-        }
-        printf("\n");
-    }
-}
-
-
 #define PMD_STUDIO_M3DB (0.7071f)
 #define PMD_STUDIO_M6DB (0.5f)
-
-/* Error Handling */
-
-typedef enum {
-	PMD_STUDIO_OK = 0,
-	PMD_STUDIO_ERR_PA_ERROR,
-	PMD_STUDIO_ERR_ASSERT,
-	PMD_STUDIO_ERR_MEMORY,
-    PMD_STUDIO_ERR_UI,
-    PMD_STUDIO_ERR_FILE,
-    PMD_STUDIO_ERR_AUGMENTOR,
-	PMD_STUDIO_NUM_ERROR_MESSAGES
-} pmd_studio_error_code;
-
-extern const char* pmd_studio_error_messages[];
-
-
-static inline
-void
-pmd_studio_error
-	(pmd_studio_error_code err,
-	const char error_message[]
-	)
-{
-
-#ifndef NDEBUG
-	if (err == PMD_STUDIO_ERR_PA_ERROR)
-	{
-		fprintf(stderr, "%d,%s,%s,%s\n", err, error_message, pmd_studio_error_messages[err], Pa_GetErrorText(err));		
-	}
-	if (err < PMD_STUDIO_NUM_ERROR_MESSAGES)
-	{
-		fprintf(stderr, "%d,%s,%s\n", err, error_message, pmd_studio_error_messages[err]);
-	}
-	else
-	{
-		fprintf(stderr, "%d,%s\n", err, error_message);
-	}
-	exit(err);
-#else
-    (void)err; // suppress warnings
-    (void)error_message;
-#endif
-}
-
-#ifndef NDEBUG
-#define pmd_studio_warning( message )         fprintf(stderr, "Warning at line %d in file %s of function %s, %s\n", __LINE__, __FILE__, __func__, message);     
-#else
-#define pmd_studio_warning( message )
-#endif
-
 
 /* Global helper functions */
 
@@ -309,6 +189,11 @@ pmd_studio_update_model
 
 dlb_pmd_model
 *pmd_studio_get_model
+    (pmd_studio *studio
+    );
+
+uiWindow
+*pmd_studio_get_window
     (pmd_studio *studio
     );
 

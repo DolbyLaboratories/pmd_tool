@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -600,13 +600,13 @@ pmd_studio_audio_objects_refresh_ui
 
         }
 
-        if ((a->object.z ==  -1) || (a->object.z ==  1) || (a->object.z ==  0))
+        if ((a->object.z ==  1) || (a->object.z ==  0))
         {
-            uiComboboxSetSelected(a->z,       (int)((1 + a->object.z) * 10.0f));
+            uiComboboxSetSelected(a->z,       (int)((a->object.z) * 10.0f));
         }
         else 
         {
-            uiComboboxSetSelected(a->z,       (int)((1.1 + a->object.z) * 10.0f));
+            uiComboboxSetSelected(a->z,       (int)((0.1 + a->object.z) * 10.0f));
         }
 
         uiEntrySetText(a->name, a->object.name);
@@ -968,7 +968,7 @@ pmd_studio_set_obj_gain
 {
     pmd_studio_audio_objects *objs = pmd_studio_get_objects(studio);
     pmd_studio_audio_object *obj;
-    for(int i=0; i<objs->object_count; i++)
+    for(unsigned int i=0; i<objs->object_count; i++)
     {
         obj = &objs->objects[i];
         if(obj->object.id == eid)

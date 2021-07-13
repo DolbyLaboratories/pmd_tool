@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -456,7 +456,7 @@ pmd_studio_audio_beds_enable
     )
 {
     uiControlEnable(uiControl(abeds->add_bed_button));
-    for (int i = 0; i < abeds->bed_count; i++)
+    for (unsigned int i = 0; i < abeds->bed_count; i++)
     {
         uiControlEnable(uiControl(abeds->beds[i].cfg));
         uiControlEnable(uiControl(abeds->beds[i].gain));
@@ -475,7 +475,7 @@ pmd_studio_audio_beds_disable
     )
 {
     uiControlDisable(uiControl(abeds->add_bed_button));
-    for (int i = 0; i < abeds->bed_count; i++)
+    for (unsigned int i = 0; i < abeds->bed_count; i++)
     {
         uiControlDisable(uiControl(abeds->beds[i].cfg));
         uiControlDisable(uiControl(abeds->beds[i].start));

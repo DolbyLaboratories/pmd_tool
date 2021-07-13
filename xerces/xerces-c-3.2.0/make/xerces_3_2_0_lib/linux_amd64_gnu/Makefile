@@ -9,10 +9,10 @@ CCDEP = $(CC)
 CFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CXXDEP = $(CXX)
-CXXFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall
-CXXFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall
-DEFINES_debug = -DHAVE_CONFIG_H=1 -DXERCES_BUILDING_LIBRARY=1
-DEFINES_release = -DHAVE_CONFIG_H=1 -DNDEBUG=1 -DXERCES_BUILDING_LIBRARY=1
+CXXFLAGS_debug = -std=c++17 -g -ggdb3 -O0 -m64 -c -Wall
+CXXFLAGS_release = -std=c++17 -O3 -ftree-vectorize -m64 -c -Wall
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_CONFIG_H=1 -DXERCES_BUILDING_LIBRARY=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_CONFIG_H=1 -DNDEBUG=1 -DXERCES_BUILDING_LIBRARY=1
 INCLUDES = -I$(BASE)xerces/xerces-c-3.2.0/linux/x86 -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/FileManagers -I$(BASE)xerces/xerces-c-3.2.0/src
 
 

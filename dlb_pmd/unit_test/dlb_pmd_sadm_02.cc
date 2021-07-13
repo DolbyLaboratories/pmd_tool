@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -103,6 +103,135 @@ static const char *smallXML =
 "    <audioTrackUID UID=\"ATU_00000002\">\n"
 "      <audioChannelFormatIDRef>AC_00011002</audioChannelFormatIDRef>\n"
 "      <audioPackFormatIDRef>AP_00011000</audioPackFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"  </audioFormatExtended>\n"
+"</frame>\n"
+;
+
+static const char *stereo_2D_ADM =
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+"<frame>\n"
+"  <frameHeader>\n"
+"    <frameFormat frameFormatID=\"FF_00000000001\" type=\"full\" start=\"00:00:00.00000\" duration=\"00:00:00.02000\" flowID=\"f8cc7821-09b2-41cb-bd42-ec35e9fcb9a8\">\n"
+"    </frameFormat>\n"
+"    <transportTrackFormat transportID=\"TP_0001\" transportName=\"X\" numIDs=\"4\" numTracks=\"4\">\n"
+"      <audioTrack trackID=\"1\">\n"
+"        <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"2\">\n"
+"        <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"3\">\n"
+"        <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"4\">\n"
+"        <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"    </transportTrackFormat>\n"
+"  </frameHeader>\n"
+"  <audioFormatExtended version=\"ITU-R_BS.2076-2\">\n"
+"    <audioProgramme audioProgrammeID=\"APR_1001\" audioProgrammeName=\"English\" audioProgrammeLanguage=\"en\">\n"
+"      <audioProgrammeLabel language=\"fr\">Anglais</audioProgrammeLabel>\n"
+"      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1002</audioContentIDRef>\n"
+"    </audioProgramme>\n"
+"    <audioProgramme audioProgrammeID=\"APR_1002\" audioProgrammeName=\"Francais\" audioProgrammeLanguage=\"fr\">\n"
+"      <audioProgrammeLabel language=\"en\">French</audioProgrammeLabel>\n"
+"      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1003</audioContentIDRef>\n"
+"    </audioProgramme>\n"
+"    <audioContent audioContentID=\"ACO_1001\" audioContentName=\"Stereo M+E\">\n"
+"      <dialogue mixedContentKind=\"2\">2</dialogue>\n"
+"      <audioObjectIDRef>AO_1001</audioObjectIDRef>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1002\" audioContentName=\"English Dialog\">\n"
+"      <dialogue dialogueContentKind=\"1\">1</dialogue>\n"
+"      <audioObjectIDRef>AO_1002</audioObjectIDRef>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1003\" audioContentName=\"French Dialog\">\n"
+"      <dialogue dialogueContentKind=\"1\">1</dialogue>\n"
+"      <audioObjectIDRef>AO_1003</audioObjectIDRef>\n"
+"    </audioContent>\n"
+"    <audioObject audioObjectID=\"AO_1001\" audioObjectName=\"Stereo M+E\">\n"
+"      <gain gainUnit=\"dB\">0.00</gain>\n"
+"      <audioPackFormatIDRef>AP_00011001</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioObject audioObjectID=\"AO_1002\" audioObjectName=\"English Dialog\">\n"
+"      <gain gainUnit=\"dB\">0.00</gain>\n"
+"      <audioPackFormatIDRef>AP_00011002</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioObject audioObjectID=\"AO_1003\" audioObjectName=\"French Dialog\">\n"
+"      <gain gainUnit=\"dB\">0.00</gain>\n"
+"      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioPackFormat audioPackFormatID=\"AP_00011001\" audioPackFormatName=\"RoomCentric_2.0\" typeLabel=\"0001\" typeDefinition=\"DirectSpeakers\">\n"
+"      <audioChannelFormatIDRef>AC_00011001</audioChannelFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00011002</audioChannelFormatIDRef>\n"
+"    </audioPackFormat>\n"
+"    <audioPackFormat audioPackFormatID=\"AP_00011002\" audioPackFormatName=\"RoomCentric_Center\" typeLabel=\"0001\" typeDefinition=\"DirectSpeakers\">\n"
+"      <audioChannelFormatIDRef>AC_00011003</audioChannelFormatIDRef>\n"
+"    </audioPackFormat>\n"
+"    <audioPackFormat audioPackFormatID=\"AP_00031001\" audioPackFormatName=\"Dialog Object\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>\n"
+"    </audioPackFormat>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00011001\" audioChannelFormatName=\"RoomCentricLeft\" typeLabel=\"0001\" typeDefinition=\"DirectSpeakers\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00011001_00000001\">\n"
+"        <speakerLabel>RC_L</speakerLabel>\n"
+"        <gain gainUnit=\"dB\">0.00</gain>\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">-1.00</position>\n"
+"        <position coordinate=\"Y\">1.00</position>\n"
+"        <position coordinate=\"Z\">0.00</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00011002\" audioChannelFormatName=\"RoomCentricRight\" typeLabel=\"0001\" typeDefinition=\"DirectSpeakers\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00011002_00000001\">\n"
+"        <speakerLabel>RC_R</speakerLabel>\n"
+"        <gain gainUnit=\"dB\">0.00</gain>\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">1.00</position>\n"
+"        <position coordinate=\"Y\">1.00</position>\n"
+"        <position coordinate=\"Z\">0.00</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00011003\" audioChannelFormatName=\"RoomCentricCenter\" typeLabel=\"0001\" typeDefinition=\"DirectSpeakers\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00011003_00000001\">\n"
+"        <speakerLabel>RC_C</speakerLabel>\n"
+"        <gain gainUnit=\"dB\">0.00</gain>\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">0.00</position>\n"
+"        <position coordinate=\"Y\">1.00</position>\n"
+"        <position coordinate=\"Z\">0.00</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00031001\" audioChannelFormatName=\"Dialog Object\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00031001_00000001\">\n"
+"        <gain gainUnit=\"dB\">0.00</gain>\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">0.00</position>\n"
+"        <position coordinate=\"Y\">1.00</position>\n"
+"        <position coordinate=\"Z\">0.00</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"    <audioTrackUID UID=\"ATU_00000001\">\n"
+"      <audioPackFormatIDRef>AP_00011001</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00011001</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000002\">\n"
+"      <audioPackFormatIDRef>AP_00011001</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00011002</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000003\">\n"
+"      <audioPackFormatIDRef>AP_00011002</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00011003</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000004\">\n"
+"      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>\n"
 "    </audioTrackUID>\n"
 "  </audioFormatExtended>\n"
 "</frame>\n"
@@ -485,4 +614,39 @@ TEST_F(DlbPmdSadm02, BitstreamEncodeDecodeFrameMode)
     ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
     compare = ::strcmp(decodedXml, compareXml);
     EXPECT_EQ(0, compare);
+}
+
+TEST_F(DlbPmdSadm02, InOutAndCompareADM)
+{
+    const char *inputXMLFileName  = "stereo_2D_ADM_sadm_02_input.xml";
+    const char *outputXMLFileName = "stereo_2D_ADM_sadm_02_output.xml";
+    dlb_pmd_success success;
+    int compare;
+    size_t sz;
+
+    // Write test input file
+    success = WriteStringToFile(inputXMLFileName, stereo_2D_ADM);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    // Create the PMD model
+    sz = ::dlb_pmd_query_mem_constrained(&limits);
+    pmdModelMemory = new uint8_t[sz];
+    ASSERT_NE(nullptr, pmdModelMemory);
+    ::dlb_pmd_init_constrained(&pmdModel, &limits, pmdModelMemory);
+
+    // Ingest test XML into the PMD model
+    success = ::dlb_pmd_sadm_file_read(inputXMLFileName, pmdModel, errorCallback, NULL);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    // Write test XML to file
+    success = ::dlb_pmd_sadm_file_write(outputXMLFileName, pmdModel);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    // Compare XML files
+    success = ReadStringFromFile(decodedXml, sizeof(decodedXml) - 1, outputXMLFileName);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+    success = ReadStringFromFile(compareXml, sizeof(compareXml) - 1, inputXMLFileName);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+    compare = ::strcmp(decodedXml, compareXml);
+    EXPECT_NE(0, compare);  // putting S-ADM through PMD model produces different results
 }
