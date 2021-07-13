@@ -6,10 +6,10 @@ TMP=$(BASE)
 %/..:; @test $(dir $(basename $(@D))) | mkdir -p $(dir $(basename $(@D)))
 ARFLAGS = -rc
 CXXDEP = $(CXX)
-CXXFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall
-CXXFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall
-DEFINES_debug = -DWIN32=1 -DWIN64=1 -D_LIB=1
-DEFINES_release = -DNDEBUG=1 -DWIN32=1 -DWIN64=1 -D_LIB=1
+CXXFLAGS_debug = -std=c++17 -g -ggdb3 -O0 -m64 -c -Wall
+CXXFLAGS_release = -std=c++17 -O3 -ftree-vectorize -m64 -c -Wall
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1 -DWIN32=1 -DWIN64=1 -D_LIB=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1 -DWIN32=1 -DWIN64=1 -D_LIB=1
 INCLUDES = -I$(BASE)googletest/1.8.0/include -I$(BASE)googletest/1.8.0/include -I$(BASE)googletest/1.8.0
 
 

@@ -1,5 +1,5 @@
-PMD 1.7.3.34 release notes
-==========================
+PMD 1.7.4 release notes
+=======================
 
 Professional Metadata (PMD) is a format for specifying and
 transmitting 'next-generation' audio authoring metadata in
@@ -19,11 +19,17 @@ object-based audio subset of the serialized Audio Definition Model
 
 Supported/Tested Platforms:
 ---------------------------
+PMD Library
 - 64-bit Windows, Microsoft Visual Studio 2015 and 2017 compilers
 - 64-bit OSX, clang compiler
 - 64-bit Linux, GNU compiler
 - 32-bit Linux, GNU compiler
 - Build files for other platforms may be provided, but are not tested
+
+PMD Studio
+- 64-bit Linux, GNU compiler with PortAudio support
+- 64-bit Linux with NVidia Rivermax enabled ConnectX NIC
+- 64-bit OSX, clang compiler
 
 Components:
 -----------
@@ -31,10 +37,10 @@ Components:
 - pmd_tool library: higher-level file-based operations, static and dynamic
   link versions
 - pmd_tool application: convert between various file-based representations
-- pmd_studio application: GUI-based tool for creating PMD and S-ADM XML files,
-  streaming audio containing PMD or S-ADM metadata, and interfacing with
-  Lawo consoles and applications via the Ember+ library
-- pmd_realtime application: experimental code for streaming PMD with PCM
+- pmd_studio/pmd_studio_rivermax applications: GUI-based tool for creating
+  PMD and S-ADM XML files, streaming audio containing PMD or S-ADM metadata,
+  interface with Lawo consoles and applications via the Ember+ library, and
+  interface to audio over IP via the Rivermax library and drivers
 
 Test applications:
 ------------------
@@ -48,13 +54,22 @@ Known issues:
 -------------
 - To build the test applications on Linux, you need the ICU unicode library and
   header files (http://site.icu-project.org/home)
-- For pmd_realtime on Linux you need ALSA (https://alsa-project.org/wiki/Main_Page)
-- pmd_studio will not build on Windows
+- pmd_studio will not build on Windows and OSX support is limited
+
+Changes since 1.7.3.34:
+-----------------------
+- Added NVIDIA Rivermax support to the PMD Studio Application so that
+  SMPTE ST 2110-30/31 streams are natively supported. Professional audio card
+  support is still provided using Portaudio but via a different build. See the
+  [PMD Studio Quick Start Guide](PmdStudioQsg.md) for more information and
+  requirements.
+
 
 Changes since 1.7.3.33:
 -----------------------
-- Revise a section of documentation in the PmdStudioQsg.md file.
+- Remove some misleading documentation in the PmdStudioQsg.md file.
 - Add "por" to the list of supported language codes in pmd_studio.
+- Include string.h in sadm_bitstream_encoder.c to eliminate build warnings.
 - Rewrite audioChannelFormat parsing code in the S-ADM reader to make typeLabel
   and typeDefinition optional; and if both are present, check that they are
   consistent.
@@ -240,8 +255,8 @@ Changes since 1.2.0:
 - fix valgrind warning
 - fix clang compiler warnings
 - correct the allowed range of LUFS values in the PMD loudness API
-	- from [-102.3, 0.0]
-	- to [-102.4, +102.3]
+  - from [-102.3, 0.0]
+  - to [-102.4, +102.3]
 - fix MGI ingestion error: we can now generate presentations after receiving
   the first MGI packet, not waiting for 8.
 

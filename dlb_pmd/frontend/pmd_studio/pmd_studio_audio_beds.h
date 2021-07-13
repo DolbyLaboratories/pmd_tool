@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #include "dlb_pmd_api.h"
 #include "pmd_studio_limits.h"
 #include "pmd_studio.h"
+#include "mix_matrix.h"
 
 typedef struct pmd_studio_audio_beds pmd_studio_audio_beds;
     

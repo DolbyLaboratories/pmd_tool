@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@
 #include "sadm_bitstream_encoder.h"
 #include "zlib.h"
 
+#include <string.h>
 #include <assert.h>
 #include <string.h>
 
@@ -52,10 +53,10 @@
 static
 int
 pcm_sadm_get_buffer
-    (void *arg
-    ,char *pos
-    ,char **buf
-    ,size_t *capacity
+    (void       *arg
+    ,char       *pos
+    ,char      **buf
+    ,size_t     *capacity
     )
 {
     sadm_bitstream_encoder *sadm = (sadm_bitstream_encoder *)arg;
@@ -82,12 +83,9 @@ pcm_sadm_get_buffer
 }
 
 
-/**
- * @brief determine memory requirements for the sADM bitstream encoder
- */
-size_t                                    /** @return size of memory required */
+size_t
 sadm_bitstream_encoder_query_mem
-    (dlb_pmd_model_constraints *limits    /**< [in] PMD model limits */
+    (dlb_pmd_model_constraints  *limits
     )
 {
     return sizeof(sadm_bitstream_encoder)
@@ -95,14 +93,11 @@ sadm_bitstream_encoder_query_mem
 }
 
 
-/**
- * @brief initialize the sADM bitstream encoder
- */
 dlb_pmd_success
 sadm_bitstream_encoder_init
-    (dlb_pmd_model_constraints *limits
-    ,void *mem
-    ,sadm_bitstream_encoder **gen
+    (dlb_pmd_model_constraints  *limits
+    ,void                       *mem
+    ,sadm_bitstream_encoder    **gen
     )
 {
     sadm_bitstream_encoder *g;
@@ -120,15 +115,11 @@ sadm_bitstream_encoder_init
 }
 
 
-/**
- * @brief helper function to compress the encoder's XML buffer to the
- * given byte buffer
- */
-int                                /** @return bytes used */
+int
 compress_sadm_xml
-   (sadm_bitstream_encoder *enc    /**< [in] bitstream encoder */
-   ,uint8_t *buf                   /**< [in] output compression buffer */
-   )
+    (sadm_bitstream_encoder *enc
+    ,uint8_t                *buf
+    )
 {
     z_stream s;
     int bytecount;
@@ -180,16 +171,34 @@ compress_sadm_xml
 }
 
 
-/**
- * @brief function to encapsulate the process of generating an sADM bitstream
- */
-int                                 /** @return bytes used, or 0 if none */
+int
+sadm_bitstream_encoder_payload
+    (sadm_bitstream_encoder *enc
+    ,dlb_pmd_model          *model
+    ,uint8_t                *outbuf
+    )
+{
+    int byte_size;
+
+    enc->size = sizeof(enc->xmlbuf);
+    if (dlb_pmd_sadm_writer_write(enc->w, model, pcm_sadm_get_buffer, 0, enc))
+    {
+        return 0;
+    }
+
+    byte_size = compress_sadm_xml(enc, outbuf);
+
+    return byte_size;
+}
+
+
+int
 sadm_bitstream_encoder_encode
-    (pmd_s337m *s337m               /**< [in] S337m abstraction */
-    ,sadm_bitstream_encoder *enc    /**< [in] bitstream encoder */
-    ,dlb_pmd_model *model           /**< [in] model to write */
-    ,dlb_pmd_frame_rate rate        /**< [in] frame rate */
-    ,uint8_t *outbuf                /**< [in] compression buffer */
+    (pmd_s337m              *s337m
+    ,sadm_bitstream_encoder *enc
+    ,dlb_pmd_model          *model
+    ,dlb_pmd_frame_rate      rate
+    ,uint8_t                *outbuf
     )
 {
     size_t min_frame_size = pmd_s337m_min_frame_size(rate);

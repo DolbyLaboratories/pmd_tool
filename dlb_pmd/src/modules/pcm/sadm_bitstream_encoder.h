@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -62,8 +62,8 @@ extern "C" {
  */
 typedef struct
 {
-    char xmlbuf[MAX_DATA_BYTES * DLB_PMD_SADM_XML_COMPRESSION]; /**< sADM precompression buffer */
-    size_t size;
+    char                 xmlbuf[MAX_DATA_BYTES * DLB_PMD_SADM_XML_COMPRESSION]; /**< sADM precompression buffer */
+    size_t               size;
     dlb_pmd_sadm_writer *w;
 } sadm_bitstream_encoder;
 
@@ -72,9 +72,9 @@ typedef struct
  * @brief determine memory requirements for the sADM bitstream encoder
  */
 TEST_DLL_ENTRY
-size_t                                    /** @return size of memory required */
+size_t                              /** @return size of memory required */
 sadm_bitstream_encoder_query_mem
-    (dlb_pmd_model_constraints *limits    /**< [in] PMD model limits */
+    (dlb_pmd_model_constraints  *limits     /**< [in] PMD model limits */
     );
 
 
@@ -84,9 +84,9 @@ sadm_bitstream_encoder_query_mem
 TEST_DLL_ENTRY
 dlb_pmd_success
 sadm_bitstream_encoder_init
-    (dlb_pmd_model_constraints *limits
-    ,void *mem
-    ,sadm_bitstream_encoder **gen
+    (dlb_pmd_model_constraints  *limits
+    ,void                       *mem
+    ,sadm_bitstream_encoder    **gen
     );
 
 
@@ -95,11 +95,23 @@ sadm_bitstream_encoder_init
  * given byte buffer
  */
 TEST_DLL_ENTRY
-int                                /** @return bytes used */
+int                                 /** @return bytes used */
 compress_sadm_xml
-   (sadm_bitstream_encoder *enc    /**< [in] bitstream encoder */
-   ,uint8_t *buf                   /**< [in] output compression buffer */
-   );
+    (sadm_bitstream_encoder *enc    /**< [in] bitstream encoder */
+    ,uint8_t                *buf    /**< [in] output compression buffer */
+    );
+
+
+/**
+ * @brief function to encapsulate the process of generating a compressed sADM payload
+ */
+TEST_DLL_ENTRY
+int                                 /** @return bytes used, or 0 if none */
+sadm_bitstream_encoder_payload
+    (sadm_bitstream_encoder *enc    /**< [in]  bitstream encoder */
+    ,dlb_pmd_model          *model  /**< [in]  model to write */
+    ,uint8_t                *outbuf /**< [out] compression buffer - must be large enough! (suggested: >= 12012) */
+    );
 
 
 /**

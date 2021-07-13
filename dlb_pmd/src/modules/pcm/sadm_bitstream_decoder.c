@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@ static
 void
 sadm_bitstream_decoder_error_callback
     (const char *msg
-    ,void *arg
+    ,void       *arg
     )
 {
     sadm_bitstream_decoder *dec = (sadm_bitstream_decoder *)arg;
@@ -55,12 +55,9 @@ sadm_bitstream_decoder_error_callback
 }
 
 
-/**
- * @brief determine memory requirements for the sADM bitstream decoder
- */
-size_t                                    /** @return size of memory required */
+size_t
 sadm_bitstream_decoder_query_mem
-    (dlb_pmd_model_constraints *limits    /**< [in] PMD model limits */
+    (dlb_pmd_model_constraints  *limits
     )
 {
     return sizeof(sadm_bitstream_decoder)
@@ -68,14 +65,11 @@ sadm_bitstream_decoder_query_mem
 }
 
 
-/**
- * @brief initialize the sADM bitstream decoder
- */
 dlb_pmd_success
 sadm_bitstream_decoder_init
-    (dlb_pmd_model_constraints *limits
-    ,void *mem
-    ,sadm_bitstream_decoder **dec
+    (dlb_pmd_model_constraints  *limits
+    ,void                       *mem
+    ,sadm_bitstream_decoder    **dec
     )
 {
     sadm_bitstream_decoder *d;
@@ -93,15 +87,11 @@ sadm_bitstream_decoder_init
 }
 
 
-/**
- * @brief helper function to compress the decoder's XML buffer to the
- * given byte buffer
- */
-int                                /** @return bytes used */
+int
 decompress_sadm_xml
-   (sadm_bitstream_decoder *dec    /**< [in] bitstream decoder */
-   ,uint8_t *buf                   /**< [in] input compressed data */
-   ,size_t datasize                /**< [in] size of compressed input in bytes */
+   (sadm_bitstream_decoder  *dec
+   ,uint8_t                 *buf
+   ,size_t                   datasize
    )
 {
     z_stream s;
@@ -148,17 +138,14 @@ decompress_sadm_xml
 }
 
 
-/**
- * @brief function to encapsulate the process of generating an sADM bitstream
- */
-dlb_pmd_success                     /** @return 0 on success, 1 on failure */
+dlb_pmd_success
 sadm_bitstream_decoder_decode
-    (sadm_bitstream_decoder *dec            /**< [in] bitstream decoder */
-    ,uint8_t *bitstream                     /**< [in] bits to decode */
-    ,size_t datasize                        /**< [in] number of bytes in bitstream */
-    ,dlb_pmd_model *model                   /**< [in] model to write */
-    ,sadm_bitstream_dec_callback callback   /**< [in] status callback function - may be NULL */
-    ,void *cbarg                            /**< [in] callback state argument */
+    (sadm_bitstream_decoder         *dec
+    ,uint8_t                        *bitstream
+    ,size_t                          datasize
+    ,dlb_pmd_model                  *model
+    ,sadm_bitstream_dec_callback     callback
+    ,void                           *cbarg
     )
 {
     dlb_pmd_success result;

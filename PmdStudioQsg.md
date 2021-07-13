@@ -1,5 +1,5 @@
 # PMD Studio Quick Start Guide
-# Version 1.7.3
+# Version 1.7.4
 
 PMD Studio is an application for authoring professional metadata.
 It provides a simple user interface for configuring audio beds, objects
@@ -30,15 +30,23 @@ return focus. The menu-bar will now respond normally.
 ### Real-time interface
 
 The application supports real-time input of pre-rendered audio and combined
-output of rendered audio and metadata. A Professional multichannel sound card
-is required with drivers supporting either ALSA for Linux or Core Audio for
-Mac. The presence of the drivers can be checked using the -dl switch or
+output of rendered audio and metadata.
+
+To support real-time I/O, one of the following hardware options is required
+
+- A Professional multichannel sound card with ALSA (Linux) or Core Audio Drivers (Mac)
+- An NVIDIA ConnectX SmartNIC supporting the Rivermax SDK.
+
+#### Professional Multichannel Sound card
+
+The presence of the drivers can be checked using the -dl switch or
 checking the device lists in the settings panel. The clock settings must
 be sane such that input and output intefaces are using the same clock. The
-application has been tested using an RME HDSP MADI card with Ubuntu 19.10.
-For AES3 I/O the Lynx AES16 and RME AES32 cards are recommend although these
-have not been tested. For AES67 / SMPTE 2110-30/31 support the Digigram LX-IP
-is recommended although this also has not been tested.
+application has been tested on the folowing hardware:
+
+- RME HDSP MADI card on Ubuntu
+- Digigram LX-IP with on Ubuntu
+- BlackMagic Decklink 4K Extreme on OSX
 
 ## Running the Application
 
@@ -46,15 +54,13 @@ PMD Studio can be simply evoked from the command line without any options.
 Some basic options are provided at the command line but most of these can
 be overidden with settings in the application.
 
+## Options
+
 * -fb                  File-based mode (overrides streaming options)
-* -di <name>           Name of device to use for input
-* -do <name>           Name of device to use for output
-* -dl                  List input and output device names and details
-* -c <channels>        Number of input and output channels
 * -f <filename>        Filename of file to load on launch
 * -l <latency>         Input and output latency in seconds
+* -device <option>     Device specific option
 * -buf <samples>       Buffer size in samples
-* -am824               Select am824 framing for metadata output (for use with ALSA AES67 driver)
 
 ### File-based mode
 This mode is forced when no streaming audio interfaces can be found. The -fb
@@ -64,20 +70,8 @@ not available. XML files can be opened, edit and saved. Certain metadata
 options are only available in file-based mode. These include divergence for
 objects and extra configuration options for beds.
 
-### Device Selection
-The -di and -do are used to select the streaming interfaces for input and
-output. Names are used to identify the devices. A list of the names of
-available devices can be obtained using the -dl switch.
-These settings are normally obtaining from a configuration file that
-is loaded upon invocation. The input and output device selection can be
-modified from the settings within the application.
-
-### Channels
-By default PMD Studio tries to acquire 32 input and output mono channels for
-use by the application. When used with AES3 or SDI sound cards it may be that
-32 channels are not available. In this case the number of channels available to
-the application can be limited by this setting. The number of input and output
-channels available to the application is always the same.
+### Device Specific Options
+-device list provides more information about the available hardware devices
 
 ### Latency and buffer size
 These settings can be used to alter the latency PMD Studio requests from the
@@ -88,17 +82,6 @@ system decreasing latency may introduce audible artifacts. On older or slower
 systems it may be necessary to increase latency to eliminate artifacts. A
 modern multi-core system should have little difficulty with the default
 settings.
-
-### AM824 mode
-This mode should be selected when the application is used with the ALSA
-AES67 driver available [here](https://github.com/bondagit/aes67-linux-daemon).
-The use of this switch rearranges the 24-bit metadata output to be compatible
-with AM824 or SMPTE ST 2110-31 rather than regular SMPTE ST 337 output which
-is the default. In AM824 mode the top 8 bits are used for the AES3 PCUV bits
-that carry the channel status. The metadata output is always marked as
-non-audio and Professional in the AES3 channel status. In the default mode
-only the audio bits are transmitted to be directly compatible with AES3, SDI
-and MADI etc.
 
 ## Basic Operation
 
@@ -171,6 +154,30 @@ menu the last known settings are saved in 'pmd_studio.cfg' in the current direct
 This file is loaded by default when PMD Studio is invoked to restore the last known
 settings.
 
+#### Audio Device Configuration
+
+When using a professional sound card an *Audio Device Configuration* menu option will
+be available. This allows selection of the input and output audio devices and the
+number of channels to be used.
+
+#### Stream Settings
+
+When using an NVIDIA Rivermax enabled NIC, a stream setting menu option is available.
+This allows selection of the input and output streams. Input streams are discovered
+via multicast DNS and RTSP (Ravenna) or SAP (Dante). Only a single input stream can
+be selected but multiple output streams can be defined. For each outputs stream the
+name of the stream is defined as well as the output codec to be used and the channel
+allocation. Channels are automatically allocated in order based on the number of
+channels in each stream. Available codecs are SMPTE ST 2110-30/AES 67 with either
+16 or 24 bits or SMPTE ST 2110-31/AM824. The former should not be used for metadata
+outputs as SMPTE ST 2110-30 / AES67 is defined to only carry linear PCM. Output
+streams are advertised on the network using both Ravenna and Dante methods.
+
+Once the stream settings are applied the IP subsystem will be restarted with the
+new settings. A progress bar may be displayed when searching for a Dante stream. This
+process can take up to 30 seconds. If the input stream cannot be acquired, an error
+message will be displayed.
+
 #### Update
 
 The update option creates
@@ -205,17 +212,24 @@ metadata configuration is fixed except for gain and positional settings.
 ### Ember+ client
 
 PMD Studio 1.7.3 introduces a simple Ember+ consumer (client) that allows an Ember+ 
-provider (server) on the same network to control a restricted set of metadata values*.
+provider (server) on the same network to control a restricted set of metadata values.
 The server IP address and port are configured from the settings panel under the 
 file menu. Connection to the server or console is initiated using the Connect option 
 under "Console" on the menu-bar.
 
-
-**NOTE: The module is currently hard-coded for provider software that is not publicly 
-available, and so not intended for use by the average user.*
+NOTE: The module is currently hard-coded for provider software that is not publicly 
+available, and so not intended for use by the average user.
 
 ## Known Limitations
 
 OSX Catalina requires focus to be moved from and to application to enable menu-bar.
 Audio elements and outputs can be added to the user interface but cannot be
 removed. Unused elements and outputs should just be disabled.
+
+Metadata frames are always sent at 25fps.
+
+## Trademarks
+
+NVIDIA, Rivermax and ConnectX are trademarks and/or registered trademarks of NVIDIA Corporation in the U.S. and/or other countries.
+BlackMagic and Decklink are trademarks and/or registered trademarks of Blackmagic Design Pty Ltd. 
+Digigram is a registered trademark of Digigram S.A.

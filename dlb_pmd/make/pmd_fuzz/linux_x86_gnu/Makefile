@@ -8,10 +8,10 @@ CCDEP = $(CC)
 CFLAGS_debug = -D_GNU_SOURCE -msse2 -g -ggdb3 -O0 -m32 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CFLAGS_release = -D_GNU_SOURCE -msse2 -O3 -ftree-vectorize -m32 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CXXDEP = $(CXX)
-CXXFLAGS_debug = -std=c++11 -msse2 -g -ggdb3 -O0 -m32 -c -Wall
-CXXFLAGS_release = -std=c++11 -msse2 -O3 -ftree-vectorize -m32 -c -Wall
-DEFINES_debug = -DHAVE_CONFIG_H=1 -DXERCES_BUILDING_LIBRARY=1
-DEFINES_release = -DHAVE_CONFIG_H=1 -DNDEBUG=1 -DXERCES_BUILDING_LIBRARY=1
+CXXFLAGS_debug = -std=c++11 -std=c++17 -msse2 -g -ggdb3 -O0 -m32 -c -Wall
+CXXFLAGS_release = -std=c++11 -std=c++17 -msse2 -O3 -ftree-vectorize -m32 -c -Wall
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_CONFIG_H=1 -DXERCES_BUILDING_LIBRARY=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_CONFIG_H=1 -DNDEBUG=1 -DXERCES_BUILDING_LIBRARY=1
 INCLUDES = -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd -I$(BASE)dlb_wave/1.6 -I$(BASE). -I$(BASE). -I$(BASE)xerces/xerces-c-3.2.0/linux/x86 -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/FileManagers -I$(BASE)xerces/xerces-c-3.2.0/src
 LD = $(CXX)
 LDFLAGS_debug = -m32

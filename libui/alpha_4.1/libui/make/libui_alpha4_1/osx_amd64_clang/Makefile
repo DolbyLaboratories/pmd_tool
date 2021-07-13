@@ -8,7 +8,8 @@ ARFLAGS = -rc -s
 CCDEP = $(CC)
 CFLAGS_debug = -g -O0 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
 CFLAGS_release = -O3 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
-DEFINES_release = -DNDEBUG=1
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
 INCLUDES = -I$(BASE)libui/alpha_4.1/libui/common -I$(BASE)libui/alpha_4.1/libui
 
 COMMON_FILES = $(TMP)libui/alpha_4.1/libui/common/attribute $(TMP)libui/alpha_4.1/libui/common/debug $(TMP)libui/alpha_4.1/libui/common/shouldquit\
@@ -29,8 +30,8 @@ libui_alpha4_1_release.a: $(INPUTS_COMMON_ARCHIVE_release)
 	$(AR) $(ARFLAGS)   $@ $^
 
 $(TMP)%.libui_alpha4_1_osx_amd64_clang_debug.o: $(BASE)%.c | $(TMP)%/..
-	$(CCDEP) -arch x86_64 -MM $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
-	$(CC) $(CFLAGS_debug) $(INCLUDES) -o $@ $<
+	$(CCDEP) -arch x86_64 -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CC) $(CFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.libui_alpha4_1_osx_amd64_clang_release.o: $(BASE)%.c | $(TMP)%/..
 	$(CCDEP) -arch x86_64 -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<

@@ -8,7 +8,8 @@ ARFLAGS = -rc
 CCDEP = $(CC)
 CFLAGS_debug = -std=c99 -fPIC -Wno-switch -fvisibility=hidden -msse2 -g -ggdb3 -O0 -m32 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
 CFLAGS_release = -std=c99 -fPIC -Wno-switch -fvisibility=hidden -msse2 -O3 -ftree-vectorize -m32 -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wdeclaration-after-statement -Wvla
-DEFINES_release = -DNDEBUG=1
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
 INCLUDES = -I$(BASE)libui/alpha_4.1/libui/unix -I$(BASE)libui/alpha_4.1/libui/common -I`pkg-config --cflags gtk+-3.0` -I/usr/include/gtk-3.0 -I/usr/include/at-spi2-atk/2.0 -I/usr/include/at-spi-2.0 -I/usr/include/dbus-1.0 -I/usr/lib/i386-linux-gnu/dbus-1.0/include -I/usr/include/gio-unix-2.0/ -I/usr/include/mirclient -I/usr/include/mircommon -I/usr/include/mircookie -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/atk-1.0 -I/usr/include/pixman-1 -I/usr/include/freetype2 -I/usr/include/libpng12 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/glib-2.0 -I/usr/lib/i386-linux-gnu/glib-2.0/include -I$(BASE)libui/alpha_4.1/libui
 
 COMMON_FILES = $(TMP)libui/alpha_4.1/libui/common/attribute $(TMP)libui/alpha_4.1/libui/common/debug $(TMP)libui/alpha_4.1/libui/common/shouldquit\
@@ -43,8 +44,8 @@ libui_alpha4_1_release.a: $(INPUTS_COMMON_ARCHIVE_release)
 	$(AR) $(ARFLAGS)  $@ $^
 
 $(TMP)%.libui_alpha4_1_linux_x86_gnu_debug.o: $(BASE)%.c | $(TMP)%/..
-	$(CCDEP) -msse2 -MM $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
-	$(CC) $(CFLAGS_debug) $(INCLUDES) -o $@ $<
+	$(CCDEP) -msse2 -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CC) $(CFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.libui_alpha4_1_linux_x86_gnu_release.o: $(BASE)%.c | $(TMP)%/..
 	$(CCDEP) -msse2 -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<

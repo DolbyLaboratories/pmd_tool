@@ -7,7 +7,8 @@ TMP=$(BASE)
 CCDEP = $(CC)
 CFLAGS_debug = -g -O0 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
 CFLAGS_release = -O3 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
-DEFINES_release = -DNDEBUG=1
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
 INCLUDES = -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE).
 LD = $(CC)
 LDFLAGS_debug = -arch x86_64 -dead_strip
@@ -30,8 +31,8 @@ pmd_tool_dynamic_release: $(INPUTS_COMMON_LINK_release) $(DEP_PROJ_LINK_release)
 	$(LD) $(LDFLAGS_release) -o $@ $+ 
 
 $(TMP)%.pmd_tool_dynamic_osx_amd64_clang_debug.o: $(BASE)%.c | $(TMP)%/..
-	$(CCDEP) -arch x86_64 -MM $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
-	$(CC) $(CFLAGS_debug) $(INCLUDES) -o $@ $<
+	$(CCDEP) -arch x86_64 -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CC) $(CFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.pmd_tool_dynamic_osx_amd64_clang_release.o: $(BASE)%.c | $(TMP)%/..
 	$(CCDEP) -arch x86_64 -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<

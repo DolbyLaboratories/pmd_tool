@@ -6,9 +6,10 @@ TMP=$(BASE)
 %/..:; @test $(dir $(basename $(@D))) | mkdir -p $(dir $(basename $(@D)))
 ARFLAGS = -rc
 CXXDEP = $(CXX)
-CXXFLAGS_debug = -g -ggdb3 -O0 -m64 -c -Wall
-CXXFLAGS_release = -O3 -ftree-vectorize -m64 -c -Wall
-DEFINES_release = -DNDEBUG=1
+CXXFLAGS_debug = -std=c++17 -g -ggdb3 -O0 -m64 -c -Wall
+CXXFLAGS_release = -std=c++17 -O3 -ftree-vectorize -m64 -c -Wall
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
 INCLUDES = -I$(BASE)googletest/1.8.0/include -I$(BASE)googletest/1.8.0/include -I$(BASE)googletest/1.8.0
 
 
@@ -31,8 +32,8 @@ googletest_release.a: $(INPUTS_ARCHIVE_release)
 	$(AR) $(ARFLAGS)  $@ $^
 
 $(TMP)%.googletest_linux_amd64_gnu_debug.o: $(BASE)%.cc | $(TMP)%/..
-	$(CXXDEP) -MM $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
-	$(CXX) $(CXXFLAGS_debug) $(INCLUDES) -o $@ $<
+	$(CXXDEP) -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CXX) $(CXXFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.googletest_linux_amd64_gnu_release.o: $(BASE)%.cc | $(TMP)%/..
 	$(CXXDEP) -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<

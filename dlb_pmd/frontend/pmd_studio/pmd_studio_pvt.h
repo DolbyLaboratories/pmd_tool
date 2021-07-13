@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@
 
 struct pmd_studio
 {
-    char title[DLB_PMD_MAX_NAME_LENGTH];
+    char title[PMD_STUDIO_MAX_FILENAME_LENGTH];
     model pmd;
     uiWindow 						*window;
     uiEntry 						*title_entry;

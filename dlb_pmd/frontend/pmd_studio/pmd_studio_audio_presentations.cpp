@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@
 #include "pmd_studio_audio_objects.h"
 #include "pmd_studio_pvt.h"
 #include "pmd_studio_settings_pvt.h"
+#include "mix_matrix.h"
 /* Definitions */
 
 
@@ -167,7 +168,7 @@ onPresentationBedUpdated
 
     // Make a copy of eids and labels as this will change
     dlb_pmd_element_id bed_eids2[num_beds];
-    for(int i=0; i<num_beds; i++)
+    for(unsigned int i=0; i<num_beds; i++)
     {
         bed_eids2[i] = bed_eids[i];
     }
@@ -562,6 +563,8 @@ pmd_studio_audio_presentations_init
     	return PMD_FAIL;
     }
 
+    memset(*ap1, 0, sizeof(pmd_studio_audio_presentations));
+
     (*ap1)->window = win;
     
     (*ap1)->studio = studio1;
@@ -676,7 +679,7 @@ pmd_studio_audio_presentations_update_nlang
 {
     pmd_studio *studio = apres->studio;
     // Incase of nlang settings change, update presentation nlang.
-    for(int i=0; i < apres->presentation_count; i++){
+    for(unsigned int i=0; i < apres->presentation_count; i++){
         pmd_studio_audio_presentation *p = &apres->presentations[i];
         switch (studio->settings->nlang_settings.behaviour)
         {

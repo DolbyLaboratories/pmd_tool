@@ -8,10 +8,10 @@ CCDEP = $(CC)
 CFLAGS_debug = -g -O0 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
 CFLAGS_release = -O3 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -pedantic -std=gnu99 -Wno-overlength-strings -Wdeclaration-after-statement -Wconditional-uninitialized
 CXXDEP = $(CXX)
-CXXFLAGS_debug = -std=c++11 -g -O0 -arch x86_64 -fPIC -c -Wall -std=c++11
-CXXFLAGS_release = -std=c++11 -O3 -arch x86_64 -fPIC -c -Wall -std=c++11
-DEFINES_debug = -DHAVE_CONFIG_H=1 -DXERCES_BUILDING_LIBRARY=1
-DEFINES_release = -DHAVE_CONFIG_H=1 -DNDEBUG=1 -DXERCES_BUILDING_LIBRARY=1
+CXXFLAGS_debug = -std=c++11 -std=c++17 -g -O0 -arch x86_64 -fPIC -c -Wall -std=c++11
+CXXFLAGS_release = -std=c++11 -std=c++17 -O3 -arch x86_64 -fPIC -c -Wall -std=c++11
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_CONFIG_H=1 -DXERCES_BUILDING_LIBRARY=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DHAVE_CONFIG_H=1 -DNDEBUG=1 -DXERCES_BUILDING_LIBRARY=1
 INCLUDES = -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd -I$(BASE)dlb_wave/1.6 -I$(BASE)googletest/1.8.0/include -I$(BASE)googletest/1.8.0/include -I$(BASE). -I$(BASE). -I$(BASE)xerces/xerces-c-3.2.0/osx -I$(BASE)xerces/xerces-c-3.2.0/src/xercesc/util/FileManagers -I$(BASE)xerces/xerces-c-3.2.0/src
 LD = $(CXX)
 LDFLAGS_debug = -arch x86_64 -dead_strip

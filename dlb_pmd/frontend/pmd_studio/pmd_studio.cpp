@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -266,16 +266,12 @@ print_usage
     )
 {
     fprintf(stderr, "%s\n", get_version_string("pmd_studio [OPTION]... "));
-    fprintf(stderr, "Copyright Dolby Laboratories Inc., 2020. All rights reserved.\n\n");
+    fprintf(stderr, "Copyright Dolby Laboratories Inc., 2021. All rights reserved.\n\n");
     fprintf(stderr, "-fb                  File-based mode (overrides streaming options)\n");
-    fprintf(stderr, "-di <name>           Name of device to use for input\n");
-    fprintf(stderr, "-do <name>           Name of device to use for output\n");
-    fprintf(stderr, "-dl                  List input and output device names and details\n");
-    fprintf(stderr, "-c <channels>        Number of input and output channels\n");
     fprintf(stderr, "-f <filename>        Filename of file to load on launch\n");
     fprintf(stderr, "-l <latency>         Input and output latency in seconds\n");
+    fprintf(stderr, "-device <option>     Device specific option\n");
     fprintf(stderr, "-buf <samples>       Buffer size in samples\n");
-    fprintf(stderr, "-am824               Select am824 framing for metadata output. For use with ALSA AES67 driver\n");
     fprintf(stderr, "-h                   This message\n");
     fprintf(stderr, "--help               This message\n");
 }
@@ -369,6 +365,8 @@ config_init(
     }
 }
 
+/* Private functions */
+
 
 static
 dlb_pmd_success
@@ -382,9 +380,30 @@ pmd_studio_init
     uiBox *titlebox, *hbox1, *hbox2;
     int i;
     char *file_to_load = NULL;
-    dlb_pmd_bool input_device_selected = PMD_FALSE;
-    dlb_pmd_bool output_device_selected = PMD_FALSE;
     dlb_pmd_success status;
+
+    // First init UI so we can have dialog box errors
+    memset(&options, 0, sizeof (uiInitOptions));
+    err = uiInit(&options);
+    if (err)
+    {
+        fprintf(stderr, "error initializing libui: %s", err);
+        uiFreeInitError(err);
+        return PMD_FAIL;
+    }
+
+    // Lock down menu edits immediately as menus are finalized on mac once a window is created
+
+    if (pmd_studio_file_menu_init(&s->file_menu, s))
+    {
+        return PMD_FAIL;
+    }
+
+    if (pmd_studio_console_menu_init(&s->console_menu, s))
+    {
+        return PMD_FAIL;
+    }
+
 
     /* initialize the system random number generator */
     srand((unsigned int)time(NULL));
@@ -398,71 +417,30 @@ pmd_studio_init
         {
             s->settings->file_based_mode = PMD_TRUE;
         }
-        else if (!strcmp(argv[i], "-di"))
-        {
-            if (input_device_selected)
-            {
-                fprintf(stderr, "Error: Selected input device multiple times\n");
-                print_usage();
-                exit(-8);
-            }
-            if (i == (argc - 1))
-            {
-                fprintf(stderr, "Error: Can't find soundcard index\n");
-                print_usage();
-                exit(-1);
-            }
-            strncpy(s->settings->device_settings.input_device, argv[i + 1], MAX_DEVICE_NAME_LENGTH - 1);
-            input_device_selected = PMD_TRUE;
-            // We increment i here to step over the next parameter
-            // which has been parsed as the value
-            i++;
-        }
-        else if (!strcmp(argv[i], "-do"))
-        {
-            if (output_device_selected)
-            {
-                fprintf(stderr, "Error: Selected output device multiple times\n");
-                print_usage();
-                exit(-9);
-            }
-            if (i == (argc - 1))
-            {
-                fprintf(stderr, "Error: Can't find soundcard index\n");
-                print_usage();
-                exit(-1);
-            }
-            strncpy(s->settings->device_settings.output_device, argv[i + 1], MAX_DEVICE_NAME_LENGTH - 1);
-            output_device_selected = PMD_TRUE;
-            // We increment i here to step over the next parameter
-            // which has been parsed as the value
-            i++;
-        }
-        else if (!strcmp(argv[i], "-dl"))
-        {
-            pmd_studio_device_list();
-            exit(0);
-        }
         else if (!strcmp(argv[i], "-l"))
         {
-            s->settings->device_settings.latency = (float)atof(argv[i + 1]);
+            s->settings->common_device_settings.latency = (float)atof(argv[i + 1]);
         }
-        else if (!strcmp(argv[i], "-am824"))
+        else if (!strcmp(argv[i], "-device"))
         {
-            s->settings->device_settings.am824_mode = PMD_TRUE;
+        	if (i < (argc - 1))
+        	{
+        		pmd_studio_device_option(s, argv[i+1]);
+        	}
+            i++;
         }
         else if (!strcmp(argv[i], "-buf"))
         {
-            s->settings->device_settings.frames_per_buffer = atoi(argv[i + 1]);
-            if (s->settings->device_settings.frames_per_buffer > MAX_FRAMES_PER_BUFFER)
+            s->settings->common_device_settings.frames_per_buffer = atoi(argv[i + 1]);
+            if (s->settings->common_device_settings.frames_per_buffer > MAX_FRAMES_PER_BUFFER)
             {
-                fprintf(stderr, "Error: Buffer size %u exceeds maximum allowed size of Frames: %u\n", s->settings->device_settings.frames_per_buffer, MAX_FRAMES_PER_BUFFER);
+                fprintf(stderr, "Error: Buffer size %u exceeds maximum allowed size of Frames: %u\n", s->settings->common_device_settings.frames_per_buffer, MAX_FRAMES_PER_BUFFER);
                 print_usage();
                 exit(-1);                
             }            
-            if (s->settings->device_settings.frames_per_buffer < MIN_FRAMES_PER_BUFFER)
+            if (s->settings->common_device_settings.frames_per_buffer < MIN_FRAMES_PER_BUFFER)
             {
-                fprintf(stderr, "Error: Buffer size %u less than minimum allowed size of Frames: %u\n", s->settings->device_settings.frames_per_buffer, MIN_FRAMES_PER_BUFFER);
+                fprintf(stderr, "Error: Buffer size %u less than minimum allowed size of Frames: %u\n", s->settings->common_device_settings.frames_per_buffer, MIN_FRAMES_PER_BUFFER);
                 print_usage();
                 exit(-1);                
             }
@@ -471,7 +449,7 @@ pmd_studio_init
         else if (!strcmp(argv[i], "-f"))
         {
             file_to_load = argv[i + 1];
-            if ((strlen(file_to_load) == 0) || strlen(file_to_load) > DLB_PMD_MAX_NAME_LENGTH)
+            if ((strlen(file_to_load) == 0) || strlen(file_to_load) > PMD_STUDIO_MAX_FILENAME_LENGTH) 
             {
                 fprintf(stderr, "Error: Invalid file name: \"%s\"", file_to_load);
                 if(strlen(file_to_load) == 0){
@@ -482,17 +460,6 @@ pmd_studio_init
                 }
                 print_usage();
                 exit(-1);
-            }
-            i++;
-        }
-        else if (!strcmp(argv[i], "-c"))
-        {
-            s->settings->device_settings.num_channels = atoi(argv[i + 1]);
-            if (s->settings->device_settings.num_channels > MAX_CHANNELS)
-            {
-                fprintf(stderr, "Error: Number of specified channels %u exceeds maximum number of channels: %u\n", s->settings->device_settings.num_channels, MAX_CHANNELS);
-                print_usage();
-                exit(-1);                
             }
             i++;
         }
@@ -515,15 +482,6 @@ pmd_studio_init
     }
     s->pmd.model->error_callback = pmd_studio_on_augmentor_fail_cb;
 
-    memset(&options, 0, sizeof (uiInitOptions));
-    err = uiInit(&options);
-    if (err)
-    {
-        fprintf(stderr, "error initializing libui: %s", err);
-        uiFreeInitError(err);
-        return PMD_FAIL;
-    }
-
     if (s->settings->file_based_mode)
     {
         s->mode = PMD_STUDIO_MODE_FILE_EDIT;
@@ -533,23 +491,10 @@ pmd_studio_init
         s->mode = PMD_STUDIO_MODE_EDIT;        
     }
 
-    if (pmd_studio_file_menu_init(&s->file_menu, s))
-    {
-        return PMD_FAIL;
-    }
-
-    if (s->mode != PMD_STUDIO_MODE_FILE_EDIT)
-    {
-        if (pmd_studio_console_menu_init(&s->console_menu, s))
-        {
-            return PMD_FAIL;
-        }
-    }
-
     s->window = uiNewWindow(get_version_string("Professional Metadata Studio "), 640, 380, 1);
-
     uiWindowOnClosing(s->window, onClosing, s);
     uiOnShouldQuit(onShouldQuit, s);
+
 
     s->toplevelbox = uiNewVerticalBox();
     hbox1 = uiNewHorizontalBox();
@@ -584,6 +529,8 @@ pmd_studio_init
     uiBoxAppend(hbox1, uiControl(uiNewVerticalSeparator()), 0);
     status = status || pmd_studio_audio_objects_init(&s->audio_objects, s->window, hbox1, s);
     status = status || pmd_studio_audio_presentations_init(&s->audio_presentations, s->window, hbox2, s);
+ 
+
     if (status)
     {
         return(PMD_FAIL);
@@ -593,7 +540,8 @@ pmd_studio_init
         /* This is to signal that we are initializing the device for the first time */
         s->device = NULL;
         /* Try to bring up the audio subsystem, if this fails then revert to file only */
-        if (!s->settings->file_based_mode && !pmd_studio_device_init(&s->device, &s->settings->device_settings,s->window, s))
+        pmd_studio_device_init(&s->device, &s->settings->common_device_settings, &s->settings->device_settings, s->window, s);
+        if (!s->settings->file_based_mode)
         {
             uiBoxAppend(hbox2, uiControl(uiNewVerticalSeparator()), 0);
             pmd_studio_outputs_init(&s->outputs, s->window, hbox2, s);
@@ -602,11 +550,11 @@ pmd_studio_init
         {
             // Explicitly signal that outputs are disabled
             s->outputs = NULL;
-            s->device = NULL;
         }
 
         if (file_to_load != NULL)
         {
+            pmd_studio_reset(s);
             pmd_studio_open_file(s, file_to_load);
         }
 
@@ -662,111 +610,6 @@ refresh_ui
     pmd_studio_audio_objects_refresh_ui(s->audio_objects);
     pmd_studio_audio_presentations_refresh_ui(s->audio_presentations);
     pmd_studio_outputs_refresh_ui(s->outputs);
-}
-
-/* Public functions */
-
-pmd_studio_audio_presentations *pmd_studio_get_presentations(pmd_studio *studio)
-{
-    return(studio->audio_presentations);
-}
-
-pmd_studio_audio_beds *pmd_studio_get_beds(pmd_studio *studio)
-{
-    return(studio->audio_beds);
-}
-
-pmd_studio_audio_objects *pmd_studio_get_objects(pmd_studio *studio)
-{
-    return(studio->audio_objects);
-}
-
-pmd_studio_outputs *pmd_studio_get_outputs(pmd_studio *studio)
-{
-    return(studio->outputs);
-}
-
-pmd_studio_device *pmd_studio_get_device(pmd_studio *studio)
-{
-    return(studio->device);
-}
-
-pmd_studio_settings *pmd_studio_get_settings(pmd_studio *studio)
-{
-    return(studio->settings);
-}
-
-
-void
-pmd_studio_reset
-    (pmd_studio *s
-    )
-{
-    console_disconnect(s);
-
-    dlb_pmd_reset(s->pmd.model);
-    snprintf(s->title, sizeof(s->title), "<untitled>");
-    uiEntrySetText(s->title_entry, s->title);
-
-    eid_init(s);
-    
-    pmd_studio_outputs_reset(s->outputs);
-    pmd_studio_audio_beds_reset(s->audio_beds);
-    pmd_studio_audio_objects_reset(s->audio_objects);
-    pmd_studio_audio_presentations_reset(s->audio_presentations);
-    pmd_studio_device_init(&s->device, &s->settings->device_settings, s->window, s);
-    // pmd_studio_device_reset(s->device);
-    refresh_ui(s);
-}
-
-void
-pmd_studio_enable
-    (pmd_studio *s
-    )
-{
-    pmd_studio_switch_mode(s, PMD_STUDIO_MODE_EDIT);
-}
-
-
-void
-pmd_studio_disable (pmd_studio *s)
-{
-    pmd_studio_switch_mode(s, PMD_STUDIO_MODE_LIVE);
-}
-
-void
-pmd_studio_import
-    (pmd_studio *s
-    )
-{   
-    dlb_pmd_model *m = s->pmd.model;
-    const char *title;
-    
-    pmd_studio_audio_beds_reset(s->audio_beds);
-    pmd_studio_audio_objects_reset(s->audio_objects);
-    pmd_studio_audio_presentations_reset(s->audio_presentations);
-    eid_init(s);
-
-    if (   pmd_studio_audio_beds_import(s->audio_beds, m)
-        || pmd_studio_audio_objects_import(s->audio_objects, m)
-        || pmd_studio_audio_presentations_import(s->audio_presentations, m))
-    {
-        uiMsgBoxError(s->window, "error importing model", dlb_pmd_error(m));
-        dlb_pmd_reset(m);
-    }
-    refresh_ui(s);
-    /* The code below was moved from the top of the function because its position there was ineffective on linux */
-    /* It is unkown why exactly but it is thought to be to do with timing and the closing of the */
-    /* file opening dialogue box */
-    if (dlb_pmd_title(m, &title))
-    {
-        uiEntrySetText(s->title_entry, "<unknown>");
-    }
-    else
-    {
-        snprintf(s->title, sizeof(s->title), "%s", title);
-        uiEntrySetText(s->title_entry, s->title);
-    }
 }
 
 static
@@ -826,6 +669,179 @@ generate_random_uuid
         p += 2;
     }
 }
+
+/*** Public Functions ***/
+
+pmd_studio_audio_presentations *pmd_studio_get_presentations(pmd_studio *studio)
+{
+    return(studio->audio_presentations);
+}
+
+pmd_studio_audio_beds *pmd_studio_get_beds(pmd_studio *studio)
+{
+    return(studio->audio_beds);
+}
+
+pmd_studio_audio_objects *pmd_studio_get_objects(pmd_studio *studio)
+{
+    return(studio->audio_objects);
+}
+
+pmd_studio_outputs *pmd_studio_get_outputs(pmd_studio *studio)
+{
+    return(studio->outputs);
+}
+
+pmd_studio_device *pmd_studio_get_device(pmd_studio *studio)
+{
+    return(studio->device);
+}
+
+pmd_studio_settings *pmd_studio_get_settings(pmd_studio *studio)
+{
+    return(studio->settings);
+}
+
+uiWindow
+*pmd_studio_get_window
+    (pmd_studio *studio
+    )
+{
+    return(studio->window);
+}
+
+void
+pmd_studio_reset
+    (pmd_studio *s
+    )
+{
+    console_disconnect(s);
+
+    dlb_pmd_reset(s->pmd.model);
+    snprintf(s->title, sizeof(s->title), "<untitled>");
+    uiEntrySetText(s->title_entry, s->title);
+
+   eid_init(s);
+    
+    if (s->outputs != nullptr)
+    {
+        pmd_studio_outputs_reset(s->outputs);
+    }
+    pmd_studio_audio_beds_reset(s->audio_beds);
+    pmd_studio_audio_objects_reset(s->audio_objects);
+    pmd_studio_audio_presentations_reset(s->audio_presentations);
+    pmd_studio_device_reset(s->device);
+    refresh_ui(s);
+}
+
+void
+pmd_studio_enable
+    (pmd_studio *s
+    )
+{
+    pmd_studio_switch_mode(s, PMD_STUDIO_MODE_EDIT);
+}
+
+
+void
+pmd_studio_disable (pmd_studio *s)
+{
+    pmd_studio_switch_mode(s, PMD_STUDIO_MODE_LIVE);
+}
+
+void
+pmd_studio_import
+    (pmd_studio *s
+    )
+{   
+    dlb_pmd_model *m = s->pmd.model;
+    const char *title;
+    
+    pmd_studio_audio_beds_reset(s->audio_beds);
+    pmd_studio_audio_objects_reset(s->audio_objects);
+    pmd_studio_audio_presentations_reset(s->audio_presentations);
+    eid_init(s);
+
+    if (   pmd_studio_audio_beds_import(s->audio_beds, m)
+        || pmd_studio_audio_objects_import(s->audio_objects, m)
+        || pmd_studio_audio_presentations_import(s->audio_presentations, m))
+    {
+        uiMsgBoxError(s->window, "error importing model", dlb_pmd_error(m));
+        dlb_pmd_reset(m);
+    }
+    refresh_ui(s);
+    /* The code below was moved from the top of the function because its position there was ineffective on linux */
+    /* It is unkown why exactly but it is thought to be to do with timing and the closing of the */
+    /* file opening dialogue box */
+    if (dlb_pmd_title(m, &title))
+    {
+        uiEntrySetText(s->title_entry, "<unknown>");
+    }
+    else
+    {
+        snprintf(s->title, sizeof(s->title), "%s", title);
+        uiEntrySetText(s->title_entry, s->title);
+    }
+}
+
+void pmd_studio_information(const char message[])
+{
+    uiWindow *win;
+
+    win = uiNewWindow("PMD Studio Error", 400, 410, 0);
+    if (win)
+    {
+        uiMsgBoxError(win, "PMD Studio Information", message);
+        uiControlDestroy(uiControl(win));
+    }
+    else
+    {
+        fprintf(stderr, "PMD Studio Information\n");            
+        fprintf(stderr, "%s\n", message);
+        fprintf(stderr, "Press Enter to continue\n");            
+        getchar();
+    }
+}
+
+
+void pmd_studio_error(pmd_studio_error_code err, const char error_message[])
+{
+    uiWindow *win;
+
+    if (err == PMD_STUDIO_ERR_UI)
+    {
+        win = uiNewWindow("PMD Studio Error", 400, 410, 0);
+        if (win)
+        {
+            uiMsgBoxError(win, "PMD Studio Error", error_message);
+            uiControlDestroy(uiControl(win));
+        }
+        else
+        {
+            fprintf(stderr, "PMD Studio Error\n");            
+            fprintf(stderr, "%s\n", error_message);
+            fprintf(stderr, "Press Enter to continue\n");            
+            getchar();
+        }
+        return;
+    }
+
+#ifndef NDEBUG
+    if (err < PMD_STUDIO_NUM_ERROR_MESSAGES)
+    {
+        fprintf(stderr, "%d,%s,%s\n", err, error_message, pmd_studio_error_messages[err]);
+    }
+    else
+    {
+        fprintf(stderr, "%d,%s\n", err, error_message);
+    }
+    if (err == PMD_STUDIO_ERR_ASSERT)
+    {
+        exit(err);
+    }
+#endif
+}
+
 
 void
 pmd_studio_update_model(pmd_studio *s)
@@ -944,7 +960,7 @@ pmd_studio_eid_replace
 {
 
     int existing_old_index = -1;
-    for(int i = 0; i<studio->num_eids; i++)
+    for(unsigned int i = 0; i<studio->num_eids; i++)
     {
         if(studio->eids[i] == old_eid)
         {
@@ -1069,7 +1085,7 @@ pmd_studio_settings_update
 
     if (!s->settings->file_based_mode)
     {
-        return(pmd_studio_device_init(&s->device, &s->settings->device_settings, win, s));
+        return(pmd_studio_device_init(&s->device, &s->settings->common_device_settings, &s->settings->device_settings, win, s));
     }
     else
     {

@@ -52,7 +52,7 @@
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>Disabled</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
-<PreprocessorDefinitions>WIN32=1;WIN64=1;_CONSOLE=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
+<PreprocessorDefinitions>ELPP_NO_DEFAULT_LOG_FILE=1;WIN32=1;WIN64=1;_CONSOLE=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
 <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
 <PrecompiledHeader />
 <WarningLevel>Level4</WarningLevel>
@@ -82,7 +82,7 @@
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>MaxSpeed</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
-<PreprocessorDefinitions>NDEBUG=1;WIN32=1;WIN64=1;_CONSOLE=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
+<PreprocessorDefinitions>ELPP_NO_DEFAULT_LOG_FILE=1;NDEBUG=1;WIN32=1;WIN64=1;_CONSOLE=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
 <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
 <PrecompiledHeader />
 <WarningLevel>Level4</WarningLevel>

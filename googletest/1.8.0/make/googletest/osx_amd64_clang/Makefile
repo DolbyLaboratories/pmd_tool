@@ -6,9 +6,10 @@ TMP=$(BASE)
 %/..:; @test $(dir $(basename $(@D))) | mkdir -p $(dir $(basename $(@D)))
 ARFLAGS = -rc -s
 CXXDEP = $(CXX)
-CXXFLAGS_debug = -g -O0 -arch x86_64 -fPIC -c -Wall
-CXXFLAGS_release = -O3 -arch x86_64 -fPIC -c -Wall
-DEFINES_release = -DNDEBUG=1
+CXXFLAGS_debug = -std=c++17 -g -O0 -arch x86_64 -fPIC -c -Wall
+CXXFLAGS_release = -std=c++17 -O3 -arch x86_64 -fPIC -c -Wall
+DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
+DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
 INCLUDES = -I$(BASE)googletest/1.8.0/include -I$(BASE)googletest/1.8.0/include -I$(BASE)googletest/1.8.0
 
 
@@ -31,8 +32,8 @@ googletest_release.a: $(INPUTS_ARCHIVE_release)
 	$(AR) $(ARFLAGS)   $@ $^
 
 $(TMP)%.googletest_osx_amd64_clang_debug.o: $(BASE)%.cc | $(TMP)%/..
-	$(CXXDEP) -arch x86_64 -MM $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
-	$(CXX) $(CXXFLAGS_debug) $(INCLUDES) -o $@ $<
+	$(CXXDEP) -arch x86_64 -MM $(DEFINES_debug) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
+	$(CXX) $(CXXFLAGS_debug) $(DEFINES_debug) $(INCLUDES) -o $@ $<
 
 $(TMP)%.googletest_osx_amd64_clang_release.o: $(BASE)%.cc | $(TMP)%/..
 	$(CXXDEP) -arch x86_64 -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
