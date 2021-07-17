@@ -54,9 +54,7 @@
 #include <csignal>
 #include <rivermax_api.h>
 
-#include "dlb_aoip_services.h"
-#include "dlb_st2110_hardware.h"
-#include "mclock.h"
+#include "dlb_st2110_api.h"
 
 /*** Logging */
 #include "dlb_st2110_logging.h"
@@ -67,7 +65,7 @@ using namespace std;
 
 #define MAX_FILENAME_SIZE 256
 #define MAX_LABEL_SIZE 256
-#define VERSION 0.1
+#define VERSION 0.9
 
 
 /********************** Type Defs *****************************/
@@ -117,7 +115,7 @@ public:
 void print_usage(void)
 {
 	fprintf(stderr, "dlb_2110_main -i <INPUT FILE> -if <INTERFACE> -di <DEST IP ADDRESS> -n <NUM PACKETS> -N <NAME> -l <LATENCY> -b <BLOCK SIZE> -smpte2110-<STANDARD> -volume <VOLUME> -dit <DATA_ITEM_TYPE>v%f\n", VERSION);
-	fprintf(stderr, "Copyright Dolby Laboratories Inc., 2020. All rights reserved.\n\n");
+	fprintf(stderr, "Copyright Dolby Laboratories Inc., 2021. All rights reserved.\n\n");
 	fprintf(stderr, "<INPUT FILE>              Filename of input file (WAV file for -30/-31, binary for -41)\n");
 	fprintf(stderr, "                          A generator with a test pattern is used if no filename is supplied\n");
 	fprintf(stderr, "<INTERFACE>               Interface to send streams on\n");
@@ -189,8 +187,6 @@ bool aes67Callback(void *data, void *audioPtr, unsigned int numBytes, bool& have
 	unsigned char *packetData = (unsigned char *)audioPtr;
 	unsigned int readCount, j;
 	uint8_t tmpByte;
-	uint16_t *sample16;
-	uint32_t sample24;
 	CallBackData *callBackData = (CallBackData *)data;
 
 	readCount = callBackData->waveFile->readRaw(audioPtr, numBytes);
@@ -307,21 +303,11 @@ int main(int argc, char *argv[])
 	WSAStartup(MAKEWORD(2,2),&dat);
 #endif // RTP_SOCKETTYPE_WINSOCK
 	
-	uint16_t portbase,destport;
-	uint32_t destip;
-	int status,i,j;
+	int status,i;
 	std::string tmpStr;
-	uint32_t packetSizeBytes;
-	uint32_t klvBytesRead;
-	struct timespec realTimeClock;
-	unsigned char *packetData;
 	FILE *metadataFile = nullptr;
-	unsigned int readCount;
 	uint32_t waveFormat;
 	UserInfo userInfo;
-	pid_t pid = getpid();
-	StreamType streamType;
-	unsigned char tmpByte;
 
 	signal(SIGINT, SignalHandler);  
 
