@@ -53,10 +53,7 @@
 #include <csignal>
 #include <rivermax_api.h>
 
-#include "dlb_aoip_services.h"
-#include "dlb_st2110_hardware.h"
-#include "mclock.h"
-#include "audio_buffer.h"
+#include "dlb_st2110_api.h"
 
 /*** Logging */
 #include "dlb_st2110_logging.h"
@@ -67,7 +64,7 @@ using namespace std::literals::chrono_literals;
 /************************* Constants ***************************/
 
 #define MAX_LABEL_SIZE 256
-#define VERSION 0.1
+#define VERSION 0.9
 
 #define MAX_INPUT_CHANNELS MAX_CHANNELS
 #define MAX_OUTPUT_CHANNELS MAX_CHANNELS
@@ -349,18 +346,9 @@ int main(int argc, char *argv[])
 	WSAStartup(MAKEWORD(2,2),&dat);
 #endif // RTP_SOCKETTYPE_WINSOCK
 	
-	uint16_t portbase,destport;
-	uint32_t destip;
-	int status,i,j;
+	int status,i;
 	std::string tmpStr;
-	uint32_t packetSizeBytes;
-	struct timespec realTimeClock;
-	unsigned char *packetData;
-	unsigned int readCount;
 	UserInfo userInfo;
-	pid_t pid = getpid();
-	StreamType streamType;
-	unsigned char tmpByte;
 	bool success;
 	pmd_studio_mix_matrix_array mix_matrix;
 	CallBackData callBackData;
@@ -685,8 +673,11 @@ int main(int argc, char *argv[])
 		callBackInfo.blockSize = userInfo.blockSize;
 		callBackData.callBackInfo = callBackInfo;
 
-		aoipServices->AddRxTxStream(inputStreamInfo, outputStreamInfo, userInfo.latency, callBackInfo);
-		success = aoipServices->StartRxTxStream(outputStreamInfo.streamName);
+		std::vector<StreamInfo> outputStreamInfos;
+		outputStreamInfos.push_back(outputStreamInfo);
+
+		void *rxTxStream = aoipServices->AddRxTxStream(inputStreamInfo, outputStreamInfos, userInfo.latency, callBackInfo);
+		success = aoipServices->StartRxTxStream(rxTxStream);
 		LOG(INFO) << "Receiving " << inputStreamInfo.streamName << "...";
 		if (!success)
 		{
