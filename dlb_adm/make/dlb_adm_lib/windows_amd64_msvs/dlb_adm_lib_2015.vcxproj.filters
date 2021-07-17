@@ -1,0 +1,239 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+<Filter Include="dlb_adm">
+<UniqueIdentifier>{00138090-8d19-314f-a90b-3b9383a99841}</UniqueIdentifier></Filter>
+<Filter Include="dlb_adm\include">
+<UniqueIdentifier>{2de926a6-ceb6-3825-aae8-d6f031364ccd}</UniqueIdentifier></Filter>
+<Filter Include="dlb_adm\src">
+<UniqueIdentifier>{9dfb8d40-41be-3649-bfb0-83c9a4e487e9}</UniqueIdentifier></Filter>
+<Filter Include="dlb_adm\src\adm_identity">
+<UniqueIdentifier>{4f477b87-7a8c-3fc1-a96c-a6ca1e9dadca}</UniqueIdentifier></Filter>
+<Filter Include="dlb_adm\src\adm_transformer">
+<UniqueIdentifier>{020f46dd-5576-3bb8-83ac-9c3810fd95a8}</UniqueIdentifier></Filter>
+<Filter Include="dlb_adm\src\adm_xml">
+<UniqueIdentifier>{25d44166-8642-3753-b005-ad512b4d04f0}</UniqueIdentifier></Filter>
+<Filter Include="dlb_adm\src\core_model">
+<UniqueIdentifier>{836fe4c0-0b4b-320b-8776-969ecafe857f}</UniqueIdentifier></Filter></ItemGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\src\adm_identity\AdmIdSequenceMap.cpp">
+<Filter>dlb_adm\src\adm_identity</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_identity\AdmIdTranslator.cpp">
+<Filter>dlb_adm\src\adm_identity</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_transformer\XMLGenerator.cpp">
+<Filter>dlb_adm\src\adm_transformer</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_transformer\XMLIngester.cpp">
+<Filter>dlb_adm\src\adm_transformer</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\AttributeDescriptor.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\AttributeValue.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\ContentContainer.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\EntityContainer.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\EntityDB.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\EntityDescriptor.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\EntityRecord.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\RelationshipDB.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\RelationshipDescriptor.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\RelationshipRecord.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\XMLBuffer.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\XMLContainer.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\XMLReader.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\XMLReaderStack.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\XMLWriter.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\adm_xml\dlb_adm_xml_container.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\AudioElement.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\AudioTrack.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\BlockUpdate.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\ContentGroup.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\CoreModel.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\ElementGroup.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\ElementRecord.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\ElementTable.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\EntityName.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\FrameFormat.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\Gain.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\ModelEntity.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\ModelEntityContainer.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\Position.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\Presentation.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\PresentationRecord.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\PresentationTable.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\Source.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\SourceGroup.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\SourceRecord.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\Target.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\TargetGroup.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\UpdateRecord.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\UpdateTable.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\core_model\dlb_adm_core_model.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\dlb_adm_api.c">
+<Filter>dlb_adm\src</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\dlb_adm_api_pp.cpp">
+<Filter>dlb_adm\src</Filter></ClCompile></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\include\dlb_adm_api.h">
+<Filter>dlb_adm\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_adm_api_types.h">
+<Filter>dlb_adm\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_adm_data_types.h">
+<Filter>dlb_adm\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_adm_entity_id.h">
+<Filter>dlb_adm\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_adm_fwd_type.h">
+<Filter>dlb_adm\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_adm_lib_dll.h">
+<Filter>dlb_adm\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_identity\AdmId.h">
+<Filter>dlb_adm\src\adm_identity</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_identity\AdmIdSequenceMap.h">
+<Filter>dlb_adm\src\adm_identity</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_identity\AdmIdTranslator.h">
+<Filter>dlb_adm\src\adm_identity</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_transformer\XMLGenerator.h">
+<Filter>dlb_adm\src\adm_transformer</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_transformer\XMLIngester.h">
+<Filter>dlb_adm\src\adm_transformer</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\AttributeDescriptor.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\AttributeInitializers.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\AttributeValue.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\ContentContainer.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\EntityContainer.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\EntityDB.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\EntityDescriptor.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\EntityInitializers.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\EntityRecord.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\EntityRelationship.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\RelationshipContainer.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\RelationshipDB.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\RelationshipDescriptor.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\RelationshipInitializers.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\RelationshipRecord.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\TableIndex.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\XMLBuffer.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\XMLContainer.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\XMLReader.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\XMLReaderStack.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\XMLWriter.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\adm_xml\dlb_adm_xml_container.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\AudioElement.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\AudioTrack.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\BlockUpdate.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\ContentGroup.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\CoreModel.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\ElementGroup.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\ElementRecord.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\ElementTable.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\EntityName.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\FrameFormat.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\Gain.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\ModelEntity.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\ModelEntityContainer.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\Position.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\Presentation.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\PresentationRecord.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\PresentationTable.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\Source.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\SourceGroup.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\SourceRecord.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\SourceTable.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\Target.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\TargetGroup.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\UpdateRecord.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\UpdateTable.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\core_model_defs.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\core_model\dlb_adm_core_model.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\dlb_adm_api_pvt.h">
+<Filter>dlb_adm\src</Filter></ClInclude></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup /></Project>

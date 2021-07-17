@@ -7,9 +7,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sadm_fuzz", "sadm_fuzz_2015
 		{F3113CD3-1EEE-3755-88A8-9D430022FDA1} = {F3113CD3-1EEE-3755-88A8-9D430022FDA1}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_pmd_lib", "..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2015.vcxproj", "{888B31BA-E7A4-360D-978E-857D8E4C4BAC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_adm_lib", "..\..\..\..\dlb_adm\make\dlb_adm_lib\windows_amd64_msvs\dlb_adm_lib_2015.vcxproj", "{1C9EF3B0-AD47-319D-B784-946309DE7B57}"
 	ProjectSection(ProjectDependencies) = postProject
 		{20895E86-0CC5-376D-A205-153F08960967} = {20895E86-0CC5-376D-A205-153F08960967}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_pmd_lib", "..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2015.vcxproj", "{888B31BA-E7A4-360D-978E-857D8E4C4BAC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57} = {1C9EF3B0-AD47-319D-B784-946309DE7B57}
 		{76502233-DBC5-3511-A0CE-193C451A7809} = {76502233-DBC5-3511-A0CE-193C451A7809}
 	EndProjectSection
 EndProject
@@ -27,6 +32,8 @@ Global
 		release|x64 = release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57}.debug|x64.ActiveCfg = debug|x64
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57}.debug|x64.Build.0 = debug|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.debug|x64.ActiveCfg = debug|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.debug|x64.Build.0 = debug|x64
 		{2A4DF4EE-7136-33B4-B637-60938D184F39}.debug|x64.ActiveCfg = debug|x64
@@ -39,6 +46,8 @@ Global
 		{F3113CD3-1EEE-3755-88A8-9D430022FDA1}.debug|x64.Build.0 = debug|x64
 		{76502233-DBC5-3511-A0CE-193C451A7809}.debug|x64.ActiveCfg = debug|x64
 		{76502233-DBC5-3511-A0CE-193C451A7809}.debug|x64.Build.0 = debug|x64
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57}.release|x64.ActiveCfg = release|x64
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57}.release|x64.Build.0 = release|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.release|x64.ActiveCfg = release|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.release|x64.Build.0 = release|x64
 		{2A4DF4EE-7136-33B4-B637-60938D184F39}.release|x64.ActiveCfg = release|x64

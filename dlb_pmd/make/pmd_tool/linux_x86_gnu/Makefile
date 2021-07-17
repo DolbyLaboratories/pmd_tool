@@ -10,7 +10,7 @@ CFLAGS_release = -msse2 -O3 -ftree-vectorize -m32 -c -Wall -Wextra -Wstrict-prot
 DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
 DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
 INCLUDES = -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE).
-LD = $(CC)
+LD = $(CXX)
 LDFLAGS_debug = -m32
 LDFLAGS_release = -O2 -m32
 LDLIBS = -lm
@@ -20,8 +20,8 @@ COMMON_FILES = $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_main
 INPUTS_COMMON_LINK_debug = $(addsuffix .pmd_tool_linux_x86_gnu_debug.o,$(COMMON_FILES))
 INPUTS_COMMON_LINK_release = $(addsuffix .pmd_tool_linux_x86_gnu_release.o,$(COMMON_FILES))
 
-DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_tool_lib/linux_x86_gnu/dlb_pmd_tool_lib_debug.a $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_x86_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_x86_gnu/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/linux_x86_gnu/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_x86_gnu/dlb_wave_lib_debug.a
-DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_tool_lib/linux_x86_gnu/dlb_pmd_tool_lib_release.a $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_x86_gnu/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_x86_gnu/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/linux_x86_gnu/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_x86_gnu/dlb_wave_lib_release.a
+DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_tool_lib/linux_x86_gnu/dlb_pmd_tool_lib_debug.a $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_x86_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_adm/make/dlb_adm_lib/linux_x86_gnu/dlb_adm_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_x86_gnu/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/linux_x86_gnu/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_x86_gnu/dlb_wave_lib_debug.a
+DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_tool_lib/linux_x86_gnu/dlb_pmd_tool_lib_release.a $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_x86_gnu/dlb_pmd_lib_release.a $(BASE)dlb_adm/make/dlb_adm_lib/linux_x86_gnu/dlb_adm_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_x86_gnu/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/linux_x86_gnu/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_x86_gnu/dlb_wave_lib_release.a
 
 default: pmd_tool_debug pmd_tool_release
 
@@ -47,6 +47,7 @@ cleandeps:
 	$(RM) $(CLEAN_COMMON_COMPILE_release)
 
 clean: cleanself
+	$(MAKE) -C $(BASE)dlb_adm/make/dlb_adm_lib/linux_x86_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_x86_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_pmd_tool_lib/linux_x86_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_wave_lib/linux_x86_gnu cleanself
@@ -77,6 +78,8 @@ help:
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_main.pmd_tool_linux_x86_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_main.pmd_tool_linux_x86_gnu_release.d)
 
+$(BASE)dlb_adm/make/dlb_adm_lib/linux_x86_gnu/dlb_adm_lib_debug.a \
+$(BASE)dlb_adm/make/dlb_adm_lib/linux_x86_gnu/dlb_adm_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_x86_gnu/dlb_pmd_lib_debug.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_x86_gnu/dlb_pmd_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_pmd_tool_lib/linux_x86_gnu/dlb_pmd_tool_lib_debug.a \

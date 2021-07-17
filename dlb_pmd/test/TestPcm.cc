@@ -1,37 +1,14 @@
-/************************************************************************
- * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
  *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- **********************************************************************/
+ *                Copyright (C) 2018-2021 by Dolby Laboratories,
+ *                Copyright (C) 2018-2021 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
 
 /**
  * @file TestPcm.cc
@@ -45,8 +22,9 @@ extern "C"
 #include "frontend/pcm_vsync_timer.h"
 }
 
-
 #include "TestPcm.hh"
+#include "DlbPmdModelWrapper.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -209,7 +187,8 @@ TestPcm::~TestPcm()
 dlb_pmd_success TestPcm::write(bool ispair, dlb_klvpmd_universal_label ul, dlb_pmd_model *m,
                                bool sadm)
 {
-    dlb_pmd_model_constraints limits;
+    dlb_pmd_model_combo *combo_model;
+    DlbAdm::DlbPmdModelWrapper wrapper(&combo_model, m, PMD_FALSE);
     dlb_pcmpmd_augmentor *aug;
     uint32_t *channeldata;
     unsigned int chan = ispair ? 0 : 1;
@@ -220,13 +199,12 @@ dlb_pmd_success TestPcm::write(bool ispair, dlb_klvpmd_universal_label ul, dlb_p
     size_t num_samples = num_samples_;
     size_t read;
     
-    dlb_pmd_get_constraints(m, &limits);
-    sz = dlb_pcmpmd_augmentor_query_mem2(sadm, &limits);
+    sz = dlb_pcmpmd_augmentor_query_mem(sadm);
     mem = new char[sz];
 
     ispair_ = ispair;
     /* note, for testing, we always want to mark the 160-sample blocks with NULL databursts */
-    dlb_pcmpmd_augmentor_init2(&aug, m, mem, fr_, ul, 1, NUM_CHANNELS, NUM_CHANNELS, ispair, chan,
+    dlb_pcmpmd_augmentor_init2(&aug, combo_model, mem, fr_, ul, 1, NUM_CHANNELS, NUM_CHANNELS, ispair, chan,
                                sadm);
     vsync_timer_init(&vt, fr_, 0);
 
@@ -241,6 +219,7 @@ dlb_pmd_success TestPcm::write(bool ispair, dlb_klvpmd_universal_label ul, dlb_p
         num_samples -= read;
     }
     
+    (void)dlb_pmd_model_combo_destroy(&combo_model);
     dlb_pcmpmd_augmentor_finish(aug);
     delete[] mem;
     return PMD_SUCCESS;
@@ -370,9 +349,10 @@ dlb_pmd_success TestPcm::validate()
 dlb_pmd_success TestPcm::read(dlb_pmd_model *m, unsigned int num_skip_samples,
                               unsigned int *num_frames)
 {
+    dlb_pmd_model_combo *combo_model;
+    DlbAdm::DlbPmdModelWrapper wrapper(&combo_model, m, PMD_FALSE);
     dlb_pmd_success success;
     dlb_pmd_payload_set_status status;
-    dlb_pmd_model_constraints limits;
     dlb_pcmpmd_extractor *ext;
     unsigned int chan = ispair_ ? 0 : 1;
     uint32_t *channeldata;
@@ -381,8 +361,7 @@ dlb_pmd_success TestPcm::read(dlb_pmd_model *m, unsigned int num_skip_samples,
     size_t sz;
     char *mem;
     
-    dlb_pmd_get_constraints(m, &limits);
-    sz = dlb_pcmpmd_extractor_query_mem2(1, &limits);
+    sz = dlb_pcmpmd_extractor_query_mem(PMD_TRUE);
     mem = new char[sz];
     channeldata = mem_;
     num_samples = num_samples_;
@@ -392,7 +371,7 @@ dlb_pmd_success TestPcm::read(dlb_pmd_model *m, unsigned int num_skip_samples,
     {
         return success;
     }
-    dlb_pcmpmd_extractor_init2(&ext, mem, fr_, chan, NUM_CHANNELS, ispair_, m, &status, 1);
+    dlb_pcmpmd_extractor_init2(&ext, mem, fr_, chan, NUM_CHANNELS, ispair_, combo_model, &status, 1);
 
     channeldata = mem_;
 

@@ -10,7 +10,7 @@ CFLAGS_release = -msse2 -O3 -ftree-vectorize -m32 -c -Wall -Wextra -Wstrict-prot
 DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
 DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
 INCLUDES = -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE).
-LD = $(CC)
+LD = $(CXX)
 LDFLAGS_debug = -m32
 LDFLAGS_release = -O2 -m32
 LDLIBS = -lm

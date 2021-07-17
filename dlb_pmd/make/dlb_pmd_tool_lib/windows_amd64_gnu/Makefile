@@ -18,8 +18,8 @@ COMMON_FILES = $(TMP)dlb_pmd/frontend/pmd_tool/pcm $(TMP)dlb_pmd/frontend/pmd_to
 INPUTS_COMMON_ARCHIVE_debug = $(addsuffix .dlb_pmd_tool_lib_windows_amd64_gnu_debug.o,$(COMMON_FILES))
 INPUTS_COMMON_ARCHIVE_release = $(addsuffix .dlb_pmd_tool_lib_windows_amd64_gnu_release.o,$(COMMON_FILES))
 
-DEP_PROJ_ARCHIVE_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/windows_amd64_gnu/dlb_pmd_lib_debug.lib $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/windows_amd64_gnu/dlb_xml_debug.lib $(BASE)zlib/1.2.11/make/zlib/windows_amd64_gnu/zlib_debug.lib $(BASE)dlb_pmd/make/dlb_wave_lib/windows_amd64_gnu/dlb_wave_lib_debug.lib
-DEP_PROJ_ARCHIVE_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/windows_amd64_gnu/dlb_pmd_lib_release.lib $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/windows_amd64_gnu/dlb_xml_release.lib $(BASE)zlib/1.2.11/make/zlib/windows_amd64_gnu/zlib_release.lib $(BASE)dlb_pmd/make/dlb_wave_lib/windows_amd64_gnu/dlb_wave_lib_release.lib
+DEP_PROJ_ARCHIVE_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/windows_amd64_gnu/dlb_pmd_lib_debug.lib $(BASE)dlb_adm/make/dlb_adm_lib/windows_amd64_gnu/dlb_adm_lib_debug.lib $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/windows_amd64_gnu/dlb_xml_debug.lib $(BASE)zlib/1.2.11/make/zlib/windows_amd64_gnu/zlib_debug.lib $(BASE)dlb_pmd/make/dlb_wave_lib/windows_amd64_gnu/dlb_wave_lib_debug.lib
+DEP_PROJ_ARCHIVE_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/windows_amd64_gnu/dlb_pmd_lib_release.lib $(BASE)dlb_adm/make/dlb_adm_lib/windows_amd64_gnu/dlb_adm_lib_release.lib $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/windows_amd64_gnu/dlb_xml_release.lib $(BASE)zlib/1.2.11/make/zlib/windows_amd64_gnu/zlib_release.lib $(BASE)dlb_pmd/make/dlb_wave_lib/windows_amd64_gnu/dlb_wave_lib_release.lib
 
 default: dlb_pmd_tool_lib_debug.lib dlb_pmd_tool_lib_release.lib
 
@@ -45,6 +45,7 @@ cleandeps:
 	$(RM) $(CLEAN_COMMON_COMPILE_release)
 
 clean: cleanself
+	$(MAKE) -C $(BASE)dlb_adm/make/dlb_adm_lib/windows_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_pmd_lib/windows_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_wave_lib/windows_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/windows_amd64_gnu cleanself
@@ -80,6 +81,8 @@ include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.dlb_pmd_tool_lib_win
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.dlb_pmd_tool_lib_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/xml.dlb_pmd_tool_lib_windows_amd64_gnu_release.d)
 
+$(BASE)dlb_adm/make/dlb_adm_lib/windows_amd64_gnu/dlb_adm_lib_debug.lib \
+$(BASE)dlb_adm/make/dlb_adm_lib/windows_amd64_gnu/dlb_adm_lib_release.lib \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/windows_amd64_gnu/dlb_pmd_lib_debug.lib \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/windows_amd64_gnu/dlb_pmd_lib_release.lib \
 $(BASE)dlb_pmd/make/dlb_wave_lib/windows_amd64_gnu/dlb_wave_lib_debug.lib \

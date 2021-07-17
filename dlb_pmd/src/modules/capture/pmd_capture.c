@@ -1,37 +1,14 @@
-/************************************************************************
- * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
  *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- **********************************************************************/
+ *                Copyright (C) 2020-2021 by Dolby Laboratories,
+ *                Copyright (C) 2020-2021 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
 
 /**
  * @file dlb_pmd_capture.c
@@ -101,7 +78,7 @@ typedef enum
 
 struct dlb_pmd_frame_captor
 {
-    dlb_pmd_model                   *model;
+    dlb_pmd_model_combo             *model;
     dlb_pcmpmd_extractor            *extractor;
     dlb_pmd_metadata_set            *metadata_set;
 
@@ -138,7 +115,7 @@ get_model_memory_size
     (void
     )
 {
-    return dlb_pmd_query_mem();
+    return dlb_pmd_model_combo_query_mem(NULL, NULL);
 }
 
 static
@@ -147,10 +124,7 @@ get_extractor_memory_size
     (void
     )
 {
-    pmd_profile p;
-
-    pmd_profile_set(&p, 0, 0, NULL);
-    return dlb_pcmpmd_extractor_query_mem2(PMD_TRUE, &p.constraints);
+    return dlb_pcmpmd_extractor_query_mem(PMD_TRUE);
 }
 
 static
@@ -183,31 +157,39 @@ free_memory
     (dlb_pmd_frame_captor *captor
     )
 {
-    if (captor != NULL && captor->mallocated)
+    if (captor != NULL)
     {
-        if (captor->metadata_set_memory != NULL)
-        {
-            free(captor->metadata_set_memory);
-        }
         if (captor->extractor)
         {
             dlb_pcmpmd_extractor_finish(captor->extractor);
         }
-        if (captor->extractor_memory != NULL)
-        {
-            free(captor->extractor_memory);
-        }
         if (captor->model != NULL)
         {
-            dlb_pmd_finish(captor->model);
+            (void)dlb_pmd_model_combo_destroy(&captor->model);
         }
-        if (captor->model_memory != NULL)
+        if (captor->mallocated)
         {
-            free(captor->model_memory);
+            if (captor->metadata_set_memory != NULL)
+            {
+                free(captor->metadata_set_memory);
+            }
+            if (captor->extractor_memory != NULL)
+            {
+                free(captor->extractor_memory);
+            }
+            if (captor->model_memory != NULL)
+            {
+                free(captor->model_memory);
+            }
+            memset(captor, 0, sizeof(*captor));
+            captor->captor_state = CAPTOR_STATE_DESTROYED;
+            free(captor);
         }
-        memset(captor, 0, sizeof(*captor));
-        captor->captor_state = CAPTOR_STATE_DESTROYED;
-        free(captor);
+        else
+        {
+            memset(captor, 0, sizeof(*captor));
+            captor->captor_state = CAPTOR_STATE_DESTROYED;
+        }
     }
 }
 
@@ -221,10 +203,12 @@ frame_captor_clear
     {
         if (captor->model)
         {
-            dlb_pmd_finish(captor->model);
+            dlb_pmd_model_combo_clear(captor->model);
         }
-        memset(captor->model_memory, 0, captor->model_memory_size);
-        dlb_pmd_init(&captor->model, captor->model_memory);
+        else
+        {
+            memset(captor->model_memory, 0, captor->model_memory_size);
+        }
 
         if (captor->extractor)
         {
@@ -263,7 +247,7 @@ dlb_pmd_frame_captor_open
     )
 {
     int status = DLB_PMD_FRAME_CAPTOR_STATUS_OK;
-    dlb_pmd_bool mallocated = (memory == NULL);
+    dlb_pmd_bool mallocate = (memory == NULL);
     uint8_t *mem = (uint8_t *)memory;
     dlb_pmd_frame_captor *fc;
     size_t sz;
@@ -274,7 +258,7 @@ dlb_pmd_frame_captor_open
     }
 
     /* captor structure */
-    if (mallocated)
+    if (mallocate)
     {
         fc = malloc(sizeof(*fc));
         if (fc == NULL)
@@ -289,7 +273,7 @@ dlb_pmd_frame_captor_open
     }
     memset(fc, 0, sizeof(*fc));
 
-    /* model memory */
+    /* model memory and model */
     sz = get_model_memory_size();
     if (sz == 0)
     {
@@ -297,7 +281,7 @@ dlb_pmd_frame_captor_open
         goto err;
     }
     fc->model_memory_size = sz;
-    if (mallocated)
+    if (mallocate)
     {
         fc->model_memory = malloc(sz);
         if (fc->model_memory == NULL)
@@ -311,6 +295,11 @@ dlb_pmd_frame_captor_open
         fc->model_memory = mem;
         mem += sz;
     }
+    if (dlb_pmd_model_combo_init(&fc->model, NULL, NULL, PMD_FALSE, fc->model_memory))
+    {
+        status = DLB_PMD_FRAME_CAPTOR_STATUS_ERROR;
+        goto err;
+    }
 
     /* extractor memory */
     sz = get_extractor_memory_size();
@@ -320,7 +309,7 @@ dlb_pmd_frame_captor_open
         goto err;
     }
     fc->extractor_memory_size = sz;
-    if (mallocated)
+    if (mallocate)
     {
         fc->extractor_memory = malloc(sz);
         if (fc->extractor_memory == NULL)
@@ -343,7 +332,7 @@ dlb_pmd_frame_captor_open
         goto err;
     }
     fc->metadata_set_memory_size = sz;
-    if (mallocated)
+    if (mallocate)
     {
         fc->metadata_set_memory = malloc(sz);
         if (fc->metadata_set_memory == NULL)
@@ -357,17 +346,15 @@ dlb_pmd_frame_captor_open
         fc->metadata_set_memory = mem;
     }
 
-    fc->mallocated = mallocated;
+    fc->mallocated = mallocate;
     frame_captor_clear(fc);
     *captor = fc;
 
     return status;
 
 err:
-    if (mallocated)
-    {
-        free_memory(fc);
-    }
+    free_memory(fc);
+
     return status;
 }
 
@@ -826,14 +813,20 @@ create_metadata_set
     (dlb_pmd_frame_captor *captor
     )
 {
-    int status = DLB_PMD_FRAME_CAPTOR_STATUS_ERROR;
+    const dlb_pmd_model *pmd_model;
+    int status;
 
     if (captor == NULL)
     {
         return DLB_PMD_FRAME_CAPTOR_STATUS_NULL_POINTER;
     }
 
-    status = dlb_pmd_create_metadata_set(captor->model, captor->metadata_set_memory, &captor->metadata_set);
+    if (dlb_pmd_model_combo_ensure_readable_pmd_model(captor->model, &pmd_model, PMD_FALSE))
+    {
+        return DLB_PMD_FRAME_CAPTOR_STATUS_ERROR;
+    }
+
+    status = dlb_pmd_create_metadata_set(pmd_model, captor->metadata_set_memory, &captor->metadata_set);
 
     return status;
 }

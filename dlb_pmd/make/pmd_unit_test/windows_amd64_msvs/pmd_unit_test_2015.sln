@@ -10,9 +10,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pmd_unit_test", "pmd_unit_t
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libember_slim", "..\..\..\..\Lawo\ember-plus\libember_slim\make\libember_slim\windows_amd64_msvs\libember_slim_2015.vcxproj", "{D30FDE59-F772-3718-BDAB-EFC45FBFAA5F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_pmd_lib", "..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2015.vcxproj", "{888B31BA-E7A4-360D-978E-857D8E4C4BAC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_adm_lib", "..\..\..\..\dlb_adm\make\dlb_adm_lib\windows_amd64_msvs\dlb_adm_lib_2015.vcxproj", "{1C9EF3B0-AD47-319D-B784-946309DE7B57}"
 	ProjectSection(ProjectDependencies) = postProject
 		{20895E86-0CC5-376D-A205-153F08960967} = {20895E86-0CC5-376D-A205-153F08960967}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dlb_pmd_lib", "..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2015.vcxproj", "{888B31BA-E7A4-360D-978E-857D8E4C4BAC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57} = {1C9EF3B0-AD47-319D-B784-946309DE7B57}
 		{76502233-DBC5-3511-A0CE-193C451A7809} = {76502233-DBC5-3511-A0CE-193C451A7809}
 	EndProjectSection
 EndProject
@@ -32,6 +37,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D30FDE59-F772-3718-BDAB-EFC45FBFAA5F}.debug|x64.ActiveCfg = debug|x64
 		{D30FDE59-F772-3718-BDAB-EFC45FBFAA5F}.debug|x64.Build.0 = debug|x64
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57}.debug|x64.ActiveCfg = debug|x64
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57}.debug|x64.Build.0 = debug|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.debug|x64.ActiveCfg = debug|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.debug|x64.Build.0 = debug|x64
 		{2A4DF4EE-7136-33B4-B637-60938D184F39}.debug|x64.ActiveCfg = debug|x64
@@ -46,6 +53,8 @@ Global
 		{76502233-DBC5-3511-A0CE-193C451A7809}.debug|x64.Build.0 = debug|x64
 		{D30FDE59-F772-3718-BDAB-EFC45FBFAA5F}.release|x64.ActiveCfg = release|x64
 		{D30FDE59-F772-3718-BDAB-EFC45FBFAA5F}.release|x64.Build.0 = release|x64
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57}.release|x64.ActiveCfg = release|x64
+		{1C9EF3B0-AD47-319D-B784-946309DE7B57}.release|x64.Build.0 = release|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.release|x64.ActiveCfg = release|x64
 		{888B31BA-E7A4-360D-978E-857D8E4C4BAC}.release|x64.Build.0 = release|x64
 		{2A4DF4EE-7136-33B4-B637-60938D184F39}.release|x64.ActiveCfg = release|x64

@@ -1,5 +1,5 @@
 # pmd_tool (dlb_pmd_lib)
-# version 1.7.4
+# version 2.0.0
 
 This project provides applications and libraries to assist with conversion between
 various professional audio metadata formats and containers.
@@ -30,6 +30,10 @@ running on your local machine for development and testing purposes.
 
 - **LICENSE** Terms of use.
 
+- **boost/** Boost C++ library.
+
+- **dlb_adm/** Dolby ADM library.
+
 - **dlb_buffer/** Buffer management component.
 
 - **dlb_octfile/** This component defines a wrapper around the stdio
@@ -40,11 +44,11 @@ running on your local machine for development and testing purposes.
 
 - **dlb_socket/** Cross-platform socket component.
 
+- **dlb_st2110/** IP stream management layer
+
 - **dlb_wave/** Component providing read/write to Microsoft (broadcast) audio WAV format.
 
 - **dlb_xmllib/** XML parser.
-
-- **dlb_st2110/** IP stream management layer
 
 - **googletest/** C++ test framework from Google.
 

@@ -9,8 +9,6 @@
 <UniqueIdentifier>{89beb8c7-b6e0-3cc9-9758-f36dfd1dac5f}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\include">
 <UniqueIdentifier>{579370b4-f054-3050-9e97-fb058c837d53}</UniqueIdentifier></Filter>
-<Filter Include="dlb_pmd\include\sadm">
-<UniqueIdentifier>{b7c16b3b-5a5f-3038-82d2-7e90afa13190}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\os">
 <UniqueIdentifier>{32391cfd-1734-3849-8b13-9f5d6a72de97}</UniqueIdentifier></Filter>
 <Filter Include="dlb_pmd\os\windows">
@@ -83,6 +81,8 @@
 <Filter>dlb_pmd\frontend\pmd_realtime</Filter></ClInclude>
 <ClInclude Include="..\..\..\frontend\pmd_realtime\pa_play.h">
 <Filter>dlb_pmd\frontend\pmd_realtime</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\DlbPmdModelWrapper.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_api.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_capture.h">
@@ -92,6 +92,8 @@
 <ClInclude Include="..\..\..\include\dlb_pmd_klv.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_lib_dll.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_model_combo.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
@@ -107,18 +109,6 @@
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h">
-<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h">
-<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model_type.h">
-<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h">
-<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h">
-<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h">
-<Filter>dlb_pmd\include\sadm</Filter></ClInclude>
 <ClInclude Include="..\..\..\os\pmd_os.h">
 <Filter>dlb_pmd\os</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_socket\0.1\dlb_socket\include\dlb_http_client.h">

@@ -1,0 +1,457 @@
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
+ *
+ *                Copyright (C) 2021 by Dolby Laboratories,
+ *                Copyright (C) 2021 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
+
+#define _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
+
+#include "gtest/gtest.h"
+
+#include "dlb_pmd/include/dlb_pmd_sadm_file.h"
+#include "dlb_pmd/include/dlb_pmd_model_combo.h"
+#include "dlb_pmd/frontend/pmd_tool/xml.h"
+
+#include "dlb_adm/include/dlb_adm_api.h"
+#include "dlb_pmd/src/modules/sadm/pmd_core_model_generator.h"
+#include "dlb_pmd/src/modules/sadm/pmd_bitset.h"
+#include "test_data.h"
+
+#include "DlbPmdModelWrapper.h"
+
+#include <fstream>
+
+#define CHECK_STATUS(X) if ((X) != DLB_ADM_STATUS_OK) return (X)
+
+static const char smallModel2InputFileName[] = "SmallADMModel2.xml";
+static const char smallModel2OutputFileName[] = "SmallADMModel2Output.xml";
+
+static const char dolbyReferenceInputFileName[] = "DolbyReference.xml";
+static const char dolbyReference_1_7_OutputFileName[] = "DolbyReference_1_7_Output.xml";
+static const char dolbyReferenceOutputFileName[] = "DolbyReferenceOutput.xml";
+
+static const char extraObjectPMDInputFileName[] = "ExtraObject.pmd.xml";
+static const char extraObjectADMInputFileName[] = "ExtraObject.sadm.xml";
+static const char extraObjectADMOutputFileName[] = "ExtraObject.out.sadm.xml";
+
+static const char altSpkrADMInputFileName[] = "AltSpkr.sadm.xml";
+static const char altSpkrADMOutputFileName[] = "AltSpkr.out.sadm.xml";
+
+class CoreModelGenerator : public testing::Test
+{
+protected:
+    dlb_pmd_model *mPmdModel;
+    dlb_pmd_model_combo *mPmdModelCombo;
+    dlb_adm_xml_container *mContainer;
+    dlb_adm_core_model *mCoreModel;
+    pmd_core_model_generator *mGenerator;
+
+    char *mPmdModelMemory;
+    char *mPmdModelComboMemory;
+    char *mGeneratorMemory;
+
+    void SetUpTestInput(const char *path, const char *content)
+    {
+        std::ifstream ifs(path);
+
+        if (!ifs.good())
+        {
+            std::ofstream ofs(path);
+
+            ofs << content;
+        }
+    }
+
+    int InitPmdModel()
+    {
+        dlb_pmd_model_constraints c;
+        size_t sz;
+
+        ::dlb_pmd_max_constraints(&c, PMD_FALSE);
+        sz = ::dlb_pmd_query_mem_constrained(&c);
+        mPmdModelMemory = new char[sz];
+        if (mPmdModelMemory == nullptr)
+        {
+            return DLB_ADM_STATUS_OUT_OF_MEMORY;
+        }
+        dlb_pmd_init_constrained(&mPmdModel, &c, mPmdModelMemory);
+
+        return DLB_ADM_STATUS_OK;
+    }
+
+    int InitCoreModel()
+    {
+        dlb_adm_core_model_counts counts;
+        int status;
+
+        ::memset(&counts, 0, sizeof(counts));
+        status = ::dlb_adm_core_model_open(&mCoreModel, &counts);
+
+        return status;
+    }
+
+    bool InitComboModel(dlb_pmd_model *existing_pmd_model, dlb_adm_core_model *existing_core_model)
+    {
+        bool good = true;
+
+        try
+        {
+            size_t sz = ::dlb_pmd_model_combo_query_mem(existing_pmd_model, existing_core_model);
+            dlb_pmd_success success;
+
+            if (sz == 0) throw false;
+            mPmdModelComboMemory = new char[sz];
+            if (mPmdModelComboMemory == nullptr) throw false;
+            success = ::dlb_pmd_model_combo_init(&mPmdModelCombo, existing_pmd_model, existing_core_model, PMD_FALSE, mPmdModelComboMemory);
+            if ((success == PMD_FAIL) || (mPmdModelCombo == nullptr)) throw false;
+        }
+        catch (...)
+        {
+            good = false;
+        }
+
+        return good;
+    }
+
+    dlb_pmd_success InitGenerator()
+    {
+        size_t sz;
+
+        if (::pmd_core_model_generator_query_memory_size(&sz))
+        {
+            return PMD_FAIL;
+        }
+
+        mGeneratorMemory = new char[sz];
+        if (mGeneratorMemory == nullptr)
+        {
+            return PMD_FAIL;
+        }
+
+        if (::pmd_core_model_generator_open(&mGenerator, mGeneratorMemory))
+        {
+            return PMD_FAIL;
+        }
+
+        return PMD_SUCCESS;
+    }
+
+    bool CompareFiles(const char *fname1, const char *fname2)
+    {
+        std::ifstream ifs1(fname1);
+        std::ifstream ifs2(fname2);
+        bool eq = ifs1.good() && ifs2.good();
+
+        if (eq)
+        {
+            std::string line1;
+            std::string line2;
+            bool got1 = !std::getline(ifs1, line1).eof();
+            bool got2 = !std::getline(ifs2, line2).eof();
+
+            while (got1 && got2)
+            {
+                if (!(line1 == line2))
+                {
+                    eq = false;
+                    break;
+                }
+                got1 = !std::getline(ifs1, line1).eof();
+                got2 = !std::getline(ifs2, line2).eof();
+            }
+            if (eq && (got1 || got2))
+            {
+                eq = false; // they should end at the same time
+            }
+        }
+
+        return eq;
+    }
+
+    virtual void SetUp()
+    {
+        mPmdModel = nullptr;
+        mContainer = nullptr;
+        mCoreModel = nullptr;
+        mGenerator = nullptr;
+
+        mPmdModelMemory = nullptr;
+        mGeneratorMemory = nullptr;
+    }
+
+    virtual void TearDown()
+    {
+        if (mGenerator != nullptr)
+        {
+            (void)::pmd_core_model_generator_close(&mGenerator);
+        }
+        if (mCoreModel != nullptr)
+        {
+            (void)::dlb_adm_core_model_close(&mCoreModel);
+        }
+        if (mContainer != nullptr)
+        {
+            (void)::dlb_adm_container_close(&mContainer);
+        }
+        if (mPmdModel != nullptr)
+        {
+            ::dlb_pmd_finish(mPmdModel);
+            mPmdModel = nullptr;
+        }
+
+        if (mGeneratorMemory != nullptr)
+        {
+            delete[] mGeneratorMemory;
+            mGeneratorMemory = nullptr;
+        }
+        if (mPmdModelMemory != nullptr)
+        {
+            delete[] mPmdModelMemory;
+            mPmdModelMemory = nullptr;
+        }
+    }
+
+};
+
+TEST(core_model_generator, BitSet)
+{
+    uint8_t              element_set[(DLB_PMD_MAX_AUDIO_ELEMENTS + (BYTE_BITS - 1)) / BYTE_BITS];
+    dlb_pmd_element_id   fib[] = { 0, 1 };
+    dlb_pmd_element_id   element_id;
+    dlb_pmd_element_id   previous_id;
+    const uint8_t        all_bits = (uint8_t)(~0);
+    size_t               i;
+
+    ::memset(element_set, 0, sizeof(element_set));
+
+    element_id = fib[0] + fib[1];
+    while (element_id <= DLB_PMD_MAX_AUDIO_ELEMENTS)
+    {
+        set_element_bit(element_set, element_id);
+        fib[0] = fib[1];
+        fib[1] = element_id;
+        element_id += fib[0];
+    }
+
+    fib[0] = 0;
+    fib[1] = 1;
+    EXPECT_FALSE(get_element_bit(element_set, fib[0]));
+    element_id = fib[0] + fib[1];
+    previous_id = element_id;
+    while (element_id <= DLB_PMD_MAX_AUDIO_ELEMENTS)
+    {
+        while (++previous_id < element_id)
+        {
+            EXPECT_FALSE(get_element_bit(element_set, previous_id));
+        }
+
+        EXPECT_TRUE(get_element_bit(element_set, element_id));
+
+        previous_id = element_id;
+        fib[0] = fib[1];
+        fib[1] = element_id;
+        element_id += fib[0];
+    }
+
+    ::memset(element_set, 0, sizeof(element_set));
+    for (element_id = 0; element_id < sizeof(element_set) * BYTE_BITS; element_id++)
+    {
+        set_element_bit(element_set, element_id);
+    }
+    for (i = 0; i < sizeof(element_set); i++)
+    {
+        EXPECT_EQ(all_bits, element_set[i]);
+    }
+}
+
+TEST(core_model_generator, QueryMem)
+{
+    dlb_pmd_success success;
+    size_t sz;
+
+    success = pmd_core_model_generator_query_memory_size(nullptr);
+    EXPECT_EQ(PMD_FAIL, success);
+
+    sz = 0;
+    success = pmd_core_model_generator_query_memory_size(&sz);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    EXPECT_LT(0, sz);
+}
+
+TEST_F(CoreModelGenerator, Open)
+{
+    dlb_pmd_success success;
+    size_t sz;
+
+    success = pmd_core_model_generator_query_memory_size(&sz);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    mGeneratorMemory = new char[sz];
+    ASSERT_NE(nullptr, mGeneratorMemory);
+
+    success = ::pmd_core_model_generator_open(nullptr, nullptr);
+    EXPECT_EQ(PMD_FAIL, success);
+    success = ::pmd_core_model_generator_open(&mGenerator, nullptr);
+    EXPECT_EQ(PMD_FAIL, success);
+
+    success = ::pmd_core_model_generator_open(&mGenerator, mGeneratorMemory);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    EXPECT_NE(nullptr, mGenerator);
+}
+
+TEST_F(CoreModelGenerator, GenerateBasic)
+{
+    const dlb_pmd_model *const_pmd_model;
+    dlb_pmd_success success;
+    int status;
+
+    SetUpTestInput(smallModel2InputFileName, smallXML2);
+    status = InitPmdModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    ASSERT_TRUE(InitComboModel(mPmdModel, nullptr));
+
+    status = ::xml_read(smallModel2InputFileName, mPmdModelCombo, PMD_FALSE, PMD_FALSE);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    success = ::dlb_pmd_model_combo_convert_to_pmd_model(mPmdModelCombo, smallModel2InputFileName, &const_pmd_model);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    ASSERT_EQ(mPmdModel, const_pmd_model);
+
+    status = InitCoreModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    success = InitGenerator();
+    ASSERT_EQ(PMD_SUCCESS, success);
+
+    success = ::pmd_core_model_generator_generate(nullptr, nullptr, nullptr);
+    EXPECT_EQ(PMD_FAIL, success);
+    success = ::pmd_core_model_generator_generate(mGenerator, nullptr, nullptr);
+    EXPECT_EQ(PMD_FAIL, success);
+    success = ::pmd_core_model_generator_generate(mGenerator, mCoreModel, nullptr);
+    EXPECT_EQ(PMD_FAIL, success);
+
+    success = ::pmd_core_model_generator_generate(mGenerator, mCoreModel, mPmdModel);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    status = ::dlb_adm_container_open_from_core_model(&mContainer, mCoreModel);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_container_write_xml_file(mContainer, smallModel2OutputFileName);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    EXPECT_TRUE(CompareFiles(smallModel2InputFileName, smallModel2OutputFileName));
+}
+
+TEST_F(CoreModelGenerator, GenerateDolbyReferenceComparisonWith_1_7)
+{
+    const dlb_pmd_model *const_pmd_model;
+    dlb_pmd_success success;
+    int status;
+
+    SetUpTestInput(dolbyReferenceInputFileName, dolbyReferenceXML);
+    SetUpTestInput(dolbyReference_1_7_OutputFileName, dolbyReference_1_7_XML);
+    status = InitPmdModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    ASSERT_TRUE(InitComboModel(mPmdModel, nullptr));
+
+    status = ::xml_read(dolbyReferenceInputFileName, mPmdModelCombo, PMD_FALSE, PMD_FALSE);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    success = ::dlb_pmd_model_combo_convert_to_pmd_model(mPmdModelCombo, dolbyReferenceInputFileName, &const_pmd_model);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    ASSERT_EQ(mPmdModel, const_pmd_model);
+
+    status = InitCoreModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    success = InitGenerator();
+    ASSERT_EQ(PMD_SUCCESS, success);
+
+    success = ::pmd_core_model_generator_generate(mGenerator, mCoreModel, mPmdModel);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    status = ::dlb_adm_container_open_from_core_model(&mContainer, mCoreModel);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_container_write_xml_file(mContainer, dolbyReferenceOutputFileName);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    EXPECT_TRUE(CompareFiles(dolbyReference_1_7_OutputFileName, dolbyReferenceOutputFileName));
+}
+
+TEST_F(CoreModelGenerator, Close)
+{
+    pmd_core_model_generator *p = nullptr;
+    dlb_pmd_success success;
+
+    success = InitGenerator();
+    ASSERT_EQ(PMD_SUCCESS, success);
+    ASSERT_NE(nullptr, mGenerator);
+
+    success = ::pmd_core_model_generator_close(nullptr);
+    EXPECT_EQ(PMD_FAIL, success);
+    success = ::pmd_core_model_generator_close(&p);
+    EXPECT_EQ(PMD_FAIL, success);
+
+    success = ::pmd_core_model_generator_close(&mGenerator);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    EXPECT_EQ(nullptr, mGenerator);
+}
+
+TEST_F(CoreModelGenerator, PMDExtraObjectGen)
+{
+    dlb_pmd_success success;
+    int status;
+
+    SetUpTestInput(extraObjectPMDInputFileName, extraObjectPMD);
+    SetUpTestInput(extraObjectADMInputFileName, extraObjectADM);
+    status = InitPmdModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    ASSERT_TRUE(InitComboModel(mPmdModel, nullptr));
+
+    status = ::xml_read(extraObjectPMDInputFileName, mPmdModelCombo, PMD_FALSE, PMD_FALSE);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = InitCoreModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    success = InitGenerator();
+    ASSERT_EQ(PMD_SUCCESS, success);
+
+    success = ::pmd_core_model_generator_generate(mGenerator, mCoreModel, mPmdModel);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    status = ::dlb_adm_container_open_from_core_model(&mContainer, mCoreModel);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_container_write_xml_file(mContainer, extraObjectADMOutputFileName);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    EXPECT_TRUE(CompareFiles(extraObjectADMInputFileName, extraObjectADMOutputFileName));
+}
+
+TEST_F(CoreModelGenerator, AltSpkrs)
+{
+    dlb_pmd_element_id eid;
+    dlb_pmd_success success;
+    int status;
+
+    SetUpTestInput(altSpkrADMInputFileName, altSpkrADM);
+    status = InitPmdModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    success = ::dlb_pmd_add_bed(mPmdModel, 1, "Bed 1", DLB_PMD_SPEAKER_CONFIG_5_1,   1, 0);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_pmd_add_bed(mPmdModel, 2, "Bed 2", DLB_PMD_SPEAKER_CONFIG_7_1_4, 7, 0);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    eid = 1;
+    success = ::dlb_pmd_add_presentation(mPmdModel, 1, "en", "Pres 1", "en", DLB_PMD_SPEAKER_CONFIG_5_1, 1, &eid);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    eid = 2;
+    success = ::dlb_pmd_add_presentation(mPmdModel, 2, "en", "Pres 2", "en", DLB_PMD_SPEAKER_CONFIG_7_1_4, 1, &eid);
+    EXPECT_EQ(PMD_SUCCESS, success);
+
+    // Wrap the model
+    dlb_pmd_model_combo *comboModel;
+    DlbAdm::DlbPmdModelWrapper wrapper(&comboModel, mPmdModel, PMD_FALSE);
+
+    success = ::dlb_pmd_sadm_file_write(altSpkrADMOutputFileName, comboModel);
+    EXPECT_EQ(PMD_SUCCESS, success);
+
+    /* Note: the "gold standard" comparison is WITHOUT using alternative speakers */
+
+    EXPECT_TRUE(CompareFiles(altSpkrADMInputFileName, altSpkrADMOutputFileName));
+}

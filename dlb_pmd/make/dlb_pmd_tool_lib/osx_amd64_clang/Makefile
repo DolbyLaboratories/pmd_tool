@@ -18,8 +18,8 @@ COMMON_FILES = $(TMP)dlb_pmd/frontend/pmd_tool/pcm $(TMP)dlb_pmd/frontend/pmd_to
 INPUTS_COMMON_ARCHIVE_debug = $(addsuffix .dlb_pmd_tool_lib_osx_amd64_clang_debug.o,$(COMMON_FILES))
 INPUTS_COMMON_ARCHIVE_release = $(addsuffix .dlb_pmd_tool_lib_osx_amd64_clang_release.o,$(COMMON_FILES))
 
-DEP_PROJ_ARCHIVE_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a
-DEP_PROJ_ARCHIVE_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_release.a
+DEP_PROJ_ARCHIVE_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a $(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a
+DEP_PROJ_ARCHIVE_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a $(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_release.a
 
 default: dlb_pmd_tool_lib_debug.a dlb_pmd_tool_lib_release.a
 
@@ -45,6 +45,7 @@ cleandeps:
 	$(RM) $(CLEAN_COMMON_COMPILE_release)
 
 clean: cleanself
+	$(MAKE) -C $(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang cleanself
 	$(MAKE) -C $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang cleanself
@@ -80,6 +81,8 @@ include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.dlb_pmd_tool_lib_osx
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.dlb_pmd_tool_lib_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/xml.dlb_pmd_tool_lib_osx_amd64_clang_release.d)
 
+$(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_debug.a \
+$(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a \

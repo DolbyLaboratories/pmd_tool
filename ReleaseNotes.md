@@ -1,4 +1,4 @@
-PMD 1.7.4 release notes
+PMD 2.0.0 release notes
 =======================
 
 Professional Metadata (PMD) is a format for specifying and
@@ -41,6 +41,7 @@ Components:
   PMD and S-ADM XML files, streaming audio containing PMD or S-ADM metadata,
   interface with Lawo consoles and applications via the Ember+ library, and
   interface to audio over IP via the Rivermax library and drivers
+- Not all components are supported on all platforms
 
 Test applications:
 ------------------
@@ -56,6 +57,14 @@ Known issues:
   header files (http://site.icu-project.org/home)
 - pmd_studio will not build on Windows and OSX support is limited
 
+Changes since 1.7.4:
+--------------------
+- Added the boost C++ library in support of the new ADM library.
+- Added the new ADM library, which is implemented in C++ with a C-callable
+  API.  There is an implementation guide in the dlb_adm folder.  This library
+  entirely replaces the original ADM implementation.  It is much more easily
+  maintained and extended, and is more than three times faster than the orginal.
+
 Changes since 1.7.3.34:
 -----------------------
 - Added NVIDIA Rivermax support to the PMD Studio Application so that
@@ -63,7 +72,6 @@ Changes since 1.7.3.34:
   support is still provided using Portaudio but via a different build. See the
   [PMD Studio Quick Start Guide](PmdStudioQsg.md) for more information and
   requirements.
-
 
 Changes since 1.7.3.33:
 -----------------------

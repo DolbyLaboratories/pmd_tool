@@ -30,8 +30,8 @@ INPUTS_LINK_release = $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.sadm_fuzz_osx_amd64_clang_
                       $(TMP)dlb_pmd/test/TestXml.sadm_fuzz_osx_amd64_clang_release.o $(TMP)dlb_pmd/test/XmlSchema.sadm_fuzz_osx_amd64_clang_release.o\
                       $(TMP)dlb_pmd/test/sadm_fuzz.sadm_fuzz_osx_amd64_clang_release.o
 
-DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_clang/xerces_3_2_0_lib_debug.a
-DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_release.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_clang/xerces_3_2_0_lib_release.a
+DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a $(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_clang/xerces_3_2_0_lib_debug.a
+DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a $(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_release.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/osx_amd64_clang/xerces_3_2_0_lib_release.a
 
 default: sadm_fuzz_debug sadm_fuzz_release
 
@@ -73,6 +73,7 @@ cleandeps:
 	$(RM) $(CLEAN_COMPILE_release)
 
 clean: cleanself
+	$(MAKE) -C $(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang cleanself
 	$(MAKE) -C $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang cleanself
@@ -119,6 +120,8 @@ include $(wildcard $(TMP)dlb_pmd/test/TestXml.sadm_fuzz_osx_amd64_clang_release.
 include $(wildcard $(TMP)dlb_pmd/test/XmlSchema.sadm_fuzz_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/test/sadm_fuzz.sadm_fuzz_osx_amd64_clang_release.d)
 
+$(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_debug.a \
+$(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a \

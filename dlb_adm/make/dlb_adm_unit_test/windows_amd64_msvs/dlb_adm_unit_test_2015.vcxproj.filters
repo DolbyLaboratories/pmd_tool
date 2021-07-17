@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<ItemGroup>
+<Filter Include="dlb_adm">
+<UniqueIdentifier>{00138090-8d19-314f-a90b-3b9383a99841}</UniqueIdentifier></Filter>
+<Filter Include="dlb_adm\test">
+<UniqueIdentifier>{e6c28a84-50ba-30cd-9253-19f4df259236}</UniqueIdentifier></Filter>
+<Filter Include="dlb_adm\test\unit">
+<UniqueIdentifier>{be0ce0b5-ff0e-3783-801c-7df62fd22bf5}</UniqueIdentifier></Filter></ItemGroup>
+<ItemGroup>
+<ClCompile Include="..\..\..\test\unit\CoreModelTest.cpp">
+<Filter>dlb_adm\test\unit</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\unit\dlb_adm_01.cpp">
+<Filter>dlb_adm\test\unit</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\unit\dlb_adm_02.cpp">
+<Filter>dlb_adm\test\unit</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\unit\dlb_adm_03.cpp">
+<Filter>dlb_adm\test\unit</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\unit\dlb_adm_04.cpp">
+<Filter>dlb_adm\test\unit</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\unit\dlb_adm_05.cpp">
+<Filter>dlb_adm\test\unit</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\unit\dlb_adm_06.cpp">
+<Filter>dlb_adm\test\unit</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\unit\unit_test_main.cpp">
+<Filter>dlb_adm\test\unit</Filter></ClCompile></ItemGroup>
+<ItemGroup>
+<ClInclude Include="..\..\..\test\unit\CoreModelTest.h">
+<Filter>dlb_adm\test\unit</Filter></ClInclude>
+<ClInclude Include="..\..\..\test\unit\dlb_adm_data.h">
+<Filter>dlb_adm\test\unit</Filter></ClInclude></ItemGroup>
+<ItemGroup />
+<ItemGroup />
+<ItemGroup />
+<ItemGroup /></Project>

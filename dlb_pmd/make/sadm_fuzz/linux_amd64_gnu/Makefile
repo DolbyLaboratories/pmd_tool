@@ -30,8 +30,8 @@ INPUTS_LINK_release = $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.sadm_fuzz_linux_amd64_gn
                       $(TMP)dlb_pmd/test/TestXml.sadm_fuzz_linux_amd64_gnu_release.o $(TMP)dlb_pmd/test/XmlSchema.sadm_fuzz_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/test/sadm_fuzz.sadm_fuzz_linux_amd64_gnu_release.o
 
-DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu/dlb_wave_lib_debug.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/linux_amd64_gnu/xerces_3_2_0_lib_debug.a
-DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu/dlb_wave_lib_release.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/linux_amd64_gnu/xerces_3_2_0_lib_release.a
+DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu/dlb_adm_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu/dlb_wave_lib_debug.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/linux_amd64_gnu/xerces_3_2_0_lib_debug.a
+DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_release.a $(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu/dlb_adm_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu/dlb_wave_lib_release.a $(BASE)xerces/xerces-c-3.2.0/make/xerces_3_2_0_lib/linux_amd64_gnu/xerces_3_2_0_lib_release.a
 
 default: sadm_fuzz_debug sadm_fuzz_release
 
@@ -73,6 +73,7 @@ cleandeps:
 	$(RM) $(CLEAN_COMPILE_release)
 
 clean: cleanself
+	$(MAKE) -C $(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu cleanself
@@ -119,6 +120,8 @@ include $(wildcard $(TMP)dlb_pmd/test/TestXml.sadm_fuzz_linux_amd64_gnu_release.
 include $(wildcard $(TMP)dlb_pmd/test/XmlSchema.sadm_fuzz_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/test/sadm_fuzz.sadm_fuzz_linux_amd64_gnu_release.d)
 
+$(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu/dlb_adm_lib_debug.a \
+$(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu/dlb_adm_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_debug.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu/dlb_wave_lib_debug.a \

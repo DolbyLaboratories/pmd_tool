@@ -1,5 +1,5 @@
 # PMD Studio Quick Start Guide
-# Version 1.7.4
+# Version 2.0.0
 
 PMD Studio is an application for authoring professional metadata.
 It provides a simple user interface for configuring audio beds, objects

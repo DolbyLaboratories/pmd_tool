@@ -1,37 +1,14 @@
-/************************************************************************
- * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
  *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- **********************************************************************/
+ *                Copyright (C) 2017-2020 by Dolby Laboratories,
+ *                Copyright (C) 2017-2020 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
 
 /**
  * @file dlb_pmd_xml_string.h
@@ -52,7 +29,7 @@ extern "C" {
 /**
  * @brief helper routine to write PMD XML to a string
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if string written successfully, 1 otherwise */
 dlb_xmlpmd_string_write
    (const dlb_pmd_model  *pmd_model     /**< [in] PMD model struct to write */
@@ -71,7 +48,7 @@ dlb_xmlpmd_string_write
  * see the note on #dlb_xmlpmd_parse for an explanation of the #strict
  * field.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if string read and parsed successfully, 1 otherwise */
 dlb_xmlpmd_string_read
    (const char                *data          /**< [in] data to read */

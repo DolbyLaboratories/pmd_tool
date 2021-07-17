@@ -1,37 +1,14 @@
-/************************************************************************
- * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
  *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- **********************************************************************/
+ *                Copyright (C) 2018-2021 by Dolby Laboratories,
+ *                Copyright (C) 2018-2021 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
 
 /**
  * @file dlb_pmd_api.h
@@ -61,19 +38,6 @@ extern "C" {
 
 
 /**
- * @brief PMD success return type
- *
- * The return type for the construction side of the API returns 0
- * for success and non-zero for failure.
- */
-typedef dlb_pmd_bool dlb_pmd_success;
-enum
-{
-    PMD_SUCCESS,
-    PMD_FAIL
-};
-
-/**
   * Mask used for determining which components should be
   * considered during PMD comparison.
   */
@@ -101,7 +65,7 @@ enum dlb_pmd_equal_mask
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 const char *                    /** @return error string, or NULL if none */
 dlb_pmd_error
     (const dlb_pmd_model *model /**< [in] model pertaining to the error */
@@ -124,7 +88,7 @@ dlb_pmd_error
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_library_version
     (unsigned int *epoch    /**< [out] library implementation epoch number */
@@ -139,7 +103,7 @@ dlb_pmd_library_version
 /**
  * @brief initialize constraints to maximum values
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_max_constraints
     (dlb_pmd_model_constraints  *c                      /**< [out] model size constraints */
@@ -150,7 +114,7 @@ dlb_pmd_max_constraints
 /**
  * @brief establish how much memory the client needs to allocate
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 size_t                  /** @return size of memory to allocate in bytes */
 dlb_pmd_query_mem
     (void
@@ -172,7 +136,7 @@ dlb_pmd_query_mem
  * If the constraints do not satisfy these conditions, this function will
  * return 0.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 size_t                                  /** @return size of memory to allocate in bytes */
 dlb_pmd_query_mem_constrained
     (const dlb_pmd_model_constraints *c /**< [in] model size constraints */
@@ -185,7 +149,7 @@ dlb_pmd_query_mem_constrained
  * values when initialising the model using #dlb_pmd_init_profile.
  * If the profile is unknown, returns 0.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 size_t                       /** @return size of memory to allocate in bytes, or 0 if profile unknown */
 dlb_pmd_query_mem_profile
     (unsigned int   profile  /**< [in] profile number */
@@ -203,7 +167,7 @@ dlb_pmd_query_mem_profile
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_init
     (dlb_pmd_model **model      /**< [out] newly created model structure */
@@ -229,7 +193,7 @@ dlb_pmd_init
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_init_constrained
     (      dlb_pmd_model **model        /**< [out] newly created model structure */
@@ -248,7 +212,7 @@ dlb_pmd_init_constrained
  * Invalid parameters cause undefined behaviour.  If the profile is unknown,
  * the model is set to NULL.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_init_profile
     (dlb_pmd_model **model        /**< [out] newly created model structure */
@@ -261,7 +225,7 @@ dlb_pmd_init_profile
 /**
  * @brief retrieve maximum constraints of a model
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_get_constraints
     (const dlb_pmd_model *model     /**< [in] PMD model */
@@ -276,7 +240,7 @@ dlb_pmd_get_constraints
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS always */
 dlb_pmd_reset
     (dlb_pmd_model *model      /**< [in] reinitialize model structure */
@@ -290,7 +254,7 @@ dlb_pmd_reset
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if succeeded, 1 if not */
 dlb_pmd_set_error_callback
     (dlb_pmd_model                      *model  /**< [in] model */
@@ -304,7 +268,7 @@ dlb_pmd_set_error_callback
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_finish
     (dlb_pmd_model *model       /**< [in] model to clean up */
@@ -316,7 +280,7 @@ dlb_pmd_finish
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if succeeded, 1 if not (i.e., not
                                  * enough space in destination model for entirety
                                  * of source model */
@@ -332,7 +296,7 @@ dlb_pmd_copy
  *
  * @see dlb_pmd_equal_mask
  */
-extern DLB_DLL_ENTRY const uint32_t PMD_COMPARE_MASK;
+extern DLB_PMD_DLL_ENTRY const uint32_t PMD_COMPARE_MASK;
 
 
 /**
@@ -341,7 +305,7 @@ extern DLB_DLL_ENTRY const uint32_t PMD_COMPARE_MASK;
  * More general approach than existing dlb_pmd_equal2
  * uses bit mask, allowing to choose exact components for comparison.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                   /** @return 0 if equal, 1 otherwise */
 dlb_pmd_equal3
     (const dlb_pmd_model *m1             /**< [in] 1st model to compare */
@@ -362,7 +326,7 @@ dlb_pmd_equal3
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                   /** @return 0 if equal, 1 otherwise */
 dlb_pmd_equal2
     (const dlb_pmd_model *m1            /**< [in] 1st model to compare */
@@ -395,7 +359,7 @@ dlb_pmd_equal
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_remap_channels
     (dlb_pmd_model *m     /**< [in] model to augment */
@@ -413,7 +377,7 @@ dlb_pmd_remap_channels
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL on failure */       
 dlb_pmd_smpte2109_sample_offset
     (const dlb_pmd_model *m      /**< [in] model to query */
@@ -426,7 +390,7 @@ dlb_pmd_smpte2109_sample_offset
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                        /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_version
     (const dlb_pmd_model *model        /**< [in] model to query */
@@ -440,7 +404,7 @@ dlb_pmd_version
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_title
     (const dlb_pmd_model *model /**< [in] model to query */
@@ -456,7 +420,7 @@ dlb_pmd_title
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_profile
     (const dlb_pmd_model *model    /**< [in] model to query */
@@ -470,7 +434,7 @@ dlb_pmd_profile
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 on success, nonzero on failure */
 dlb_pmd_count_entities
     (const dlb_pmd_model *model    /**< [in] model to query */
@@ -486,7 +450,7 @@ dlb_pmd_count_entities
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                     /** @return number of audio signals, 0 on error */
 dlb_pmd_num_signals
     (const dlb_pmd_model *model  /**< [in] model to query */
@@ -507,7 +471,7 @@ typedef struct
 /**
  * @brief initialize a signal iterator
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                       /** @return 0 on success, 1 on failure */
 dlb_pmd_signal_iterator_init
     (dlb_pmd_signal_iterator *it      /**< [in/out] iterator to initialize */
@@ -518,7 +482,7 @@ dlb_pmd_signal_iterator_init
 /**
  * @brief read the next signal out of the iterator
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 if another bed found, 1 otherwise */
 dlb_pmd_signal_iterator_next
    (dlb_pmd_signal_iterator *it    /**< [in] iterator */
@@ -529,7 +493,7 @@ dlb_pmd_signal_iterator_next
 /**
  * @brief return number of audio bed elements
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                   /** @return number of audio elements, 0 on error */
 dlb_pmd_num_beds
    (const dlb_pmd_model *model /**< [in] model to query */
@@ -553,7 +517,7 @@ dlb_pmd_num_beds
  * memory for the sources field of #bed, so bed->sources will point
  * to #sources upon successful return.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                       /** @return 0 if bed exists, 1 otherwise */
 dlb_pmd_bed_lookup
     (const dlb_pmd_model *model       /**< [in] model to query */
@@ -579,7 +543,7 @@ typedef struct
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                       /** @return 0 on success, 1 on failure */
 dlb_pmd_bed_iterator_init
     (dlb_pmd_bed_iterator *it         /**< [in/out] iterator to initialize */
@@ -592,7 +556,7 @@ dlb_pmd_bed_iterator_init
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 if another bed found, 1 otherwise */
 dlb_pmd_bed_iterator_next
    (dlb_pmd_bed_iterator *it       /**< [in] iterator */
@@ -607,7 +571,7 @@ dlb_pmd_bed_iterator_next
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                   /** @return number of audio elements, 0 on error */
 dlb_pmd_num_objects
    (const dlb_pmd_model *model /**< [in] model to query */
@@ -623,7 +587,7 @@ dlb_pmd_num_objects
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                     /** @return 0 if object exists, 1 otherwise */
 dlb_pmd_object_lookup
     (const dlb_pmd_model *model     /**< [in] model to query */
@@ -647,7 +611,7 @@ typedef struct
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 on success, 1 on failure */
 dlb_pmd_object_iterator_init
     (dlb_pmd_object_iterator *it   /**< [in] iterator to initialize */
@@ -660,7 +624,7 @@ dlb_pmd_object_iterator_init
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                  /** @return 0 if another object found, 1 otherwise */
 dlb_pmd_object_iterator_next
    (dlb_pmd_object_iterator *it  /**< [in] iterator */
@@ -673,7 +637,7 @@ dlb_pmd_object_iterator_next
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                     /** @return number of ED2 turnaround descriptions, 0 on error */
 dlb_pmd_num_updates
     (const dlb_pmd_model *model  /**< [in] model to query */
@@ -685,7 +649,7 @@ dlb_pmd_num_updates
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 if update exists, 1 otherwise */
 dlb_pmd_update_lookup
     (const dlb_pmd_model *model    /**< [in] model to query */
@@ -710,7 +674,7 @@ typedef struct
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                      /** @return 0 on success, 1 on failure */
 dlb_pmd_update_iterator_init
     (dlb_pmd_update_iterator *it     /**< [in] iterator to initialize */
@@ -723,7 +687,7 @@ dlb_pmd_update_iterator_init
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                  /** @return 0 if another update found, 1 otherwise */
 dlb_pmd_update_iterator_next
    (dlb_pmd_update_iterator *it  /**< [in] iterator */
@@ -736,7 +700,7 @@ dlb_pmd_update_iterator_next
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                     /** @return number of presentations, 0 on error */
 dlb_pmd_num_presentations
     (const dlb_pmd_model *model  /**< [in] model to query */
@@ -760,7 +724,7 @@ dlb_pmd_num_presentations
  * the memory for the elements field of #p, so p->elements will point to
  * #elements upon successful return.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                       /** @return 0 if presentation exists, 1 otherwise */
 dlb_pmd_presentation_lookup
     (const dlb_pmd_model * model      /**< [in] model to query */
@@ -782,7 +746,7 @@ dlb_pmd_presentation_lookup
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                      /** @return 0 on success, 1 otherwise */
 dlb_pmd_default_presentation
     (const dlb_pmd_model *model      /**< [in] model to query */
@@ -807,7 +771,7 @@ typedef struct
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return 0 on success, 1 on failure */
 dlb_pmd_presentation_iterator_init
     (dlb_pmd_presentation_iterator *it  /**< [in] iterator to initialize */
@@ -820,7 +784,7 @@ dlb_pmd_presentation_iterator_init
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                        /** @return 0 if another presentation found, 1 otherwise */
 dlb_pmd_presentation_iterator_next
     (dlb_pmd_presentation_iterator *it /**< [in] iterator */
@@ -835,7 +799,7 @@ dlb_pmd_presentation_iterator_next
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                    /** @return number of loudness descriptions, 0 on error */
 dlb_pmd_num_loudness
     (const dlb_pmd_model *model /**< [in] model to query */
@@ -847,7 +811,7 @@ dlb_pmd_num_loudness
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                       /** @return 0 if loudness exists, 1 otherwise */
 dlb_pmd_loudness_lookup
     (const dlb_pmd_model *model       /**< [in] model to query */
@@ -871,7 +835,7 @@ typedef struct
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return 0 on success, 1 on failure */
 dlb_pmd_loudness_iterator_init
     (dlb_pmd_loudness_iterator *it      /**< [in] iterator to initialize */
@@ -884,7 +848,7 @@ dlb_pmd_loudness_iterator_init
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 if another loudness found, 1 otherwise */
 dlb_pmd_loudness_iterator_next
    (dlb_pmd_loudness_iterator *it  /**< [in] iterator */
@@ -897,7 +861,7 @@ dlb_pmd_loudness_iterator_next
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                          /** @return 1 if IAT present, 0 otherwise */
 dlb_pmd_num_iat
     (const dlb_pmd_model *model       /**< [in] model to query */
@@ -909,7 +873,7 @@ dlb_pmd_num_iat
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                       /** @return 0 if successful, 1 otherwise */
 dlb_pmd_iat_lookup
     (const dlb_pmd_model *model       /**< [in] model to query */
@@ -922,7 +886,7 @@ dlb_pmd_iat_lookup
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                        /** @return number of loudness descriptions, 0 on error */
 dlb_pmd_num_eac3
     (const dlb_pmd_model *model     /**< [in] model to query */
@@ -934,7 +898,7 @@ dlb_pmd_num_eac3
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                  /** @return 0 if EAC3 encoder parameter exists, 1 otherwise */
 dlb_pmd_eac3_lookup
     (const dlb_pmd_model *model  /**< [in] model to query */
@@ -958,7 +922,7 @@ typedef struct
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 on success, 1 on failure */
 dlb_pmd_eac3_iterator_init
     (dlb_pmd_eac3_iterator *it     /**< [in] iterator to initialize */
@@ -971,7 +935,7 @@ dlb_pmd_eac3_iterator_init
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                /** @return 0 if another EAC3 encoding param desc found, 1 otherwise */
 dlb_pmd_eac3_iterator_next
    (dlb_pmd_eac3_iterator *it  /**< [in] iterator */
@@ -984,7 +948,7 @@ dlb_pmd_eac3_iterator_next
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                       /** @return number of ED2 turnaround descriptions, 0 on error */
 dlb_pmd_num_ed2_turnarounds
     (const dlb_pmd_model *model    /**< [in] model to query */
@@ -996,7 +960,7 @@ dlb_pmd_num_ed2_turnarounds
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                  /** @return 0 if ED2 turnaround exists, 1 otherwise */
 dlb_pmd_ed2_turnaround_lookup
     (const dlb_pmd_model *model  /**< [in] model to query */
@@ -1020,7 +984,7 @@ typedef struct
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                           /** @return 0 on success, 1 on failure */
 dlb_pmd_ed2_turnaround_iterator_init
     (dlb_pmd_ed2_turnaround_iterator *it  /**< [in] iterator to initialize */
@@ -1033,7 +997,7 @@ dlb_pmd_ed2_turnaround_iterator_init
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 if another ED2 turnaround found, 1 otherwise */
 dlb_pmd_ed2_turnaround_iterator_next
    (dlb_pmd_ed2_turnaround_iterator *it  /**< [in] iterator */
@@ -1048,7 +1012,7 @@ dlb_pmd_ed2_turnaround_iterator_next
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                        /** @return number of ED2 stream descriptions, 0 on error */
 dlb_pmd_num_ed2_system
     (const dlb_pmd_model *model     /**< [in] model to query */
@@ -1060,7 +1024,7 @@ dlb_pmd_num_ed2_system
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                  /** @return 0 on success, 1 otherwise */
 dlb_pmd_ed2_system_lookup
     (const dlb_pmd_model *model  /**< [in] model to query */
@@ -1073,7 +1037,7 @@ dlb_pmd_ed2_system_lookup
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 unsigned int                     /** @return number of headphone_element_descriptions, 0 on error */
 dlb_pmd_num_headphone_element_desc
     (const dlb_pmd_model *model  /**< [in] model to query */
@@ -1085,7 +1049,7 @@ dlb_pmd_num_headphone_element_desc
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                       /** @return 0 if bed exists, 1 otherwise */
 dlb_pmd_hed_lookup
     (const dlb_pmd_model *model       /**< [in] model to query */
@@ -1109,7 +1073,7 @@ typedef struct
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                       /** @return 0 on success, 1 on failure */
 dlb_pmd_hed_iterator_init
     (dlb_pmd_hed_iterator *it         /**< [in/out] iterator to initialize */
@@ -1122,7 +1086,7 @@ dlb_pmd_hed_iterator_init
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 if another bed found, 1 otherwise */
 dlb_pmd_hed_iterator_next
    (dlb_pmd_hed_iterator *it       /**< [in] iterator */
@@ -1138,7 +1102,7 @@ dlb_pmd_hed_iterator_next
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success            /** @return PMD_SUCCESS on success, PMD_FAIL on failure */       
 dlb_pmd_set_smpte2109_sample_offset
     (dlb_pmd_model *m      /**< [in] model to populate */
@@ -1151,7 +1115,7 @@ dlb_pmd_set_smpte2109_sample_offset
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success              /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_remap_local_tag
     (dlb_pmd_model *m        /**< [in] model to populate */
@@ -1167,7 +1131,7 @@ dlb_pmd_remap_local_tag
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success          /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_title
     (dlb_pmd_model *m    /**< [in] model to populate */
@@ -1188,7 +1152,7 @@ dlb_pmd_set_title
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success              /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_profile
     (dlb_pmd_model *model    /**< [in] model to populate */
@@ -1217,7 +1181,7 @@ dlb_pmd_unset_profile
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_signal
     (dlb_pmd_model *m            /**< [in] model to populate */
@@ -1233,7 +1197,7 @@ dlb_pmd_add_signal
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_signals
     (dlb_pmd_model *m            /**< [in] model to populate */
@@ -1249,7 +1213,7 @@ dlb_pmd_add_signals
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                  /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_bed
     (dlb_pmd_model *m            /**< [in] model to augment */
@@ -1266,7 +1230,7 @@ dlb_pmd_add_bed
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_bed
     (      dlb_pmd_model *m             /**< [in] model to augment */
@@ -1286,7 +1250,7 @@ dlb_pmd_set_bed
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_object
     (dlb_pmd_model *m             /**< [in] model to augment */
@@ -1310,7 +1274,7 @@ dlb_pmd_add_object
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_object
     (      dlb_pmd_model *m             /**< [in] model to augment */
@@ -1501,7 +1465,7 @@ dlb_pmd_add_voiceover
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_presentation
     (dlb_pmd_model *m           /**< [in] model to augment */
@@ -1560,7 +1524,7 @@ dlb_pmd_add_presentation2
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_presentation_name
     (dlb_pmd_model           *m    /**< [in] model to augment */
@@ -1575,7 +1539,7 @@ dlb_pmd_add_presentation_name
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_presentation
     (      dlb_pmd_model *m             /**< [in] model to augment */
@@ -1592,7 +1556,7 @@ dlb_pmd_set_presentation
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success             /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_update
     (dlb_pmd_model *m       /**< [in] model to augment */
@@ -1609,7 +1573,7 @@ dlb_pmd_add_update
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_update
     (      dlb_pmd_model *m             /**< [in] model to augment */
@@ -1630,7 +1594,7 @@ dlb_pmd_set_update
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success             /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_eac3_encoding_parameters
     (dlb_pmd_model *m       /**< [in] model to augment */
@@ -1646,7 +1610,7 @@ dlb_pmd_add_eac3_encoding_parameters
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_eep_add_encoder_params
     (dlb_pmd_model *m           /**< [in] model to augment */
@@ -1664,7 +1628,7 @@ dlb_pmd_eep_add_encoder_params
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                       /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_eep_add_bitstream_params
     (dlb_pmd_model    *m              /**< [in] model to augment */
@@ -1685,7 +1649,7 @@ dlb_pmd_eep_add_bitstream_params
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_eep_add_drc_params
     (dlb_pmd_model *m          /**< [in] model to augment */
@@ -1703,7 +1667,7 @@ dlb_pmd_eep_add_drc_params
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_eep_add_presentation
     (dlb_pmd_model *m              /**< [in] model to augment */
@@ -1717,7 +1681,7 @@ dlb_pmd_eep_add_presentation
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_eac3
     (      dlb_pmd_model *m             /**< [in] model to augment */
@@ -1730,7 +1694,7 @@ dlb_pmd_set_eac3
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_etd
     (dlb_pmd_model *m         /**< [in] model to augment */
@@ -1743,7 +1707,7 @@ dlb_pmd_add_etd
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                     /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_etd_add_ed2
     (dlb_pmd_model     *m           /**< [in] model to augment */
@@ -1762,7 +1726,7 @@ dlb_pmd_etd_add_ed2
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_etd_add_ed2_presentation
     (dlb_pmd_model *m         /**< [in] model to augment */
@@ -1812,7 +1776,7 @@ dlb_pmd_add_ed2_turnaround
  * 
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                           /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_etd_add_de
     (dlb_pmd_model            *m          /**< [in] model to augment */
@@ -1827,7 +1791,7 @@ dlb_pmd_etd_add_de
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_etd_add_de_presentation
     (dlb_pmd_model *m             /**< [in] model to augment */
@@ -1879,7 +1843,7 @@ dlb_pmd_add_de_turnaround
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_ed2_turnaround
     (      dlb_pmd_model *m             /**< [in] model to augment */
@@ -1892,7 +1856,7 @@ dlb_pmd_set_ed2_turnaround
  *
  * Invalid parameters cause undefined behaviour. 
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_add
     (dlb_pmd_model *m              /**< [in] model to augment */
@@ -1908,7 +1872,7 @@ dlb_pmd_iat_add
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_content_id_uuid
     (dlb_pmd_model *m         /**< [in] model to augment */
@@ -1923,7 +1887,7 @@ dlb_pmd_iat_content_id_uuid
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_content_id_eidr
     (dlb_pmd_model *m         /**< [in] model to augment */
@@ -1939,7 +1903,7 @@ dlb_pmd_iat_content_id_eidr
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_content_id_ad_id
     (dlb_pmd_model *m          /**< [in] model to augment */
@@ -1954,7 +1918,7 @@ dlb_pmd_iat_content_id_ad_id
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                     /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_content_id_raw
     (dlb_pmd_model          *m      /**< [in] model to augment */
@@ -1969,7 +1933,7 @@ dlb_pmd_iat_content_id_raw
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_distribution_id_atsc3
     (dlb_pmd_model *m         /**< [in] model to augment */
@@ -1986,7 +1950,7 @@ dlb_pmd_iat_distribution_id_atsc3
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                        /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_distribution_id_raw
     (dlb_pmd_model *m                  /**< [in] model to augment */
@@ -2001,7 +1965,7 @@ dlb_pmd_iat_distribution_id_raw
  * 
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_set_offset
     (dlb_pmd_model *m         /**< [in] model to augment */
@@ -2014,7 +1978,7 @@ dlb_pmd_iat_set_offset
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success               /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_set_validity_duration
     (dlb_pmd_model *m         /**< [in] model to augment */
@@ -2027,7 +1991,7 @@ dlb_pmd_iat_set_validity_duration
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_set_user_data
     (dlb_pmd_model *m           /**< [in] model to augment */
@@ -2041,7 +2005,7 @@ dlb_pmd_iat_set_user_data
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success           /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_iat_set_extension
     (dlb_pmd_model *m     /**< [in] model to augment */
@@ -2055,7 +2019,7 @@ dlb_pmd_iat_set_extension
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                        /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_iat
     (dlb_pmd_model *m                  /**< [in] model to augment */
@@ -2068,7 +2032,7 @@ dlb_pmd_set_iat
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_loudness
     (      dlb_pmd_model    *m     /**< [in] model to augment */
@@ -2082,7 +2046,7 @@ dlb_pmd_set_loudness
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                 /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_element_name
     (dlb_pmd_model        *m    /**< [in] model to augment */
@@ -2096,7 +2060,7 @@ dlb_pmd_add_element_name
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success           /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_add_ed2_stream_name
     (dlb_pmd_model *m     /**< [in] model to augment */
@@ -2112,7 +2076,7 @@ dlb_pmd_add_ed2_stream_name
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_ed2_system
     (      dlb_pmd_model *m             /**< [in] model to augment */
@@ -2123,7 +2087,7 @@ dlb_pmd_set_ed2_system
 /**
  * @brief add a headphone element description
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_set_headphone_element
     (      dlb_pmd_model *m             /**< [in] model to augment */
@@ -2153,7 +2117,7 @@ dlb_pmd_set_headphone_element
  * 
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_apply_updates
     (dlb_pmd_model *m             /**< [in] model to augment */
@@ -2164,7 +2128,7 @@ dlb_pmd_apply_updates
 /**
  * @brief prune away signals not used by the elements in the model
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_prune_unused_signals
     (dlb_pmd_model *m             /**< [in] model to augment */
@@ -2179,7 +2143,7 @@ dlb_pmd_prune_unused_signals
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 size_t                              /** @return size to malloc, or 0 on error */
 dlb_pmd_metadata_set_query_memory
     (const dlb_pmd_model *model     /**< [in] model from which to generate metadata set */
@@ -2191,7 +2155,7 @@ dlb_pmd_metadata_set_query_memory
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 size_t                              /** @return size to malloc, or 0 on error */
 dlb_pmd_metadata_set_max_memory
     (void
@@ -2203,7 +2167,7 @@ dlb_pmd_metadata_set_max_memory
  *
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                   /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_create_metadata_set
     (const dlb_pmd_model *model   /**< [in] model from which to generate metadata set */
@@ -2220,7 +2184,7 @@ dlb_pmd_create_metadata_set
  * 
  * Invalid parameters cause undefined behaviour.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_ingest_metadata_set
     (      dlb_pmd_model        *m      /**< [in] model to create */
@@ -2236,7 +2200,7 @@ dlb_pmd_ingest_metadata_set
  *
  * Initialize a payload set status record, using the given array for the XYZ payloads.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_initialize_payload_set_status
     (dlb_pmd_payload_set_status     *payload_set_status /**< [in/out] Payload set status record to initialize */
@@ -2251,7 +2215,7 @@ dlb_pmd_initialize_payload_set_status
  * Initialize a payload set status record, using the given array for the XYZ payloads.  The callback will be called
  * at the end of payload set processing.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                                         /** @return PMD_SUCCESS on success, PMD_FAIL on failure */
 dlb_pmd_initialize_payload_set_status_with_callback
     (dlb_pmd_payload_set_status             *payload_set_status /**< [in/out] Payload set status record to initialize */
@@ -2265,7 +2229,7 @@ dlb_pmd_initialize_payload_set_status_with_callback
 /**
  * @brief Clear (reset) the data in a payload set status record
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_clear_payload_set_status
     (dlb_pmd_payload_set_status *payload_set_status     /**< [in/out] Payload set status record to clear */

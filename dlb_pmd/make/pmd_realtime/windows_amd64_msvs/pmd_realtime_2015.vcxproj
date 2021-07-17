@@ -48,7 +48,7 @@
 <CompileAs>Default</CompileAs>
 <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
 <DisableSpecificWarnings />
-<ExceptionHandling />
+<ExceptionHandling>Sync</ExceptionHandling>
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>Disabled</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -78,7 +78,7 @@
 <CompileAs>Default</CompileAs>
 <DebugInformationFormat />
 <DisableSpecificWarnings />
-<ExceptionHandling />
+<ExceptionHandling>Sync</ExceptionHandling>
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>MaxSpeed</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -122,11 +122,13 @@
 <ClInclude Include="..\..\..\frontend\pmd_realtime\pa_capture.h" />
 <ClInclude Include="..\..\..\frontend\pmd_realtime\pa_pipe.h" />
 <ClInclude Include="..\..\..\frontend\pmd_realtime\pa_play.h" />
+<ClInclude Include="..\..\..\include\DlbPmdModelWrapper.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_api.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_capture.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_generate.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_klv.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_lib_dll.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_model_combo.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h" />
@@ -134,12 +136,6 @@
 <ClInclude Include="..\..\..\include\dlb_pmd_xml.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_file.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model_type.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h" />
 <ClInclude Include="..\..\..\os\pmd_os.h" />
 <ClInclude Include="..\..\..\..\dlb_socket\0.1\dlb_socket\include\dlb_http_client.h" />
 <ClInclude Include="..\..\..\..\dlb_socket\0.1\dlb_socket\include\dlb_http_server.h" />
@@ -165,6 +161,9 @@
 <ItemGroup>
 <ProjectReference Include="..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2015.vcxproj">
 <Project>{888B31BA-E7A4-360D-978E-857D8E4C4BAC}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\dlb_adm\make\dlb_adm_lib\windows_amd64_msvs\dlb_adm_lib_2015.vcxproj">
+<Project>{1C9EF3B0-AD47-319D-B784-946309DE7B57}</Project>
 <ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
 <ProjectReference Include="..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\make\dlb_xml\windows_amd64_msvs\dlb_xml_2015.vcxproj">
 <Project>{20895E86-0CC5-376D-A205-153F08960967}</Project>

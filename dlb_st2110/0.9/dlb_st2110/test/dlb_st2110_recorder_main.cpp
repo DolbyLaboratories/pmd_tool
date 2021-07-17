@@ -54,16 +54,14 @@
 #include <csignal>
 #include <rivermax_api.h>
 
-#include "dlb_aoip_services.h"
-#include "dlb_st2110_hardware.h"
-#include "mclock.h"
+#include "dlb_st2110_api.h"
 
 using namespace std;
 
 /************************* Constants ***************************/
 
 #define MAX_LABEL_SIZE 256
-#define VERSION 0.1
+#define VERSION 0.9
 
 
 /********************** Type Defs *****************************/
@@ -184,11 +182,7 @@ void writeSample24(void *p, int32_t sample24)
 
 bool aes67Callback(void *data, void *audioPtr, unsigned int numBytes, uint32_t timeStamp)
 {
-	unsigned char *packetData = (unsigned char *)audioPtr;
-	unsigned int writeCount, j;
-	uint8_t tmpByte;
-	uint16_t *sample16;
-	uint32_t sample24;
+	unsigned int writeCount;
 	CallBackData *callBackData = (CallBackData *)data;
 
 	// Sanity check
@@ -268,16 +262,9 @@ int main(int argc, char *argv[])
 	WSAStartup(MAKEWORD(2,2),&dat);
 #endif // RTP_SOCKETTYPE_WINSOCK
 	
-	int status,i,j;
+	int status,i;
 	std::string tmpStr;
-	uint32_t packetSizeBytes;
-	struct timespec realTimeClock;
-	unsigned char *packetData;
-	FILE *metadataFile = nullptr;
 	UserInfo userInfo;
-	pid_t pid = getpid();
-	StreamType streamType;
-	unsigned char tmpByte;
 	unsigned int sleepComplete = 0;
 	CallBackData callBackData;
 	ST2110ReceiverCallBackInfo callBackInfo;
@@ -596,7 +583,6 @@ int main(int argc, char *argv[])
 		{
 			using namespace std::literals::chrono_literals;
 			// Check for stream termination once a second
-			//std::this_thread::sleep_for(500ms);
 			sleep(1);
 			spinner.turn();
 		}

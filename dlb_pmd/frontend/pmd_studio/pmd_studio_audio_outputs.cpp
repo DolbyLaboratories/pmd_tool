@@ -1,37 +1,14 @@
-/************************************************************************
- * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
  *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- **********************************************************************/
+ *                Copyright (C) 2020-2021 by Dolby Laboratories,
+ *                Copyright (C) 2020-2021 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
 
 #include <string.h>
 
@@ -50,7 +27,8 @@ extern "C"{
 
 #include "pmd_studio_audio_outputs.h"
 #include "pmd_studio_audio_outputs_pvt.h"
-/* Definitons */
+
+/* Definitions */
 
 static
 dlb_pmd_success allocateAudioOutput(
@@ -995,11 +973,11 @@ pmd_studio_outputs_init
     uiGridAppend((*outs)->audio_output_grid, uiControl((*outs)->add_aout_button), 1, 0, 5, 1, 1, uiAlignFill, 0, uiAlignFill);
     uiButtonOnClicked((*outs)->add_aout_button, onAddAudioOutputButtonClicked, *outs);
 
- 	uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("En")),           1, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
- 	uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("Cfg")),          2, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
- 	uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("Presentation")), 3, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
- 	uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("Start")),        4, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
- 	uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("End")),          5, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+        uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("En")),           1, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+        uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("Cfg")),          2, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+        uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("Presentation")), 3, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+        uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("Start")),        4, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+        uiGridAppend((*outs)->audio_output_grid, uiControl(uiNewLabel("End")),          5, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
 
     uiBoxAppend(hbox, uiControl(uiNewVerticalSeparator()), 0);
 
@@ -1012,10 +990,10 @@ pmd_studio_outputs_init
     uiGridAppend((*outs)->metadata_output_grid, uiControl((*outs)->add_mdout_button), 1, 0, 5, 1, 1, uiAlignFill, 0, uiAlignFill);
     uiButtonOnClicked((*outs)->add_mdout_button, onAddMetadataOutputButtonClicked, *outs);
 
- 	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("En")),      2, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
- 	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Format")),  3, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
- 	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Mode")),    4, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
- 	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Channel")), 5, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+        uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("En")),      2, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+        uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Format")),  3, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+        uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Mode")),    4, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+        uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Channel")), 5, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
 
 
     /* this appends the entire outputs box to the studio window */
@@ -1040,7 +1018,7 @@ pmd_studio_audio_output_update_presentation_names
     // Quit if in file only mode
     if (!outs)
     {
-    	return(PMD_SUCCESS);
+        return(PMD_SUCCESS);
     }
 
     // Refesh local copy of ids
@@ -1108,7 +1086,7 @@ pmd_studio_outputs_print_debug
 
     if (!outs)
     {
-    	return;
+        return;
     }
 
     printf("Audio Outputs\n===== =======\n");
@@ -1197,9 +1175,9 @@ pmd_studio_outputs_refresh_ui(
     pmd_studio_outputs *outs
     )
 {
-	if (outs)
-	{
-    	pmd_studio_audio_output_update_presentation_names(outs->studio);
+        if (outs)
+        {
+        pmd_studio_audio_output_update_presentation_names(outs->studio);
     }
 }
 
@@ -1294,7 +1272,7 @@ dlb_pmd_success pmd_studio_audio_outputs_get_mix_matrix(
 
     if (!outs)
     {
-    	return(PMD_FAIL);
+        return(PMD_FAIL);
     }
 
     pmd_studio_mix_matrix_reset(mix_matrix);
@@ -1376,9 +1354,9 @@ pmd_studio_outputs_finish
     (pmd_studio_outputs *ao1
     )
 {
-	if (ao1)
-	{
-    	free(ao1);
+    if (ao1)
+    {
+        free(ao1);
     }
     return(PMD_SUCCESS);
 }
@@ -1391,16 +1369,16 @@ pmd_studio_audio_outputs_update_metadata_output
 {
     if(mout != nullptr)
     {
-        dlb_pmd_model *model = pmd_studio_get_model(mout->outputs->studio);
+        dlb_pmd_model_combo *combo_model = pmd_studio_get_model(mout->outputs->studio);
 
         // Reset augmentor error flag and callback arg
         mout->augmentor_error = PMD_FALSE;
+#if LATER
         model->error_cbarg = (void *) mout;
+#endif
 
-        dlb_pmd_model_constraints limits;
-        dlb_pmd_get_constraints(model, &limits);
         dlb_pmd_bool sadm = (mout->format == SADM_OUTPUT_MODE)? PMD_TRUE : PMD_FALSE;
-        void *mem = malloc(dlb_pcmpmd_augmentor_query_mem2(sadm, &limits));
+        void *mem = malloc(dlb_pcmpmd_augmentor_query_mem(sadm));
         if(mem == nullptr){
             pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Could not allocate memory for SADM/PMD encoder");
             return(PMD_FAIL);
@@ -1419,7 +1397,7 @@ pmd_studio_audio_outputs_update_metadata_output
         }
         dlb_pcmpmd_augmentor *aug;
         unsigned int wrap_depth = 0;    // TODO: add a SMPTE 337m wrapping bit depth UI element and use the value here
-        dlb_pcmpmd_augmentor_init3(&aug, model, mem, wrap_depth, METADATA_DLB_PMD_FRAME_RATE, DLB_PMD_KLV_UL_ST2109, PMD_FALSE, num_channels, num_channels, pair, 0, sadm);
+        dlb_pcmpmd_augmentor_init3(&aug, combo_model, mem, wrap_depth, METADATA_DLB_PMD_FRAME_RATE, DLB_PMD_KLV_UL_ST2109, PMD_FALSE, num_channels, num_channels, pair, 0, sadm);
 
         if(mout->augmentor_error == PMD_FALSE)
         {
@@ -1441,7 +1419,6 @@ pmd_studio_audio_outputs_update_metadata_output
             onEnableMetadataOutput(mout->enable, mout);
             return PMD_FAIL;
         }
-
         return PMD_SUCCESS;
     }
     return PMD_FAIL;

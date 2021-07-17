@@ -26,29 +26,22 @@ INPUTS_LINK_debug = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_ri
                     $(TMP)Lawo/ember-plus/libember_slim/Source/emberframing.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)Lawo/ember-plus/libember_slim/Source/emberinternal.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)Lawo/ember-plus/libember_slim/Source/glow.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)Lawo/ember-plus/libember_slim/Source/glowrx.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)Lawo/ember-plus/libember_slim/Source/glowtx.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/api/dlb_pmd.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)Lawo/ember-plus/libember_slim/Source/glowtx.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/frontend/pmd_studio/model.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/api/dlb_pmd.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/model/pmd_model.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/src/model/pmd_model_combo.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/src/modules/klv/pmd_crc32.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/klv/pmd_klv_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/src/modules/klv/pmd_klv_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/pcm/pmd_bitstream.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/idmap.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_ingester.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_common_definitions.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_model.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/sadm/idrefs.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/src/modules/sadm/sadm/lookup3.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_string.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/src/modules/xml/pmd_xml_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/frontend/pmd_studio/ember_connector/ember_connector.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
@@ -61,7 +54,8 @@ INPUTS_LINK_debug = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_ri
                     $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_audio_presentations.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
                     $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_rivermax_linux_amd64_gnu_debug.o $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
-                    $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_debug.o
+                    $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_debug.o\
+                    $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.pmd_studio_rivermax_linux_amd64_gnu_debug.o
 INPUTS_LINK_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)Lawo/ember-plus/libember_slim/Source/berio.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)Lawo/ember-plus/libember_slim/Source/berreader.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)Lawo/ember-plus/libember_slim/Source/bertag.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)Lawo/ember-plus/libember_slim/Source/bytebuffer.pmd_studio_rivermax_linux_amd64_gnu_release.o\
@@ -69,31 +63,23 @@ INPUTS_LINK_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_
                       $(TMP)Lawo/ember-plus/libember_slim/Source/emberframing.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)Lawo/ember-plus/libember_slim/Source/emberinternal.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)Lawo/ember-plus/libember_slim/Source/glow.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)Lawo/ember-plus/libember_slim/Source/glowrx.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)Lawo/ember-plus/libember_slim/Source/glowtx.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/api/dlb_pmd.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)Lawo/ember-plus/libember_slim/Source/glowtx.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/frontend/pmd_studio/model.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/api/dlb_pmd.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/model/pmd_model.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/src/model/pmd_model_combo.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/src/modules/klv/pmd_crc32.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/klv/pmd_klv_reader.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/src/modules/klv/pmd_klv_writer.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/pcm/pmd_bitstream.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/idmap.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_generator.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_ingester.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_common_definitions.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_model.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/idrefs.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/sadm/sadm/lookup3.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_string.pmd_studio_rivermax_linux_amd64_gnu_release.o $(TMP)dlb_pmd/src/modules/xml/pmd_xml_writer.pmd_studio_rivermax_linux_amd64_gnu_release.o\
@@ -109,10 +95,11 @@ INPUTS_LINK_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_rivermax_linux_amd64_gnu_release.o\
                       $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device.pmd_studio_rivermax_linux_amd64_gnu_release.o\
-                      $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_release.o
+                      $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_release.o\
+                      $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.pmd_studio_rivermax_linux_amd64_gnu_release.o
 
-DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu/dlb_wave_lib_debug.a $(BASE)dlb_pmd/make/dlb_st2110_lib/linux_amd64_gnu/dlb_st2110_lib_debug.a $(BASE)libui/alpha_4.1/libui/make/libui_alpha4_1/linux_amd64_gnu/libui_alpha4_1_debug.a $(BASE)libui/alpha_4.1/libui/make/libui_impl_alpha4_1/linux_amd64_gnu/libui_impl_alpha4_1_debug.a
-DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu/dlb_wave_lib_release.a $(BASE)dlb_pmd/make/dlb_st2110_lib/linux_amd64_gnu/dlb_st2110_lib_release.a $(BASE)libui/alpha_4.1/libui/make/libui_alpha4_1/linux_amd64_gnu/libui_alpha4_1_release.a $(BASE)libui/alpha_4.1/libui/make/libui_impl_alpha4_1/linux_amd64_gnu/libui_impl_alpha4_1_release.a
+DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_debug.a $(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu/dlb_adm_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_debug.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu/dlb_wave_lib_debug.a $(BASE)dlb_pmd/make/dlb_st2110_lib/linux_amd64_gnu/dlb_st2110_lib_debug.a $(BASE)libui/alpha_4.1/libui/make/libui_alpha4_1/linux_amd64_gnu/libui_alpha4_1_debug.a $(BASE)libui/alpha_4.1/libui/make/libui_impl_alpha4_1/linux_amd64_gnu/libui_impl_alpha4_1_debug.a
+DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_release.a $(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu/dlb_adm_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/linux_amd64_gnu/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/linux_amd64_gnu/zlib_release.a $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu/dlb_wave_lib_release.a $(BASE)dlb_pmd/make/dlb_st2110_lib/linux_amd64_gnu/dlb_st2110_lib_release.a $(BASE)libui/alpha_4.1/libui/make/libui_alpha4_1/linux_amd64_gnu/libui_alpha4_1_release.a $(BASE)libui/alpha_4.1/libui/make/libui_impl_alpha4_1/linux_amd64_gnu/libui_impl_alpha4_1_release.a
 
 default: pmd_studio_rivermax_debug pmd_studio_rivermax_release
 
@@ -145,32 +132,26 @@ CLEAN_COMPILE_debug = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_
                       $(TMP)Lawo/ember-plus/libember_slim/Source/emberframing.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)Lawo/ember-plus/libember_slim/Source/emberinternal.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)Lawo/ember-plus/libember_slim/Source/glow.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)Lawo/ember-plus/libember_slim/Source/glowrx.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)Lawo/ember-plus/libember_slim/Source/glowtx.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/api/dlb_pmd.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)Lawo/ember-plus/libember_slim/Source/glowtx.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/frontend/pmd_studio/model.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/api/dlb_pmd.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/model/pmd_model.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/model/pmd_model_combo.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/klv/pmd_crc32.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/klv/pmd_klv_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/klv/pmd_klv_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/pcm/pmd_bitstream.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/idmap.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_ingester.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_common_definitions.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_model.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/sadm/idrefs.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/sadm/lookup3.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/xml/pmd_xml_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/frontend/pmd_studio/ember_connector/ember_connector.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/xml/pmd_xml_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/frontend/pmd_studio/ember_connector/ember_connector.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/frontend/pmd_studio/ember_connector/ember_controller.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/frontend/pmd_studio/ember_connector/parameter_manager.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/frontend/pmd_studio/ember_connector/utils/utils.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
@@ -181,7 +162,8 @@ CLEAN_COMPILE_debug = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console.pmd_studio_rivermax_linux_amd64_gnu_debug.d $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_debug.d
+                      $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.pmd_studio_rivermax_linux_amd64_gnu_debug.d
 CLEAN_COMPILE_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)Lawo/ember-plus/libember_slim/Source/berio.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)Lawo/ember-plus/libember_slim/Source/berreader.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)Lawo/ember-plus/libember_slim/Source/bertag.pmd_studio_rivermax_linux_amd64_gnu_release.d\
@@ -191,32 +173,23 @@ CLEAN_COMPILE_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studi
                         $(TMP)Lawo/ember-plus/libember_slim/Source/emberinternal.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)Lawo/ember-plus/libember_slim/Source/glow.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)Lawo/ember-plus/libember_slim/Source/glowrx.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)Lawo/ember-plus/libember_slim/Source/glowtx.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/api/dlb_pmd.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/frontend/pmd_studio/model.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/os/linux/pmd_ctrl_c.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/api/dlb_pmd.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/model/pmd_model.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/model/pmd_model_combo.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/klv/pmd_crc32.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/klv/pmd_klv_reader.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/klv/pmd_klv_writer.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/pcm/pmd_bitstream.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/idmap.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_generator.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_ingester.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_common_definitions.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_model.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/sadm/sadm/idrefs.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/sadm/sadm/lookup3.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.pmd_studio_rivermax_linux_amd64_gnu_release.d $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_string.pmd_studio_rivermax_linux_amd64_gnu_release.d\
@@ -232,13 +205,15 @@ CLEAN_COMPILE_release = $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studi
                         $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplus.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_rivermax_linux_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device.pmd_studio_rivermax_linux_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_release.d
+                        $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.pmd_studio_rivermax_linux_amd64_gnu_release.d
 
 cleandeps:
 	$(RM) $(CLEAN_COMPILE_debug)
 	$(RM) $(CLEAN_COMPILE_release)
 
 clean: cleanself
+	$(MAKE) -C $(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_st2110_lib/linux_amd64_gnu cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_wave_lib/linux_amd64_gnu cleanself
@@ -280,6 +255,7 @@ include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/emberinternal.pmd_
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/glow.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/glowrx.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/glowtx.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/model.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
@@ -291,6 +267,8 @@ include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_l
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/model/pmd_model.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/model/pmd_model_combo.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/klv/pmd_crc32.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
@@ -302,25 +280,10 @@ include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.pmd_studio_ri
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/idmap.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_ingester.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_common_definitions.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_model.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/idrefs.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/lookup3.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
@@ -341,6 +304,7 @@ include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplu
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.pmd_studio_rivermax_linux_amd64_gnu_debug.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/ber.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/berio.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/berreader.pmd_studio_rivermax_linux_amd64_gnu_release.d)
@@ -353,6 +317,7 @@ include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/emberinternal.pmd_
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/glow.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/glowrx.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)Lawo/ember-plus/libember_slim/Source/glowtx.pmd_studio_rivermax_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/model.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_studio_rivermax_linux_amd64_gnu_release.d)
@@ -364,6 +329,8 @@ include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.pmd_studio_rivermax_l
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_equal.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/api/dlb_pmd_metadata_set.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/model/pmd_language.pmd_studio_rivermax_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/model/pmd_model.pmd_studio_rivermax_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/model/pmd_model_combo.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/capture/pmd_capture.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/generate/pmd_random_generator.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/klv/pmd_crc32.pmd_studio_rivermax_linux_amd64_gnu_release.d)
@@ -375,25 +342,10 @@ include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.pmd_studio_ri
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/idmap.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_generator.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_ingester.pmd_studio_rivermax_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.pmd_studio_rivermax_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_common_definitions.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_model.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_read_string.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_reader.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_file.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_write_string.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/dlb_sadm_writer.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/idrefs.pmd_studio_rivermax_linux_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm/lookup3.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.pmd_studio_rivermax_linux_amd64_gnu_release.d)
@@ -414,7 +366,10 @@ include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_console_emberplu
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/pmd_studio_settings.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/frontend/pmd_studio/rivermax/pmd_studio_device_settings.pmd_studio_rivermax_linux_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.pmd_studio_rivermax_linux_amd64_gnu_release.d)
 
+$(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu/dlb_adm_lib_debug.a \
+$(BASE)dlb_adm/make/dlb_adm_lib/linux_amd64_gnu/dlb_adm_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_debug.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/linux_amd64_gnu/dlb_pmd_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_st2110_lib/linux_amd64_gnu/dlb_st2110_lib_debug.a \

@@ -1,88 +1,43 @@
-/************************************************************************
- * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
  *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- **********************************************************************/
+ *                Copyright (C) 2020-2021 by Dolby Laboratories,
+ *                Copyright (C) 2020-2021 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
 
 #include "sadm_bitstream_decoder.h"
+#include "dlb_adm/include/dlb_adm_api.h"
 #include "zlib.h"
 
 
 /**
- * @brief callback function to record and print error status for the sADM bitstream decoder
+ * @brief determine memory requirements for the sADM bitstream decoder
  */
-static
-void
-sadm_bitstream_decoder_error_callback
-    (const char *msg
-    ,void       *arg
-    )
-{
-    sadm_bitstream_decoder *dec = (sadm_bitstream_decoder *)arg;
-
-    error(dec->model, "Could not read SADM: %s at line %u", msg, dec->error_line);
-    /* TODO: printf might be too verbose for some situations... */
-    printf("Could not read SADM: %s at line %u\n", msg, dec->error_line);
-}
-
-
-size_t
+size_t                                    /** @return size of memory required */
 sadm_bitstream_decoder_query_mem
-    (dlb_pmd_model_constraints  *limits
+    (void
     )
 {
-    return sizeof(sadm_bitstream_decoder)
-        + dlb_pmd_sadm_reader_query_mem(limits);
+    return sizeof(sadm_bitstream_decoder);
 }
 
 
 dlb_pmd_success
 sadm_bitstream_decoder_init
-    (dlb_pmd_model_constraints  *limits
-    ,void                       *mem
+    (void                       *mem
     ,sadm_bitstream_decoder    **dec
     )
 {
-    sadm_bitstream_decoder *d;
-    uintptr_t mc = (uintptr_t)mem;
+    sadm_bitstream_decoder *d = (sadm_bitstream_decoder*)mem;
 
-    d = (sadm_bitstream_decoder*)mc;
-    mc += sizeof(sadm_bitstream_decoder);
-    
-    if (dlb_pmd_sadm_reader_init(&d->r, limits, (void*)mc))
-    {
-        return PMD_FAIL;
-    }
+    memset(d, 0, sizeof(*d));
     *dec = d;
+
     return PMD_SUCCESS;
 }
 
@@ -143,13 +98,16 @@ sadm_bitstream_decoder_decode
     (sadm_bitstream_decoder         *dec
     ,uint8_t                        *bitstream
     ,size_t                          datasize
-    ,dlb_pmd_model                  *model
+    ,dlb_adm_core_model             *model
     ,sadm_bitstream_dec_callback     callback
     ,void                           *cbarg
     )
 {
-    dlb_pmd_success result;
+    dlb_adm_container_counts     counts;
+    dlb_adm_xml_container       *container = NULL;
+    dlb_pmd_success              result = PMD_SUCCESS;
 
+    memset(&counts, 0, sizeof(counts));
     dec->model = model;
     dec->size = decompress_sadm_xml(dec, bitstream, datasize);
     if (!dec->size)
@@ -161,15 +119,23 @@ sadm_bitstream_decoder_decode
         return PMD_FAIL;
     }
 
-    result = dlb_pmd_sadm_string_read(dec->r, "decompressed", dec->xmlbuf, dec->size,
-                                      model, sadm_bitstream_decoder_error_callback, dec,
-                                      &dec->error_line);
+    if (dlb_adm_container_open(&container, &counts)                                         ||
+        dlb_adm_container_read_xml_buffer(container, dec->xmlbuf, dec->size, DLB_ADM_FALSE) ||
+        dlb_adm_core_model_ingest_xml_container(model, container)
+       )
+    {
+        result = PMD_FAIL;
+    }
 
     if (callback)
     {
         callback(cbarg, (result == PMD_SUCCESS) ? SADM_OK : SADM_PARSE_ERR);
     }
 
+    if (container != NULL)
+    {
+        (void)dlb_adm_container_close(&container);
+    }
+
     return result;
 }
-

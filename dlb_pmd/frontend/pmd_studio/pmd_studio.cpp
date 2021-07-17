@@ -1,37 +1,14 @@
-/************************************************************************
- * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
  *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- **********************************************************************/
+ *                Copyright (C) 2019-2021 by Dolby Laboratories,
+ *                Copyright (C) 2019-2021 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
 
 
 #include <stdio.h>
@@ -45,6 +22,7 @@ extern "C"{
 #include "xml.h"
 #include "pcm.h"
 #include "pmd_model.h"
+#include "dlb_pmd_model_combo.h"
 }
 #include "pmd_studio.h"
 #include "pmd_studio_pvt.h"
@@ -62,7 +40,7 @@ extern "C"{
 
 pmd_studio_error_code c;
 
-#define PMD_STUDIO_VERSION "1.7.3"
+#define PMD_STUDIO_VERSION "1.8.0"
 
 
 const char* pmd_studio_error_messages[PMD_STUDIO_NUM_ERROR_MESSAGES] =
@@ -480,7 +458,9 @@ pmd_studio_init
     {
         return PMD_FAIL;
     }
+#if LATER
     s->pmd.model->error_callback = pmd_studio_on_augmentor_fail_cb;
+#endif
 
     if (s->settings->file_based_mode)
     {
@@ -598,6 +578,7 @@ refresh_ui
     (pmd_studio *s
     )
 {
+#if LATER
     dlb_pmd_model *m = s->pmd.model;
     const char *title;
 
@@ -605,6 +586,7 @@ refresh_ui
     {
         snprintf(s->title, sizeof(s->title), "%s", title);
     }
+#endif
 
     pmd_studio_audio_beds_refresh_ui(s->audio_beds);
     pmd_studio_audio_objects_refresh_ui(s->audio_objects);
@@ -717,7 +699,7 @@ pmd_studio_reset
 {
     console_disconnect(s);
 
-    dlb_pmd_reset(s->pmd.model);
+    (void)dlb_pmd_model_combo_clear(s->pmd.model);
     snprintf(s->title, sizeof(s->title), "<untitled>");
     uiEntrySetText(s->title_entry, s->title);
 
@@ -754,8 +736,11 @@ pmd_studio_import
     (pmd_studio *s
     )
 {   
-    dlb_pmd_model *m = s->pmd.model;
+    dlb_pmd_model *m;
     const char *title;
+
+    (void)dlb_pmd_model_combo_clear(s->pmd.model);
+    (void)dlb_pmd_model_combo_get_writable_pmd_model(s->pmd.model, &m, PMD_FALSE);
     
     pmd_studio_audio_beds_reset(s->audio_beds);
     pmd_studio_audio_objects_reset(s->audio_objects);
@@ -847,12 +832,13 @@ void
 pmd_studio_update_model(pmd_studio *s)
 {
     string_uuid random_uuid;
-    dlb_pmd_model *m = s->pmd.model;
+    dlb_pmd_model *m;
 
     memset(&random_uuid, 0, sizeof(random_uuid));
     generate_random_uuid(random_uuid);
    
-    if (   dlb_pmd_reset(m)
+    if (   dlb_pmd_model_combo_clear(s->pmd.model)
+        || dlb_pmd_model_combo_get_writable_pmd_model(s->pmd.model, &m, PMD_FALSE)
         || dlb_pmd_add_signals(m, MAX_STUDIO_AUDIO_SIGNALS)
         || dlb_pmd_set_title(m, s->title)
         || dlb_pmd_iat_add(m, (uint64_t)0u)
@@ -874,7 +860,7 @@ pmd_studio_update_model(pmd_studio *s)
     }
 }
 
-dlb_pmd_model
+dlb_pmd_model_combo
 *pmd_studio_get_model
     (pmd_studio *studio
     )
@@ -989,29 +975,31 @@ pmd_studio_open_file
     ,const char *filename
     )
 {
-    dlb_pmd_model *model = s->pmd.model;
+    dlb_pmd_model_combo *combo_model = s->pmd.model;
     file_mode m;
+    
     m = read_file_mode(filename);
-    dlb_pmd_reset(model);
+    (void)dlb_pmd_model_combo_clear(combo_model);
+
     switch (m)
     {
         case MODE_XML:
-            if (xml_read(filename, model, 0))
+            if (xml_read(filename, combo_model, PMD_FALSE, PMD_FALSE))
             {
-                uiMsgBoxError(s->window, "open model", dlb_pmd_error(model));
+                uiMsgBoxError(s->window, "open model", "xml_read() failed");
                 return;
             }
             break;
         case MODE_KLV:
-            if (klv_read(filename, model))
+            if (klv_read(filename, combo_model))
             {
-                uiMsgBoxError(s->window, "open model", dlb_pmd_error(model));
+                uiMsgBoxError(s->window, "open model", "klv_read() failed");
                 return;
             }
             break;
 #ifdef todo
         case MODE_WAV:
-            if (pcm_read(filename, rate, chan, ispair, vsync, 0, model))
+            if (pcm_read(filename, rate, chan, ispair, vsync, 0, combo_model))
             {
                 uiMsgBoxError(s->window, "open model", dlb_pmd_error(model));                
                 return;
@@ -1019,10 +1007,11 @@ pmd_studio_open_file
             break;
 #endif
         default:
-            uiMsgBoxError(s->window, "open model", "Unknown file extension");
+            uiMsgBoxError(s->window, "open model", "Unsupported file extension");
             return;
             break;
     }
+    
     pmd_studio_import(s);
 }
 
@@ -1035,7 +1024,7 @@ pmd_studio_save_file
     )
 {
     dlb_klvpmd_universal_label ul = DLB_PMD_KLV_UL_DOLBY;
-    dlb_pmd_model *model = s->pmd.model;
+    dlb_pmd_model_combo *combo_model = s->pmd.model;
     file_mode m;
     
     if (filename)
@@ -1044,15 +1033,15 @@ pmd_studio_save_file
         switch (m)
         {
         case MODE_XML:
-            if (xml_write(filename, model, sadm))
+            if (xml_write(filename, combo_model, sadm))
             {
-                uiMsgBoxError(s->window, "save model", dlb_pmd_error(model));
+                uiMsgBoxError(s->window, "save model", "xml_write() failed");
             }
             break;
         case MODE_KLV:
-            if (klv_write(filename, model, ul))
+            if (klv_write(filename, combo_model, ul))
             {
-                uiMsgBoxError(s->window, "save model", dlb_pmd_error(model));
+                uiMsgBoxError(s->window, "save model", "klv_write() failed");
             }
             break;
 #ifdef todo
@@ -1060,7 +1049,7 @@ pmd_studio_save_file
         {
             char pcm_out[256];
             generate_output_filename(filename, 0, pcm_out, sizeof(pcm_out));
-            if (pcm_write(filename, pcm_out, rate, chan, ispair, ul, mark, sadm, model))
+            if (pcm_write(filename, pcm_out, rate, chan, ispair, ul, mark, sadm, combo_model))
             {
                 uiMsgBoxError(s->window, "save model", dlb_pmd_error(model));
             }
@@ -1068,7 +1057,7 @@ pmd_studio_save_file
         }        
 #endif
         default:
-            uiMsgBoxError(s->window, "save model", "Unknown file extension");
+            uiMsgBoxError(s->window, "save model", "Unsupported file extension");
             break;
         }
     }
@@ -1296,11 +1285,13 @@ main
      char **argv)
 {
     pmd_studio s;
+
     if (!pmd_studio_init(&s, argc, argv))
     {
         pmd_studio_run(&s);
     }
-
     pmd_studio_finish(&s);
+
     return 0;
 }
+

@@ -42,17 +42,17 @@
 <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='release|x64'">false</LinkIncremental></PropertyGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\sadm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\..\boost\boost_1_73_0;..\..\..\..\dlb_adm\include;..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\sadm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..;..\..\..\..;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
 <BufferSecurityCheck>true</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
 <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
 <DisableSpecificWarnings />
-<ExceptionHandling />
+<ExceptionHandling>Sync</ExceptionHandling>
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>Disabled</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
-<PreprocessorDefinitions>DLB_DLL_EXPORT=1;DLB_PMD_LIB_DLL=1;ELPP_NO_DEFAULT_LOG_FILE=1;WIN32=1;WIN64=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_USRDLL=1;_WINDOWS=1</PreprocessorDefinitions>
+<PreprocessorDefinitions>DLB_ADM_DLL_EXPORT=1;DLB_ADM_LIB_DLL=1;DLB_PMD_DLL_EXPORT=1;DLB_PMD_LIB_DLL=1;ELPP_NO_DEFAULT_LOG_FILE=1;WIN32=1;WIN64=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_USRDLL=1;_WINDOWS=1</PreprocessorDefinitions>
 <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
 <PrecompiledHeader />
 <WarningLevel>Level4</WarningLevel>
@@ -72,17 +72,17 @@
 <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers></Link></ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\sadm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\..\boost\boost_1_73_0;..\..\..\..\dlb_adm\include;..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\include;..\..\..;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\klv;..\..\..\src\modules\pcm;..\..\..\src\modules\sadm;..\..\..\src\modules\xml;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..;..\..\..\..;..\..\..\..\dlb_xmllib\1.0.4;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>Default</BasicRuntimeChecks>
 <BufferSecurityCheck>false</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
 <DebugInformationFormat />
 <DisableSpecificWarnings />
-<ExceptionHandling />
+<ExceptionHandling>Sync</ExceptionHandling>
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>MaxSpeed</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
-<PreprocessorDefinitions>DLB_DLL_EXPORT=1;DLB_PMD_LIB_DLL=1;ELPP_NO_DEFAULT_LOG_FILE=1;NDEBUG=1;WIN32=1;WIN64=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_USRDLL=1;_WINDOWS=1</PreprocessorDefinitions>
+<PreprocessorDefinitions>DLB_ADM_DLL_EXPORT=1;DLB_ADM_LIB_DLL=1;DLB_PMD_DLL_EXPORT=1;DLB_PMD_LIB_DLL=1;ELPP_NO_DEFAULT_LOG_FILE=1;NDEBUG=1;WIN32=1;WIN64=1;_CRT_SECURE_NO_DEPRECATE=1;_CRT_SECURE_NO_WARNINGS=1;_USRDLL=1;_WINDOWS=1</PreprocessorDefinitions>
 <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
 <PrecompiledHeader />
 <WarningLevel>Level4</WarningLevel>
@@ -101,13 +101,63 @@
 <TargetMachine>MachineX64</TargetMachine>
 <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers></Link></ItemDefinitionGroup>
 <ItemGroup>
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_identity\AdmIdSequenceMap.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_identity\AdmIdTranslator.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_transformer\XMLGenerator.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_transformer\XMLIngester.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\AttributeDescriptor.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\AttributeValue.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\ContentContainer.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\EntityContainer.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\EntityDB.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\EntityDescriptor.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\EntityRecord.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\RelationshipDB.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\RelationshipDescriptor.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\RelationshipRecord.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\XMLBuffer.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\XMLContainer.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\XMLReader.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\XMLReaderStack.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\XMLWriter.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\dlb_adm_xml_container.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\AudioElement.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\AudioTrack.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\BlockUpdate.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\ContentGroup.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\CoreModel.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\ElementGroup.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\ElementRecord.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\ElementTable.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\EntityName.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\FrameFormat.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\Gain.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\ModelEntity.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\ModelEntityContainer.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\Position.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\Presentation.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\PresentationRecord.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\PresentationTable.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\Source.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\SourceGroup.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\SourceRecord.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\Target.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\TargetGroup.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\UpdateRecord.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\UpdateTable.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\dlb_adm_core_model.cpp" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\dlb_adm_api.c" />
+<ClCompile Include="..\..\..\..\dlb_adm\src\dlb_adm_api_pp.cpp" />
 <ClCompile Include="..\..\..\os\windows\pmd_ctrl_c.c" />
 <ClCompile Include="..\..\..\src\api\dlb_pmd.c" />
 <ClCompile Include="..\..\..\src\api\dlb_pmd_api_read.c" />
 <ClCompile Include="..\..\..\src\api\dlb_pmd_api_write.c" />
 <ClCompile Include="..\..\..\src\api\dlb_pmd_equal.c" />
 <ClCompile Include="..\..\..\src\api\dlb_pmd_metadata_set.c" />
+<ClCompile Include="..\..\..\src\model\DlbPmdModelWrapper.cpp" />
 <ClCompile Include="..\..\..\src\model\pmd_language.c" />
+<ClCompile Include="..\..\..\src\model\pmd_model.c" />
+<ClCompile Include="..\..\..\src\model\pmd_model_combo.c" />
 <ClCompile Include="..\..\..\src\modules\capture\pmd_capture.c" />
 <ClCompile Include="..\..\..\src\modules\generate\pmd_random_generator.c" />
 <ClCompile Include="..\..\..\src\modules\klv\pmd_crc32.c" />
@@ -119,25 +169,10 @@
 <ClCompile Include="..\..\..\src\modules\pcm\pmd_smpte_337m.c" />
 <ClCompile Include="..\..\..\src\modules\pcm\sadm_bitstream_decoder.c" />
 <ClCompile Include="..\..\..\src\modules\pcm\sadm_bitstream_encoder.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\idmap.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_generator.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_ingester.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_core_model_generator.c" />
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_core_model_ingester.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_read_file.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_read_string.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_reader.c" />
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_file.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_string.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_writer.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_common_definitions.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_model.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_read_file.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_read_string.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_reader.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_write_file.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_write_string.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_writer.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\idrefs.c" />
-<ClCompile Include="..\..\..\src\modules\sadm\sadm\lookup3.c" />
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_read_file.c" />
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_read_string.c" />
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_reader.c" />
@@ -161,11 +196,74 @@
 <ClCompile Include="..\..\..\..\zlib\1.2.11\zlib-1.2.11\uncompr.c" />
 <ClCompile Include="..\..\..\..\zlib\1.2.11\zlib-1.2.11\zutil.c" /></ItemGroup>
 <ItemGroup>
+<ClInclude Include="..\..\..\..\dlb_adm\include\dlb_adm_api.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\include\dlb_adm_api_types.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\include\dlb_adm_data_types.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\include\dlb_adm_entity_id.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\include\dlb_adm_fwd_type.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\include\dlb_adm_lib_dll.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_identity\AdmId.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_identity\AdmIdSequenceMap.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_identity\AdmIdTranslator.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_transformer\XMLGenerator.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_transformer\XMLIngester.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\AttributeDescriptor.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\AttributeInitializers.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\AttributeValue.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\ContentContainer.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\EntityContainer.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\EntityDB.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\EntityDescriptor.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\EntityInitializers.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\EntityRecord.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\EntityRelationship.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\RelationshipContainer.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\RelationshipDB.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\RelationshipDescriptor.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\RelationshipInitializers.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\RelationshipRecord.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\TableIndex.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\XMLBuffer.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\XMLContainer.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\XMLReader.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\XMLReaderStack.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\XMLWriter.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\dlb_adm_xml_container.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\AudioElement.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\AudioTrack.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\BlockUpdate.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\ContentGroup.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\CoreModel.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\ElementGroup.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\ElementRecord.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\ElementTable.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\EntityName.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\FrameFormat.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\Gain.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\ModelEntity.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\ModelEntityContainer.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\Position.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\Presentation.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\PresentationRecord.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\PresentationTable.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\Source.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\SourceGroup.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\SourceRecord.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\SourceTable.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\Target.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\TargetGroup.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\UpdateRecord.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\UpdateTable.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\core_model_defs.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\dlb_adm_core_model.h" />
+<ClInclude Include="..\..\..\..\dlb_adm\src\dlb_adm_api_pvt.h" />
+<ClInclude Include="..\..\..\include\DlbPmdModelWrapper.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_api.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_capture.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_generate.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_klv.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_lib_dll.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_model_combo.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h" />
@@ -173,12 +271,6 @@
 <ClInclude Include="..\..\..\include\dlb_pmd_xml.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_file.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_xml_string.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_file.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_model_type.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_reader.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_string.h" />
-<ClInclude Include="..\..\..\include\sadm\dlb_sadm_writer.h" />
 <ClInclude Include="..\..\..\os\pmd_os.h" />
 <ClInclude Include="..\..\..\src\api\dlb_pmd_api_version.h" />
 <ClInclude Include="..\..\..\src\model\pmd_abd_aod.h" />
@@ -230,13 +322,12 @@
 <ClInclude Include="..\..\..\src\modules\pcm\pmd_smpte_337m.h" />
 <ClInclude Include="..\..\..\src\modules\pcm\sadm_bitstream_decoder.h" />
 <ClInclude Include="..\..\..\src\modules\pcm\sadm_bitstream_encoder.h" />
-<ClInclude Include="..\..\..\src\modules\sadm\idmap.h" />
-<ClInclude Include="..\..\..\src\modules\sadm\pmd_sadm_generator.h" />
-<ClInclude Include="..\..\..\src\modules\sadm\pmd_sadm_ingester.h" />
-<ClInclude Include="..\..\..\src\modules\sadm\sadm\dlb_sadm_common_definitions.h" />
-<ClInclude Include="..\..\..\src\modules\sadm\sadm\idrefs.h" />
-<ClInclude Include="..\..\..\src\modules\sadm\sadm\lookup3.h" />
-<ClInclude Include="..\..\..\src\modules\sadm\sadm\memstuff.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_bitset.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_core_model_generator.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_core_model_ingester.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_core_model_types.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_speaker_blkupdt.h" />
+<ClInclude Include="..\..\..\src\modules\sadm\pmd_speaker_position.h" />
 <ClInclude Include="..\..\..\src\modules\xml\parser_tagstack.h" />
 <ClInclude Include="..\..\..\src\modules\xml\xml_ad_id.h" />
 <ClInclude Include="..\..\..\src\modules\xml\xml_cdata.h" />

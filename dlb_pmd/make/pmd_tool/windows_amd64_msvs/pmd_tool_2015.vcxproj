@@ -48,7 +48,7 @@
 <CompileAs>Default</CompileAs>
 <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
 <DisableSpecificWarnings />
-<ExceptionHandling />
+<ExceptionHandling>Sync</ExceptionHandling>
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>Disabled</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -78,7 +78,7 @@
 <CompileAs>Default</CompileAs>
 <DebugInformationFormat />
 <DisableSpecificWarnings />
-<ExceptionHandling />
+<ExceptionHandling>Sync</ExceptionHandling>
 <MinimalRebuild>false</MinimalRebuild>
 <Optimization>MaxSpeed</Optimization>
 <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -114,6 +114,9 @@
 <ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
 <ProjectReference Include="..\..\dlb_pmd_lib\windows_amd64_msvs\dlb_pmd_lib_2015.vcxproj">
 <Project>{888B31BA-E7A4-360D-978E-857D8E4C4BAC}</Project>
+<ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
+<ProjectReference Include="..\..\..\..\dlb_adm\make\dlb_adm_lib\windows_amd64_msvs\dlb_adm_lib_2015.vcxproj">
+<Project>{1C9EF3B0-AD47-319D-B784-946309DE7B57}</Project>
 <ReferenceOutputAssembly>false</ReferenceOutputAssembly></ProjectReference>
 <ProjectReference Include="..\..\..\..\dlb_xmllib\1.0.4\dlb_xml\make\dlb_xml\windows_amd64_msvs\dlb_xml_2015.vcxproj">
 <Project>{20895E86-0CC5-376D-A205-153F08960967}</Project>

@@ -10,7 +10,7 @@ CFLAGS_release = -O3 -arch x86_64 -fPIC -c -Wall -Wextra -Wstrict-prototypes -Wm
 DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
 DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
 INCLUDES = -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE).
-LD = $(CC)
+LD = $(CXX)
 LDFLAGS_debug = -arch x86_64 -dead_strip
 LDFLAGS_release = -arch x86_64 -dead_strip -O2
 

@@ -1,37 +1,14 @@
-/************************************************************************
- * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
  *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- **********************************************************************/
+ *                Copyright (C) 2016-2021 by Dolby Laboratories,
+ *                Copyright (C) 2016-2021 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
 
 /**
  * @file pmc_pcm_augmentor.c
@@ -62,13 +39,25 @@
 #  define TRACE(x)
 #endif
 
+#ifdef NDEBUG
+#define FAILURE PMD_FAIL
+#else
+static dlb_pmd_success ret_fail()
+{
+    return PMD_FAIL;    // Put a breakpoint here
+}
+#define FAILURE ret_fail()
+#endif
+
+#define CHECK_SUCCESS(s) if ((s) != PMD_SUCCESS) return FAILURE
+
 
 /**
  * @brief internal state of PCM augmentor
  */
 struct dlb_pcmpmd_augmentor
 {
-    dlb_pmd_model               *model;                     /**< source model */
+    dlb_pmd_model_combo         *model;                     /**< source model */
     dlb_klvpmd_universal_label   ul;                        /**< Universal label */
     uint8_t                      klvbuf[MAX_DATA_BYTES];    /**< current KLV block write buffer */     
     uint8_t                     *klvp;                      /**< current read pointer of klvbuf */
@@ -98,14 +87,23 @@ pcm_next_block
     )
 {
     dlb_pcmpmd_augmentor *aug = (dlb_pcmpmd_augmentor*)s337m->nextarg;
-    int byte_size;
+    dlb_pmd_bool sadm = s337m->sadm;
+    int byte_size = 0;
     int res = 1;
 
     aug->block += 1;
     memset(aug->klvbuf, '\0', MAX_DATA_BYTES);
     if (aug->block == aug->maxblock)
     {
-        dlb_pmd_apply_updates(aug->model, aug->rate);
+        if (!sadm)
+        {
+            const dlb_pmd_model *m;
+
+            if (!dlb_pmd_model_combo_get_readable_pmd_model(aug->model, &m, PMD_FALSE))
+            {
+                dlb_pmd_apply_updates((dlb_pmd_model *)m, aug->rate);   /* const cast */
+            }
+        }
         aug->block = 0;
         res = 0;
         if (aug->callback)
@@ -114,10 +112,25 @@ pcm_next_block
         }
     }
 
-    byte_size = (s337m->sadm)
-        ? sadm_bitstream_encoder_encode(s337m, aug->senc, aug->model, aug->rate, aug->klvbuf)
-        : generate_pmd_bitstream(s337m, aug->model, aug->block, aug->maxblock,
-                                 aug->ul, aug->klvbuf);
+    if (sadm)
+    {
+        const dlb_adm_core_model *core_model;
+
+        if (!dlb_pmd_model_combo_ensure_readable_core_model(aug->model, &core_model))
+        {
+            byte_size = sadm_bitstream_encoder_encode(s337m, aug->senc, core_model, aug->rate, aug->klvbuf);
+        }
+    } 
+    else
+    {
+        const dlb_pmd_model *pmd_model;
+
+        if (!dlb_pmd_model_combo_ensure_readable_pmd_model(aug->model, &pmd_model, PMD_FALSE))
+        {
+            byte_size = generate_pmd_bitstream(s337m, pmd_model, aug->block, aug->maxblock, aug->ul, aug->klvbuf);
+        }
+    }
+
     s337m->data = aug->klvbuf;
     s337m->databits = 8 * byte_size;
     if (0 == byte_size)
@@ -143,23 +156,15 @@ dlb_pcmpmd_min_frame_size
 
 
 size_t
-dlb_pcmpmd_augmentor_query_mem2
+dlb_pcmpmd_augmentor_query_mem
     (dlb_pmd_bool sadm
-    ,dlb_pmd_model_constraints *limits
     )
 {
     size_t sz = sizeof(struct dlb_pcmpmd_augmentor);
 
     if (sadm)
     {
-        if (limits == NULL)
-        {
-            sz = 0;
-        }
-        else
-        {
-            sz += sadm_bitstream_encoder_query_mem(limits);
-        }
+        sz += sadm_bitstream_encoder_query_mem();
     }
 
     return sz;
@@ -168,21 +173,21 @@ dlb_pcmpmd_augmentor_query_mem2
 
 void
 dlb_pcmpmd_augmentor_init3
-    (dlb_pcmpmd_augmentor **augptr
-    ,dlb_pmd_model *model
-    ,void *mem
-    ,unsigned int wrap_depth
-    ,dlb_pmd_frame_rate rate
-    ,dlb_klvpmd_universal_label ul
-    ,dlb_pmd_bool mark_empty_blocks
-    ,unsigned int numchannels
-    ,unsigned int stride
-    ,dlb_pmd_bool ispair
-    ,unsigned int start
-    ,dlb_pmd_bool sadm
+    (dlb_pcmpmd_augmentor          **augptr
+    ,dlb_pmd_model_combo            *model
+    ,void                           *mem
+    ,unsigned int                    wrap_depth
+    ,dlb_pmd_frame_rate              rate
+    ,dlb_klvpmd_universal_label      ul
+    ,dlb_pmd_bool                    mark_empty_blocks
+    ,unsigned int                    numchannels
+    ,unsigned int                    stride
+    ,dlb_pmd_bool                    is_pair
+    ,unsigned int                    start
+    ,dlb_pmd_bool                    sadm
     )
 {
-    dlb_pcmpmd_augmentor *aug = mem;
+    dlb_pcmpmd_augmentor *aug = (dlb_pcmpmd_augmentor *)mem;
     unsigned int wd;       /** s337m wrapping bit depth */
     unsigned int vfsize;   /** video frame size in samples */
 
@@ -209,7 +214,7 @@ dlb_pcmpmd_augmentor_init3
 
     if (start >= stride)
     {
-        if (ispair)
+        if (is_pair)
         {
             start = stride - 2;
         }
@@ -223,39 +228,39 @@ dlb_pcmpmd_augmentor_init3
     aug->numchannels = numchannels;
     aug->maxblock = sadm ? 1 : (vfsize / DLB_PCMPMD_BLOCK_SIZE);
 
-    if (ispair && ((aug->numchannels < 2) || (aug->numchannels & 1)))
+    if (is_pair && ((aug->numchannels < 2) || (aug->numchannels & 1)))
     {
         abort();
     }
 
     aug->klvchan = start;
-    pmd_apn_list_iterator_init(&model->write_state.apni, &model->apn_list);
+    /*pmd_apn_list_iterator_init(&model->write_state.apni, &model->apn_list);*/ /* TODO */
     if (sadm)
     {
-        dlb_pmd_model_constraints limits;
-        dlb_pmd_get_constraints(model, &limits);
-        sadm_bitstream_encoder_init(&limits, (void*)(aug+1), &aug->senc);
+        char *p = (char *)aug;
+        p += sizeof(*aug);
+        sadm_bitstream_encoder_init((void *)p, &aug->senc);
     }
-    pmd_s337m_init(&aug->s337m, wd, stride, pcm_next_block, aug, ispair, start, mark_empty_blocks, sadm);
+    pmd_s337m_init(&aug->s337m, wd, stride, pcm_next_block, aug, is_pair, start, mark_empty_blocks, sadm);
 }
 
 
 void
 dlb_pcmpmd_augmentor_init2
-    (dlb_pcmpmd_augmentor **aug
-    ,dlb_pmd_model *model
-    ,void *mem
-    ,dlb_pmd_frame_rate rate
-    ,dlb_klvpmd_universal_label ul
-    ,dlb_pmd_bool mark_empty_blocks
-    ,unsigned int numchannels
-    ,unsigned int stride
-    ,dlb_pmd_bool is_pair
-    ,unsigned int start
-    ,dlb_pmd_bool sadm
+    (dlb_pcmpmd_augmentor          **augptr
+    ,dlb_pmd_model_combo            *model
+    ,void                           *mem
+    ,dlb_pmd_frame_rate              rate
+    ,dlb_klvpmd_universal_label      ul
+    ,dlb_pmd_bool                    mark_empty_blocks
+    ,unsigned int                    numchannels
+    ,unsigned int                    stride
+    ,dlb_pmd_bool                    is_pair
+    ,unsigned int                    start
+    ,dlb_pmd_bool                    sadm
     )
 {
-    dlb_pcmpmd_augmentor_init3(aug, model, mem, 0, rate, ul, mark_empty_blocks,
+    dlb_pcmpmd_augmentor_init3(augptr, model, mem, 0, rate, ul, mark_empty_blocks,
                                numchannels, stride, is_pair, start,
                                sadm);
 }
@@ -263,19 +268,19 @@ dlb_pcmpmd_augmentor_init2
 
 void
 dlb_pcmpmd_augmentor_init
-    (dlb_pcmpmd_augmentor **aug
-    ,dlb_pmd_model *model
-    ,void *mem
-    ,dlb_pmd_frame_rate rate
-    ,dlb_klvpmd_universal_label ul
-    ,dlb_pmd_bool mark_empty_blocks
-    ,unsigned int numchannels
-    ,unsigned int stride
-    ,dlb_pmd_bool is_pair
-    ,unsigned int start
+    (dlb_pcmpmd_augmentor          **augptr
+    ,dlb_pmd_model_combo            *model
+    ,void                           *mem
+    ,dlb_pmd_frame_rate              rate
+    ,dlb_klvpmd_universal_label      ul
+    ,dlb_pmd_bool                    mark_empty_blocks
+    ,unsigned int                    numchannels
+    ,unsigned int                    stride
+    ,dlb_pmd_bool                    is_pair
+    ,unsigned int                    start
     )
 {
-    dlb_pcmpmd_augmentor_init2(aug, model, mem, rate, ul, mark_empty_blocks,
+    dlb_pcmpmd_augmentor_init2(augptr, model, mem, rate, ul, mark_empty_blocks,
                                numchannels, stride, is_pair, start,
                                0);
 }
@@ -308,7 +313,7 @@ dlb_pcmpmd_augmentor_try_frame_query_mem
 
 size_t
 dlb_pcmpmd_augmentor_model_try_frame_query_mem
-    (dlb_pmd_model        *model
+    (dlb_pmd_model_combo  *model
     ,dlb_pmd_bool          sadm
     )
 {
@@ -316,9 +321,7 @@ dlb_pcmpmd_augmentor_model_try_frame_query_mem
 
     if (model != NULL)
     {
-        dlb_pmd_model_constraints limits;
-        dlb_pmd_get_constraints(model, &limits);
-        sz = dlb_pcmpmd_augmentor_query_mem2(sadm, &limits);
+        sz = dlb_pcmpmd_augmentor_query_mem(sadm);
     }
 
     return sz;
@@ -366,24 +369,31 @@ try_frame_test_xyz
 
 dlb_pcmpmd_write_status
 dlb_pcmpmd_augmentor_model_try_frame
-    (dlb_pmd_model        *model
-    ,void                 *mem
-    ,uint32_t             *buf
-    ,unsigned int          num_channels
-    ,unsigned int          num_samples
-    ,dlb_pmd_frame_rate    rate
-    ,dlb_pmd_bool          pair
-    ,dlb_pmd_bool          sadm
-)
+    (dlb_pmd_model_combo    *model
+    ,void                   *mem
+    ,uint32_t               *buf
+    ,unsigned int            num_channels
+    ,unsigned int            num_samples
+    ,dlb_pmd_frame_rate      rate
+    ,dlb_pmd_bool            pair
+    ,dlb_pmd_bool            sadm
+    )
 {
-    dlb_pcmpmd_write_status s;
-    pmd_model_write_state write_state;
-    unsigned int n_pmd, min_frame;
-    dlb_pcmpmd_augmentor *faux = (dlb_pcmpmd_augmentor *)mem;
-    try_frame_cbarg cbarg;
+    dlb_pcmpmd_write_status  s;
+    pmd_model_write_state    write_state;
+    unsigned int             n_pmd;
+    unsigned int             min_frame;
+    dlb_pcmpmd_augmentor    *faux = (dlb_pcmpmd_augmentor *)mem;
+    try_frame_cbarg          cbarg;
 
     /* Check argument values */
-    if (model == NULL || buf == NULL || mem == NULL || rate > DLB_PMD_FRAMERATE_LAST)
+    if ((model == NULL)     ||
+        (mem == NULL)       ||
+        (buf == NULL)       ||
+        (num_channels == 0) ||
+        (num_samples == 0)  ||
+        (rate > DLB_PMD_FRAMERATE_LAST)
+        )
     {
         return DLB_PCMPMD_WRITE_STATUS_ERROR;
     }
@@ -395,11 +405,6 @@ dlb_pcmpmd_augmentor_model_try_frame
         return DLB_PCMPMD_WRITE_STATUS_ERROR;
     }
 
-    /* Save and reset the model's write state */
-    memcpy(&write_state, &model->write_state, sizeof(write_state));
-    memset(&model->write_state, 0, sizeof(model->write_state));
-    pmd_apn_list_iterator_init(&model->write_state.apni, &model->apn_list);
-
     /* Set up a faux augmentor, initialized to beginning of a frame */
     memset(faux, 0, sizeof(*faux));
     faux->model = model;
@@ -408,19 +413,17 @@ dlb_pcmpmd_augmentor_model_try_frame
     faux->block = ~0u;
     faux->sadm = sadm;
     faux->numchannels = num_channels;
-    faux->maxblock = sadm ? 1 : (min_frame / DLB_PCMPMD_BLOCK_SIZE);
+    faux->maxblock = (sadm ? 1 : (min_frame / DLB_PCMPMD_BLOCK_SIZE));
     faux->klvchan = 0;
     if (sadm)
     {
-        dlb_pmd_model_constraints limits;
-        dlb_pmd_get_constraints(model, &limits);
-        sadm_bitstream_encoder_init(&limits, (void *)(faux + 1), &faux->senc);
+        sadm_bitstream_encoder_init((void *)(faux + 1), &faux->senc);
     }
-    pmd_s337m_init(&faux->s337m, (sadm ? 24 : 20), num_channels, pcm_next_block, faux, pair, 0, PMD_FALSE, sadm);
 
     s = DLB_PCMPMD_WRITE_STATUS_RED;
     if (sadm)
     {
+        pmd_s337m_init(&faux->s337m, 24, num_channels, pcm_next_block, faux, pair, 0, PMD_FALSE, sadm);
         if (faux->s337m.databits > 0)   /* If the encoded model is too big, the sADM encoder sets databits to 0 */
         {
             s = DLB_PCMPMD_WRITE_STATUS_GREEN;
@@ -428,30 +431,47 @@ dlb_pcmpmd_augmentor_model_try_frame
     } 
     else
     {
+        const dlb_pmd_model *pmd_model;
+        dlb_pmd_model *m;
+
+        if (dlb_pmd_model_combo_ensure_readable_pmd_model(model, &pmd_model, PMD_TRUE))
+        {
+            return DLB_PCMPMD_WRITE_STATUS_ERROR;
+        }
+        m = (dlb_pmd_model *)pmd_model; // const cast
+
+        /* Save and reset the model's write state */
+        memcpy(&write_state, &m->write_state, sizeof(write_state));
+        memset(&m->write_state, 0, sizeof(m->write_state));
+        pmd_apn_list_iterator_init(&m->write_state.apni, &m->apn_list);
+
+        /* Initialize the s337m wrapper (AFTER messing with the write state!!!) */
+        pmd_s337m_init(&faux->s337m, 20, num_channels, pcm_next_block, faux, pair, 0, PMD_FALSE, sadm);
+
         /* Set up callback data */
-        cbarg.model = model;
+        cbarg.model = m;
         memset(&cbarg.final_state, 0, sizeof(cbarg.final_state));
 
         /* Augment a full frame */
         dlb_pcmpmd_augment2(faux, buf, min_frame, 0, try_frame_callback, &cbarg);
 
         /* How much did we write? */
-        if ((!model->esd_present || (model->esd_present && cbarg.final_state.esd_written)) &&
-            (cbarg.final_state.abd_written == model->num_abd) &&
-            (cbarg.final_state.aod_written == model->num_elements - cbarg.final_state.abd_written) && /* TODO: other kinds of elements? */
-            (cbarg.final_state.apd_written == model->num_apd) &&
-            (cbarg.final_state.hed_written == model->num_hed) &&
-            (model->iat == NULL || !(model->iat->options & PMD_IAT_PRESENT) || (cbarg.final_state.iat_written)) &&
-            (try_frame_test_xyz(model->num_xyz, &cbarg.final_state.xyz_written)) &&
-            (cbarg.final_state.eep_written == model->num_eep) &&
-            (cbarg.final_state.etd_written == model->num_etd) &&
-            (cbarg.final_state.pld_written == model->num_pld)
+        if ((!pmd_model->esd_present || (pmd_model->esd_present && cbarg.final_state.esd_written)) &&
+            (cbarg.final_state.abd_written == pmd_model->num_abd) &&
+            (cbarg.final_state.aod_written == pmd_model->num_elements - cbarg.final_state.abd_written) && /* TODO: other kinds of elements? */
+            (cbarg.final_state.apd_written == pmd_model->num_apd) &&
+            (cbarg.final_state.hed_written == pmd_model->num_hed) &&
+            (pmd_model->iat == NULL || !(pmd_model->iat->options & PMD_IAT_PRESENT) || (cbarg.final_state.iat_written)) &&
+            (try_frame_test_xyz(pmd_model->num_xyz, &cbarg.final_state.xyz_written)) &&
+            (cbarg.final_state.eep_written == pmd_model->num_eep) &&
+            (cbarg.final_state.etd_written == pmd_model->num_etd) &&
+            (cbarg.final_state.pld_written == pmd_model->num_pld)
             )
         {
             s = DLB_PCMPMD_WRITE_STATUS_YELLOW;
-            if ((cbarg.final_state.apn_written == model->apn_list.num) &&
-                (cbarg.final_state.aen_written == model->num_elements) &&
-                (!model->esd || (cbarg.final_state.esn_written == model->esd->count))
+            if ((cbarg.final_state.apn_written == pmd_model->apn_list.num) &&
+                (cbarg.final_state.aen_written == pmd_model->num_elements) &&
+                (!pmd_model->esd || (cbarg.final_state.esn_written == pmd_model->esd->count))
                 )
             {
                 s = DLB_PCMPMD_WRITE_STATUS_GREEN;
@@ -459,7 +479,7 @@ dlb_pcmpmd_augmentor_model_try_frame
         }
 
         /* Restore the model's write state */
-        memcpy(&model->write_state, &write_state, sizeof(model->write_state));
+        memcpy(&m->write_state, &write_state, sizeof(m->write_state));
     }
 
     return s;
@@ -486,12 +506,12 @@ dlb_pcmpmd_augmentor_try_frame
 
 void
 dlb_pcmpmd_augment2
-    (dlb_pcmpmd_augmentor *aug
-    ,uint32_t *pcm
-    ,size_t num_samples
-    ,size_t video_sync
-    ,dlb_pcmpmd_new_frame callback
-    ,void                *cbarg
+    (dlb_pcmpmd_augmentor   *aug
+    ,uint32_t               *pcm
+    ,size_t                  num_samples
+    ,size_t                  video_sync
+    ,dlb_pcmpmd_new_frame    callback
+    ,void                   *cbarg
     )
 {
     uint32_t *end;
@@ -508,12 +528,11 @@ dlb_pcmpmd_augment2
 
 void
 dlb_pcmpmd_augment
-    (dlb_pcmpmd_augmentor *aug
-    ,uint32_t *pcm
-    ,size_t num_samples
-    ,size_t video_sync
+    (dlb_pcmpmd_augmentor   *aug
+    ,uint32_t               *pcm
+    ,size_t                  num_samples
+    ,size_t                  video_sync
     )
 {
     dlb_pcmpmd_augment2(aug, pcm, num_samples, video_sync, NULL, NULL);
 }
-

@@ -1,51 +1,28 @@
-/************************************************************************
- * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+/******************************************************************************
+ * This program is protected under international and U.S. copyright laws as
+ * an unpublished work. This program is confidential and proprietary to the
+ * copyright owners. Reproduction or disclosure, in whole or in part, or the
+ * production of derivative works therefrom without the express permission of
+ * the copyright owners is prohibited.
  *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials provided
- *    with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- **********************************************************************/
+ *                Copyright (C) 2020-2021 by Dolby Laboratories,
+ *                Copyright (C) 2020-2021 by Dolby International AB.
+ *                            All rights reserved.
+ ******************************************************************************/
 
 /**
  * @file sadm_bitstream_encoder.c
- * @brief definitions for generating an sADM bitstream suitable for embedding
+ * @brief definitions for generating a S-ADM bitstream suitable for embedding
  * within SMPTE-337m encoded PCM.
  */
 
 #include "sadm_bitstream_encoder.h"
+#include "dlb_adm/include/dlb_adm_api.h"
 #include "zlib.h"
 
 #include <string.h>
 #include <assert.h>
 #include <string.h>
-
 
 /**
  * @brief sadm write callback
@@ -83,43 +60,43 @@ pcm_sadm_get_buffer
 }
 
 
-size_t
+/**
+ * @brief determine memory requirements for the S-ADM bitstream encoder
+ */
+size_t                                    /** @return size of memory required */
 sadm_bitstream_encoder_query_mem
-    (dlb_pmd_model_constraints  *limits
+    (void
     )
 {
-    return sizeof(sadm_bitstream_encoder)
-        + dlb_pmd_sadm_writer_query_mem(limits);
+    return sizeof(sadm_bitstream_encoder);
 }
 
 
 dlb_pmd_success
 sadm_bitstream_encoder_init
-    (dlb_pmd_model_constraints  *limits
-    ,void                       *mem
-    ,sadm_bitstream_encoder    **gen
+    (void                       *mem
+    ,sadm_bitstream_encoder    **enc
     )
 {
-    sadm_bitstream_encoder *g;
-    uintptr_t mc = (uintptr_t)mem;
+    sadm_bitstream_encoder *e = (sadm_bitstream_encoder*)mem;
 
-    g = (sadm_bitstream_encoder*)mc;
-    mc += sizeof(sadm_bitstream_encoder);
-    
-    if (dlb_pmd_sadm_writer_init(&g->w, limits, (void*)mc))
+    if ((mem == NULL) || (enc == NULL))
     {
         return PMD_FAIL;
     }
-    *gen = g;
+
+    memset(e, 0, sizeof(*e));
+    *enc = e;
+
     return PMD_SUCCESS;
 }
 
 
-int
+int 
 compress_sadm_xml
-    (sadm_bitstream_encoder *enc
-    ,uint8_t                *buf
-    )
+   (sadm_bitstream_encoder  *enc
+   ,uint8_t                 *buf
+   )
 {
     z_stream s;
     int bytecount;
@@ -173,20 +150,27 @@ compress_sadm_xml
 
 int
 sadm_bitstream_encoder_payload
-    (sadm_bitstream_encoder *enc
-    ,dlb_pmd_model          *model
-    ,uint8_t                *outbuf
+    (sadm_bitstream_encoder     *enc
+    ,const dlb_adm_core_model   *model
+    ,uint8_t                    *outbuf
     )
 {
-    int byte_size;
+    dlb_adm_xml_container   *container = NULL;
+    int                      byte_size = 0;
+    int                      status;
 
     enc->size = sizeof(enc->xmlbuf);
-    if (dlb_pmd_sadm_writer_write(enc->w, model, pcm_sadm_get_buffer, 0, enc))
-    {
-        return 0;
-    }
-
+    status = dlb_adm_container_open_from_core_model(&container, model);
+    if (status != DLB_ADM_STATUS_OK) goto finish;
+    status = dlb_adm_container_write_xml_buffer(container, pcm_sadm_get_buffer, enc);
+    if (status != DLB_ADM_STATUS_OK) goto finish;
     byte_size = compress_sadm_xml(enc, outbuf);
+
+finish:
+    if (container != NULL)
+    {
+        (void)dlb_adm_container_close(&container);
+    }
 
     return byte_size;
 }
@@ -194,29 +178,37 @@ sadm_bitstream_encoder_payload
 
 int
 sadm_bitstream_encoder_encode
-    (pmd_s337m              *s337m
-    ,sadm_bitstream_encoder *enc
-    ,dlb_pmd_model          *model
-    ,dlb_pmd_frame_rate      rate
-    ,uint8_t                *outbuf
+    (pmd_s337m                  *s337m
+    ,sadm_bitstream_encoder     *enc
+    ,const dlb_adm_core_model   *model
+    ,dlb_pmd_frame_rate          rate
+    ,uint8_t                    *outbuf
     )
 {
-    size_t min_frame_size = pmd_s337m_min_frame_size(rate);
-    int frame_byte_count = (int)pmd_s337m_sadm_data_bytes(s337m, rate);
-    int byte_size;
+    dlb_adm_xml_container   *container = NULL;
+    size_t                   min_frame_size = pmd_s337m_min_frame_size(rate);
+    int                      frame_byte_count = (int)pmd_s337m_sadm_data_bytes(s337m, rate);
+    int                      byte_size = 0;
+    int                      status;
 
     enc->size = sizeof(enc->xmlbuf);
     s337m->framelen = min_frame_size - 2 * GUARDBAND;   /* Note: this could be short by a sample - TODO: can that be a problem? */
-    if (dlb_pmd_sadm_writer_write(enc->w, model, pcm_sadm_get_buffer, 0, enc))
-    {
-        return 0;
-    }
-    
+
+    status = dlb_adm_container_open_from_core_model(&container, model);
+    if (status != DLB_ADM_STATUS_OK) goto finish;
+    status = dlb_adm_container_write_xml_buffer(container, pcm_sadm_get_buffer, enc);
+    if (status != DLB_ADM_STATUS_OK) goto finish;
+
     byte_size = compress_sadm_xml(enc, outbuf);
     if (byte_size > frame_byte_count)
     {
-        /* TODO: warning or error */
         byte_size = 0;
+    }
+
+finish:
+    if (container != NULL)
+    {
+        (void)dlb_adm_container_close(&container);
     }
 
     return byte_size;

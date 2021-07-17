@@ -33,17 +33,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 #include <iostream>
-#include "dlb_aoip_services.h"
+#include "dlb_st2110_api.h"
 
-#define VERSION "0.1"
+#define VERSION "0.9"
 
 using namespace std;
-/*
-void newStreamCallBack(AoipRxStream &newStream)
-{
-	cout << "New Stream" << endl << "=== ======" << endl << newStream;
-}
-*/
+
 void newServiceCallBack(AoipService &newService)
 {
 	cout << "New Service" << endl << "=== =======" << endl << newService;
@@ -53,7 +48,7 @@ void newServiceCallBack(AoipService &newService)
 void PrintUsage(void)
 {
 	fprintf(stderr, "dlb_aoip_discovery_main <INTERFACE> v%s\n", VERSION);
-	fprintf(stderr, "Copyright Dolby Laboratories Inc., 2020. All rights reserved.\n\n");
+	fprintf(stderr, "Copyright Dolby Laboratories Inc., 2021. All rights reserved.\n\n");
 	fprintf(stderr, "<INTERFACE>               Interface to listen for SAP and use for mDNS\n");
 }
 

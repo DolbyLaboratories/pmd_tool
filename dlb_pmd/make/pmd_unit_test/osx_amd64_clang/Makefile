@@ -12,24 +12,30 @@ CXXFLAGS_debug = -std=c++11 -std=c++17 -g -O0 -arch x86_64 -fPIC -c -Wall
 CXXFLAGS_release = -std=c++11 -std=c++17 -O3 -arch x86_64 -fPIC -c -Wall
 DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
 DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
-INCLUDES = -I$(BASE)Lawo/ember-plus/libember_slim/Source -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd/src/model -I$(BASE)dlb_pmd/src/modules/pcm -I$(BASE)dlb_pmd -I$(BASE)dlb_wave/1.6 -I$(BASE)googletest/1.8.0/include -I$(BASE)googletest/1.8.0/include -I$(BASE). -I$(BASE). -I$(BASE)zlib/1.2.11/zlib-1.2.11
+INCLUDES = -I$(BASE)Lawo/ember-plus/libember_slim/Source -I$(BASE)dlb_buffer/1.3 -I$(BASE)dlb_octfile/1.1 -I$(BASE)dlb_pmd/frontend/pmd_tool -I$(BASE)dlb_pmd/frontend -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/include -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd/os -I$(BASE)dlb_pmd/src/model -I$(BASE)dlb_pmd/src/modules/pcm -I$(BASE)dlb_pmd -I$(BASE)dlb_wave/1.6 -I$(BASE)googletest/1.8.0/include -I$(BASE)googletest/1.8.0/include -I$(BASE). -I$(BASE). -I$(BASE)zlib/1.2.11/zlib-1.2.11
 LD = $(CXX)
 LDFLAGS_debug = -arch x86_64 -dead_strip
 LDFLAGS_release = -arch x86_64 -dead_strip -O2
 LDLIBS = -lpthread
 
 
-INPUTS_LINK_debug = $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_debug.o\
-                    $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_debug.o\
-                    $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_01.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_debug.o\
+INPUTS_LINK_debug = $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_unit_test_osx_amd64_clang_debug.o\
+                    $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_unit_test_osx_amd64_clang_debug.o\
+                    $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/unit_test/combo_model.pmd_unit_test_osx_amd64_clang_debug.o\
+                    $(TMP)dlb_pmd/unit_test/core_model_generator.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/unit_test/core_model_ingester.pmd_unit_test_osx_amd64_clang_debug.o\
+                    $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_debug.o\
+                    $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_debug.o\
                     $(TMP)dlb_pmd/unit_test/libember_slim_01.pmd_unit_test_osx_amd64_clang_debug.o $(TMP)dlb_pmd/unit_test/pmd_unit_test.pmd_unit_test_osx_amd64_clang_debug.o
-INPUTS_LINK_release = $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_release.o\
-                      $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_release.o\
-                      $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_01.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_release.o\
+INPUTS_LINK_release = $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_unit_test_osx_amd64_clang_release.o\
+                      $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_unit_test_osx_amd64_clang_release.o\
+                      $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/unit_test/combo_model.pmd_unit_test_osx_amd64_clang_release.o\
+                      $(TMP)dlb_pmd/unit_test/core_model_generator.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/unit_test/core_model_ingester.pmd_unit_test_osx_amd64_clang_release.o\
+                      $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_release.o\
+                      $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_release.o\
                       $(TMP)dlb_pmd/unit_test/libember_slim_01.pmd_unit_test_osx_amd64_clang_release.o $(TMP)dlb_pmd/unit_test/pmd_unit_test.pmd_unit_test_osx_amd64_clang_release.o
 
-DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a $(BASE)Lawo/ember-plus/libember_slim/make/libember_slim/osx_amd64_clang/libember_slim_debug.a $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_debug.a $(BASE)googletest/1.8.0/make/googletest/osx_amd64_clang/googletest_debug.a
-DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_release.a $(BASE)Lawo/ember-plus/libember_slim/make/libember_slim/osx_amd64_clang/libember_slim_release.a $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_release.a $(BASE)googletest/1.8.0/make/googletest/osx_amd64_clang/googletest_release.a
+DEP_PROJ_LINK_debug = $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a $(BASE)Lawo/ember-plus/libember_slim/make/libember_slim/osx_amd64_clang/libember_slim_debug.a $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a $(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_debug.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_debug.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_debug.a $(BASE)googletest/1.8.0/make/googletest/osx_amd64_clang/googletest_debug.a
+DEP_PROJ_LINK_release = $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_release.a $(BASE)Lawo/ember-plus/libember_slim/make/libember_slim/osx_amd64_clang/libember_slim_release.a $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a $(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_release.a $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang/dlb_xml_release.a $(BASE)zlib/1.2.11/make/zlib/osx_amd64_clang/zlib_release.a $(BASE)googletest/1.8.0/make/googletest/osx_amd64_clang/googletest_release.a
 
 default: pmd_unit_test_debug pmd_unit_test_release
 
@@ -55,13 +61,19 @@ $(TMP)%.pmd_unit_test_osx_amd64_clang_release.o: $(BASE)%.cc | $(TMP)%/..
 	$(CXXDEP) -std=c++11 -arch x86_64 -MM $(DEFINES_release) $(INCLUDES) -MT $@ -o $(patsubst %.o,%.d,$@) $<
 	$(CXX) $(CXXFLAGS_release) $(DEFINES_release) $(INCLUDES) -o $@ $<
 
-CLEAN_COMPILE_debug = $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_01.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_debug.d\
+CLEAN_COMPILE_debug = $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_unit_test_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_unit_test_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/unit_test/combo_model.pmd_unit_test_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_pmd/unit_test/core_model_generator.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/unit_test/core_model_ingester.pmd_unit_test_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_debug.d\
                       $(TMP)dlb_pmd/unit_test/libember_slim_01.pmd_unit_test_osx_amd64_clang_debug.d $(TMP)dlb_pmd/unit_test/pmd_unit_test.pmd_unit_test_osx_amd64_clang_debug.d
-CLEAN_COMPILE_release = $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_release.d\
-                        $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_release.d\
-                        $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_01.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_release.d\
+CLEAN_COMPILE_release = $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_unit_test_osx_amd64_clang_release.d\
+                        $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_unit_test_osx_amd64_clang_release.d\
+                        $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/unit_test/combo_model.pmd_unit_test_osx_amd64_clang_release.d\
+                        $(TMP)dlb_pmd/unit_test/core_model_generator.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/unit_test/core_model_ingester.pmd_unit_test_osx_amd64_clang_release.d\
+                        $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_release.d\
+                        $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_release.d\
                         $(TMP)dlb_pmd/unit_test/libember_slim_01.pmd_unit_test_osx_amd64_clang_release.d $(TMP)dlb_pmd/unit_test/pmd_unit_test.pmd_unit_test_osx_amd64_clang_release.d
 
 cleandeps:
@@ -70,6 +82,7 @@ cleandeps:
 
 clean: cleanself
 	$(MAKE) -C $(BASE)Lawo/ember-plus/libember_slim/make/libember_slim/osx_amd64_clang cleanself
+	$(MAKE) -C $(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang cleanself
 	$(MAKE) -C $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang cleanself
 	$(MAKE) -C $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/osx_amd64_clang cleanself
@@ -97,25 +110,39 @@ help:
 	@echo " cleandeps"
 	@echo " help"
 
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_unit_test_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_unit_test_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_unit_test_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_unit_test_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_pmd/unit_test/combo_model.pmd_unit_test_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_pmd/unit_test/core_model_generator.pmd_unit_test_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_pmd/unit_test/core_model_ingester.pmd_unit_test_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_debug.d)
-include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_01.pmd_unit_test_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/libember_slim_01.pmd_unit_test_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/pmd_unit_test.pmd_unit_test_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pcm.pmd_unit_test_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool.pmd_unit_test_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/pmd_tool_klv.pmd_unit_test_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_pmd/frontend/pmd_tool/xml.pmd_unit_test_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.pmd_unit_test_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_pmd/unit_test/combo_model.pmd_unit_test_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_pmd/unit_test/core_model_generator.pmd_unit_test_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_pmd/unit_test/core_model_ingester.pmd_unit_test_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_01.pmd_unit_test_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_capture_02.pmd_unit_test_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_pcm_01.pmd_unit_test_osx_amd64_clang_release.d)
-include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_01.pmd_unit_test_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/dlb_pmd_sadm_02.pmd_unit_test_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/libember_slim_01.pmd_unit_test_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_pmd/unit_test/pmd_unit_test.pmd_unit_test_osx_amd64_clang_release.d)
 
 $(BASE)Lawo/ember-plus/libember_slim/make/libember_slim/osx_amd64_clang/libember_slim_debug.a \
 $(BASE)Lawo/ember-plus/libember_slim/make/libember_slim/osx_amd64_clang/libember_slim_release.a \
+$(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_debug.a \
+$(BASE)dlb_adm/make/dlb_adm_lib/osx_amd64_clang/dlb_adm_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_debug.a \
 $(BASE)dlb_pmd/make/dlb_pmd_lib/osx_amd64_clang/dlb_pmd_lib_release.a \
 $(BASE)dlb_pmd/make/dlb_wave_lib/osx_amd64_clang/dlb_wave_lib_debug.a \
