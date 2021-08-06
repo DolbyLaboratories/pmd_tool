@@ -1,14 +1,37 @@
-/******************************************************************************
- * This program is protected under international and U.S. copyright laws as
- * an unpublished work. This program is confidential and proprietary to the
- * copyright owners. Reproduction or disclosure, in whole or in part, or the
- * production of derivative works therefrom without the express permission of
- * the copyright owners is prohibited.
+/************************************************************************
+ * dlb_pmd
+ * Copyright (c) 2021, Dolby Laboratories Inc.
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
  *
- *                Copyright (C) 2021 by Dolby Laboratories,
- *                Copyright (C) 2021 by Dolby International AB.
- *                            All rights reserved.
- ******************************************************************************/
+ * 2. Redistributions in binary form must reproduce the above
+ *    copyright notice, this list of conditions and the following
+ *    disclaimer in the documentation and/or other materials provided
+ *    with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ **********************************************************************/
 
 #include "pmd_core_model_ingester.h"
 #include "pmd_speaker_position.h"
@@ -576,7 +599,7 @@ generate_pmd_presentation
     dlb_pmd_element_id elements[DLB_PMD_MAX_AUDIO_ELEMENTS];
     dlb_pmd_presentation pres;
     dlb_adm_bool has_name;
-    size_t i, n;
+    size_t i, j, n;
     int status;
 
     memset(&pres, 0, sizeof(pres));
@@ -607,12 +630,19 @@ generate_pmd_presentation
         n = DLB_PMD_MAX_PRESENTATION_NAMES;
     }
     pres.num_names = (unsigned int)n;
-    for (i = 0; i < n; i++)
+    i = 0;
+    if (n > 1 && !strcmp(ingester->names.names[0], ingester->names.names[1]))
     {
-        strncpy(pres.names[i].text,                        ingester->names.names[i],  sizeof(pres.names[i].text));
-        strncpy(pres.names[i].language, reconcile_language(ingester->names.langs[i]), sizeof(pres.names[i].language));
+        pres.num_names--;
+        i++;
     }
-    status = dlb_adm_core_model_has_name(&has_name, &ingester->names);  /* TODO: figure out how to set audio_language correctly... */
+    for (j = 0; j < pres.num_names; i++, j++)
+    {
+        strncpy(pres.names[j].text,                        ingester->names.names[i],  sizeof(pres.names[j].text));
+        strncpy(pres.names[j].language, reconcile_language(ingester->names.langs[i]), sizeof(pres.names[j].language));
+    }
+
+    status = dlb_adm_core_model_has_name(&has_name, &ingester->names);
     if (has_name)
     {
         audio_language = ingester->names.langs[0];

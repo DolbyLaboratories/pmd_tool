@@ -1,0 +1,41 @@
+require('mbuild_conditional')
+require('clang_support')
+
+def get_symbols():
+	return {'dlb_adm_platform_configurations': dlb_adm_platform_configs,
+		   }
+
+def use_configuration_dlb_adm(conf):
+
+	# Basic filters
+	if conf['processor'] not in ['x86', 'amd64']:
+		return False
+	if conf['os'] not in ['windows', 'linux', 'osx']:
+		return False
+	if conf['toolchain'] not in ['gnu', 'msvs2015', 'msvs2017', 'clang']:
+		return False
+	if conf['flavour'] not in ['release', 'debug']:
+		return False
+
+	# Only GNU toolchain on Linux
+	if conf['os'] in ['linux']:
+		if conf['toolchain'] not in ['gnu']:
+			return False
+	
+	# Only 64-bit MSVS and GNU configurations on Windows
+	if conf['os'] in ['windows']:
+		if conf['processor'] not in ['amd64']:
+			return False
+		if conf['toolchain'] not in ['msvs2015', 'msvs2017', 'gnu']:
+			return False
+			
+	# Only 64-bit clang configuration on OSX
+	if conf['os'] in ['osx']:
+		if conf['processor'] not in ['amd64']:
+			return False
+		if conf['toolchain'] not in ['clang']:
+			return False
+	
+	return True
+
+dlb_adm_platform_configs = mbuild_conditional(mbuild_union(mbuild_standard, clang_support), use_configuration_dlb_adm)

@@ -1,19 +1,43 @@
-/******************************************************************************
- * This program is protected under international and U.S. copyright laws as
- * an unpublished work. This program is confidential and proprietary to the
- * copyright owners. Reproduction or disclosure, in whole or in part, or the
- * production of derivative works therefrom without the express permission of
- * the copyright owners is prohibited.
+/************************************************************************
+ * dlb_pmd
+ * Copyright (c) 2021, Dolby Laboratories Inc.
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
  *
- *                Copyright (C) 2021 by Dolby Laboratories,
- *                Copyright (C) 2021 by Dolby International AB.
- *                            All rights reserved.
- ******************************************************************************/
+ * 2. Redistributions in binary form must reproduce the above
+ *    copyright notice, this list of conditions and the following
+ *    disclaimer in the documentation and/or other materials provided
+ *    with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ **********************************************************************/
 
 #define _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
 
 #include "gtest/gtest.h"
 
+#include "dlb_pmd/include/dlb_pmd_xml_file.h"
 #include "dlb_pmd/include/dlb_pmd_sadm_file.h"
 #include "dlb_pmd/include/dlb_pmd_model_combo.h"
 #include "dlb_pmd/frontend/pmd_tool/xml.h"
@@ -42,6 +66,9 @@ static const char extraObjectADMOutputFileName[] = "ExtraObject.out.sadm.xml";
 
 static const char altSpkrADMInputFileName[] = "AltSpkr.sadm.xml";
 static const char altSpkrADMOutputFileName[] = "AltSpkr.out.sadm.xml";
+
+static const char altSpkrPMDOriginalFileName[] = "AltSpkr.pmd.xml";
+static const char altSpkrPMDOutputFileName[] = "AltSpkr.out.pmd.xml";
 
 class CoreModelGenerator : public testing::Test
 {
@@ -343,39 +370,6 @@ TEST_F(CoreModelGenerator, GenerateBasic)
     EXPECT_TRUE(CompareFiles(smallModel2InputFileName, smallModel2OutputFileName));
 }
 
-TEST_F(CoreModelGenerator, GenerateDolbyReferenceComparisonWith_1_7)
-{
-    const dlb_pmd_model *const_pmd_model;
-    dlb_pmd_success success;
-    int status;
-
-    SetUpTestInput(dolbyReferenceInputFileName, dolbyReferenceXML);
-    SetUpTestInput(dolbyReference_1_7_OutputFileName, dolbyReference_1_7_XML);
-    status = InitPmdModel();
-    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
-    ASSERT_TRUE(InitComboModel(mPmdModel, nullptr));
-
-    status = ::xml_read(dolbyReferenceInputFileName, mPmdModelCombo, PMD_FALSE, PMD_FALSE);
-    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
-    success = ::dlb_pmd_model_combo_convert_to_pmd_model(mPmdModelCombo, dolbyReferenceInputFileName, &const_pmd_model);
-    ASSERT_EQ(PMD_SUCCESS, success);
-    ASSERT_EQ(mPmdModel, const_pmd_model);
-
-    status = InitCoreModel();
-    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
-    success = InitGenerator();
-    ASSERT_EQ(PMD_SUCCESS, success);
-
-    success = ::pmd_core_model_generator_generate(mGenerator, mCoreModel, mPmdModel);
-    EXPECT_EQ(PMD_SUCCESS, success);
-    status = ::dlb_adm_container_open_from_core_model(&mContainer, mCoreModel);
-    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
-    status = dlb_adm_container_write_xml_file(mContainer, dolbyReferenceOutputFileName);
-    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
-
-    EXPECT_TRUE(CompareFiles(dolbyReference_1_7_OutputFileName, dolbyReferenceOutputFileName));
-}
-
 TEST_F(CoreModelGenerator, Close)
 {
     pmd_core_model_generator *p = nullptr;
@@ -425,6 +419,7 @@ TEST_F(CoreModelGenerator, PMDExtraObjectGen)
 
 TEST_F(CoreModelGenerator, AltSpkrs)
 {
+    dlb_pmd_model_combo *comboModel;
     dlb_pmd_element_id eid;
     dlb_pmd_success success;
     int status;
@@ -432,26 +427,45 @@ TEST_F(CoreModelGenerator, AltSpkrs)
     SetUpTestInput(altSpkrADMInputFileName, altSpkrADM);
     status = InitPmdModel();
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = InitCoreModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
+    // Set up and write out the PMD model
+    success = ::dlb_pmd_set_title(mPmdModel, "Converted from Serial ADM");
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_pmd_add_signals(mPmdModel, 18);
+    ASSERT_EQ(PMD_SUCCESS, success);
     success = ::dlb_pmd_add_bed(mPmdModel, 1, "Bed 1", DLB_PMD_SPEAKER_CONFIG_5_1,   1, 0);
-    EXPECT_EQ(PMD_SUCCESS, success);
+    ASSERT_EQ(PMD_SUCCESS, success);
     success = ::dlb_pmd_add_bed(mPmdModel, 2, "Bed 2", DLB_PMD_SPEAKER_CONFIG_7_1_4, 7, 0);
-    EXPECT_EQ(PMD_SUCCESS, success);
+    ASSERT_EQ(PMD_SUCCESS, success);
     eid = 1;
     success = ::dlb_pmd_add_presentation(mPmdModel, 1, "en", "Pres 1", "en", DLB_PMD_SPEAKER_CONFIG_5_1, 1, &eid);
-    EXPECT_EQ(PMD_SUCCESS, success);
+    ASSERT_EQ(PMD_SUCCESS, success);
     eid = 2;
     success = ::dlb_pmd_add_presentation(mPmdModel, 2, "en", "Pres 2", "en", DLB_PMD_SPEAKER_CONFIG_7_1_4, 1, &eid);
-    EXPECT_EQ(PMD_SUCCESS, success);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_xmlpmd_file_write(altSpkrPMDOriginalFileName, mPmdModel);
+    ASSERT_EQ(PMD_SUCCESS, success);
 
-    // Wrap the model
-    dlb_pmd_model_combo *comboModel;
-    DlbAdm::DlbPmdModelWrapper wrapper(&comboModel, mPmdModel, PMD_FALSE);
+    // Wrap the model, write the S-ADM and compare with the "gold standard"
+    DlbAdm::DlbPmdModelWrapper pmdWrapper(&comboModel, mPmdModel, PMD_FALSE);
 
     success = ::dlb_pmd_sadm_file_write(altSpkrADMOutputFileName, comboModel);
     EXPECT_EQ(PMD_SUCCESS, success);
 
-    /* Note: the "gold standard" comparison is WITHOUT using alternative speakers */
-
     EXPECT_TRUE(CompareFiles(altSpkrADMInputFileName, altSpkrADMOutputFileName));
+
+    // Read the S-ADM, convert it to PMD, write it out and compare with the original PMD
+    DlbAdm::DlbPmdModelWrapper sadmWrapper(&comboModel, mCoreModel, PMD_FALSE);
+    const dlb_pmd_model *pmdModel;
+
+    success = ::dlb_pmd_sadm_file_read(altSpkrADMOutputFileName, comboModel, PMD_FALSE, nullptr, nullptr);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_pmd_model_combo_ensure_readable_pmd_model(comboModel, &pmdModel, PMD_FALSE);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_xmlpmd_file_write(altSpkrPMDOutputFileName, pmdModel);
+    ASSERT_EQ(PMD_SUCCESS, success);
+
+    EXPECT_TRUE(CompareFiles(altSpkrPMDOriginalFileName, altSpkrPMDOutputFileName));
 }
