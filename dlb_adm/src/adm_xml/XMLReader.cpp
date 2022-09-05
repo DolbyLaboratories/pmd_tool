@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +35,6 @@
  **********************************************************************/
 
 #include "XMLReader.h"
-#include "dlb_adm/src/adm_identity/AdmIdTranslator.h"
 #include "XMLContainer.h"
 #include "RelationshipDescriptor.h"
 #include "AttributeDescriptor.h"
@@ -134,7 +134,7 @@ namespace DlbAdm
                  return nullptr;
              }
              s = ::fgets(mLineBuffer, LINE_BUFFER_SIZE, mInputFile);
-         } 
+         }
          else
          {
              if (mBuffer.GetLine(mLineBuffer, LINE_BUFFER_SIZE) > 0)
@@ -175,10 +175,18 @@ namespace DlbAdm
              XMLReaderStackEntry *top;
              XMLReaderStackEntry next;
              RelationshipDescriptor rd;
+             EntityNameDisambiguationFn disambiguator = [&](const EntityDescriptor &candidate)
+             {
+                 // If there is a relationship between the entity type at the top of the stack and
+                 // the candidate's entity type, return true.  Side effect: set rd to that relationship.
+                 int s = GetRelationshipDescriptor(rd, top->entityDescriptor.entityType, candidate.entityType);
+                 bool found = (s == DLB_ADM_STATUS_OK);
+                 return found;
+             };
 
              status = mStack.Top(top);
              CHECK_STATUS(status);
-             status = GetEntityDescriptor(next.entityDescriptor, tag);
+             status = GetEntityDescriptor(next.entityDescriptor, tag, disambiguator);
              CHECK_STATUS(status);
              if (!next.entityDescriptor.hasADMIdOrRef)
              {
@@ -186,8 +194,6 @@ namespace DlbAdm
                  CHECK_STATUS(status);
              }
 
-             status = GetRelationshipDescriptor(rd, top->entityDescriptor.entityType, next.entityDescriptor.entityType);
-             CHECK_STATUS(status);
              switch (rd.relationship)
              {
              case ENTITY_RELATIONSHIP::CONTAINS:
@@ -311,7 +317,7 @@ namespace DlbAdm
             // Special case for "status" attribute for entities referred to by the changedIDs element
             // TODO: work out how to do something useful with the information
             handled = true;
-        } 
+        }
         else if (status == DLB_ADM_STATUS_OK)
         {
             if (child->idFinal)
@@ -401,7 +407,6 @@ namespace DlbAdm
      int XMLReader::MakeGenericComponentId(XMLReaderStackEntry *component)
      {
          int status = DLB_ADM_STATUS_OK;
-         AdmIdTranslator translator;
 
          component->entityId = mContainer.GetGenericID(component->entityDescriptor.entityType);
          if (component->entityId == DLB_ADM_NULL_ENTITY_ID)
@@ -495,6 +500,15 @@ namespace DlbAdm
          case DLB_ADM_VALUE_TYPE_STRING:
          {
              v = valueString;
+             break;
+         }
+
+         case DLB_ADM_VALUE_TYPE_REF:
+         {
+             dlb_adm_entity_id lv;
+             status = ParseValue(lv, valueString);
+             CHECK_STATUS(status);
+             v = lv;
              break;
          }
 

@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_xmllib
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -88,7 +89,7 @@ dlb_xml_query_version
  *     Non-validating parser, ignoring external entities
  *     Limited error and syntax checking
  *     Entities are not supported
- *     Maximum significant characters in element tags: 32
+ *     Maximum significant characters in element tags: 34
  *     Maximum text length per element: 2048
  * 
  *  RETURN:

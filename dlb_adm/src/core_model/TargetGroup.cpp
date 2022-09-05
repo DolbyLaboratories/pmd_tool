@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,25 +44,25 @@ namespace DlbAdm
     TargetGroup::TargetGroup()
         : ModelEntity()
         , mSpeakerConfig(DLB_ADM_SPEAKER_CONFIG_NONE)
-        , mObjectClass(DLB_ADM_OBJECT_CLASS_NONE)
+        , mAudioType(DLB_ADM_AUDIO_TYPE_NONE)
         , mIsDynamic(false)
     {
         mNameLimit = NAME_LIMIT;
     }
 
-    TargetGroup::TargetGroup(dlb_adm_entity_id id, DLB_ADM_SPEAKER_CONFIG speakerConfig)
-        : ModelEntity(id, NAME_LIMIT)
+    TargetGroup::TargetGroup(dlb_adm_entity_id id, DLB_ADM_SPEAKER_CONFIG speakerConfig, bool isCommon /*= false*/)
+        : ModelEntity(id, NAME_LIMIT, isCommon)
         , mSpeakerConfig(speakerConfig)
-        , mObjectClass(DLB_ADM_OBJECT_CLASS_NONE)
+        , mAudioType(DLB_ADM_AUDIO_TYPE_DIRECT_SPEAKERS)
         , mIsDynamic(false)
     {
         // Empty
     }
 
-    TargetGroup::TargetGroup(dlb_adm_entity_id id, DLB_ADM_OBJECT_CLASS objectClass, bool isDynamic)
+    TargetGroup::TargetGroup(dlb_adm_entity_id id, DLB_ADM_AUDIO_TYPE audioType, bool isDynamic)
         : ModelEntity(id, NAME_LIMIT)
         , mSpeakerConfig(DLB_ADM_SPEAKER_CONFIG_NONE)
-        , mObjectClass(objectClass)
+        , mAudioType(audioType)
         , mIsDynamic(isDynamic)
     {
         // Empty
@@ -70,7 +71,7 @@ namespace DlbAdm
     TargetGroup::TargetGroup(const TargetGroup &x)
         : ModelEntity(x)
         , mSpeakerConfig(x.mSpeakerConfig)
-        , mObjectClass(x.mObjectClass)
+        , mAudioType(x.mAudioType)
         , mIsDynamic(x.mIsDynamic)
     {
         // Empty
@@ -79,7 +80,7 @@ namespace DlbAdm
     TargetGroup::~TargetGroup()
     {
         mSpeakerConfig = DLB_ADM_SPEAKER_CONFIG_NONE;
-        mObjectClass = DLB_ADM_OBJECT_CLASS_NONE;
+        mAudioType = DLB_ADM_AUDIO_TYPE_NONE;
         mIsDynamic = false;
     }
 
@@ -87,7 +88,7 @@ namespace DlbAdm
     {
         (void)ModelEntity::operator=(x);
         mSpeakerConfig = x.mSpeakerConfig;
-        mObjectClass = x.mObjectClass;
+        mAudioType = x.mAudioType;
         mIsDynamic = x.mIsDynamic;
         return *this;
     }

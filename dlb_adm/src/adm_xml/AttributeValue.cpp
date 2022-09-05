@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,11 +36,19 @@
 
 #include "AttributeValue.h"
 
+#include "dlb_adm/src/adm_identity/AdmIdTranslator.h"
+
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include <iostream>
 #include <stdio.h>
+
+#include <regex>
+#include <string>
+
+static constexpr uint8_t MINUTES_PER_HOUR = 60;
+static constexpr uint8_t SECONDS_PER_MINUTES = 60;
 
 namespace DlbAdm
 {
@@ -81,6 +90,11 @@ namespace DlbAdm
         return DLB_ADM_VALUE_TYPE_STRING;
     }
 
+    DLB_ADM_VALUE_TYPE GetValueType::operator()(dlb_adm_entity_id) const
+    {
+        return DLB_ADM_VALUE_TYPE_REF;
+    }
+
 
     // Parse a value from a string
 
@@ -114,7 +128,7 @@ namespace DlbAdm
         else if (lvs == "false" || valueString == "0")
         {
             value = DLB_ADM_FALSE;
-        } 
+        }
         else
         {
             status = DLB_ADM_STATUS_ERROR;
@@ -151,11 +165,76 @@ namespace DlbAdm
         return status;
     }
 
+    int ParseValue(dlb_adm_entity_id &value, const std::string &valueString)
+    {
+        AdmIdTranslator translator;
+        value = translator.Translate(valueString.c_str());
+
+        return (value == 0ull);
+    }
+
     int ParseValue(dlb_adm_time &value, const std::string &valueString)
     {
-        (void)value;
-        (void)valueString;
-        return DLB_ADM_STATUS_ERROR;
+        /*
+        Three possible time formats:
+            hh:mm:ss.zzzzzSfffff
+            hh:mm:ss.zzzzz
+            zzzzzSfffff
+
+            There should be at least 5 of 'z' and 'f' each.
+        */
+
+        int status = DLB_ADM_STATUS_OK;
+
+        std::smatch matchResult;
+
+        ::memset(&value, 0, sizeof(dlb_adm_time));
+
+        try
+        {
+            if(std::regex_match(valueString, matchResult, std::regex("(\\d\\d):(\\d\\d):(\\d\\d)\\.(\\d{5,})S(\\d{5,})"))) // hh:mm:ss.zzzzzSfffff
+            {
+                value.hours = std::stoull(matchResult[1]);
+                value.minutes = std::stoull(matchResult[2]);
+                value.seconds = std::stoull(matchResult[3]);
+                value.fraction_numerator = std::stoull(matchResult[4]);
+                value.fraction_denominator = std::stoull(matchResult[5]);
+            }
+            else if(std::regex_match(valueString, matchResult, std::regex("(\\d\\d):(\\d\\d):(\\d\\d)\\.(\\d{5,})"))) // hh:mm:ss.zzzzz
+            {
+                value.hours = std::stoull(matchResult[1]);
+                value.minutes = std::stoull(matchResult[2]);
+                value.seconds = std::stoull(matchResult[3]);
+                value.fraction_numerator = std::stoull(matchResult[4]);
+            }
+            else if(std::regex_match(valueString, matchResult, std::regex("(\\d{5,})S(\\d{5,})"))) // zzzzzSfffff
+            {
+                value.fraction_numerator = std::stoull(matchResult[1]);
+                value.fraction_denominator = std::stoull(matchResult[2]);
+            }
+            else
+            {
+                status = DLB_ADM_STATUS_ERROR;
+            }
+        }
+        catch(...)
+        {
+            status = DLB_ADM_STATUS_ERROR;
+        }
+
+        if(status == DLB_ADM_STATUS_OK)
+        {
+            // verify values
+            bool fail = false;
+            fail |= value.minutes >= MINUTES_PER_HOUR;
+            fail |= value.seconds >= SECONDS_PER_MINUTES;
+            if (fail)
+            {
+                status = DLB_ADM_STATUS_ERROR;
+            }
+
+        }
+        return status;
     }
 
 
@@ -173,6 +252,7 @@ namespace DlbAdm
         void operator()(DLB_ADM_AUDIO_TYPE v) const;
         void operator()(const dlb_adm_time &v) const;
         void operator()(const std::string &v) const;
+        void operator()(dlb_adm_entity_id v) const;
 
         bool IsGood() const { return mGood; }
 
@@ -186,7 +266,7 @@ namespace DlbAdm
         if (v == DLB_ADM_FALSE)
         {
             mOstream << 0;
-        } 
+        }
         else
         {
             mOstream << 1;
@@ -268,7 +348,7 @@ namespace DlbAdm
             }
             ::sprintf(buffer, "%-.*f", static_cast<int>(m), f);
             mOstream << (buffer + 1);
-        } 
+        }
         else
         {
             uint32_t dn;
@@ -288,6 +368,12 @@ namespace DlbAdm
     void StreamOut::operator()(const std::string &v) const
     {
         mOstream << v;
+    }
+
+    void StreamOut::operator()(dlb_adm_entity_id v) const
+    {
+        AdmIdTranslator translator;
+        mOstream << translator.Translate(v);
     }
 
     std::ostream &operator<<(std::ostream &os, const AttributeValue &value)

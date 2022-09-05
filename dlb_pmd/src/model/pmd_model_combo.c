@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -392,6 +393,24 @@ dlb_pmd_model_combo_get_writable_pmd_model
     case COMBO_STATE_PMD_MODEL_PRIMARY:
         break;
 
+    case COMBO_STATE_CORE_MODEL_PRIMARY:
+        {
+            pmd_core_model_ingester *ingester;
+            status = pmd_core_model_ingester_open(&ingester, model_combo->converter_memory);
+            CHECK_STATUS_SUCCESS(status);
+            /* the call to ingest() clears the PMD model */
+            status = pmd_core_model_ingester_ingest(ingester, model_combo->pmd_model, "Converted from Serial ADM", model_combo->core_model);
+            CHECK_STATUS_SUCCESS(status);
+            status = pmd_core_model_ingester_close(&ingester);
+            CHECK_STATUS_SUCCESS(status);
+
+            reset_write_state = PMD_TRUE;
+            
+            model_combo->existing_pmd_model = PMD_TRUE;
+            model_combo->combo_state = COMBO_STATE_PMD_MODEL_PRIMARY;
+        }
+        break;
+                    
     default:
         return FAILURE;
     }

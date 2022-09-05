@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +38,9 @@
 #define DLB_ADM_PRESENTATION_H
 
 #include "ModelEntity.h"
+#include "LoudnessMetadata.h"
+
+#include "dlb_adm/include/dlb_adm_data_types.h"
 
 namespace DlbAdm
 {
@@ -46,6 +50,8 @@ namespace DlbAdm
     public:
         Presentation();
         explicit Presentation(dlb_adm_entity_id id);
+        explicit Presentation(dlb_adm_entity_id id, const LoudnessMetadata &loudness);
+        explicit Presentation(dlb_adm_entity_id id, const dlb_adm_data_loudness &loudness);
         Presentation(const Presentation &x);
         virtual ~Presentation();
 
@@ -54,6 +60,11 @@ namespace DlbAdm
         virtual bool AddLabel(const char *name, const char *language = "");
 
         virtual bool AddLabel(const std::string &name, const std::string &language);
+
+        LoudnessMetadata GetLoudnessMetadata() const { return mLoudness; };
+
+    private:
+        LoudnessMetadata mLoudness;
     };
 
 }

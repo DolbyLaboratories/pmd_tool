@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,8 +49,8 @@ namespace DlbAdm
         mNameLimit = NAME_LIMIT;
     }
 
-    Target::Target(dlb_adm_entity_id entityID, DLB_ADM_AUDIO_TYPE audioType, const std::string &speakerLabel)
-        : ModelEntity(entityID, NAME_LIMIT)
+    Target::Target(dlb_adm_entity_id entityID, DLB_ADM_AUDIO_TYPE audioType, const std::string &speakerLabel, bool isCommon /*= false*/)
+        : ModelEntity(entityID, NAME_LIMIT, isCommon)
         , mAudioType(audioType)
         , mSpeakerLabel(speakerLabel)
     {

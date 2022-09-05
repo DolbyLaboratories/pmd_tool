@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -61,6 +62,7 @@ namespace DlbAdm
         "AB_",  /* DLB_ADM_ENTITY_TYPE_BLOCK_FORMAT */
         "AVS_", /* DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET */
         "ATU_", /* DLB_ADM_ENTITY_TYPE_TRACK_UID */
+        "AFC_", /* DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET */
     };
 
     static DLB_ADM_ENTITY_TYPE FindIdType(const char *s, size_t *f)
@@ -214,6 +216,7 @@ namespace DlbAdm
         case DLB_ADM_ENTITY_TYPE_PROGRAMME:
         case DLB_ADM_ENTITY_TYPE_CONTENT:
         case DLB_ADM_ENTITY_TYPE_OBJECT:
+        case DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET:
             xw = static_cast<uint16_t>(readHex(id, &i, &n));
             ok = (n == 4);
             break;
@@ -380,6 +383,7 @@ namespace DlbAdm
         case DLB_ADM_ENTITY_TYPE_PROGRAMME:
         case DLB_ADM_ENTITY_TYPE_CONTENT:
         case DLB_ADM_ENTITY_TYPE_OBJECT:
+        case DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET:
             xw = static_cast<uint16_t>((id >> X_W_SHIFT) & MASK_16);
             buf = writePrefix(buf, entityType);
             buf = writeHex(buf, xw, false);
@@ -451,6 +455,27 @@ namespace DlbAdm
         return (test1 && test2) || test3;
     }
 
+    bool AdmIdTranslator::SubcomponentIdReferencesComponent(const dlb_adm_entity_id parentId, const dlb_adm_entity_id subcomponentId) const
+    {
+        bool res = false;
+        DLB_ADM_ENTITY_TYPE parentType       = GetEntityType(parentId);
+        DLB_ADM_ENTITY_TYPE subcomponentType = GetEntityType(subcomponentId);
+
+        if  (   (parentType == DLB_ADM_ENTITY_TYPE_OBJECT         &&  subcomponentType == DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET)
+            // TODO: finish implementation for pair DLB_ADM_ENTITY_TYPE_CHANNEL_FORMAT and BLOCK_FORMAT (if needed)
+            )
+        {
+            uint32_t parentSeqNumber;
+            uint32_t subcomponentSeqNumber;
+            this->DeconstructUntypedId(parentId,       nullptr, &parentSeqNumber,      nullptr);
+            this->DeconstructUntypedId(subcomponentId, nullptr, &subcomponentSeqNumber, nullptr);
+
+            res = (parentSeqNumber == subcomponentSeqNumber);
+        }
+
+        return res;
+    }
+
     dlb_adm_entity_id AdmIdTranslator::ConstructGenericId(DLB_ADM_ENTITY_TYPE entityType, uint32_t sequenceNumber) const
     {
         dlb_adm_entity_id numericId = 0ull;
@@ -475,11 +500,16 @@ namespace DlbAdm
         case DLB_ADM_ENTITY_TYPE_PROGRAMME:
         case DLB_ADM_ENTITY_TYPE_CONTENT:
         case DLB_ADM_ENTITY_TYPE_OBJECT:
+        case DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET:
             id = ConstructId(entityType, DLB_ADM_AUDIO_TYPE_NONE, static_cast<uint16_t>(sequenceNumber), 0, 0, 0);
             break;
 
         case DLB_ADM_ENTITY_TYPE_FRAME_FORMAT:
             id = ConstructId(entityType, DLB_ADM_AUDIO_TYPE_NONE, 0, 0, sequenceNumber, static_cast<uint8_t>(subSequenceNumber));
+            break;
+
+        case DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET:
+            id = ConstructId(entityType, DLB_ADM_AUDIO_TYPE_NONE, static_cast<uint16_t>(sequenceNumber), static_cast<uint16_t>(subSequenceNumber), 0 , 0);
             break;
 
         default:
@@ -551,6 +581,7 @@ namespace DlbAdm
         case DLB_ADM_ENTITY_TYPE_PROGRAMME:
         case DLB_ADM_ENTITY_TYPE_CONTENT:
         case DLB_ADM_ENTITY_TYPE_OBJECT:
+        case DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET:
             // extract xw
             seq = static_cast<uint32_t>((id >> X_W_SHIFT) & MASK_16);
             break;
@@ -560,6 +591,13 @@ namespace DlbAdm
             seq = static_cast<uint32_t>(id & MASK_48);
             // extract pp
             sub = static_cast<uint32_t>((id >> FRAME_PART_SHIFT) & MASK_08);
+            break;
+
+        case DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET:
+            // extract xw
+            seq = static_cast<uint32_t>((id >> X_W_SHIFT) & MASK_16);
+            // extract z
+            sub = static_cast<uint32_t>(id  & MASK_16);
             break;
 
         default:
@@ -598,6 +636,7 @@ namespace DlbAdm
         case DLB_ADM_ENTITY_TYPE_PROGRAMME:
         case DLB_ADM_ENTITY_TYPE_CONTENT:
         case DLB_ADM_ENTITY_TYPE_OBJECT:
+        case DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET:
             numericId =
                 (static_cast<uint64_t>(entityType) << ENTITY_TYPE_SHIFT) |
                 (static_cast<uint64_t>(xw)         << X_W_SHIFT);

@@ -49,22 +49,24 @@ INPUTS_ARCHIVE_debug = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_lib_dynamic_osx_amd
                        $(TMP)dlb_adm/src/adm_xml/EntityRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/adm_xml/RelationshipDB.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
                        $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
                        $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
                        $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
                        $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
                        $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/PresentationTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/Source.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/SourceGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/SourceRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/Target.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/TargetGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/UpdateRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/UpdateTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_adm/src/core_model/dlb_adm_core_model.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/dlb_adm_api_pp.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
-                       $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o
+                       $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/PresentationTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/Source.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/SourceGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/SourceRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/Target.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/TargetGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/UpdateRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/core_model/UpdateTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_adm/src/core_model/dlb_adm_core_model.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o\
+                       $(TMP)dlb_adm/src/dlb_adm_api_pp.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.o
 INPUTS_ARCHIVE_release = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_pmd/src/api/dlb_pmd.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_pmd/src/api/dlb_pmd_equal.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
@@ -99,15 +101,19 @@ INPUTS_ARCHIVE_release = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_lib_dynamic_osx_a
                          $(TMP)dlb_adm/src/adm_xml/EntityDescriptor.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/adm_xml/EntityRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/adm_xml/RelationshipDB.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
-                         $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
-                         $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
-                         $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
+                         $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
+                         $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
+                         $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
+                         $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
+                         $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
+                         $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
-                         $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
+                         $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
+                         $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/PresentationTable.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
                          $(TMP)dlb_adm/src/core_model/Source.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o $(TMP)dlb_adm/src/core_model/SourceGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_release.o\
@@ -173,22 +179,24 @@ CLEAN_COMPILE_debug = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_lib_dynamic_osx_amd6
                       $(TMP)dlb_adm/src/adm_xml/EntityRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/adm_xml/RelationshipDB.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
                       $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
                       $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
                       $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
                       $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
                       $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/PresentationTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/Source.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/SourceGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/SourceRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/Target.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/TargetGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/UpdateRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/UpdateTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_adm/src/core_model/dlb_adm_core_model.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/dlb_adm_api_pp.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
-                      $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d
+                      $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/PresentationTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/Source.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/SourceGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/SourceRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/Target.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/TargetGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/UpdateRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/core_model/UpdateTable.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_adm/src/core_model/dlb_adm_core_model.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d\
+                      $(TMP)dlb_adm/src/dlb_adm_api_pp.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d $(TMP)dlb_pmd/src/model/DlbPmdModelWrapper.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d
 CLEAN_COMPILE_release = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_pmd/os/osx/pmd_ctrl_c.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_pmd/src/api/dlb_pmd.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_pmd/src/api/dlb_pmd_api_read.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_pmd/src/api/dlb_pmd_api_write.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_pmd/src/api/dlb_pmd_equal.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
@@ -223,15 +231,19 @@ CLEAN_COMPILE_release = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_lib_dynamic_osx_am
                         $(TMP)dlb_adm/src/adm_xml/EntityDescriptor.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/adm_xml/EntityRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/adm_xml/RelationshipDB.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
-                        $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
-                        $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
-                        $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
+                        $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
+                        $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
+                        $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
+                        $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
+                        $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
+                        $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
-                        $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
+                        $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
+                        $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/PresentationTable.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
                         $(TMP)dlb_adm/src/core_model/Source.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d $(TMP)dlb_adm/src/core_model/SourceGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d\
@@ -330,13 +342,17 @@ include $(wildcard $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_lib_
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
@@ -345,6 +361,7 @@ include $(wildcard $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_lib_dynamic
 include $(wildcard $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_lib_dynamic_osx_amd64_clang_debug.d)
@@ -424,13 +441,17 @@ include $(wildcard $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_lib_
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
@@ -439,6 +460,7 @@ include $(wildcard $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_lib_dynamic
 include $(wildcard $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_lib_dynamic_osx_amd64_clang_release.d)

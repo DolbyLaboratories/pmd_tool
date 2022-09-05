@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -762,7 +763,11 @@ pmd_studio_import
     dlb_pmd_model *m;
     const char *title;
 
-    (void)dlb_pmd_model_combo_get_writable_pmd_model(s->pmd.model, &m, PMD_FALSE);
+    if(dlb_pmd_model_combo_get_writable_pmd_model(s->pmd.model, &m, PMD_FALSE))
+    {
+        uiMsgBoxError(s->window, "error getting writable core model", dlb_pmd_error(m));
+        dlb_pmd_reset(m);
+    }
     
     pmd_studio_audio_beds_reset(s->audio_beds);
     pmd_studio_audio_objects_reset(s->audio_objects);
@@ -1006,7 +1011,7 @@ pmd_studio_open_file
     switch (m)
     {
         case MODE_XML:
-            if (xml_read(filename, combo_model, PMD_FALSE, PMD_FALSE))
+            if (xml_read(filename, combo_model, PMD_FALSE, PMD_TRUE))
             {
                 uiMsgBoxError(s->window, "open model", "xml_read() failed");
                 return;

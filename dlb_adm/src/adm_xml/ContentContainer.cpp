@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,8 +49,9 @@ namespace DlbAdm
         Clear();
     }
 
-    ContentRecord::ContentRecord(dlb_adm_entity_id targetGroupID, dlb_adm_entity_id contentGroupID, DLB_ADM_CONTENT_KIND contentKind)
+    ContentRecord::ContentRecord(dlb_adm_entity_id targetGroupID, dlb_adm_entity_id objectID, dlb_adm_entity_id contentGroupID, DLB_ADM_CONTENT_KIND contentKind)
         : mTargetGroupID(targetGroupID)
+        , mObjectID(objectID)
         , mContentGroupID(contentGroupID)
         , mContentKind(contentKind)
     {
@@ -58,6 +60,7 @@ namespace DlbAdm
 
     ContentRecord::ContentRecord(const ContentRecord &x)
         : mTargetGroupID(x.mTargetGroupID)
+        , mObjectID(x.mObjectID)
         , mContentGroupID(x.mContentGroupID)
         , mContentKind(x.mContentKind)
     {
@@ -72,6 +75,7 @@ namespace DlbAdm
     ContentRecord &ContentRecord::operator=(const ContentRecord &x)
     {
         mTargetGroupID = x.mTargetGroupID;
+        mObjectID = x.mObjectID;
         mContentGroupID = x.mContentGroupID;
         mContentKind = x.mContentKind;
         return *this;
@@ -79,7 +83,7 @@ namespace DlbAdm
 
     bool ContentRecord::operator<(const ContentRecord &x) const
     {
-        return std::tie(mTargetGroupID, mContentGroupID) < std::tie(x.mTargetGroupID, x.mContentGroupID);
+        return std::tie(mTargetGroupID, mObjectID, mContentGroupID) < std::tie(x.mTargetGroupID, x.mObjectID, x.mContentGroupID);
     }
 
     bool ContentRecord::Validate() const
@@ -88,12 +92,14 @@ namespace DlbAdm
 
         return
             (xlator.GetEntityType(mTargetGroupID)  == DLB_ADM_ENTITY_TYPE_PACK_FORMAT) &&
+            (xlator.GetEntityType(mObjectID) == DLB_ADM_ENTITY_TYPE_OBJECT) &&
             (xlator.GetEntityType(mContentGroupID) == DLB_ADM_ENTITY_TYPE_CONTENT);
     }
 
     void ContentRecord::Clear()
     {
         mTargetGroupID = DLB_ADM_NULL_ENTITY_ID;
+        mObjectID = DLB_ADM_NULL_ENTITY_ID;
         mContentGroupID = DLB_ADM_NULL_ENTITY_ID;
         mContentKind = DLB_ADM_CONTENT_KIND_UNKNOWN;
     }
@@ -108,6 +114,16 @@ namespace DlbAdm
         return lhs < rhs.mTargetGroupID;
     }
 
+    bool ObjectIdCompare::operator()(const ContentRecord &lhs, dlb_adm_entity_id rhs) const
+    {
+        return lhs.mObjectID < rhs;
+    }
+
+    bool ObjectIdCompare::operator()(dlb_adm_entity_id lhs, const ContentRecord &rhs) const
+    {
+        return lhs < rhs.mObjectID;
+    }
+
     void Dump(const ContentContainer &container, const char *fileName)
     {
         std::ofstream f(fileName);
@@ -117,14 +133,16 @@ namespace DlbAdm
             const ContentContainer_PKIndex &index = container.get<ContentContainer_PK>();
             auto it = index.begin();
             std::string targetGroupIDString;
+            std::string objectIDString;
             std::string contentGroupIDString;
             AdmIdTranslator xlator;
 
             while (it != index.end())
             {
                 targetGroupIDString = xlator.Translate(it->mTargetGroupID);
+                objectIDString = xlator.Translate(it->mObjectID);
                 contentGroupIDString = xlator.Translate(it->mContentGroupID);
-                f << targetGroupIDString << ',' << contentGroupIDString << std::endl;
+                f << targetGroupIDString << ',' << objectIDString << ',' << contentGroupIDString << std::endl;
                 ++it;
             }
         }

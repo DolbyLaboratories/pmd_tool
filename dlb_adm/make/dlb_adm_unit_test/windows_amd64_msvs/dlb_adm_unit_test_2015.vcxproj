@@ -108,10 +108,12 @@
 <ClCompile Include="..\..\..\test\unit\dlb_adm_04.cpp" />
 <ClCompile Include="..\..\..\test\unit\dlb_adm_05.cpp" />
 <ClCompile Include="..\..\..\test\unit\dlb_adm_06.cpp" />
+<ClCompile Include="..\..\..\test\unit\dlb_adm_emission_profile.cpp" />
 <ClCompile Include="..\..\..\test\unit\unit_test_main.cpp" /></ItemGroup>
 <ItemGroup>
 <ClInclude Include="..\..\..\test\unit\CoreModelTest.h" />
-<ClInclude Include="..\..\..\test\unit\dlb_adm_data.h" /></ItemGroup>
+<ClInclude Include="..\..\..\test\unit\dlb_adm_data.h" />
+<ClInclude Include="..\..\..\test\unit\dlb_adm_emission_profile_data.h" /></ItemGroup>
 <ItemGroup />
 <ItemGroup />
 <ItemGroup />

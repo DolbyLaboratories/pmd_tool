@@ -18,11 +18,13 @@ LDFLAGS_release = -O2 -m64
 INPUTS_LINK_debug = $(TMP)dlb_adm/test/unit/CoreModelTest.dlb_adm_unit_test_windows_amd64_gnu_debug.o $(TMP)dlb_adm/test/unit/dlb_adm_01.dlb_adm_unit_test_windows_amd64_gnu_debug.o\
                     $(TMP)dlb_adm/test/unit/dlb_adm_02.dlb_adm_unit_test_windows_amd64_gnu_debug.o $(TMP)dlb_adm/test/unit/dlb_adm_03.dlb_adm_unit_test_windows_amd64_gnu_debug.o\
                     $(TMP)dlb_adm/test/unit/dlb_adm_04.dlb_adm_unit_test_windows_amd64_gnu_debug.o $(TMP)dlb_adm/test/unit/dlb_adm_05.dlb_adm_unit_test_windows_amd64_gnu_debug.o\
-                    $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_debug.o $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_debug.o
+                    $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_debug.o $(TMP)dlb_adm/test/unit/dlb_adm_emission_profile.dlb_adm_unit_test_windows_amd64_gnu_debug.o\
+                    $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_debug.o
 INPUTS_LINK_release = $(TMP)dlb_adm/test/unit/CoreModelTest.dlb_adm_unit_test_windows_amd64_gnu_release.o $(TMP)dlb_adm/test/unit/dlb_adm_01.dlb_adm_unit_test_windows_amd64_gnu_release.o\
                       $(TMP)dlb_adm/test/unit/dlb_adm_02.dlb_adm_unit_test_windows_amd64_gnu_release.o $(TMP)dlb_adm/test/unit/dlb_adm_03.dlb_adm_unit_test_windows_amd64_gnu_release.o\
                       $(TMP)dlb_adm/test/unit/dlb_adm_04.dlb_adm_unit_test_windows_amd64_gnu_release.o $(TMP)dlb_adm/test/unit/dlb_adm_05.dlb_adm_unit_test_windows_amd64_gnu_release.o\
-                      $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_release.o $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_release.o
+                      $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_release.o $(TMP)dlb_adm/test/unit/dlb_adm_emission_profile.dlb_adm_unit_test_windows_amd64_gnu_release.o\
+                      $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_release.o
 
 DEP_PROJ_LINK_debug = $(BASE)dlb_adm/make/dlb_adm_lib/windows_amd64_gnu/dlb_adm_lib_debug.lib $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/windows_amd64_gnu/dlb_xml_debug.lib $(BASE)googletest/1.8.0/make/googletest/windows_amd64_gnu/googletest_debug.lib
 DEP_PROJ_LINK_release = $(BASE)dlb_adm/make/dlb_adm_lib/windows_amd64_gnu/dlb_adm_lib_release.lib $(BASE)dlb_xmllib/1.0.4/dlb_xml/make/dlb_xml/windows_amd64_gnu/dlb_xml_release.lib $(BASE)googletest/1.8.0/make/googletest/windows_amd64_gnu/googletest_release.lib
@@ -46,11 +48,13 @@ $(TMP)%.dlb_adm_unit_test_windows_amd64_gnu_release.o: $(BASE)%.cpp | $(TMP)%/..
 CLEAN_COMPILE_debug = $(TMP)dlb_adm/test/unit/CoreModelTest.dlb_adm_unit_test_windows_amd64_gnu_debug.d $(TMP)dlb_adm/test/unit/dlb_adm_01.dlb_adm_unit_test_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_adm/test/unit/dlb_adm_02.dlb_adm_unit_test_windows_amd64_gnu_debug.d $(TMP)dlb_adm/test/unit/dlb_adm_03.dlb_adm_unit_test_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_adm/test/unit/dlb_adm_04.dlb_adm_unit_test_windows_amd64_gnu_debug.d $(TMP)dlb_adm/test/unit/dlb_adm_05.dlb_adm_unit_test_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_debug.d $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_debug.d
+                      $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_debug.d $(TMP)dlb_adm/test/unit/dlb_adm_emission_profile.dlb_adm_unit_test_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_debug.d
 CLEAN_COMPILE_release = $(TMP)dlb_adm/test/unit/CoreModelTest.dlb_adm_unit_test_windows_amd64_gnu_release.d $(TMP)dlb_adm/test/unit/dlb_adm_01.dlb_adm_unit_test_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/test/unit/dlb_adm_02.dlb_adm_unit_test_windows_amd64_gnu_release.d $(TMP)dlb_adm/test/unit/dlb_adm_03.dlb_adm_unit_test_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/test/unit/dlb_adm_04.dlb_adm_unit_test_windows_amd64_gnu_release.d $(TMP)dlb_adm/test/unit/dlb_adm_05.dlb_adm_unit_test_windows_amd64_gnu_release.d\
-                        $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_release.d $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_release.d
+                        $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_release.d $(TMP)dlb_adm/test/unit/dlb_adm_emission_profile.dlb_adm_unit_test_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_release.d
 
 cleandeps:
 	$(RM) $(CLEAN_COMPILE_debug)
@@ -89,6 +93,7 @@ include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_03.dlb_adm_unit_test_windows_
 include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_04.dlb_adm_unit_test_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_05.dlb_adm_unit_test_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_emission_profile.dlb_adm_unit_test_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/test/unit/CoreModelTest.dlb_adm_unit_test_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_01.dlb_adm_unit_test_windows_amd64_gnu_release.d)
@@ -97,6 +102,7 @@ include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_03.dlb_adm_unit_test_windows_
 include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_04.dlb_adm_unit_test_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_05.dlb_adm_unit_test_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_06.dlb_adm_unit_test_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_adm/test/unit/dlb_adm_emission_profile.dlb_adm_unit_test_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/test/unit/unit_test_main.dlb_adm_unit_test_windows_amd64_gnu_release.d)
 
 $(BASE)dlb_adm/make/dlb_adm_lib/windows_amd64_gnu/dlb_adm_lib_debug.lib \

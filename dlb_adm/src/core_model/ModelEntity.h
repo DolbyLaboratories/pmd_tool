@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -72,11 +73,13 @@ namespace DlbAdm
 
         static std::string TranslateAudioType(DLB_ADM_AUDIO_TYPE audioType);
 
+        bool IsCommon() const { return mIsCommon; }
+
     protected:
         typedef std::vector<EntityName> EntityNameVector;
 
         ModelEntity();
-        explicit ModelEntity(dlb_adm_entity_id id, size_t nameLimit = 0);
+        explicit ModelEntity(dlb_adm_entity_id id, size_t nameLimit = 0, bool isCommon = false);
         ModelEntity(const ModelEntity &x);
 
         ModelEntity &operator=(const ModelEntity &x);
@@ -86,6 +89,7 @@ namespace DlbAdm
         virtual bool AddLabel(const std::string &name, const std::string &language);
 
         dlb_adm_entity_id mEntityID;
+        bool   mIsCommon;
         size_t mNameLimit;
         size_t mLabelCount;
 

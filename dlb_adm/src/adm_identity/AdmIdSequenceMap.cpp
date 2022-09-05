@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,14 +36,16 @@
 
 #include "AdmIdSequenceMap.h"
 
+
 namespace DlbAdm
 {
+    static constexpr AdmIdSequenceNumber initWwwwNumber = 0x1001; // Emission Profile Specification, section 4.1
 
     AdmIdSequenceMap::AdmIdSequenceMap()
         : mSequenceMap()
         , mSubcomponentMap()
     {
-        // Empty
+        Init();
     }
 
     AdmIdSequenceMap::AdmIdSequenceMap(const AdmIdSequenceMap &x)
@@ -97,11 +100,31 @@ namespace DlbAdm
     {
         mSubcomponentMap.clear();
         mSequenceMap.clear();
+        Init();
+    }
+
+    bool InitialWwwwNumberInMap( const std::map<DLB_ADM_ENTITY_TYPE, AdmIdSequenceNumber> & map, const DLB_ADM_ENTITY_TYPE entityType)
+    {
+        return  (   map.find(entityType) != map.end()
+                &&  map.at(entityType) == initWwwwNumber
+                );
     }
 
     bool AdmIdSequenceMap::IsEmpty() const
     {
-        return mSequenceMap.empty() && mSubcomponentMap.empty();
+        bool SequenceMapHasInitialState =  mSequenceMap.size() == 3 \
+                                        && InitialWwwwNumberInMap(mSequenceMap, DLB_ADM_ENTITY_TYPE_PROGRAMME)
+                                        && InitialWwwwNumberInMap(mSequenceMap, DLB_ADM_ENTITY_TYPE_CONTENT)
+                                        && InitialWwwwNumberInMap(mSequenceMap, DLB_ADM_ENTITY_TYPE_OBJECT);
+        
+        return SequenceMapHasInitialState && mSubcomponentMap.empty();
+    }
+
+    void AdmIdSequenceMap::Init()
+    {
+        mSequenceMap[DLB_ADM_ENTITY_TYPE_PROGRAMME] = initWwwwNumber;
+        mSequenceMap[DLB_ADM_ENTITY_TYPE_CONTENT]   = initWwwwNumber;
+        mSequenceMap[DLB_ADM_ENTITY_TYPE_OBJECT]    = initWwwwNumber;
     }
 
 }

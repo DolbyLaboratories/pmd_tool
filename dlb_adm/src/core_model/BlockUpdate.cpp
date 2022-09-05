@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,11 +50,11 @@ namespace DlbAdm
         Clear();
     }
 
-    BlockUpdate::BlockUpdate(dlb_adm_entity_id id, const Position &position, const Gain &gain, const dlb_adm_time *start, const dlb_adm_time *duration)
-        : ModelEntity(id)
+    BlockUpdate::BlockUpdate(dlb_adm_entity_id id, const Position &position, const Gain &gain, const dlb_adm_time *start, const dlb_adm_time *duration, bool isCommon /*= false*/)
+        : ModelEntity(id, 0, isCommon)
         , mPosition(position)
         , mGain(gain)
-        , mHasTime((start != nullptr) || (duration != nullptr))
+        , mHasTime((start != nullptr) && (duration != nullptr))
     {
         if (start != nullptr)
         {
@@ -134,6 +135,7 @@ namespace DlbAdm
         mHasTime = false;
         ::memset(&mStart, 0, sizeof(mStart));
         ::memset(&mDuration, 0, sizeof(mDuration));
+        mIsCommon = false;
     }
 
     dlb_adm_entity_id BlockUpdate::GetTargetID(dlb_adm_entity_id blockUpdateID)

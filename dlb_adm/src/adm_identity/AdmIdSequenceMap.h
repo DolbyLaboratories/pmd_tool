@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -64,6 +65,9 @@ namespace DlbAdm
         bool IsEmpty() const;
 
     private:
+
+        void Init();
+
         std::map<DLB_ADM_ENTITY_TYPE, AdmIdSequenceNumber> mSequenceMap;
         std::map<dlb_adm_entity_id,   AdmIdSubcomponentNumber> mSubcomponentMap;
     };

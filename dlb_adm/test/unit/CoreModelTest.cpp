@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +39,12 @@
 #include "gtest/gtest.h"
 #include "CoreModelTest.h"
 #include "dlb_adm/include/dlb_adm_api.h"
+#include "dlb_adm/src/core_model/Presentation.h"
+#include "dlb_adm/src/core_model/ContentGroup.h"
+#include "dlb_adm/src/core_model/LoudnessMetadata.h"
+
+#include <math.h>
+#include <cmath>
 
 using namespace DlbAdm;
 
@@ -106,6 +113,70 @@ namespace DlbAdmTest
                 CheckTrue(good);
                 ++i;
             }
+        }
+        catch (bool x)
+        {
+            good = x;
+        }
+        catch (...)
+        {
+            good = false;
+        }
+
+        return good;
+    }
+
+    template
+    <typename T>
+    static bool GetLoudnessMetadata(const ModelEntity *entity, LoudnessMetadata &outLoudness)
+    {
+        bool ok = false;
+
+        const T *specificPtr = dynamic_cast<const T *>(entity);
+        if(specificPtr != nullptr)
+        {
+            outLoudness = specificPtr->GetLoudnessMetadata();
+            ok = true;
+        }
+
+        return ok;
+    }
+
+    bool CheckLoudnessMetadata(dlb_adm_core_model &model, const dlb_adm_entity_id id, const dlb_adm_data_loudness &source_loudness, DLB_ADM_ENTITY_TYPE type)
+    {
+        bool good = false;
+
+        try
+        {
+            CoreModel &coreModel = model.GetCoreModel();
+            const ModelEntity *entity;
+
+            good = coreModel.GetEntity(id, &entity);
+            CheckTrue(good);
+
+            LoudnessMetadata entityLoudness;
+
+            switch (type)
+            {
+            case DLB_ADM_ENTITY_TYPE_PROGRAMME:
+                good = GetLoudnessMetadata<Presentation>(entity, entityLoudness);
+                break;
+
+            case DLB_ADM_ENTITY_TYPE_CONTENT:
+                good = GetLoudnessMetadata<ContentGroup>(entity, entityLoudness);
+                break;
+
+            default:
+                good = false;
+                break;
+            }
+            CheckTrue(good);
+
+            good = entityLoudness.GetLoudnessType() == source_loudness.loudness_type;
+            CheckTrue(good);
+
+            good = std::fabs( entityLoudness.GetLoudnessValue() - source_loudness.loudness_value) < 0.00001f; // float comparision....
+            CheckTrue(good);
         }
         catch (bool x)
         {

@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +43,7 @@
 
 #include <string.h>
 #include <sstream>
+#include <cstdio>
 
 #include "AttributeValue.h"
 #include "AdmIdTranslator.h"
@@ -49,6 +51,7 @@
 
 using namespace DlbAdm;
 
+#ifdef EXTERNAL_ADM_COMMON_DEFINITIONS
 TEST(dlb_adm_test, ConfigureTheLibrary)
 {
     dlb_adm_library_config config;
@@ -76,6 +79,7 @@ TEST(dlb_adm_test, ConfigureTheLibrary)
     status = ::dlb_adm_configure(&config);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 }
+#endif
 
 TEST(dlb_adm_test, Translate_Good_FF_Id)
 {
@@ -143,6 +147,50 @@ TEST(dlb_adm_test, Translate_Good_APR_Id)
     s = translator.Translate(id);
     compare = strcmp(s1, s.data());
     EXPECT_EQ(0, compare);
+}
+
+TEST(dlb_adm_test, Translate_Good_AFC_Id)
+{
+    AdmIdTranslator translator;
+    const char *s1 = "AFC_1001";
+    dlb_adm_entity_id id;
+    DLB_ADM_ENTITY_TYPE entityType;
+    std::string s;
+    int compare;
+
+    id = translator.Translate(s1);
+    EXPECT_NE(0, id);
+    entityType = translator.GetEntityType(id);
+    EXPECT_EQ(DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET, entityType);
+    EXPECT_EQ(0x1001, (id >> X_W_SHIFT) & MASK_16);
+    s = translator.Translate(id);
+    compare = strcmp(s1, s.data());
+    EXPECT_EQ(0, compare);
+}
+
+TEST(dlb_adm_test, Translate_All_Good_AFC_Id)
+{
+    char id_string[9] = "AFC_1001";
+    
+    AdmIdTranslator translator;
+    dlb_adm_entity_id id;
+    DLB_ADM_ENTITY_TYPE entityType;
+    std::string s;
+    int compare;
+    
+    for(uint32_t hex_digits = 0x1001; hex_digits <= 0xFFFF; hex_digits++)
+    {
+        sprintf(id_string+4, "%04X", hex_digits);
+    
+        id = translator.Translate(id_string);
+        EXPECT_NE(0, id);
+        entityType = translator.GetEntityType(id);
+        EXPECT_EQ(DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET, entityType);
+        EXPECT_EQ(hex_digits, (id >> X_W_SHIFT) & MASK_16);
+        s = translator.Translate(id);
+        compare = strcmp(id_string, s.data());
+        EXPECT_EQ(0, compare);
+    }
 }
 
 TEST(dlb_adm_test, Translate_Good_ACO_Id)
@@ -334,6 +382,67 @@ TEST(dlb_adm_test, Translate_Good_AVS_Id)
     EXPECT_EQ(0, compare);
 }
 
+TEST(dlb_adm_test, Construct_Good_AVS_Id)
+{
+    AdmIdTranslator translator;
+    const char *s1 = "AVS_1001_0001";
+    dlb_adm_entity_id translator_id;
+    dlb_adm_entity_id construct_id;
+
+    translator_id = translator.Translate(s1);
+    EXPECT_NE(0, translator_id);
+
+    construct_id = translator.ConstructUntypedId(DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET, 0x1001, 1);
+    EXPECT_EQ(construct_id, translator_id);
+}
+
+TEST(dlb_adm_test, Deconstruct_Good_AVS_Id)
+{
+    AdmIdTranslator translator;
+    const char *s1 = "AVS_1001_0001";
+    dlb_adm_entity_id id;
+    DLB_ADM_ENTITY_TYPE entityType;
+    uint32_t xw;
+    uint32_t z;
+
+    id = translator.Translate(s1);
+    EXPECT_NE(0, id);
+
+    translator.DeconstructUntypedId(id, &entityType, &xw, &z);
+    EXPECT_EQ(entityType, DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET);
+    EXPECT_EQ(xw, 0x1001);
+    EXPECT_EQ(z, 0x0001);
+}
+
+TEST(dlb_adm_test, Deconstruct_Initial_Combinations_Good_AVS_Id)
+{
+    char id_string[14] = "AVS_1001_0001";
+    
+    AdmIdTranslator translator;
+    dlb_adm_entity_id id;
+    DLB_ADM_ENTITY_TYPE entityType;
+    std::string s;
+    
+    uint32_t dec_xw;
+    uint32_t dec_z;
+
+    for(uint32_t xw = 0x1001; xw <= 0x100F; xw++)
+    {    
+        for(uint32_t z = 0x0001; z <= 0x000F; z++)
+        {
+            sprintf(id_string+4, "%04X_%04X",xw, z);
+
+            id = translator.Translate(id_string);
+            EXPECT_NE(0, id);
+
+            translator.DeconstructUntypedId(id, &entityType, &dec_xw, &dec_z);
+            EXPECT_EQ(entityType, DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET);
+            EXPECT_EQ(xw, dec_xw);
+            EXPECT_EQ(z, dec_z);           
+        }
+    }
+}
+
 TEST(dlb_adm_test, Write_Good_Time_Value)
 {
     using namespace DlbAdm;
@@ -414,4 +523,164 @@ TEST(dlb_adm_test, ConstructGenericID)
         status = ::dlb_adm_construct_generic_entity_id(&id, type, 1);
         EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     }
+}
+
+TEST(dlb_adm_test, SubcomponentIdReferencesComponent_audioObject)
+{
+    AdmIdTranslator translator;
+    const char *obj1String = "AO_1001";
+    const char *obj2String = "AO_1002";
+    const char *avs11String = "AVS_1001_0001";
+    const char *avs12String = "AVS_1001_0002";
+    const char *programmeString = "APR_1001";
+
+    dlb_adm_entity_id obj1Id;
+    dlb_adm_entity_id obj2Id;
+    dlb_adm_entity_id avs11Id;
+    dlb_adm_entity_id avs12Id;
+    dlb_adm_entity_id programmeId;
+
+    obj1Id      = translator.Translate(obj1String);
+    obj2Id      = translator.Translate(obj2String);
+    avs11Id     = translator.Translate(avs11String);
+    avs12Id     = translator.Translate(avs12String);
+    programmeId = translator.Translate(programmeString);
+    EXPECT_NE(0, obj1Id);
+    EXPECT_NE(0, obj2Id);
+    EXPECT_NE(0, avs11Id);
+    EXPECT_NE(0, avs12Id);
+    EXPECT_NE(0, programmeId);
+
+    EXPECT_FALSE(translator.SubcomponentIdReferencesComponent(DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID));
+    EXPECT_FALSE(translator.SubcomponentIdReferencesComponent(obj1Id, DLB_ADM_NULL_ENTITY_ID));
+    EXPECT_FALSE(translator.SubcomponentIdReferencesComponent(DLB_ADM_NULL_ENTITY_ID, avs11Id));
+    EXPECT_FALSE(translator.SubcomponentIdReferencesComponent(avs11Id, obj1Id));
+
+    EXPECT_TRUE(translator.SubcomponentIdReferencesComponent(obj1Id, avs11Id));
+    EXPECT_TRUE(translator.SubcomponentIdReferencesComponent(obj1Id, avs12Id));
+    EXPECT_FALSE(translator.SubcomponentIdReferencesComponent(obj2Id, avs11Id));
+
+    EXPECT_FALSE(translator.SubcomponentIdReferencesComponent(programmeId, programmeId));
+    EXPECT_FALSE(translator.SubcomponentIdReferencesComponent(obj1Id, obj1Id));
+    EXPECT_FALSE(translator.SubcomponentIdReferencesComponent(programmeId, obj1Id));
+    EXPECT_FALSE(translator.SubcomponentIdReferencesComponent(programmeId, avs11Id));
+}
+
+TEST(dlb_adm_test, ParseValue_String_to_dlb_adm_time_1)
+{
+    std::string timeString("12:34:56.23456S78901");
+    dlb_adm_time timeConversionResult;
+
+    int status;
+
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(timeConversionResult.hours, 12);
+    EXPECT_EQ(timeConversionResult.minutes, 34);
+    EXPECT_EQ(timeConversionResult.seconds, 56);
+    EXPECT_EQ(timeConversionResult.fraction_numerator, 23456);
+    EXPECT_EQ(timeConversionResult.fraction_denominator, 78901);
+
+    timeString = "12:34:56.1234567S234567890";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(timeConversionResult.hours, 12);
+    EXPECT_EQ(timeConversionResult.minutes, 34);
+    EXPECT_EQ(timeConversionResult.seconds, 56);
+    EXPECT_EQ(timeConversionResult.fraction_numerator, 1234567);
+    EXPECT_EQ(timeConversionResult.fraction_denominator, 234567890);
+}
+
+TEST(dlb_adm_test, ParseValue_String_to_dlb_adm_time_2)
+{
+    std::string timeString("12:34:56.78901");
+    dlb_adm_time timeConversionResult;
+
+    int status;
+
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(timeConversionResult.hours, 12);
+    EXPECT_EQ(timeConversionResult.minutes, 34);
+    EXPECT_EQ(timeConversionResult.seconds, 56);
+    EXPECT_EQ(timeConversionResult.fraction_numerator, 78901);
+    EXPECT_EQ(timeConversionResult.fraction_denominator, 0);
+
+    timeString = "12:34:56.1234567";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(timeConversionResult.hours, 12);
+    EXPECT_EQ(timeConversionResult.minutes, 34);
+    EXPECT_EQ(timeConversionResult.seconds, 56);
+    EXPECT_EQ(timeConversionResult.fraction_numerator, 1234567);
+    EXPECT_EQ(timeConversionResult.fraction_denominator, 0);
+}
+
+TEST(dlb_adm_test, ParseValue_String_to_dlb_adm_time_3)
+{
+    std::string timeString("12345S67890");
+    dlb_adm_time timeConversionResult;
+
+    int status;
+
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(timeConversionResult.hours, 0);
+    EXPECT_EQ(timeConversionResult.minutes, 0);
+    EXPECT_EQ(timeConversionResult.seconds, 0);
+    EXPECT_EQ(timeConversionResult.fraction_numerator, 12345);
+    EXPECT_EQ(timeConversionResult.fraction_denominator, 67890);
+
+    timeString = "1234567S234567890";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(timeConversionResult.hours, 0);
+    EXPECT_EQ(timeConversionResult.minutes, 0);
+    EXPECT_EQ(timeConversionResult.seconds, 0);
+    EXPECT_EQ(timeConversionResult.fraction_numerator, 1234567);
+    EXPECT_EQ(timeConversionResult.fraction_denominator, 234567890);
+}
+
+TEST(dlb_adm_test, ParseValue_String_to_dlb_adm_time_bad_string)
+{
+    dlb_adm_time timeConversionResult;
+
+    int status;
+    
+    // various combinations of bad strings
+    std::string timeString("12:34:56.78901S234a6");
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+    
+    timeString = "123:34:56.78901S23406";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+    
+    timeString = "12:340:56.78901S23416";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+    
+    timeString = "12:34:560.78901S23416";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+    
+    timeString = "12:34:0.78901S23416";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+    
+    timeString = "12:3:50.78901S23416";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+    
+    timeString = "1:33:50.78901S23416";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+    
+    timeString = "12:67:50.78901S23416";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+    
+    timeString = "1:57:90.78901S23416";
+    status = ParseValue(timeConversionResult, timeString);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
 }

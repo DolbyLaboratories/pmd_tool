@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +40,7 @@
 #include "dlb_adm/include/dlb_adm_api_types.h"
 
 #include <string>
+#include <functional>
 
 namespace DlbAdm
 {
@@ -57,7 +59,9 @@ namespace DlbAdm
 
     void InitializeEntityIndex();
 
-    int GetEntityDescriptor(EntityDescriptor &d, const std::string &name);
+    typedef std::function<bool(const EntityDescriptor &d)> const& EntityNameDisambiguationFn;
+
+    int GetEntityDescriptor(EntityDescriptor &d, const std::string &name, EntityNameDisambiguationFn disambiguator = nullptr);
 
     int GetEntityDescriptor(EntityDescriptor &d, DLB_ADM_ENTITY_TYPE eType);    // Returns "not unique" for multiple results
 

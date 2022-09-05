@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +40,7 @@
 #include <boost/core/noncopyable.hpp>
 #include <functional>
 #include <memory>
+#include <set>
 
 #include "ModelEntity.h"
 
@@ -50,6 +52,7 @@ namespace DlbAdm
     class ContentGroup;
     class ElementGroup;
     class AudioElement;
+    class AlternativeValueSet;
     class ElementGroup;
     class AudioTrack;
     class TargetGroup;
@@ -63,6 +66,8 @@ namespace DlbAdm
     struct SourceRecord;
     struct UpdateRecord;
     class CoreModelData;
+    class ComplementaryElement;
+    class AudioObjectInteraction;
 
     class CoreModel : public boost::noncopyable
     {
@@ -86,6 +91,12 @@ namespace DlbAdm
         bool AddEntity(const ElementGroup &elementGroup);
 
         bool AddEntity(const AudioElement &audioElement);
+
+        bool AddEntity(const AudioObjectInteraction &audioObjInteraction);
+
+        bool AddEntity(const ComplementaryElement &compElement);
+
+        bool AddEntity(const AlternativeValueSet &altValSet);
 
         bool AddEntity(const AudioTrack &audioTrack);
 
@@ -132,7 +143,7 @@ namespace DlbAdm
                     {
                         status = DLB_ADM_STATUS_OK;
                     }
-                } 
+                }
                 else
                 {
                     status = DLB_ADM_STATUS_NOT_FOUND;
@@ -172,6 +183,12 @@ namespace DlbAdm
 
         bool IsEmpty() const;
 
+        void AddProfile(DLB_ADM_PROFILE profile) { mCoreModelProfiles.insert(profile); }
+
+        bool HasProfile(DLB_ADM_PROFILE profile) const { return mCoreModelProfiles.count(profile); }
+
+        const std::set<DLB_ADM_PROFILE> & GetProfiles() const { return mCoreModelProfiles; };
+
     private:
         template <class T>
         bool AddModelEntity(const T &entity);
@@ -191,6 +208,9 @@ namespace DlbAdm
         bool Validate(const UpdateRecord &record);
 
         std::unique_ptr<CoreModelData> mCoreModelData;
+
+        /* From BS.2125-1 specifcation: "the flow is constrained by the most constrained parts of each profile" */
+        std::set<DLB_ADM_PROFILE> mCoreModelProfiles;
     };
 
 }

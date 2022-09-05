@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -47,12 +48,16 @@ namespace DlbAdm
         dlb_adm_entity_id   contentGroupID;
         dlb_adm_entity_id   elementGroupID;
         dlb_adm_entity_id   audioElementID;
+        dlb_adm_entity_id   altValueSetID;
+        dlb_adm_entity_id   complementaryRefID;
 
         PresentationRecord();
         PresentationRecord(dlb_adm_entity_id presID,
                            dlb_adm_entity_id contentGrpID,
                            dlb_adm_entity_id elementID,
-                           dlb_adm_entity_id elementGrpID = DLB_ADM_NULL_ENTITY_ID);
+                           dlb_adm_entity_id elementGrpID = DLB_ADM_NULL_ENTITY_ID,
+                           dlb_adm_entity_id altValSetID  = DLB_ADM_NULL_ENTITY_ID,
+                           dlb_adm_entity_id complementaryRefID = DLB_ADM_NULL_ENTITY_ID);
         PresentationRecord(const PresentationRecord &x);
         ~PresentationRecord();
 

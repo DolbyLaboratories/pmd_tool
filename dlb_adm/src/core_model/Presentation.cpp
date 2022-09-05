@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,18 +42,35 @@ namespace DlbAdm
 
      Presentation::Presentation()
          : ModelEntity()
+         , mLoudness()
      {
          mNameLimit = DEFAULT_NAME_LIMIT;
      }
 
      Presentation::Presentation(dlb_adm_entity_id id)
          : ModelEntity(id, DEFAULT_NAME_LIMIT)
+         , mLoudness()
+     {
+         // Empty
+     }
+
+     Presentation::Presentation(dlb_adm_entity_id id, const LoudnessMetadata &loudness)
+         : ModelEntity(id, DEFAULT_NAME_LIMIT)
+         , mLoudness(loudness)
+     {
+         // Empty
+     }
+
+     Presentation::Presentation(dlb_adm_entity_id id, const dlb_adm_data_loudness &loudness)
+         : ModelEntity(id, DEFAULT_NAME_LIMIT)
+         , mLoudness(loudness.loudness_value, loudness.loudness_type)
      {
          // Empty
      }
 
      Presentation::Presentation(const Presentation &x)
          : ModelEntity(x)
+         , mLoudness(x.GetLoudnessMetadata())
      {
          // Empty
      }
@@ -65,6 +83,7 @@ namespace DlbAdm
      Presentation &Presentation::operator=(const Presentation &x)
      {
          (void)ModelEntity::operator=(x);
+         mLoudness.operator=(x.GetLoudnessMetadata());
          return *this;
      }
 

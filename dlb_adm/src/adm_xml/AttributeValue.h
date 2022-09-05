@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +56,8 @@ namespace DlbAdm
         dlb_adm_float,
         DLB_ADM_AUDIO_TYPE,
         dlb_adm_time,
-        std::string
+        std::string,
+        dlb_adm_entity_id
     > AttributeValue;
 
     class GetValueType : public boost::static_visitor<DLB_ADM_VALUE_TYPE>
@@ -68,6 +70,7 @@ namespace DlbAdm
         DLB_ADM_VALUE_TYPE operator()(DLB_ADM_AUDIO_TYPE v) const;
         DLB_ADM_VALUE_TYPE operator()(const dlb_adm_time &v) const;
         DLB_ADM_VALUE_TYPE operator()(const std::string &v) const;
+        DLB_ADM_VALUE_TYPE operator()(dlb_adm_entity_id v) const;
     };
 
     int ParseValue(dlb_adm_bool       &value, const std::string &valueString);
@@ -76,6 +79,7 @@ namespace DlbAdm
     int ParseValue(dlb_adm_float      &value, const std::string &valueString);
     int ParseValue(DLB_ADM_AUDIO_TYPE &value, const std::string &valueString);
     int ParseValue(dlb_adm_time       &value, const std::string &valueString);
+    int ParseValue(dlb_adm_entity_id  &value, const std::string &valueString);
 
     std::ostream &operator<<(std::ostream &os, const AttributeValue &value);
 

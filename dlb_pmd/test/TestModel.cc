@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -411,3 +412,4 @@ void TestModel::test_pcm_(const char *testname, int param, int fr_idx, bool sing
                  /* don't try random access testing when we only have one frame of data! */
                  pcm_single_frame_ ? 0 : pcm_skip_samples_);
 }
+

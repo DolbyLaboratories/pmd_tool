@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -47,7 +48,7 @@ namespace DlbAdm
     {
     public:
         BlockUpdate();
-        BlockUpdate(dlb_adm_entity_id id, const Position &position, const Gain &gain, const dlb_adm_time *start = nullptr, const dlb_adm_time *duration = nullptr);
+        BlockUpdate(dlb_adm_entity_id id, const Position &position, const Gain &gain, const dlb_adm_time *start = nullptr, const dlb_adm_time *duration = nullptr, bool isCommon = false);
         BlockUpdate(const BlockUpdate &x);
         ~BlockUpdate();
 

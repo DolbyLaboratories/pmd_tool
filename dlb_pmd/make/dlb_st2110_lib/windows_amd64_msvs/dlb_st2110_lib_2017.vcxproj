@@ -42,7 +42,7 @@
 <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='release|x64'">false</LinkIncremental></PropertyGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\..\..\..\..\..\..\..\..\usr\include\mellanox;..\..\..\..\dlb_st2110\0.9\dlb_st2110\src;..\..\..\..\dlb_st2110\0.9\dlb_st2110\include</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\..\..\..\..\..\..\..\..\..\usr\include\mellanox;..\..\..\..\dlb_st2110\0.9\dlb_st2110\src;..\..\..\..\dlb_st2110\0.9\dlb_st2110\include</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
 <BufferSecurityCheck>true</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
@@ -66,7 +66,7 @@
 <LinkLibraryDependencies>false</LinkLibraryDependencies></ProjectReference></ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\..\..\..\..\..\..\..\..\usr\include\mellanox;..\..\..\..\dlb_st2110\0.9\dlb_st2110\src;..\..\..\..\dlb_st2110\0.9\dlb_st2110\include</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\..\..\..\..\..\..\..\..\..\usr\include\mellanox;..\..\..\..\dlb_st2110\0.9\dlb_st2110\src;..\..\..\..\dlb_st2110\0.9\dlb_st2110\include</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>Default</BasicRuntimeChecks>
 <BufferSecurityCheck>false</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>

@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -176,6 +177,8 @@ TEST_F(DlbAdm05, ReadIngestGenerateAndWriteStereoXMLFile)
 
     // ingest the XML into a CoreModel instance
     CoreModel model;
+    model.AddProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE);
+
     XMLIngester ingester(model, *c);
 
     status = ingester.Ingest();
@@ -295,13 +298,13 @@ TEST(dlb_adm_test, ModelCount)
     size_t count;
 
     count = model.Count(DLB_ADM_ENTITY_TYPE_TRACK_UID);
-    EXPECT_EQ(0, count);
+    EXPECT_EQ(0u, count);
     status = ::dlb_adm_core_model_add_audio_track(cm, &audioTrack);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     count = model.Count(DLB_ADM_ENTITY_TYPE_TRACK_UID);
     EXPECT_EQ(1u, count);
     count = model.Count(DLB_ADM_ENTITY_TYPE_PROGRAMME);
-    EXPECT_EQ(0, count);
+    EXPECT_EQ(0u, count);
 
     audioTrack.id = DLB_ADM_NULL_ENTITY_ID;
     status = ::dlb_adm_core_model_add_audio_track(cm, &audioTrack);
@@ -309,7 +312,7 @@ TEST(dlb_adm_test, ModelCount)
     count = model.Count(DLB_ADM_ENTITY_TYPE_TRACK_UID);
     EXPECT_EQ(2u, count);
     count = model.Count(DLB_ADM_ENTITY_TYPE_PROGRAMME);
-    EXPECT_EQ(0, count);
+    EXPECT_EQ(0u, count);
 
     audioTrack.id = DLB_ADM_NULL_ENTITY_ID;
     status = ::dlb_adm_core_model_add_audio_track(cm, &audioTrack);
@@ -317,7 +320,7 @@ TEST(dlb_adm_test, ModelCount)
     count = model.Count(DLB_ADM_ENTITY_TYPE_TRACK_UID);
     EXPECT_EQ(3u, count);
     count = model.Count(DLB_ADM_ENTITY_TYPE_PROGRAMME);
-    EXPECT_EQ(0, count);
+    EXPECT_EQ(0u, count);
 
     status = ::dlb_adm_core_model_close(&cm);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
@@ -349,7 +352,7 @@ TEST_F(DlbAdm05, TestXMLBuffer)
     SetUpTestInput();
 
     gotCount = emptyBuffer.GetLine(lineBuffer, LINE_BUFFER_MAX);
-    EXPECT_EQ(0, gotCount);
+    EXPECT_EQ(0u, gotCount);
 
     {
         std::ofstream outputFile(stereoXMLBufferOutFileName);

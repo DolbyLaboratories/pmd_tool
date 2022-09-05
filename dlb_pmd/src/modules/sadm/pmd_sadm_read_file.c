@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -98,20 +99,35 @@ dlb_pmd_sadm_file_read
     dlb_pmd_success              success;
     const char                  *error_msg = NULL;
     dlb_adm_container_counts     counts;
+    dlb_adm_container_counts     flattened_counts;
     dlb_adm_xml_container       *container = NULL;
+    dlb_adm_xml_container       *flattened_container = NULL;
     dlb_adm_core_model          *core_model;
     int                          status;
 
     memset(&counts, 0, sizeof(counts));
+    memset(&flattened_counts, 0, sizeof(flattened_counts));
+
     status = dlb_adm_container_open(&container, &counts);
     CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to open XML container");
+    status = dlb_adm_container_open(&flattened_container, &flattened_counts);
+    CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to open XML container");
+
     status = dlb_adm_container_read_xml_file(container, filename, use_common_defs);
     CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to read XML file");
+
+    status = dlb_adm_container_flatten(container, flattened_container);
+    CHECK_STATUS(status, "dlb_adm_container_flatten(): failed to flatten XML container");
+
     success = dlb_pmd_model_combo_get_writable_core_model(model, &core_model);
     CHECK_SUCCESS(success, "dlb_pmd_sadm_file_read(): could not get writable core model");
-    status = dlb_adm_core_model_ingest_xml_container(core_model, container);
+    
+    status = dlb_adm_core_model_ingest_xml_container(core_model, flattened_container);
     CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to ingest core model from XML container");
+
     status = dlb_adm_container_close(&container);
+    CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to close XML container");
+    status = dlb_adm_container_close(&flattened_container);
     CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to close XML container");
 
     ultimate_success = PMD_SUCCESS;
@@ -124,6 +140,10 @@ finish:
     if (container != NULL)
     {
         (void)dlb_adm_container_close(&container);
+    }
+    if (flattened_container != NULL)
+    {
+        (void)dlb_adm_container_close(&flattened_container);
     }
 
     return ultimate_success;

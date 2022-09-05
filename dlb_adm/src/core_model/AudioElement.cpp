@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,27 +43,57 @@ namespace DlbAdm
     AudioElement::AudioElement()
         : ModelEntity()
         , mGain()
+        , mPositionOffset()
+        , mObjectInteraction()
     {
         mNameLimit = DEFAULT_NAME_LIMIT;
+        mObjectClass = DLB_ADM_OBJECT_CLASS_NONE;
+        mInteract = 0u;
     }
 
     AudioElement::AudioElement(const AudioElement &x)
         : ModelEntity(x)
         , mGain(x.mGain)
+        , mPositionOffset(x.mPositionOffset)
+        , mObjectClass(x.mObjectClass)
+        , mInteract(x.mInteract)
+        , mObjectInteraction(x.mObjectInteraction)
     {
         // Empty
     }
 
-    AudioElement::AudioElement(dlb_adm_entity_id id, const Gain &gain)
+    AudioElement::AudioElement(dlb_adm_entity_id id
+                              ,const Gain &gain
+                              ,const Position &positionOffset
+                              ,const DLB_ADM_OBJECT_CLASS objectClass
+                              ,dlb_adm_bool interact /*= 0 */
+                              ,const AudioObjectInteraction &objectIteraction /*= default */
+                              )
         : ModelEntity(id)
         , mGain(gain)
+        , mPositionOffset(positionOffset)
+        , mObjectClass(objectClass)
+        , mInteract(interact)
+        , mObjectInteraction(objectIteraction)
     {
         mNameLimit = DEFAULT_NAME_LIMIT;
     }
 
-    AudioElement::AudioElement(dlb_adm_entity_id id, float gainValue /*= 1.0f*/, Gain::GAIN_UNIT gainUnit /*= Gain::GAIN_UNIT::LINEAR*/)
+    AudioElement::AudioElement
+        (dlb_adm_entity_id id
+        ,float gainValue /*= 1.0f*/
+        ,Gain::GAIN_UNIT gainUnit /*= Gain::GAIN_UNIT::LINEAR*/
+        ,const dlb_adm_data_position_offset offset /*= {0.0, DLB_ADM_FALSE}*/
+        ,const DLB_ADM_OBJECT_CLASS objectClass /*= DLB_ADM_OBJECT_CLASS_NONE */
+        ,dlb_adm_bool interact /*= 0 */
+        ,const AudioObjectInteraction objectIteraction /*= default */
+        )
         : ModelEntity(id)
         , mGain(gainValue, gainUnit)
+        , mPositionOffset(offset.offset_value, offset.cartesian)
+        , mObjectClass(objectClass)
+        , mInteract(0)
+        , mObjectInteraction(objectIteraction)
     {
         mNameLimit = DEFAULT_NAME_LIMIT;
     }
@@ -76,6 +107,9 @@ namespace DlbAdm
     {
         (void)ModelEntity::operator=(x);
         mGain = x.mGain;
+        mPositionOffset = x.mPositionOffset;
+        mObjectClass = x.mObjectClass;
+        mInteract = x.mInteract;
         return *this;
     }
 

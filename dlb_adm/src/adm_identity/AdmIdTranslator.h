@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -63,6 +64,8 @@ namespace DlbAdm
         std::string Translate(dlb_adm_entity_id id) const;
 
         bool IsGenericEntityType(DLB_ADM_ENTITY_TYPE entityType) const;
+
+        bool SubcomponentIdReferencesComponent(const dlb_adm_entity_id parentId, const dlb_adm_entity_id subcomponentId) const;
 
         dlb_adm_entity_id ConstructGenericId(DLB_ADM_ENTITY_TYPE entityType, uint32_t sequenceNumber) const;
 

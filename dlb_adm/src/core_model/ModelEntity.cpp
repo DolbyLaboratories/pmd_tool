@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +43,7 @@ namespace DlbAdm
     ModelEntity::~ModelEntity()
     {
         mEntityID = DLB_ADM_NULL_ENTITY_ID;
+        mIsCommon = false;
         mNameLimit = 0;
         mLabelCount = 0;
     }
@@ -119,6 +121,7 @@ namespace DlbAdm
 
     ModelEntity::ModelEntity()
         : mEntityID(DLB_ADM_NULL_ENTITY_ID)
+        , mIsCommon(false)
         , mNameLimit(0)
         , mLabelCount(0)
         , mNameVector()
@@ -126,8 +129,9 @@ namespace DlbAdm
         // Empty
     }
 
-    ModelEntity::ModelEntity(dlb_adm_entity_id id, size_t nameLimit /*= 0*/)
+    ModelEntity::ModelEntity(dlb_adm_entity_id id, size_t nameLimit /*= 0*/, bool isCommon /*= false*/)
         : mEntityID(id)
+        , mIsCommon(isCommon)
         , mNameLimit(nameLimit)
         , mLabelCount(0)
         , mNameVector()
@@ -137,6 +141,7 @@ namespace DlbAdm
 
     ModelEntity::ModelEntity(const ModelEntity &x)
         : mEntityID(x.mEntityID)
+        , mIsCommon(x.mIsCommon)
         , mNameLimit(x.mNameLimit)
         , mLabelCount(x.mLabelCount)
         , mNameVector(x.mNameVector)
@@ -147,6 +152,7 @@ namespace DlbAdm
     ModelEntity &ModelEntity::operator=(const ModelEntity &x)
     {
         mEntityID = x.mEntityID;
+        mIsCommon = x.mIsCommon;
         mNameLimit = x.mNameLimit;
         mLabelCount = x.mLabelCount;
         mNameVector = x.mNameVector;

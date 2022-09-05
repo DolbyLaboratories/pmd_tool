@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -58,11 +59,15 @@ namespace DlbAdm
 
         Gain &operator=(const Gain &x);
 
+        bool operator==(const Gain &x) const;
+
+        bool operator!=(const Gain &x) const;
+
+        bool operator<(const Gain &x) const;
+
         float GetGainValue() const { return mGainValue; }
 
         GAIN_UNIT GetGainUnit() const { return mGainUnit; }
-
-        bool operator<(const Gain &x) const;
 
         bool Convert(GAIN_UNIT gainUnit);
 

@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -616,6 +617,7 @@ TEST_F(DlbAdm03, ReadXmlFileEBU)
     EXPECT_TRUE(CompareFiles(ebuPart1OutFileName, ebuPart1OutOutFileName));
 }
 
+#ifdef EXTERNAL_ADM_COMMON_DEFINITIONS
 TEST_F(DlbAdm03, ReadXmlFileCommonDefs)
 {
     const char *path = dlb_adm_get_common_defs_path();
@@ -640,8 +642,9 @@ TEST_F(DlbAdm03, ReadXmlFileCommonDefs)
 #endif
     }
 }
+#endif
 
-#ifdef _WIN32
+#if 0
 TEST_F(DlbAdm03, ReadXmlFileEBUWithCommonDefs)
 {
     const char *path = dlb_adm_get_common_defs_path();

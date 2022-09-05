@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +38,7 @@
 #define DLB_ADM_POSITION_H
 
 #include "dlb_adm/include/dlb_adm_api_types.h"
+#include <string>
 
 namespace DlbAdm
 {
@@ -55,6 +57,7 @@ namespace DlbAdm
         };
 
         Position();
+        Position(dlb_adm_float coord1, bool cartesian);
         Position(dlb_adm_float coord1, dlb_adm_float coord2, dlb_adm_float coord3, bool cartesian);
         Position(const Position &x);
         ~Position();
@@ -66,6 +69,14 @@ namespace DlbAdm
         dlb_adm_float GetCoordinate1() const { return mCoordinate1; }
         dlb_adm_float GetCoordinate2() const { return mCoordinate2; }
         dlb_adm_float GetCoordinate3() const { return mCoordinate3; }
+
+        static Position SphericalToCartesian(const Position &pos);
+
+        static Position CartesianToSpherical(const Position &pos);
+
+        static int PositionCoordinateToName(Position::COORDINATE coordinate, std::string &name);
+
+        static int PositionNameToCoordinate(const std::string &name, Position::COORDINATE &coordinate);
 
         void Clear();
 

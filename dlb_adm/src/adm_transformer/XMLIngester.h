@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -58,12 +59,13 @@ namespace DlbAdm
         int Ingest();
 
     private:
+
         int AnalyzeContent();
 
         int GetSpeakerConfig(DLB_ADM_SPEAKER_CONFIG &config, dlb_adm_entity_id id) const;
-        int GetObjectClass(DLB_ADM_OBJECT_CLASS &objectClass, dlb_adm_entity_id id) const;
 
         int IngestFrameFormat();
+        int IngestProfileList();
 
         int IngestSources();
         int IngestTargets();

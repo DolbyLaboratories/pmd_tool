@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -270,7 +271,7 @@ generate_pmd_object
     } 
     else
     {
-        translate_object_class(&obj.object_class, data->target_group.object_class);
+        translate_object_class(&obj.object_class, data->audio_element.object_class);
     }
     translate_coordinates(&obj.x, &obj.y, &obj.z, &data->block_updates[0]);
 
@@ -588,6 +589,29 @@ reconcile_language
 }
 
 static
+dlb_pmd_bool
+presentations_name_language_conflicts_labels_language(dlb_adm_data_names *names)
+{
+    dlb_pmd_bool ret = PMD_FALSE;
+
+    if(names == NULL)
+    {
+        return ret;
+    }
+
+    for(size_t i = 1; i <= names->label_count; i++)
+    {
+        if(strcmp(names->langs[0], names->langs[i]) == 0)
+        {
+            ret = PMD_TRUE;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+static
 dlb_pmd_success
 generate_pmd_presentation
     (pmd_core_model_ingester    *ingester
@@ -631,7 +655,7 @@ generate_pmd_presentation
     }
     pres.num_names = (unsigned int)n;
     i = 0;
-    if (n > 1 && !strcmp(ingester->names.names[0], ingester->names.names[1]))
+    if  (presentations_name_language_conflicts_labels_language(&ingester->names))
     {
         pres.num_names--;
         i++;
@@ -747,7 +771,7 @@ pmd_core_model_ingester_query_memory_size
     }
     total_sz += memory_sz;
 
-    status = dlb_adm_core_model_query_element_data_memory_size(&memory_sz, PMD_MAX_BED_CHANNELS);
+    status = dlb_adm_core_model_query_element_data_memory_size(&memory_sz, PMD_MAX_BED_CHANNELS, 0);
     if (status != DLB_ADM_STATUS_OK)
     {
         return FAILURE;
@@ -799,12 +823,12 @@ pmd_core_model_ingester_open
     }
     p += memory_sz;
 
-    status = dlb_adm_core_model_query_element_data_memory_size(&memory_sz, PMD_MAX_BED_CHANNELS);
+    status = dlb_adm_core_model_query_element_data_memory_size(&memory_sz, PMD_MAX_BED_CHANNELS, 0);
     if (status != DLB_ADM_STATUS_OK)
     {
         return FAILURE;
     }
-    status = dlb_adm_core_model_configure_element_data(&ingester->element_data, PMD_MAX_BED_CHANNELS, p);
+    status = dlb_adm_core_model_configure_element_data(&ingester->element_data, PMD_MAX_BED_CHANNELS, 0, p);
     if (status != DLB_ADM_STATUS_OK)
     {
         return FAILURE;

@@ -22,12 +22,16 @@
 <Filter>dlb_adm\test\unit</Filter></ClCompile>
 <ClCompile Include="..\..\..\test\unit\dlb_adm_06.cpp">
 <Filter>dlb_adm\test\unit</Filter></ClCompile>
+<ClCompile Include="..\..\..\test\unit\dlb_adm_emission_profile.cpp">
+<Filter>dlb_adm\test\unit</Filter></ClCompile>
 <ClCompile Include="..\..\..\test\unit\unit_test_main.cpp">
 <Filter>dlb_adm\test\unit</Filter></ClCompile></ItemGroup>
 <ItemGroup>
 <ClInclude Include="..\..\..\test\unit\CoreModelTest.h">
 <Filter>dlb_adm\test\unit</Filter></ClInclude>
 <ClInclude Include="..\..\..\test\unit\dlb_adm_data.h">
+<Filter>dlb_adm\test\unit</Filter></ClInclude>
+<ClInclude Include="..\..\..\test\unit\dlb_adm_emission_profile_data.h">
 <Filter>dlb_adm\test\unit</Filter></ClInclude></ItemGroup>
 <ItemGroup />
 <ItemGroup />

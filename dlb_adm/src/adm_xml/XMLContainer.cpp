@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +40,7 @@
 #include "dlb_adm/src/adm_identity/AdmIdSequenceMap.h"
 #include "XMLReader.h"
 #include "XMLWriter.h"
+#include "dlb_adm/adm_common_definitions/ADMCommonDefinitions.h"
 
 #include <fstream>
 
@@ -308,6 +310,8 @@ namespace DlbAdm
 
     int XMLContainer::LoadCommonDefs()
     {
+
+#if EXTERNAL_ADM_COMMON_DEFINITIONS
         const char *filePath = dlb_adm_get_common_defs_path();
         FILE *f = ::fopen(filePath, "r");
 
@@ -319,9 +323,19 @@ namespace DlbAdm
         XMLReader reader(*this, f, "C:\\temp\\trace_common.out", true);
 
         status = ::dlb_xml_parse(&reader, &LineCallback, &ElementCallback, &AttributeCallback);
-        fclose(f);
+        fclose(f); 
+#else
+        int status;
+        XMLReader reader( *this
+                        , admCommonDefinitionsXMLBuffer
+                        , strlen(admCommonDefinitionsXMLBuffer)
+                        , "C:\\temp\\trace_common.out"
+                        , true
+                        );
 
-        return status ? DLB_ADM_STATUS_ERROR : DLB_ADM_STATUS_OK;
+        status = ::dlb_xml_parse(&reader, &LineCallback, &ElementCallback, &AttributeCallback);   
+#endif
+        return status ? DLB_ADM_STATUS_ERROR : DLB_ADM_STATUS_OK;    
     }
 
 }

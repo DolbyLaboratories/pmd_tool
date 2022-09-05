@@ -92,6 +92,8 @@
 <Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\XMLContainer.cpp">
 <Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\XMLContainerFlattener.cpp">
+<Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\XMLReader.cpp">
 <Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\XMLReaderStack.cpp">
@@ -100,11 +102,17 @@
 <Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\adm_xml\dlb_adm_xml_container.cpp">
 <Filter>dlb_adm\src\adm_xml</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\AlternativeValueSet.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\core_model\AudioElement.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\AudioObjectInteraction.cpp">
 <Filter>dlb_adm\src\core_model</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\core_model\AudioTrack.cpp">
 <Filter>dlb_adm\src\core_model</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\core_model\BlockUpdate.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\ComplementaryElement.cpp">
 <Filter>dlb_adm\src\core_model</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\core_model\ContentGroup.cpp">
 <Filter>dlb_adm\src\core_model</Filter></ClCompile>
@@ -121,6 +129,8 @@
 <ClCompile Include="..\..\..\..\dlb_adm\src\core_model\FrameFormat.cpp">
 <Filter>dlb_adm\src\core_model</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\core_model\Gain.cpp">
+<Filter>dlb_adm\src\core_model</Filter></ClCompile>
+<ClCompile Include="..\..\..\..\dlb_adm\src\core_model\LoudnessMetadata.cpp">
 <Filter>dlb_adm\src\core_model</Filter></ClCompile>
 <ClCompile Include="..\..\..\..\dlb_adm\src\core_model\ModelEntity.cpp">
 <Filter>dlb_adm\src\core_model</Filter></ClCompile>
@@ -267,10 +277,14 @@
 <Filter>dlb_adm\src\adm_identity</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\adm_identity\AdmIdTranslator.h">
 <Filter>dlb_adm\src\adm_identity</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_transformer\XMLConstants.h">
+<Filter>dlb_adm\src\adm_transformer</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\adm_transformer\XMLGenerator.h">
 <Filter>dlb_adm\src\adm_transformer</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\adm_transformer\XMLIngester.h">
 <Filter>dlb_adm\src\adm_transformer</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\ADMCommonDefinitions.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\AttributeDescriptor.h">
 <Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\AttributeInitializers.h">
@@ -307,6 +321,8 @@
 <Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\XMLContainer.h">
 <Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\XMLContainerFlattener.h">
+<Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\XMLReader.h">
 <Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\XMLReaderStack.h">
@@ -315,11 +331,17 @@
 <Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\adm_xml\dlb_adm_xml_container.h">
 <Filter>dlb_adm\src\adm_xml</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\AlternativeValueSet.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\core_model\AudioElement.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\AudioObjectInteraction.h">
 <Filter>dlb_adm\src\core_model</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\core_model\AudioTrack.h">
 <Filter>dlb_adm\src\core_model</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\core_model\BlockUpdate.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\ComplementaryElement.h">
 <Filter>dlb_adm\src\core_model</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\core_model\ContentGroup.h">
 <Filter>dlb_adm\src\core_model</Filter></ClInclude>
@@ -336,6 +358,8 @@
 <ClInclude Include="..\..\..\..\dlb_adm\src\core_model\FrameFormat.h">
 <Filter>dlb_adm\src\core_model</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\core_model\Gain.h">
+<Filter>dlb_adm\src\core_model</Filter></ClInclude>
+<ClInclude Include="..\..\..\..\dlb_adm\src\core_model\LoudnessMetadata.h">
 <Filter>dlb_adm\src\core_model</Filter></ClInclude>
 <ClInclude Include="..\..\..\..\dlb_adm\src\core_model\ModelEntity.h">
 <Filter>dlb_adm\src\core_model</Filter></ClInclude>

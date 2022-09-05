@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -280,7 +281,7 @@ pmd_core_model_generator_open
  * @brief generate the required form of a presentation id
  *
  * This is derived from the id of the corresponding PMD presentation
- */ 
+ */
 static
 int                         /** @return 0 on success and non-zero otherwise */
 generate_presentation_id
@@ -303,7 +304,7 @@ generate_presentation_id
  * @brief generate the required form of a content group id
  *
  * This is derived from the id of the corresponding PMD element
- */ 
+ */
 static
 int                         /** @return 0 on success and non-zero otherwise */
 generate_content_group_id
@@ -326,7 +327,7 @@ generate_content_group_id
  * @brief generate the required form of an element group or audio element id
  *
  * This is derived from the id of the corresponding PMD element
- */ 
+ */
 static
 int                         /** @return 0 on success and non-zero otherwise */
 generate_element_id
@@ -972,7 +973,7 @@ generate_nonbed_objects
 
     /* Add the TargetGroup */
     memset(&target_group, 0, sizeof(target_group));
-    target_group.object_class = translate_object_class(obj->object_class);
+    target_group.audio_type = DLB_ADM_AUDIO_TYPE_OBJECTS;
     status = generate_target_group_id(
         DLB_ADM_AUDIO_TYPE_OBJECTS, obj->id, DLB_PMD_SPEAKER_CONFIG_NONE, &target_group.id);
     CHECK_STATUS_SUCCESS(status);
@@ -1049,12 +1050,14 @@ generate_element_objects
         {
             content_group.content_kind = DLB_ADM_CONTENT_KIND_MK_MIXED;
             audio_element.gain.gain_value = bed.sources[0].gain;    /* we'll check other gains for equality later */
+            audio_element.object_class = DLB_ADM_OBJECT_CLASS_NONE;
             is_bed = PMD_TRUE;
         }
         else if (!dlb_pmd_object_lookup(g->pmd_model, element_id, &object))
         {
             content_group.content_kind = translate_object_class_to_content_kind(object.object_class);
             audio_element.gain.gain_value = object.source_gain;
+            audio_element.object_class = translate_object_class(object.object_class);
             is_bed = PMD_FALSE;
         }
         else
@@ -1152,7 +1155,7 @@ check_presentation_config
     dlb_pmd_source sources[MAX_BED_CHANNEL_COUNT];
     dlb_pmd_bed bed;
     unsigned int i;
-    
+
     for (i = 0; i != pres->num_elements; i++)
     {
         if (!dlb_pmd_bed_lookup(g->pmd_model, pres->elements[i], &bed, MAX_BED_CHANNEL_COUNT, sources))
@@ -1187,7 +1190,7 @@ add_presentation_relation
     status = generate_element_id(element_id, &audio_element_id);
     CHECK_STATUS(status);
     status = dlb_adm_core_model_add_presentation_relation(
-        g->core_model, presentation_id, content_group_id, DLB_ADM_NULL_ENTITY_ID, audio_element_id);
+        g->core_model, presentation_id, content_group_id, DLB_ADM_NULL_ENTITY_ID, audio_element_id, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
     CHECK_STATUS(status);
 
     return status;

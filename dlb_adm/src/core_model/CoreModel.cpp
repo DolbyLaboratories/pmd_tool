@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +46,7 @@
 #include "ContentGroup.h"
 #include "ElementGroup.h"
 #include "AudioElement.h"
+#include "AlternativeValueSet.h"
 #include "AudioTrack.h"
 #include "TargetGroup.h"
 #include "Target.h"
@@ -52,6 +54,8 @@
 #include "Source.h"
 #include "BlockUpdate.h"
 #include "FrameFormat.h"
+#include "ComplementaryElement.h"
+#include "AudioObjectInteraction.h"
 
 #include "dlb_adm/src/adm_identity/AdmIdTranslator.h"
 #include "dlb_adm/src/adm_identity/AdmIdSequenceMap.h"
@@ -87,6 +91,7 @@ namespace DlbAdm
 
     CoreModel::CoreModel()
         : mCoreModelData(new CoreModelData())
+        , mCoreModelProfiles()
     {
         // Empty
     }
@@ -146,6 +151,21 @@ namespace DlbAdm
         return AddModelEntity(audioElement);
     }
 
+    bool CoreModel::AddEntity(const AudioObjectInteraction &audioObjInteration)
+    {
+        return AddModelEntity(audioObjInteration);
+    }
+
+    bool CoreModel::AddEntity(const ComplementaryElement &element)
+    {
+        return AddModelEntity(element);
+    }
+
+    bool CoreModel::AddEntity(const AlternativeValueSet &altValSet)
+    {
+        return AddModelEntity(altValSet);
+    }
+
     bool CoreModel::AddEntity(const AudioTrack &audioTrack)
     {
         return AddModelEntity(audioTrack);
@@ -194,7 +214,7 @@ namespace DlbAdm
 
         return inserted;
     }
-    
+
     bool CoreModel::AddRecord(const PresentationRecord &record)
     {
         return AddModelRecord(record, mCoreModelData->GetPresentationTable());
@@ -411,7 +431,7 @@ namespace DlbAdm
         if (translator.IsGenericEntityType(entityType))
         {
             entityID = translator.ConstructGenericId(entityType, mCoreModelData->GetSequenceMap().GetSequenceNumber(entityType));
-        } 
+        }
         else
         {
             switch (entityType)
@@ -480,22 +500,34 @@ namespace DlbAdm
     void CoreModel::Clear()
     {
         mCoreModelData->Clear();
+        mCoreModelProfiles.clear();
     }
 
     bool CoreModel::IsEmpty() const
     {
-        return mCoreModelData->IsEmpty();
+        return mCoreModelData->IsEmpty() && mCoreModelProfiles.empty();
     }
 
     bool CoreModel::Validate(const PresentationRecord &record)
     {
         const ModelEntity *ptr;
+
+        bool altValGood =
+            ( record.altValueSetID == DLB_ADM_NULL_ENTITY_ID
+            ||  (  record.presentationID != DLB_ADM_NULL_ENTITY_ID
+                && GetEntity(record.altValueSetID, &ptr)
+                && AdmIdTranslator().SubcomponentIdReferencesComponent(record.audioElementID, record.altValueSetID)
+                )
+            );
+
         bool good =
             record.Validate() &&
             (record.presentationID == DLB_ADM_NULL_ENTITY_ID || GetEntity(record.presentationID, &ptr)) &&
             GetEntity(record.contentGroupID, &ptr) &&
             (record.elementGroupID == DLB_ADM_NULL_ENTITY_ID || GetEntity(record.elementGroupID, &ptr)) &&
-            GetEntity(record.audioElementID, &ptr);
+            (record.complementaryRefID == DLB_ADM_NULL_ENTITY_ID || GetEntity(record.complementaryRefID, &ptr)) &&
+            GetEntity(record.audioElementID, &ptr) &&
+            altValGood;
 
         return good;
     }

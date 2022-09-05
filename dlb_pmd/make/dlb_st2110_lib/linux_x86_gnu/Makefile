@@ -10,7 +10,7 @@ CXXFLAGS_debug = -std=c++17 -msse2 -g -ggdb3 -O0 -m32 -c -Wall
 CXXFLAGS_release = -std=c++17 -msse2 -O3 -ftree-vectorize -m32 -c -Wall
 DEFINES_debug = -DELPP_NO_DEFAULT_LOG_FILE=1
 DEFINES_release = -DELPP_NO_DEFAULT_LOG_FILE=1 -DNDEBUG=1
-INCLUDES = -I$(BASE)../../../../../../../usr/include/mellanox -I$(BASE)dlb_st2110/0.9/dlb_st2110/src -I$(BASE)dlb_st2110/0.9/dlb_st2110/include
+INCLUDES = -I$(BASE)../../../../../../../../usr/include/mellanox -I$(BASE)dlb_st2110/0.9/dlb_st2110/src -I$(BASE)dlb_st2110/0.9/dlb_st2110/include
 
 
 INPUTS_ARCHIVE_debug = $(TMP)dlb_st2110/0.9/dlb_st2110/src/audio_buffer.dlb_st2110_lib_linux_x86_gnu_debug.o $(TMP)dlb_st2110/0.9/dlb_st2110/src/dlb_aoip_services.dlb_st2110_lib_linux_x86_gnu_debug.o\

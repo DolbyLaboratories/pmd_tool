@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,20 +50,26 @@ namespace DlbAdm
     PresentationRecord::PresentationRecord(dlb_adm_entity_id presID,
                                            dlb_adm_entity_id contentGrpID,
                                            dlb_adm_entity_id elementID,
-                                           dlb_adm_entity_id elementGrpID /* = DLB_ADM_NULL_ENTITY_ID */)
-        : presentationID(presID)
-        , contentGroupID(contentGrpID)
-        , elementGroupID(elementGrpID)
-        , audioElementID(elementID)
+                                           dlb_adm_entity_id elementGrpID /* = DLB_ADM_NULL_ENTITY_ID */,
+                                           dlb_adm_entity_id altValSetID  /* = DLB_ADM_NULL_ENTITY_ID */,
+                                           dlb_adm_entity_id compRefID /* = DLB_ADM_NULL_ENTITY_ID */)
+        :presentationID(presID)
+        ,contentGroupID(contentGrpID)
+        ,elementGroupID(elementGrpID)
+        ,audioElementID(elementID)
+        ,altValueSetID (altValSetID)
+        ,complementaryRefID(compRefID)
     {
         // Empty
     }
 
     PresentationRecord::PresentationRecord(const PresentationRecord &x)
-        : presentationID(x.presentationID)
-        , contentGroupID(x.contentGroupID)
-        , elementGroupID(x.elementGroupID)
-        , audioElementID(x.audioElementID)
+        :presentationID(x.presentationID)
+        ,contentGroupID(x.contentGroupID)
+        ,elementGroupID(x.elementGroupID)
+        ,audioElementID(x.audioElementID)
+        ,altValueSetID (x.altValueSetID)
+        ,complementaryRefID(x.complementaryRefID)
     {
         // Empty
     }
@@ -78,6 +85,8 @@ namespace DlbAdm
         contentGroupID = x.contentGroupID;
         elementGroupID = x.elementGroupID;
         audioElementID = x.audioElementID;
+        altValueSetID  = x.altValueSetID;
+        complementaryRefID = x.complementaryRefID;
 
         return *this;
     }
@@ -85,8 +94,8 @@ namespace DlbAdm
     bool PresentationRecord::operator<(const PresentationRecord &x) const
     {
         return
-            std::tie(  presentationID,   contentGroupID,   elementGroupID,   audioElementID) <
-            std::tie(x.presentationID, x.contentGroupID, x.elementGroupID, x.audioElementID);
+            std::tie(  presentationID,   contentGroupID,   elementGroupID,   audioElementID,   altValueSetID, complementaryRefID) <
+            std::tie(x.presentationID, x.contentGroupID, x.elementGroupID, x.audioElementID, x.altValueSetID, x.complementaryRefID);
     }
 
     PresentationRecord &PresentationRecord::Clear()
@@ -95,6 +104,8 @@ namespace DlbAdm
         contentGroupID = DLB_ADM_NULL_ENTITY_ID;
         elementGroupID = DLB_ADM_NULL_ENTITY_ID;
         audioElementID = DLB_ADM_NULL_ENTITY_ID;
+        altValueSetID  = DLB_ADM_NULL_ENTITY_ID;
+        complementaryRefID = DLB_ADM_NULL_ENTITY_ID;
 
         return *this;
     }
@@ -105,20 +116,31 @@ namespace DlbAdm
             presentationID == DLB_ADM_NULL_ENTITY_ID &&
             contentGroupID == DLB_ADM_NULL_ENTITY_ID &&
             elementGroupID == DLB_ADM_NULL_ENTITY_ID &&
-            audioElementID == DLB_ADM_NULL_ENTITY_ID;
+            audioElementID == DLB_ADM_NULL_ENTITY_ID &&
+            altValueSetID  == DLB_ADM_NULL_ENTITY_ID &&
+            complementaryRefID == DLB_ADM_NULL_ENTITY_ID;
     }
 
     bool PresentationRecord::Validate(bool nullOK /* = false */) const
     {
         bool nullPresentation = (presentationID == DLB_ADM_NULL_ENTITY_ID);
         bool nullElementGroup = (elementGroupID == DLB_ADM_NULL_ENTITY_ID);
+        bool nullAltValSet    = (altValueSetID  == DLB_ADM_NULL_ENTITY_ID);
+        bool nullCompObject   = (complementaryRefID == DLB_ADM_NULL_ENTITY_ID);
         AdmIdTranslator translator;
 
         return
             ((nullPresentation || translator.GetEntityType(presentationID) == DLB_ADM_ENTITY_TYPE_PROGRAMME) &&
              (translator.GetEntityType(contentGroupID) == DLB_ADM_ENTITY_TYPE_CONTENT) &&
              (nullElementGroup || translator.GetEntityType(elementGroupID) == DLB_ADM_ENTITY_TYPE_OBJECT) &&
-             (translator.GetEntityType(audioElementID) == DLB_ADM_ENTITY_TYPE_OBJECT)) ||
+             (nullCompObject || translator.GetEntityType(complementaryRefID) == DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF) &&
+             (translator.GetEntityType(audioElementID) == DLB_ADM_ENTITY_TYPE_OBJECT) &&
+             (  nullAltValSet
+             || (   !nullPresentation
+                &&  translator.GetEntityType(altValueSetID) == DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET
+                &&  translator.SubcomponentIdReferencesComponent(audioElementID, altValueSetID)
+                )
+             )) ||
             (nullOK && IsNull());
     }
 

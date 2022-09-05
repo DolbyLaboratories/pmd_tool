@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +39,8 @@
 
 #include "ModelEntity.h"
 #include "Gain.h"
+#include "Position.h"
+#include "AudioObjectInteraction.h"
 
 namespace DlbAdm
 {
@@ -46,8 +49,23 @@ namespace DlbAdm
     {
     public:
         AudioElement();
-        AudioElement(dlb_adm_entity_id id, const Gain &gain);
-        explicit AudioElement(dlb_adm_entity_id id, float gainValue = 1.0f, Gain::GAIN_UNIT gainUnit = Gain::GAIN_UNIT::LINEAR);
+        AudioElement(dlb_adm_entity_id id
+                    ,const Gain &gain
+                    ,const Position &positionOffset
+                    ,const DLB_ADM_OBJECT_CLASS objectClass
+                    ,dlb_adm_bool interact = 0
+                    ,const AudioObjectInteraction &objectIteraction = AudioObjectInteraction());
+
+        explicit AudioElement
+            (dlb_adm_entity_id id
+            ,float gainValue = 1.0f
+            ,Gain::GAIN_UNIT gainUnit = Gain::GAIN_UNIT::LINEAR
+            ,const dlb_adm_data_position_offset offset = {0.0, DLB_ADM_FALSE}
+            ,DLB_ADM_OBJECT_CLASS objectClass = DLB_ADM_OBJECT_CLASS_NONE
+            ,dlb_adm_bool interact = 0
+            ,const AudioObjectInteraction objectIteraction = AudioObjectInteraction()
+            );
+
         AudioElement(const AudioElement &x);
         virtual ~AudioElement();
 
@@ -55,12 +73,24 @@ namespace DlbAdm
 
         Gain GetGain() const { return mGain; }
 
+        Position GetPositionOffset() const { return mPositionOffset; }
+
+        DLB_ADM_OBJECT_CLASS GetObjectClass() const { return mObjectClass; }
+
+        dlb_adm_bool IsInteractive() const { return mInteract; }
+
+        AudioObjectInteraction GetInteractionBoundreies() const { return mObjectInteraction; }
+
         virtual bool AddLabel(const char *name, const char *language = "");
 
         virtual bool AddLabel(const std::string &name, const std::string &language);
 
     private:
         Gain mGain;
+        Position mPositionOffset; /* only stores coordinate "X" or "azimuth"  */
+        DLB_ADM_OBJECT_CLASS mObjectClass;
+        dlb_adm_bool mInteract;
+        AudioObjectInteraction mObjectInteraction;
     };
 
 }

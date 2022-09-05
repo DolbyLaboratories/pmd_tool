@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,8 +50,8 @@ namespace DlbAdm
     typedef multi_index_container<
         EntityDescriptor,
         indexed_by<
-            // Name index
-            ordered_unique<tag<EntityIndex_Name>, member<EntityDescriptor, std::string, &EntityDescriptor::name> >,
+            // Name index -- not unique because the same name may be used to label different entities
+            ordered_non_unique<tag<EntityIndex_Name>, member<EntityDescriptor, std::string, &EntityDescriptor::name> >,
             // Entity type index -- not unique because entity and reference to entity use the same type
             ordered_non_unique<tag<EntityIndex_Type>, member<EntityDescriptor, DLB_ADM_ENTITY_TYPE, &EntityDescriptor::entityType> >
         >
@@ -84,7 +85,7 @@ namespace DlbAdm
         }
     }
 
-    int GetEntityDescriptor(EntityDescriptor &d, const std::string &name)
+    int GetEntityDescriptor(EntityDescriptor &d, const std::string &name, EntityNameDisambiguationFn disambiguator/*= nullptr*/)
     {
         if (theADMEntityIndex.size() == 0)
         {
@@ -92,13 +93,37 @@ namespace DlbAdm
         }
 
         EntityIndex_NameIndex &index = theADMEntityIndex.get<EntityIndex_Name>();
-        EntityIndex_NameIndex::iterator it = index.find(name);
+        auto range = index.equal_range(name);
         int status = DLB_ADM_STATUS_NOT_FOUND;
 
-        if (it != index.end())
+        if (range.first != range.second)
         {
-            d = *it;
-            status = DLB_ADM_STATUS_OK;
+            if (disambiguator != nullptr)
+            {
+                while (range.first != range.second)
+                {
+                    if (disambiguator(*range.first))
+                    {
+                        d = *range.first;
+                        status = DLB_ADM_STATUS_OK;
+                        break;
+                    }
+                    ++range.first;
+                }
+            } 
+            else
+            {
+                d = *range.first;
+
+                if (++range.first == range.second)
+                {
+                    status = DLB_ADM_STATUS_OK;
+                }
+                else
+                {
+                    status = DLB_ADM_STATUS_NOT_UNIQUE;
+                }
+            }
         }
 
         return status;

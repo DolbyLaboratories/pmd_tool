@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +35,7 @@
  **********************************************************************/
 
 #include "XMLGenerator.h"
+#include "XMLConstants.h"
 #include "dlb_adm/src/adm_xml/dlb_adm_xml_container.h"
 #include "dlb_adm/src/core_model/dlb_adm_core_model.h"
 
@@ -46,12 +48,16 @@
 #include "dlb_adm/src/core_model/TargetGroup.h"
 #include "dlb_adm/src/core_model/AudioTrack.h"
 #include "dlb_adm/src/core_model/AudioElement.h"
+#include "dlb_adm/src/core_model/AlternativeValueSet.h"
+#include "dlb_adm/src/core_model/ComplementaryElement.h"
 #include "dlb_adm/src/core_model/ElementGroup.h"
 #include "dlb_adm/src/core_model/ContentGroup.h"
 #include "dlb_adm/src/core_model/Presentation.h"
 #include "dlb_adm/src/core_model/SourceRecord.h"
 #include "dlb_adm/src/core_model/ElementRecord.h"
 #include "dlb_adm/src/core_model/PresentationRecord.h"
+
+#include "dlb_adm/src/adm_identity/AdmIdTranslator.h"
 
 #define GENERATE_GAIN_FOR_BLOCK_UPDATE_DIRECT_SPEAKERS (0)
 
@@ -137,9 +143,9 @@ namespace DlbAdm
 
         status = mContainer.AddEntity(xmlID);
         CHECK_STATUS(status);
-        status = mContainer.SetValue(xmlID, DLB_ADM_TAG_XML_VERSION, AttributeValue(std::string("1.0")));
+        status = mContainer.SetValue(xmlID, DLB_ADM_TAG_XML_VERSION, AttributeValue(XML_VERSION));
         CHECK_STATUS(status);
-        status = mContainer.SetValue(xmlID, DLB_ADM_TAG_XML_ENCODING, AttributeValue(std::string("UTF-8")));
+        status = mContainer.SetValue(xmlID, DLB_ADM_TAG_XML_ENCODING, AttributeValue(XML_ENCODING));
         CHECK_STATUS(status);
 
         status = mContainer.AddRelationship(topLevelID, xmlID);
@@ -236,6 +242,162 @@ namespace DlbAdm
         return status;
     }
 
+    static int Generate1PositionOffset(XMLContainer &container, dlb_adm_entity_id audioElementID, const char *label, dlb_adm_float value)
+    {
+        /* TODO: finish implementation for positions Y, Z / elevation, distance (if needed). Maybe expand function GeneratePosition? */
+	dlb_adm_entity_id positionID = container.GetGenericID(DLB_ADM_ENTITY_TYPE_POSITION_OFFSET);
+        int status;
+
+        status = container.AddEntity(positionID);
+        CHECK_STATUS(status);
+        status = container.AddRelationship(audioElementID, positionID);
+        CHECK_STATUS(status);
+        status = container.SetValue(positionID, DLB_ADM_TAG_POSITION_OFFSET_VALUE, AttributeValue(value));
+        CHECK_STATUS(status);
+        status = container.SetValue(positionID, DLB_ADM_TAG_POSITION_OFFSET_COORDINATE, AttributeValue(std::string(label)));
+#ifndef NDEBUG
+        CHECK_STATUS(status);
+#endif
+        return status;
+    }
+
+    static int GenerateGainRange(XMLContainer &container, dlb_adm_entity_id aoiID, const Gain &gain, std::string bound)
+    {
+        int status;
+        dlb_adm_entity_id gainRangeID = container.GetGenericID(DLB_ADM_ENTITY_TYPE_GAIN_INTERACTION_RANGE);
+
+        status = container.AddEntity(gainRangeID);
+        CHECK_STATUS(status);
+        status = container.AddRelationship(aoiID, gainRangeID);
+        CHECK_STATUS(status);
+        status = container.SetValue(gainRangeID, DLB_ADM_TAG_GAIN_INTERACTION_RANGE_BOUND, AttributeValue(bound));
+        CHECK_STATUS(status);
+        status = container.SetValue(gainRangeID, DLB_ADM_TAG_GAIN_INTERACTION_RANGE_UNIT, AttributeValue(TranslateGainUnit(gain.GetGainUnit())));
+        CHECK_STATUS(status);
+        status = container.SetValue(gainRangeID, DLB_ADM_TAG_GAIN_INTERACTION_RANGE_VALUE, AttributeValue(gain.GetGainValue()));
+        CHECK_STATUS(status);
+        return status;
+    }
+
+    static int GeneratePositionRange(XMLContainer &container, dlb_adm_entity_id aoiID, Position::COORDINATE coordinate, float value, std::string bound)
+    {
+        int status;
+        dlb_adm_entity_id positionRangeID = container.GetGenericID(DLB_ADM_ENTITY_TYPE_POSITION_INTERACTION_RANGE);
+        std::string coordinateName;
+
+        status = Position::PositionCoordinateToName(coordinate, coordinateName);
+        CHECK_STATUS(status);
+        status = container.AddEntity(positionRangeID);
+        CHECK_STATUS(status);
+        status = container.AddRelationship(aoiID, positionRangeID);
+        CHECK_STATUS(status);
+        status = container.SetValue(positionRangeID, DLB_ADM_TAG_POSITION_INTERACTION_RANGE_BOUND, AttributeValue(bound));
+        CHECK_STATUS(status);
+        status = container.SetValue(positionRangeID, DLB_ADM_TAG_POSITION_INTERACTION_RANGE_COORDINATE, AttributeValue(coordinateName));
+        CHECK_STATUS(status);
+        status = container.SetValue(positionRangeID, DLB_ADM_TAG_POSITION_INTERACTION_RANGE_VALUE, AttributeValue(value));
+        CHECK_STATUS(status);
+        return status;
+    }
+
+    int XMLGenerator::GeneratePositionOffset(dlb_adm_entity_id entityID, const Position &position)
+    {
+        const char *label = position.IsCartesian() ? "X" : "azimuth";
+
+        return Generate1PositionOffset(mContainer, entityID, label, position.GetCoordinate1());
+    }
+
+    int XMLGenerator::GenerateAudioObjectInteraction(dlb_adm_entity_id audioElementID, const AudioObjectInteraction &aoi)
+    {
+        int status;
+        dlb_adm_entity_id aoiID = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_OBJECT_INTERACTION);
+        dlb_adm_bool gainInteract = aoi.GetGainInteract();
+        dlb_adm_bool positionInteract = aoi.GetPositionInteract();
+        dlb_adm_bool positionRangesPresent = !aoi.GetMinPositionRange().empty();
+
+        status = mContainer.AddEntity(aoiID);
+        CHECK_STATUS(status);
+        status = mContainer.AddRelationship(audioElementID, aoiID);
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(aoiID, DLB_ADM_TAG_OBJECT_INTERACTION_ON_OFF, AttributeValue(aoi.GetOnOfInteract()));
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(aoiID, DLB_ADM_TAG_OBJECT_INTERACTION_GAIN, AttributeValue(gainInteract));
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(aoiID, DLB_ADM_TAG_OBJECT_INTERACTION_POSITION, AttributeValue(positionInteract));
+        CHECK_STATUS(status);
+
+        if (gainInteract)
+        {
+            status = GenerateGainRange(mContainer, aoiID, aoi.GetMinGainRange(), std::string("min"));
+            CHECK_STATUS(status);
+            status = GenerateGainRange(mContainer, aoiID, aoi.GetMaxGainRange(), std::string("max"));
+            CHECK_STATUS(status);
+        }
+
+        if (positionRangesPresent)
+        {
+            for (auto range : aoi.GetMinPositionRange())
+            {
+                status = GeneratePositionRange(mContainer, aoiID, range.first, range.second, std::string("min"));
+                CHECK_STATUS(status);
+            }
+
+            for (auto range : aoi.GetMaxPositionRange())
+            {
+                status = GeneratePositionRange(mContainer, aoiID, range.first, range.second, std::string("max"));
+                CHECK_STATUS(status);
+            }
+        }
+        return DLB_ADM_STATUS_OK;
+    }
+
+    int XMLGenerator::GenerateLoudnessMetadata(dlb_adm_entity_id parentID, const LoudnessMetadata &loudness)
+    {
+        int status = DLB_ADM_STATUS_OK;
+
+        if(loudness.IsInitialized())
+        {
+            dlb_adm_entity_id loundessMetadataID = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_LOUDNESS_METADATA);
+            DLB_ADM_ENTITY_TYPE loudnessType;
+            DLB_ADM_TAG loudnessValueTag;
+
+            switch (loudness.GetLoudnessType())
+            {
+            case DLB_ADM_LOUDNESS_TYPE_INTEGRATED:
+                loudnessType = DLB_ADM_ENTITY_TYPE_INTEGRATED_LOUDNESS;
+                loudnessValueTag = DLB_ADM_TAG_INTEGRATED_LOUDNESS_VALUE;
+                break;
+            case DLB_ADM_LOUDNESS_TYPE_DIALOGUE:
+                loudnessType = DLB_ADM_ENTITY_TYPE_DIALOGUE_LOUDNESS;
+                loudnessValueTag = DLB_ADM_TAG_DIALOGUE_LOUDNESS_VALUE;
+                break;
+            default:
+                status = DLB_ADM_STATUS_ERROR; // unknown Loudness Type
+#ifndef NDEBUG
+                CHECK_STATUS(status);
+#endif
+                break;
+            }
+
+            dlb_adm_entity_id loundessMetadataTypeID = mContainer.GetGenericID(loudnessType);
+
+            status = mContainer.AddEntity(loundessMetadataID);
+            CHECK_STATUS(status);
+            status = mContainer.AddRelationship(parentID, loundessMetadataID);
+            CHECK_STATUS(status);
+            status = mContainer.SetValue(loundessMetadataID, DLB_ADM_TAG_LOUDNESS_METHOD, "ITU-R BS.1770");
+            CHECK_STATUS(status);
+
+            status = mContainer.AddEntity(loundessMetadataTypeID);
+            CHECK_STATUS(status);
+            status = mContainer.AddRelationship(loundessMetadataID, loundessMetadataTypeID);
+            CHECK_STATUS(status);
+            status = mContainer.SetValue(loundessMetadataTypeID, loudnessValueTag, AttributeValue(loudness.GetLoudnessValue()));
+            CHECK_STATUS(status);
+        }
+        return status;
+    }
+
     int XMLGenerator::GenerateSpeakerLabel(dlb_adm_entity_id blockFormatID, dlb_adm_entity_id channelFormatID)
     {
         const Target *target;
@@ -281,13 +443,13 @@ namespace DlbAdm
                 dialogueValue = 2;
                 attributeValue = static_cast<dlb_adm_uint>(contentKind) - static_cast<dlb_adm_uint>(DLB_ADM_CONTENT_KIND_MK);
                 attributeTag = DLB_ADM_TAG_DIALOGUE_MIXED_KIND;
-            } 
+            }
             else if (contentKind >= DLB_ADM_CONTENT_KIND_DK)
             {
                 dialogueValue = 1;
                 attributeValue = static_cast<dlb_adm_uint>(contentKind) - static_cast<dlb_adm_uint>(DLB_ADM_CONTENT_KIND_DK);
                 attributeTag = DLB_ADM_TAG_DIALOGUE_DIALOGUE_KIND;
-            } 
+            }
             else
             {
                 dialogueValue = 0;
@@ -366,7 +528,11 @@ namespace DlbAdm
         CHECK_STATUS(status);
         status = mContainer.AddRelationship(audioFormatExtendedID, objectID);
         CHECK_STATUS(status);
+        status = mContainer.SetValue(objectID, DLB_ADM_TAG_OBJECT_INTERACT, AttributeValue(OBJECT_INTERACT));
+        CHECK_STATUS(status);
         status = GenerateGain(objectID, gain);
+        CHECK_STATUS(status);
+        status = GenerateLabels(e, DLB_ADM_ENTITY_TYPE_OBJECT_LABEL, DLB_ADM_TAG_OBJECT_LABEL_VALUE, DLB_ADM_TAG_OBJECT_LABEL_LANGUAGE);
         CHECK_STATUS(status);
         if (object->GetName(name, 0))
         {
@@ -376,6 +542,181 @@ namespace DlbAdm
 #endif
         }
 
+        return status;
+    }
+
+    template<>
+    int DlbAdm::XMLGenerator::GenerateObject<AudioElement>(dlb_adm_entity_id audioFormatExtendedID, const ModelEntity *e)
+    {
+        const AudioElement *object = dynamic_cast<const AudioElement *>(e);
+
+        if (object == nullptr)
+        {
+            return static_cast<int>(DLB_ADM_STATUS_ERROR);
+        }
+
+        dlb_adm_entity_id objectID = object->GetEntityID();
+        Gain gain = object->GetGain();
+        EntityName name;
+        int status = DLB_ADM_STATUS_OK;
+
+        status = mContainer.AddEntity(objectID);
+        CHECK_STATUS(status);
+        status = mContainer.AddRelationship(audioFormatExtendedID, objectID);
+        CHECK_STATUS(status);
+        if (mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE))
+        {
+            status = mContainer.SetValue(objectID, DLB_ADM_TAG_OBJECT_INTERACT, object->IsInteractive());
+            CHECK_STATUS(status);
+            if (object->IsInteractive())
+            {
+                status = GenerateAudioObjectInteraction(objectID, object->GetInteractionBoundreies());
+                CHECK_STATUS(status);
+            }
+        }
+        status = GenerateGain(objectID, gain);
+        CHECK_STATUS(status);
+        status = GenerateLabels(e, DLB_ADM_ENTITY_TYPE_OBJECT_LABEL, DLB_ADM_TAG_OBJECT_LABEL_VALUE, DLB_ADM_TAG_OBJECT_LABEL_LANGUAGE);
+        CHECK_STATUS(status);
+        if (object->GetName(name, 0))
+        {
+            status = mContainer.SetValue(objectID, DLB_ADM_TAG_OBJECT_NAME, AttributeValue(name.GetName()));
+#ifndef NDEBUG
+            CHECK_STATUS(status);
+#endif
+        }
+
+        return status;
+    }
+
+    int XMLGenerator::GenerateAltValSets()
+    {
+        int status;
+
+        CoreModel::EntityCallbackFn altValSetCallback = [&](const ModelEntity *e)
+        {
+            const AlternativeValueSet *avs = dynamic_cast<const AlternativeValueSet *>(e);
+
+            if (avs == nullptr)
+            {
+                return static_cast<int>(DLB_ADM_STATUS_ERROR);
+            }
+
+            dlb_adm_entity_id avsId = avs->GetEntityID();
+            dlb_adm_entity_id objectId = avs->GetParentId();
+
+            status = mContainer.AddEntity(avsId);
+            CHECK_STATUS(status);
+            status = mContainer.AddRelationship(objectId, avsId);
+            CHECK_STATUS(status);
+
+            if(avs->HasPositionOffset())
+            {
+                Position positionOffset;
+                status = avs->GetPositionOffset(positionOffset);
+                CHECK_STATUS(status);
+                status = GeneratePositionOffset(avsId, positionOffset);
+                CHECK_STATUS(status);
+            }
+
+            if(avs->HasGain())
+            {
+                Gain gain;
+                status = avs->GetGain(gain);
+                CHECK_STATUS(status);
+                status = GenerateGain(avsId, gain);
+                CHECK_STATUS(status);
+            }
+
+            status = GenerateLabels(e, DLB_ADM_ENTITY_TYPE_OBJECT_LABEL, DLB_ADM_TAG_OBJECT_LABEL_VALUE, DLB_ADM_TAG_OBJECT_LABEL_LANGUAGE);
+
+#ifndef NDEBUG
+            CHECK_STATUS(status);
+#endif
+            return status;
+        };
+        status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET, altValSetCallback);
+#ifndef NDEBUG
+        CHECK_STATUS(status);
+#endif
+        return status;
+    }
+
+    static
+    int GenerateComplementaryGroupLabels(XMLContainer& container, const ComplementaryElement *e, dlb_adm_entity_id leader_id)
+    {
+        int status = DLB_ADM_STATUS_OK;
+
+        for (size_t i = 0; i < e->GetLabelCount(); ++i)
+        {
+            dlb_adm_entity_id labelID = container.GetGenericID(DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_GROUP_LABEL);
+            EntityName entityName;
+            std::string name;
+            std::string lang;
+
+            status = container.AddEntity(labelID);
+            CHECK_STATUS(status);
+            status = container.AddRelationship(leader_id, labelID);
+            CHECK_STATUS(status);
+
+            if (!e->GetName(entityName, i))
+            {
+                status = DLB_ADM_STATUS_ERROR;
+            }
+            CHECK_STATUS(status);
+            name = entityName.GetName();
+            lang = entityName.GetLanguage();
+            status = container.SetValue(labelID, DLB_ADM_TAG_COMPLEMENTARY_OBJECT_GROUP_LABEL_VALUE, AttributeValue(name));
+            CHECK_STATUS(status);
+            if (!lang.empty())
+            {
+                status = container.SetValue(labelID, DLB_ADM_TAG_COMPLEMENTARY_OBJECT_GROUP_LABEL_LANGUAGE, AttributeValue(lang));
+                CHECK_STATUS(status);
+            }
+        }
+
+        return status;
+    }
+
+    int XMLGenerator::GenerateComplementaryObjects()
+    {
+        int status;
+
+        CoreModel::EntityCallbackFn ComplementaryObjectCallback = [&](const ModelEntity *e)
+        {
+            const ComplementaryElement *comp = dynamic_cast<const ComplementaryElement *>(e);
+
+            if (comp == nullptr)
+            {
+                return static_cast<int>(DLB_ADM_STATUS_ERROR);
+            }
+
+            dlb_adm_entity_id compId = comp->GetEntityID();
+            dlb_adm_entity_id objectId = comp->GetComplementaryObjectId();
+
+            if (comp->IsComplementaryLeader())
+            {
+                /*Complementary Leader object (objectId == LeaderId) contains label for audioComplementary ObjectGroupLabel*/
+                status = GenerateComplementaryGroupLabels(mContainer
+                        ,comp
+                        ,comp->GetComplementaryLeaderId());
+                CHECK_STATUS(status);
+            }
+            else
+            {
+                status = mContainer.AddEntity(compId);
+                CHECK_STATUS(status);
+
+                status = mContainer.SetValue(compId, DLB_ADM_TAG_COMPLEMENTARY_OBJECT_ID_REF, AttributeValue(objectId));
+                CHECK_STATUS(status);
+            }
+
+            return status;
+        };
+        status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF, ComplementaryObjectCallback);
+#ifndef NDEBUG
+        CHECK_STATUS(status);
+#endif
         return status;
     }
 
@@ -404,6 +745,8 @@ namespace DlbAdm
         CoreModel::EntityCallbackFn blockFormatCallback = [&](const ModelEntity *e)
         {
             const BlockUpdate *update = dynamic_cast<const BlockUpdate *>(e);
+            DLB_ADM_TAG startTag;
+            DLB_ADM_TAG durationTag;
 
             if (update == nullptr)
             {
@@ -424,14 +767,24 @@ namespace DlbAdm
             CHECK_STATUS(status);
             status = mContainer.AddRelationship(channelFormatID, blockFormatID);
             CHECK_STATUS(status);
+            if (mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE))
+            {
+                startTag = DLB_ADM_TAG_BLOCK_FORMAT_RTIME;
+                durationTag = DLB_ADM_TAG_BLOCK_FORMAT_DURATION;
+            }
+            else
+            {
+                startTag = DLB_ADM_TAG_BLOCK_FORMAT_LSTART;
+                durationTag = DLB_ADM_TAG_BLOCK_FORMAT_DURATION;
+            }
             if (hasStart)
             {
-                status = mContainer.SetValue(blockFormatID, DLB_ADM_TAG_BLOCK_FORMAT_RTIME, AttributeValue(start));
+                status = mContainer.SetValue(blockFormatID, startTag, AttributeValue(start));
                 CHECK_STATUS(status);
             }
             if (hasDuration)
             {
-                status = mContainer.SetValue(blockFormatID, DLB_ADM_TAG_BLOCK_FORMAT_DURATION, AttributeValue(duration));
+                status = mContainer.SetValue(blockFormatID, durationTag, AttributeValue(duration));
                 CHECK_STATUS(status);
             }
             if (UpdateHasGain(update))
@@ -442,9 +795,15 @@ namespace DlbAdm
             status = GeneratePosition(blockFormatID, position);
             CHECK_STATUS(status);
             status = GenerateSpeakerLabel(blockFormatID, channelFormatID);
-#ifndef NDEBUG
             CHECK_STATUS(status);
+            if(update->IsCommon())
+            {
+                status = mContainer.SetIsCommon(blockFormatID);
+#ifndef NDEBUG
+                CHECK_STATUS(status);
 #endif
+            }
+
             return status;
         };
         status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_BLOCK_FORMAT, blockFormatCallback);
@@ -482,9 +841,12 @@ namespace DlbAdm
             if (target->GetName(name, 0))
             {
                 status = mContainer.SetValue(channelFormatID, DLB_ADM_TAG_CHANNEL_FORMAT_NAME, AttributeValue(name.GetName()));
-#ifndef NDEBUG
                 CHECK_STATUS(status);
-#endif
+            }
+            if (target->IsCommon())
+            {
+                status = mContainer.SetIsCommon(channelFormatID);
+                CHECK_STATUS(status);
             }
 
             return status;
@@ -514,7 +876,7 @@ namespace DlbAdm
 
             dlb_adm_entity_id packFormatID = targetGroup->GetEntityID();
             EntityName name;
-            DLB_ADM_AUDIO_TYPE audioType = (targetGroup->IsBed() ? DLB_ADM_AUDIO_TYPE_DIRECT_SPEAKERS : DLB_ADM_AUDIO_TYPE_OBJECTS);
+            DLB_ADM_AUDIO_TYPE audioType = (targetGroup->IsBed() ? DLB_ADM_AUDIO_TYPE_DIRECT_SPEAKERS : targetGroup->GetAudioType());
             int status = DLB_ADM_STATUS_OK;
 
             status = mContainer.AddEntity(packFormatID);
@@ -528,9 +890,12 @@ namespace DlbAdm
             if (targetGroup->GetName(name, 0))
             {
                 status = mContainer.SetValue(packFormatID, DLB_ADM_TAG_PACK_FORMAT_NAME, AttributeValue(name.GetName()));
-#ifndef NDEBUG
                 CHECK_STATUS(status);
-#endif
+            }
+            if (targetGroup->IsCommon())
+            {
+                status = mContainer.SetIsCommon(packFormatID);
+                CHECK_STATUS(status);
             }
 
             return status;
@@ -602,7 +967,44 @@ namespace DlbAdm
         // AudioElement
         CoreModel::EntityCallbackFn audioElementCallback = [&](const ModelEntity *e)
         {
-            return GenerateObject<AudioElement>(audioFormatExtendedID, e);
+            int status = GenerateObject<AudioElement>(audioFormatExtendedID, e);
+            CHECK_STATUS(status);
+
+            const AudioElement *element = dynamic_cast<const AudioElement *>(e);
+
+            if (element == nullptr)
+            {
+                return static_cast<int>(DLB_ADM_STATUS_ERROR);
+            }
+
+            /* TODO: Move this part inside GenerateObject... */
+            dlb_adm_bool positionRangesPresent = !element->GetInteractionBoundreies().GetMinPositionRange().empty();
+            dlb_adm_bool azimuthOrXPresent = false;
+            if (positionRangesPresent)
+            {
+                for (auto pos : element->GetInteractionBoundreies().GetMinPositionRange())
+                {
+                    if (  pos.first == Position::COORDINATE::AZIMUTH
+                       || pos.first == Position::COORDINATE::X)
+                    {
+                        azimuthOrXPresent = true;
+                    }
+                }
+            }
+
+            if (mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE)
+               && element->IsInteractive()
+               && !element->GetInteractionBoundreies().GetPositionInteract()
+               && azimuthOrXPresent)
+            {
+                status = GeneratePositionOffset(element->GetEntityID(),element->GetPositionOffset());
+            }
+            /* ...TODO: Move this part inside GenerateObject */
+#ifndef NDEBUG
+            CHECK_STATUS(status);
+#endif
+            return status;
+
         };
         status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_OBJECT, audioElementCallback, IsAudioElement);
         CHECK_STATUS(status);
@@ -614,6 +1016,16 @@ namespace DlbAdm
         };
         status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_OBJECT, elementGroupCallback, IsElementGroup);
         CHECK_STATUS(status);
+
+        status = GenerateAltValSets();
+#ifndef NDEBUG
+        CHECK_STATUS(status);
+#endif
+
+        status = GenerateComplementaryObjects();
+#ifndef NDEBUG
+        CHECK_STATUS(status);
+#endif
 
         return status;
     }
@@ -639,6 +1051,10 @@ namespace DlbAdm
             CHECK_STATUS(status);
             status = mContainer.AddRelationship(audioFormatExtendedID, contentGroupID);
             CHECK_STATUS(status);
+
+            status = GenerateLoudnessMetadata(contentGroupID, contentGroup->GetLoudnessMetadata());
+            CHECK_STATUS(status);
+
             if (e->HasName())
             {
                 EntityName entityName;
@@ -695,6 +1111,10 @@ namespace DlbAdm
             CHECK_STATUS(status);
             status = mContainer.AddRelationship(audioFormatExtendedID, presentationID);
             CHECK_STATUS(status);
+
+            status = GenerateLoudnessMetadata(presentationID, presentation->GetLoudnessMetadata());
+            CHECK_STATUS(status);
+
             if (e->HasName())
             {
                 EntityName entityName;
@@ -736,7 +1156,7 @@ namespace DlbAdm
 
         status = mContainer.AddEntity(audioFormatExtendedID);
         CHECK_STATUS(status);
-        status = mContainer.SetValue(audioFormatExtendedID, DLB_ADM_TAG_AUDIO_FORMAT_EXT_VERSION, AttributeValue(std::string("ITU-R_BS.2076-2")));
+        status = mContainer.SetValue(audioFormatExtendedID, DLB_ADM_TAG_AUDIO_FORMAT_EXT_VERSION, AttributeValue(AUDIO_FORMAT_EXT_VERSION));
         CHECK_STATUS(status);
         status = mContainer.AddRelationship(frameID, audioFormatExtendedID);
         CHECK_STATUS(status);
@@ -753,7 +1173,7 @@ namespace DlbAdm
         CHECK_STATUS(status);
         status = GenerateProgrammes(audioFormatExtendedID);
         CHECK_STATUS(status);
-        
+
         status = GenerateAudioElementRelationships();
         CHECK_STATUS(status);
         status = GeneratePresentationRelationships();
@@ -783,6 +1203,15 @@ namespace DlbAdm
             status = mContainer.AddEntity(sourceID);
             CHECK_STATUS(status);
             status = mContainer.SetValue(sourceID, DLB_ADM_TAG_AUDIO_TRACK_ID, AttributeValue(channel));
+            CHECK_STATUS(status);
+            if (mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE))
+            {
+                status = mContainer.SetValue(sourceID, DLB_ADM_TAG_AUDIO_TRACK_FORMAT_LABEL, AttributeValue(AUDIO_TRACK_FORMAT_LABEL));
+                CHECK_STATUS(status);
+                status = mContainer.SetValue( sourceID
+                                            , DLB_ADM_TAG_AUDIO_TRACK_FORMAT_DEFINITION
+                                            , AttributeValue(AUDIO_TRACK_FORMAT_DEFINITION));
+            }
 #ifndef NDEBUG
             CHECK_STATUS(status);
 #endif
@@ -866,7 +1295,7 @@ namespace DlbAdm
                 if (got)
                 {
                     status = mContainer.SetValue(transportID, DLB_ADM_TAG_TRANSPORT_TRACK_FORMAT_NAME, AttributeValue(name.GetName()));
-                } 
+                }
                 else
                 {
                     status = DLB_ADM_STATUS_ERROR;
@@ -895,6 +1324,8 @@ namespace DlbAdm
         status = mContainer.AddRelationship(frameID, frameHeaderID);
         CHECK_STATUS(status);
 
+        status = GenerateProfileList(frameHeaderID);
+        CHECK_STATUS(status);
         status = GenerateTransportTrackFormat(frameHeaderID);
         CHECK_STATUS(status);
         status = GenerateSourceRelationships();
@@ -903,6 +1334,67 @@ namespace DlbAdm
 #ifndef NDEBUG
         CHECK_STATUS(status);
 #endif
+        return status;
+    }
+
+    static int GetProfileDescriptorIndex(const DLB_ADM_PROFILE type, size_t & index)
+    {
+        int status = DLB_ADM_STATUS_OK;
+
+        for(index = 0; index < SUPPORTED_PROFILES.size(); index++)
+        {
+            if(SUPPORTED_PROFILES[index].type == type)
+            {
+                break;
+            }
+        }
+
+        if(index == SUPPORTED_PROFILES.size())
+        {
+            status = DLB_ADM_STATUS_ERROR; // not implemented profile type
+        }
+
+        return status;
+    }
+
+    int XMLGenerator::GenerateProfileList(dlb_adm_entity_id frameHeaderID)
+    {
+        int status = DLB_ADM_STATUS_OK;
+        const std::set<DLB_ADM_PROFILE> profiles = mModel.GetProfiles();
+
+        if(profiles.size() == 0)
+        {
+            return status;
+        }
+
+        const dlb_adm_entity_id profileListID = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_PROFILE_LIST);
+        status = mContainer.AddEntity(profileListID);
+        CHECK_STATUS(status);
+        status = mContainer.AddRelationship(frameHeaderID, profileListID);
+        CHECK_STATUS(status);
+
+        for (auto & profile : profiles)
+        {
+            size_t index;
+            status = GetProfileDescriptorIndex(profile, index);
+            CHECK_STATUS(status);
+
+            const dlb_adm_entity_id profileID = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION);
+            status = mContainer.AddEntity(profileID);
+            CHECK_STATUS(status);
+            status = mContainer.AddRelationship(profileListID, profileID);
+            CHECK_STATUS(status);
+
+            status = mContainer.SetValue(profileID, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_NAME,    AttributeValue(SUPPORTED_PROFILES[index].name));
+            CHECK_STATUS(status);
+            status = mContainer.SetValue(profileID, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_VERSION, AttributeValue(SUPPORTED_PROFILES[index].version));
+            CHECK_STATUS(status);
+            status = mContainer.SetValue(profileID, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_LEVEL,   AttributeValue(SUPPORTED_PROFILES[index].level));
+            CHECK_STATUS(status);
+            status = mContainer.SetValue(profileID, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_VALUE,   AttributeValue(SUPPORTED_PROFILES[index].value));
+            CHECK_STATUS(status);
+        }
+
         return status;
     }
 
@@ -1013,6 +1505,23 @@ namespace DlbAdm
             {
                 status = mContainer.AddRelationship(r.presentationID, r.contentGroupID);
                 CHECK_STATUS(status);
+                if(r.altValueSetID != DLB_ADM_NULL_ENTITY_ID)
+                {
+                    status = mContainer.AddRelationship(r.presentationID, r.altValueSetID);
+                    CHECK_STATUS(status);
+                }
+            }
+            if (r.complementaryRefID != DLB_ADM_NULL_ENTITY_ID)
+            {
+                const ComplementaryElement *compElement;
+
+                status = mModel.GetEntity(r.complementaryRefID, &compElement);
+
+                if (status == DLB_ADM_STATUS_OK)
+                {
+                    status = mContainer.AddRelationship(compElement->GetComplementaryLeaderId(), r.complementaryRefID);
+                    CHECK_STATUS(status);
+                }
             }
             if (r.elementGroupID != DLB_ADM_NULL_ENTITY_ID)
             {
@@ -1020,7 +1529,7 @@ namespace DlbAdm
                 CHECK_STATUS(status);
                 status = mContainer.AddRelationship(r.elementGroupID, r.audioElementID);
                 CHECK_STATUS(status);
-            } 
+            }
             else
             {
                 status = mContainer.AddRelationship(r.contentGroupID, r.audioElementID);

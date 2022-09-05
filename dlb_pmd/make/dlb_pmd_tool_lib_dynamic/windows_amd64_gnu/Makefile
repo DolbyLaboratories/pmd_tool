@@ -61,16 +61,19 @@ INPUTS_ARCHIVE_debug = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_tool_lib_dynamic_wi
                        $(TMP)dlb_adm/src/adm_xml/EntityDescriptor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/adm_xml/EntityRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_adm/src/adm_xml/RelationshipDB.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_adm/src/core_model/PresentationTable.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
@@ -132,17 +135,21 @@ INPUTS_ARCHIVE_release = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_tool_lib_dynamic_
                          $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
-                         $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
-                         $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_adm/src/core_model/PresentationTable.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
@@ -222,15 +229,18 @@ CLEAN_COMPILE_debug = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_tool_lib_dynamic_win
                       $(TMP)dlb_adm/src/adm_xml/EntityDescriptor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/adm_xml/EntityRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_adm/src/adm_xml/RelationshipDB.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
@@ -293,14 +303,18 @@ CLEAN_COMPILE_release = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_tool_lib_dynamic_w
                         $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
-                        $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
-                        $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
-                        $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
-                        $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/ElementRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d $(TMP)dlb_adm/src/core_model/Presentation.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_adm/src/core_model/PresentationRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
@@ -412,13 +426,17 @@ include $(wildcard $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_tool
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
@@ -427,6 +445,7 @@ include $(wildcard $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_tool_lib_dy
 include $(wildcard $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
@@ -517,13 +536,17 @@ include $(wildcard $(TMP)dlb_adm/src/adm_xml/RelationshipDescriptor.dlb_pmd_tool
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/RelationshipRecord.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLBuffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLContainerFlattener.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLReader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLReaderStack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/XMLWriter.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/adm_xml/dlb_adm_xml_container.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/AlternativeValueSet.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/AudioElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/AudioObjectInteraction.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/AudioTrack.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/BlockUpdate.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/ComplementaryElement.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ContentGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/CoreModel.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ElementGroup.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
@@ -532,6 +555,7 @@ include $(wildcard $(TMP)dlb_adm/src/core_model/ElementTable.dlb_pmd_tool_lib_dy
 include $(wildcard $(TMP)dlb_adm/src/core_model/EntityName.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/FrameFormat.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/Gain.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_adm/src/core_model/LoudnessMetadata.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ModelEntity.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/ModelEntityContainer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_adm/src/core_model/Position.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)

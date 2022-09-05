@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +38,7 @@
 #include "dlb_adm/src/adm_xml/dlb_adm_xml_container.h"
 #include "dlb_adm/src/adm_xml/AttributeValue.h"
 #include "dlb_adm/src/adm_xml/AttributeDescriptor.h"
+#include "dlb_adm/src/adm_xml/XMLContainerFlattener.h"
 #include "dlb_adm/src/adm_identity/AdmIdTranslator.h"
 #include "dlb_adm/src/core_model/dlb_adm_core_model.h"
 
@@ -44,6 +46,8 @@
 #include "dlb_adm/src/core_model/ContentGroup.h"
 #include "dlb_adm/src/core_model/ElementGroup.h"
 #include "dlb_adm/src/core_model/AudioElement.h"
+#include "dlb_adm/src/core_model/AlternativeValueSet.h"
+#include "dlb_adm/src/core_model/ComplementaryElement.h"
 #include "dlb_adm/src/core_model/AudioTrack.h"
 #include "dlb_adm/src/core_model/TargetGroup.h"
 #include "dlb_adm/src/core_model/Target.h"
@@ -759,6 +763,30 @@ dlb_adm_container_read_xml_file
     return unwind_protect([&] { return container->GetContainer().ReadXmlFile(file_path, use_common_defs); });
 }
 
+/* XML Model Flattener */
+
+int
+dlb_adm_container_flatten
+    (dlb_adm_xml_container      *container
+    ,dlb_adm_xml_container      *flattended_container
+    )
+{
+    if  (  container == nullptr
+        || flattended_container == nullptr
+        )
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    ActionFn f = [&]
+    {
+        XMLContainerFlattener flattener(*container, *flattended_container);
+        return flattener.Flatten();
+    };
+
+    return unwind_protect(f);
+}
+
 
 /* XML Writer */
 
@@ -891,10 +919,154 @@ dlb_adm_core_model_ingest_xml_container
     return status;
 }
 
+int
+dlb_adm_core_model_add_profile
+    (dlb_adm_core_model         *model
+    ,DLB_ADM_PROFILE             profile
+    )
+{
+    int status;
+
+    if (model == nullptr)
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    if (profile == DLB_ADM_PROFILE_NOT_INITIALIZED)
+    {
+        return DLB_ADM_STATUS_INVALID_ARGUMENT;
+    }
+
+    ActionFn f = [&]
+    {
+        model->GetCoreModel().AddProfile(profile);
+        return DLB_ADM_STATUS_OK;
+    };
+
+    status = unwind_protect(f);
+
+    return status;
+}
+
+int
+dlb_adm_core_model_has_profile
+    (const dlb_adm_core_model   *model
+    ,const DLB_ADM_PROFILE       profile
+    ,dlb_adm_bool               *has_profile
+    )
+{
+    int status;
+
+    if ((model == nullptr) || (has_profile == nullptr))
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    ActionFn f = [&]
+    {
+        *has_profile = model->GetCoreModel().HasProfile(profile) ? DLB_ADM_TRUE : DLB_ADM_FALSE;
+        return DLB_ADM_STATUS_OK;
+    };
+
+    status = unwind_protect(f);
+
+    return status;
+}
+
 static void Translate(const Gain &g, dlb_adm_data_gain &gain)
 {
     gain.gain_value = g.GetGainValue();
     gain.gain_unit = static_cast<DLB_ADM_GAIN_UNIT>(g.GetGainUnit());
+}
+
+static void Translate(const Position &p, dlb_adm_data_position_offset &offset)
+{
+    offset.offset_value = p.GetCoordinate1();
+    offset.cartesian = p.IsCartesian();
+}
+
+static void Translate(const Position::COORDINATE &c, DLB_ADM_COORDINATE &coordinate)
+{
+    switch(c)
+    {
+        case Position::COORDINATE::AZIMUTH:
+            coordinate = DLB_ADM_COORDINATE_AZIMUTH;
+            break;
+        case Position::COORDINATE::DISTANCE:
+            coordinate = DLB_ADM_COORDINATE_DISTANCE;
+            break;
+        case Position::COORDINATE::ELEVATION:
+            coordinate = DLB_ADM_COORDINATE_ELEVATION;
+            break;
+        case Position::COORDINATE::X:
+            coordinate = DLB_ADM_COORDINATE_X;
+            break;
+        case Position::COORDINATE::Y:
+            coordinate = DLB_ADM_COORDINATE_Y;
+            break;
+        case Position::COORDINATE::Z:
+            coordinate = DLB_ADM_COORDINATE_Z;
+            break;
+        default:
+            coordinate = DLB_ADM_COORDINATE_LAST;
+            break;
+    }
+}
+
+static bool IsCartesian(const Position::COORDINATE &c)
+{
+    bool isCartesian;
+    switch (c)
+    {
+    case Position::COORDINATE::X:
+    case Position::COORDINATE::Y:
+    case Position::COORDINATE::Z:
+        isCartesian = true;
+        break;
+
+    case Position::COORDINATE::AZIMUTH:
+    case Position::COORDINATE::DISTANCE:
+    case Position::COORDINATE::ELEVATION:
+    default:
+        isCartesian = false;
+        break;
+    }
+
+    return isCartesian;
+}
+
+static void Translate(const AudioObjectInteraction &aoi, dlb_adm_data_audio_object_interaction &audio_object_interaction)
+{
+    audio_object_interaction.onOffInteract = aoi.GetOnOfInteract();
+    audio_object_interaction.gainInteract = aoi.GetGainInteract();
+    audio_object_interaction.positionInteract = aoi.GetPositionInteract();
+    if (audio_object_interaction.gainInteract)
+    {
+        Translate(aoi.GetMinGainRange(), audio_object_interaction.minGain);
+        Translate(aoi.GetMaxGainRange(), audio_object_interaction.maxGain);
+    }
+
+    bool positionRangePresent = (aoi.GetMinPositionRange().size() > 0)
+        && (aoi.GetMinPositionRange().size() == aoi.GetMaxPositionRange().size());
+
+    if (positionRangePresent)
+    {
+        auto minRange = aoi.GetMinPositionRange();
+        auto maxRange = aoi.GetMaxPositionRange();
+        auto max = maxRange.begin();
+        dlb_adm_data_position_interaction_range *range = audio_object_interaction.positionRanges;
+        for (auto min = minRange.begin(); min != minRange.end(); ++min, ++max)
+        {
+            if (min->first == max->first)
+            {
+                range->cartesian = IsCartesian(min->first);
+                Translate(min->first, range->coordinate);
+                range->minValue = min->second;
+                range->maxValue = max->second;
+                ++range;
+            }
+        }
+    }
 }
 
 static int Translate(const ModelEntity *e, dlb_adm_data_audio_element &audioElement)
@@ -908,6 +1080,10 @@ static int Translate(const ModelEntity *e, dlb_adm_data_audio_element &audioElem
 
     audioElement.id = ae->GetEntityID();
     Translate(ae->GetGain(), audioElement.gain);
+    Translate(ae->GetPositionOffset(), audioElement.position_offset);
+    audioElement.object_class = ae->GetObjectClass();
+    audioElement.interact = ae->IsInteractive();
+    Translate(ae->GetInteractionBoundreies(), audioElement.audio_object_interaction);
 
     return DLB_ADM_STATUS_OK;
 }
@@ -923,7 +1099,7 @@ static int Translate(const ModelEntity *e, dlb_adm_data_target_group &targetGrou
 
     targetGroup.id = tg->GetEntityID();
     targetGroup.speaker_config = tg->GetSpeakerConfig();
-    targetGroup.object_class = tg->GetObjectClass();
+    targetGroup.audio_type = tg->GetAudioType();
     targetGroup.is_dynamic = tg->IsDynamic();
 
     return DLB_ADM_STATUS_OK;
@@ -979,7 +1155,7 @@ static int Translate(const ModelEntity *e, dlb_adm_data_source_group &sourceGrou
         if (sg->GetName(name, 0))
         {
             ::strncpy(sourceGroup.name, name.GetName().data(), sizeof(sourceGroup.name));
-        } 
+        }
         else
         {
             return DLB_ADM_STATUS_ERROR;
@@ -1033,6 +1209,58 @@ static int Translate(const ModelEntity *e, dlb_adm_data_block_update &update)
     return DLB_ADM_STATUS_OK;
 }
 
+static int Translate(const LoudnessMetadata &l, dlb_adm_data_loudness &loudness)
+{
+    loudness.loudness_type = l.GetLoudnessType();
+    loudness.loudness_value = l.GetLoudnessValue();
+
+    return DLB_ADM_STATUS_OK;
+}
+
+static int Translate(const ModelEntity *e, dlb_adm_data_alt_value_set &avsStruct)
+{
+    const AlternativeValueSet *avsEntity = dynamic_cast<const AlternativeValueSet *>(e);
+
+    if (avsEntity == nullptr)
+    {
+        return DLB_ADM_STATUS_ERROR;
+    }
+
+    int status;
+
+    avsStruct.id = avsEntity->GetEntityID();
+    if(avsEntity->HasGain())
+    {
+        Gain gain;
+        status = avsEntity->GetGain(gain);
+        CheckStatus(status);
+        Translate(gain, avsStruct.gain);
+        avsStruct.has_gain = DLB_ADM_TRUE;
+    }
+    else
+    {
+        avsStruct.has_gain = DLB_ADM_FALSE;
+    }
+
+    if(avsEntity->HasPositionOffset())
+    {
+        Position posOffset;
+        status = avsEntity->GetPositionOffset(posOffset);
+        CheckStatus(status);
+        avsStruct.cartesian = posOffset.IsCartesian();
+        avsStruct.position[DLB_ADM_COORDINATE_X] = posOffset.GetCoordinate1();
+        avsStruct.position[DLB_ADM_COORDINATE_Y] = posOffset.GetCoordinate2();
+        avsStruct.position[DLB_ADM_COORDINATE_Z] = posOffset.GetCoordinate3();
+        avsStruct.has_position_offset = DLB_ADM_TRUE;
+    }
+    else
+    {
+        avsStruct.has_position_offset = DLB_ADM_FALSE;
+    }
+
+    return DLB_ADM_STATUS_OK;
+}
+
 static int Translate(const ModelEntity *e, dlb_adm_data_content_group &contentGroup)
 {
     const ContentGroup *cg = dynamic_cast<const ContentGroup *>(e);
@@ -1044,6 +1272,7 @@ static int Translate(const ModelEntity *e, dlb_adm_data_content_group &contentGr
 
     contentGroup.id = cg->GetEntityID();
     contentGroup.content_kind = cg->GetContentKind();
+    Translate(cg->GetLoudnessMetadata(), contentGroup.loudness);
 
     return DLB_ADM_STATUS_OK;
 }
@@ -1058,6 +1287,23 @@ static int Translate(const ModelEntity *e, dlb_adm_data_presentation &presentati
     }
 
     presentation.id = p->GetEntityID();
+    Translate(p->GetLoudnessMetadata(), presentation.loudness);
+
+    return DLB_ADM_STATUS_OK;
+}
+
+static int Translate(const ModelEntity *e, dlb_adm_data_complementary_element &complementaryElement)
+{
+    const ComplementaryElement *ce = dynamic_cast<const ComplementaryElement *>(e);
+
+    if (ce == nullptr)
+    {
+        return DLB_ADM_STATUS_ERROR;
+    }
+
+    complementaryElement.id = ce->GetEntityID();
+    complementaryElement.audio_element_id = ce->GetComplementaryObjectId();
+    complementaryElement.complementary_leader_id = ce->GetComplementaryLeaderId();
 
     return DLB_ADM_STATUS_OK;
 }
@@ -1147,6 +1393,32 @@ dlb_adm_core_model_get_element_data
             return status;
         };
         status = model->GetCoreModel().ForEach(audio_element_id, elementCallback);
+        CheckStatus(status);
+
+        CoreModel::EntityFilterFn AltValFilter = [&](const ModelEntity *e)
+        {
+            return AdmIdTranslator().SubcomponentIdReferencesComponent(element_data->audio_element.id, e->GetEntityID());
+        };
+
+        CoreModel::EntityCallbackFn AltValCallback = [&](const ModelEntity *e)
+        {
+            int status = DLB_ADM_STATUS_OK;
+
+            if (element_data->alt_val_count >= element_data->alt_val_capacity)
+            {
+                return static_cast<int>(DLB_ADM_STATUS_OUT_OF_MEMORY);
+            }
+
+            dlb_adm_alt_val_count altValIndex = element_data->alt_val_count;
+
+            status = Translate(e, element_data->alt_val_sets[altValIndex]);
+            CheckStatus(status);
+
+            ++element_data->alt_val_count;
+
+            return status;
+        };
+        status = model->GetCoreModel().ForEach(DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET, AltValCallback, AltValFilter);
 
         return status;
     };
@@ -1204,8 +1476,19 @@ dlb_adm_core_model_get_presentation_data
                 status = Translate(model, presentationRecord.elementGroupID, presentation_data->element_groups[elementIndex]);
                 CheckStatus(status);
             }
+            if (presentationRecord.complementaryRefID != DLB_ADM_NULL_ENTITY_ID)
+            {
+                status = Translate(model, presentationRecord.complementaryRefID, presentation_data->comp_elements[elementIndex]);
+                CheckStatus(status);
+            }
             status = Translate(model, presentationRecord.audioElementID, presentation_data->audio_elements[elementIndex]);
             CheckStatus(status);
+
+            if (presentationRecord.altValueSetID != DLB_ADM_NULL_ENTITY_ID)
+            {
+                status = Translate(model, presentationRecord.altValueSetID, presentation_data->alt_val_sets[elementIndex]);
+                CheckStatus(status);
+            }
 
             ++presentation_data->element_count;
 
@@ -1762,11 +2045,11 @@ dlb_adm_core_model_add_target_group
         return DLB_ADM_STATUS_NULL_POINTER;
     }
 
-    if (((target_group->speaker_config == DLB_ADM_SPEAKER_CONFIG_NONE) && (target_group->object_class == DLB_ADM_OBJECT_CLASS_NONE)) ||
-        ((target_group->speaker_config != DLB_ADM_SPEAKER_CONFIG_NONE) && (target_group->object_class != DLB_ADM_OBJECT_CLASS_NONE)) ||
+    if (((target_group->speaker_config == DLB_ADM_SPEAKER_CONFIG_NONE) && (target_group->audio_type == DLB_ADM_AUDIO_TYPE_NONE)) ||
+        ((target_group->speaker_config != DLB_ADM_SPEAKER_CONFIG_NONE) && (target_group->audio_type != DLB_ADM_AUDIO_TYPE_NONE)) ||
 
         (target_group->speaker_config > DLB_ADM_SPEAKER_CONFIG_LAST) ||
-        (target_group->object_class   > DLB_ADM_OBJECT_CLASS_LAST)   ||
+        (target_group->audio_type   > DLB_ADM_AUDIO_TYPE_LAST_STD)   ||
 
         (names->name_count  != 1) ||
         (names->label_count != 0))
@@ -1792,11 +2075,11 @@ dlb_adm_core_model_add_target_group
 
         if (target_group->speaker_config == DLB_ADM_SPEAKER_CONFIG_NONE)
         {
-            TargetGroup coreModelTargetGroup(target_group->id, target_group->object_class, target_group->is_dynamic);
+            TargetGroup coreModelTargetGroup(target_group->id, target_group->audio_type, target_group->is_dynamic);
             AddName(coreModelTargetGroup, *names);
             added = coreModel.AddEntity(coreModelTargetGroup);
-        } 
-        else if (target_group->object_class == DLB_ADM_OBJECT_CLASS_NONE)
+        }
+        else if (target_group->audio_type == DLB_ADM_AUDIO_TYPE_NONE)
         {
             TargetGroup coreModelTargetGroup(target_group->id, target_group->speaker_config);
             AddName(coreModelTargetGroup, *names);
@@ -1894,7 +2177,17 @@ dlb_adm_core_model_add_audio_element
         }
 
         Gain coreModelGain(audio_element->gain);
-        AudioElement coreModelElement(audio_element->id, coreModelGain);
+        Position coreModelPositionOffset(audio_element->position_offset.offset_value, audio_element->position_offset.cartesian);
+        AudioElement coreModelElement;
+        if (audio_element->interact)
+        {
+            AudioObjectInteraction audioObjectInteraction;
+            coreModelElement = AudioElement(audio_element->id, coreModelGain, coreModelPositionOffset, audio_element->object_class, audio_element->interact, audioObjectInteraction);
+        }
+        else
+        {
+            coreModelElement = AudioElement(audio_element->id, coreModelGain, coreModelPositionOffset, audio_element->object_class);
+        }
         AddNameAndLabels(coreModelElement, *names);
         bool added = coreModel.AddEntity(coreModelElement);
         return static_cast<int>(added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR);
@@ -1942,6 +2235,144 @@ dlb_adm_core_model_add_element_group
         ElementGroup coreModelGroup(element_group->id, coreModelGain);
         AddNameAndLabels(coreModelGroup, *names);
         bool added = coreModel.AddEntity(coreModelGroup);
+        return static_cast<int>(added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR);
+    };
+
+    return unwind_protect(f);
+}
+
+int
+dlb_adm_core_model_add_alt_value_set
+    (dlb_adm_core_model         *model
+    ,dlb_adm_entity_id           parent_id
+    ,dlb_adm_data_alt_value_set *alt_val_set
+    ,dlb_adm_data_names         *labels
+    )
+{
+    int status;
+    dlb_adm_bool hasName;
+
+    if ((model == nullptr) || (alt_val_set == nullptr) || (labels == nullptr))
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    if (((parent_id == DLB_ADM_NULL_ENTITY_ID) && (alt_val_set->id == DLB_ADM_NULL_ENTITY_ID)) ||
+        ((parent_id != DLB_ADM_NULL_ENTITY_ID) && (alt_val_set->id != DLB_ADM_NULL_ENTITY_ID)))
+    {
+        return DLB_ADM_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = dlb_adm_core_model_has_name(&hasName, labels);
+    if (    status != DLB_ADM_STATUS_OK
+       ||   hasName // only audioObjectLabels are allowed in alternativeValueSet
+       ||   (alt_val_set->has_gain && !validate_gain(&alt_val_set->gain))
+       )
+    {
+        return DLB_ADM_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (parent_id != DLB_ADM_NULL_ENTITY_ID)
+    {
+        dlb_adm_bool exists;
+
+        status = dlb_adm_core_model_entity_exists(model, parent_id, &exists);
+        if (status != DLB_ADM_STATUS_OK)
+        {
+            return status;
+        }
+        if (!exists)
+        {
+            return DLB_ADM_STATUS_INVALID_ARGUMENT;
+        }
+    }
+
+    ActionFn f = [&]
+    {
+        CoreModel &coreModel = model->GetCoreModel();
+
+        if (alt_val_set->id == DLB_ADM_NULL_ENTITY_ID)
+        {
+            int status = coreModel.GetSubcomponentID(alt_val_set->id, parent_id);
+            CheckStatus(status);
+
+            if (alt_val_set->id == DLB_ADM_NULL_ENTITY_ID)
+            {
+                status = DLB_ADM_STATUS_ERROR;
+                return status;
+            }
+        }
+
+        AlternativeValueSet avs(*alt_val_set);
+
+        AddNameAndLabels(avs, *labels);
+
+        bool added = coreModel.AddEntity(avs);
+
+        return static_cast<int>(added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR);
+    };
+
+    return unwind_protect(f);
+}
+
+int
+dlb_adm_core_model_add_complementary_element
+    (dlb_adm_core_model                 *model
+    ,dlb_adm_data_complementary_element *comp_elem
+    ,uint32_t                            sequenceNumber
+    ,dlb_adm_data_names                 *labels
+)
+{
+    int status;
+
+    if ((model == nullptr) || (comp_elem == nullptr))
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    ActionFn f = [&]
+    {
+        dlb_adm_bool exists;
+
+        CoreModel &coreModel = model->GetCoreModel();
+
+        status = dlb_adm_core_model_entity_exists(model, comp_elem->audio_element_id, &exists);
+        if (status != DLB_ADM_STATUS_OK)
+        {
+            return status;
+        }
+        if (!exists)
+        {
+            return static_cast<int>(DLB_ADM_STATUS_INVALID_ARGUMENT);
+        }
+
+        status = dlb_adm_core_model_entity_exists(model, comp_elem->complementary_leader_id, &exists);
+        if (status != DLB_ADM_STATUS_OK)
+        {
+            return status;
+        }
+        if (!exists)
+        {
+            return static_cast<int>(DLB_ADM_STATUS_INVALID_ARGUMENT);
+        }
+
+        if (comp_elem->id == DLB_ADM_NULL_ENTITY_ID)
+        {
+            status = dlb_adm_construct_generic_entity_id(&comp_elem->id, DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF, sequenceNumber);
+            if (status != DLB_ADM_STATUS_OK)
+            {
+                return status;
+            }
+        }
+
+        ComplementaryElement coreModelCompElement(comp_elem->id, comp_elem->audio_element_id, comp_elem->complementary_leader_id);
+
+        if (coreModelCompElement.IsComplementaryLeader())
+        {
+            AddNameAndLabels(coreModelCompElement, *labels);
+        }
+
+        bool added = coreModel.AddEntity(coreModelCompElement);
         return static_cast<int>(added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR);
     };
 
@@ -2014,7 +2445,7 @@ dlb_adm_core_model_add_content_group
             }
         }
 
-        ContentGroup coreModelGroup(content_group->id, content_group->content_kind);
+        ContentGroup coreModelGroup(content_group->id, content_group->content_kind, content_group->loudness);
         AddNameAndLabels(coreModelGroup, *names);
         bool added = coreModel.AddEntity(coreModelGroup);
         return static_cast<int>(added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR);
@@ -2058,7 +2489,7 @@ dlb_adm_core_model_add_presentation
             }
         }
 
-        Presentation coreModelGroup(presentation->id);
+        Presentation coreModelGroup(presentation->id, presentation->loudness);
         AddNameAndLabels(coreModelGroup, *names);
         bool added = coreModel.AddEntity(coreModelGroup);
         return static_cast<int>(added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR);
@@ -2186,10 +2617,10 @@ dlb_adm_core_model_add_block_update
 
 int
 dlb_adm_core_model_add_source_relation
-    (dlb_adm_core_model     *model 
-    ,dlb_adm_entity_id       source_group_id 
-    ,dlb_adm_entity_id       source_id 
-    ,dlb_adm_entity_id       audio_track_id 
+    (dlb_adm_core_model     *model
+    ,dlb_adm_entity_id       source_group_id
+    ,dlb_adm_entity_id       source_id
+    ,dlb_adm_entity_id       audio_track_id
     )
 {
     if (model == nullptr)
@@ -2255,6 +2686,8 @@ dlb_adm_core_model_add_presentation_relation
     ,dlb_adm_entity_id       content_group_id
     ,dlb_adm_entity_id       element_group_id
     ,dlb_adm_entity_id       audio_element_id
+    ,dlb_adm_entity_id       alt_value_set_id
+    ,dlb_adm_entity_id       complementary_ref_id
     )
 {
     if (model == nullptr)
@@ -2263,7 +2696,7 @@ dlb_adm_core_model_add_presentation_relation
     }
 
     if ((content_group_id == DLB_ADM_NULL_ENTITY_ID) ||
-        (audio_element_id == DLB_ADM_NULL_ENTITY_ID))   // Null presentation_id and/or element_group_id is OK
+        (audio_element_id == DLB_ADM_NULL_ENTITY_ID))   // Null presentation_id, alt_value_set_id, complementary_ref_id and/or element_group_id is OK
     {
         return DLB_ADM_STATUS_INVALID_ARGUMENT;
     }
@@ -2271,7 +2704,7 @@ dlb_adm_core_model_add_presentation_relation
     ActionFn f = [&]
     {
         CoreModel &coreModel = model->GetCoreModel();
-        PresentationRecord r(presentation_id, content_group_id, audio_element_id, element_group_id);
+        PresentationRecord r(presentation_id, content_group_id, audio_element_id, element_group_id, alt_value_set_id, complementary_ref_id);
         bool added = coreModel.AddRecord(r);
         return static_cast<int>(added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR);
     };
@@ -2322,7 +2755,7 @@ dlb_adm_gain_in_decibels
     if (gain.gain_unit == DLB_ADM_GAIN_UNIT_DB)
     {
         gain_in_db = gain.gain_value;
-    } 
+    }
     else
     {
         ActionFn convertGain = [&]

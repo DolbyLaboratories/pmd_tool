@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -102,6 +103,12 @@ static const RelationshipDescriptor initializers[] =
         ENTITY_RELATIONSHIP::CONTAINS,
         { 1, 1 },
     },
+    {
+        DLB_ADM_ENTITY_TYPE_FRAME,
+        DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
 
     // frameHeader
     {
@@ -115,6 +122,20 @@ static const RelationshipDescriptor initializers[] =
         DLB_ADM_ENTITY_TYPE_TRANSPORT_TRACK_FORMAT,
         ENTITY_RELATIONSHIP::CONTAINS,
         { 0, 1 },   // { 1, 1 } to match the spec (PMDLIB-108)
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_FRAME_HEADER,
+        DLB_ADM_ENTITY_TYPE_PROFILE_LIST,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+
+    // profileList
+    {
+        DLB_ADM_ENTITY_TYPE_PROFILE_LIST,
+        DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, RelationshipArity::ANY },
     },
 
     // frameFormat
@@ -260,6 +281,18 @@ static const RelationshipDescriptor initializers[] =
         ENTITY_RELATIONSHIP::REFERENCES,
         { 1, RelationshipArity::ANY },
     },
+    {
+        DLB_ADM_ENTITY_TYPE_PROGRAMME,
+        DLB_ADM_ENTITY_TYPE_LOUDNESS_METADATA,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_PROGRAMME,
+        DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET,
+        ENTITY_RELATIONSHIP::REFERENCES,
+        { 0, RelationshipArity::ANY },
+    },
 
     // audioContent
     {
@@ -279,6 +312,12 @@ static const RelationshipDescriptor initializers[] =
         DLB_ADM_ENTITY_TYPE_DIALOGUE,
         ENTITY_RELATIONSHIP::CONTAINS,
         { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_CONTENT,
+        DLB_ADM_ENTITY_TYPE_LOUDNESS_METADATA,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
     },
 
     // audioObject
@@ -311,6 +350,50 @@ static const RelationshipDescriptor initializers[] =
         DLB_ADM_ENTITY_TYPE_OBJECT,
         ENTITY_RELATIONSHIP::REFERENCES,
         { 0, RelationshipArity::ANY },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_OBJECT,
+        DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_OBJECT,
+        DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_OBJECT,
+        DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_GROUP_LABEL,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_OBJECT,
+        DLB_ADM_ENTITY_TYPE_OBJECT_INTERACTION,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_OBJECT,
+        DLB_ADM_ENTITY_TYPE_POSITION_OFFSET,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+
+    // audioObjectInteraction
+    {
+        DLB_ADM_ENTITY_TYPE_OBJECT_INTERACTION,
+        DLB_ADM_ENTITY_TYPE_GAIN_INTERACTION_RANGE,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 2 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_OBJECT_INTERACTION,
+        DLB_ADM_ENTITY_TYPE_POSITION_INTERACTION_RANGE,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 2 },
     },
 
     // audioTrackUID
@@ -435,6 +518,64 @@ static const RelationshipDescriptor initializers[] =
     {
         DLB_ADM_ENTITY_TYPE_BLOCK_FORMAT,
         DLB_ADM_ENTITY_TYPE_NORMALIZATION,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+
+    // alternativeValueSet
+    {
+        DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET,
+        DLB_ADM_ENTITY_TYPE_GAIN,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET,
+        DLB_ADM_ENTITY_TYPE_POSITION_OFFSET,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET,
+        DLB_ADM_ENTITY_TYPE_OBJECT_LABEL,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
+    },
+
+    // audioFormatCustom
+    {
+        DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM,
+        DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, RelationshipArity::ANY },
+    },
+
+    // audioFormatCustomSet
+    {
+        DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET,
+        DLB_ADM_ENTITY_TYPE_ADM_INFORMATION,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+
+    // admInformation
+    {
+        DLB_ADM_ENTITY_TYPE_ADM_INFORMATION,
+        DLB_ADM_ENTITY_TYPE_PROFILE,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, RelationshipArity::ANY },
+    },
+
+    // loudnessMetadata
+    {
+        DLB_ADM_ENTITY_TYPE_LOUDNESS_METADATA,
+        DLB_ADM_ENTITY_TYPE_INTEGRATED_LOUDNESS,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_LOUDNESS_METADATA,
+        DLB_ADM_ENTITY_TYPE_DIALOGUE_LOUDNESS,
         ENTITY_RELATIONSHIP::CONTAINS,
         { 0, 1 },
     },

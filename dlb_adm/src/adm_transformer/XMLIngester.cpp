@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +35,7 @@
  **********************************************************************/
 
 #include "XMLIngester.h"
+#include "XMLConstants.h"
 #include "dlb_adm/src/dlb_adm_api_pvt.h"
 #include "dlb_adm/src/adm_xml/dlb_adm_xml_container.h"
 #include "dlb_adm/src/adm_xml/EntityRecord.h"
@@ -52,6 +54,9 @@
 #include "dlb_adm/src/core_model/ElementGroup.h"
 #include "dlb_adm/src/core_model/ContentGroup.h"
 #include "dlb_adm/src/core_model/Presentation.h"
+#include "dlb_adm/src/core_model/AlternativeValueSet.h"
+#include "dlb_adm/src/core_model/ComplementaryElement.h"
+#include "dlb_adm/src/core_model/AudioObjectInteraction.h"
 
 #include "dlb_adm/src/core_model/PresentationRecord.h"
 #include "dlb_adm/src/core_model/ElementRecord.h"
@@ -62,6 +67,7 @@
 #include "dlb_adm/src/adm_identity/AdmIdTranslator.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/optional.hpp>
 #include <map>
 
 //#define PRINT_ELEMENT_RECORDS
@@ -279,6 +285,46 @@ namespace DlbAdm
         return status;
     }
 
+    static int IngestStartDuration(dlb_adm_time &ingestedStart, dlb_adm_time &ingestedDuration , XMLContainer &container, dlb_adm_entity_id blockFormatId)
+    {
+        int status;
+
+        bool startFound = false;
+        bool durationFound = false;
+        AttributeValue attrVal;
+
+        status = container.GetValue(attrVal, blockFormatId, DLB_ADM_TAG_BLOCK_FORMAT_LSTART);
+        CHECK_OPTIONAL(status);
+        startFound = status == DLB_ADM_STATUS_NOT_FOUND ? false : true;
+        if(startFound)
+        {
+            ingestedStart = boost::get<dlb_adm_time>(attrVal);
+        }
+
+        status = container.GetValue(attrVal, blockFormatId, DLB_ADM_TAG_BLOCK_FORMAT_LDURATION);
+        CHECK_OPTIONAL(status);
+        durationFound = status == DLB_ADM_STATUS_NOT_FOUND ? false : true;
+        if(durationFound)
+        {
+            ingestedDuration = boost::get<dlb_adm_time>(attrVal);
+        }
+        
+        if(startFound != durationFound)
+        {
+            status = DLB_ADM_STATUS_ERROR;
+        }
+        else if(startFound && durationFound)
+        {
+            status = DLB_ADM_STATUS_OK;
+        }
+        else
+        {
+            status = DLB_ADM_STATUS_NOT_FOUND;
+        }
+
+        return status;
+    }
+
     static int CheckCoordinate(dlb_adm_float &coord, AttributeValue &value, bool &gotIt)
     {
         if (gotIt)
@@ -416,6 +462,154 @@ namespace DlbAdm
         return status;
     }
 
+    static int IsOffsetCartesian(const Position::COORDINATE coordinate, dlb_adm_bool & cartesian)
+    {
+        int status = DLB_ADM_STATUS_OK;
+        if(coordinate == Position::COORDINATE::X)
+        {
+            cartesian = DLB_ADM_TRUE;
+        } 
+        else if(coordinate == Position::COORDINATE::AZIMUTH)
+        {
+            cartesian = DLB_ADM_FALSE;
+        } 
+        else
+        {
+            status = DLB_ADM_STATUS_ERROR;
+        } 
+
+        return status;
+    }
+
+    static int IngestPositionOffset(Position &position, XMLContainer &container, const dlb_adm_entity_id parentID)
+    {
+        /* TODO: finish implementation for positions Y, Z / elevation, distance (if needed). Maybe expand function IngestPosition? */
+        int status = DLB_ADM_STATUS_OK;
+        dlb_adm_bool cartesian = DLB_ADM_FALSE;
+        dlb_adm_float coord1 = 0.0f;
+        bool positionOffsetFound = false;
+
+        RelationshipDB::RelationshipCallbackFn ingestPositionOffset = [&](const RelationshipRecord &r)
+        {
+            int status = DLB_ADM_STATUS_OK;
+        
+            if(positionOffsetFound)
+            {
+                status = DLB_ADM_STATUS_ERROR; // max 1 allowed in Emission Profile
+            }
+            else
+            {
+                positionOffsetFound = true;
+            }
+            CHECK_STATUS(status);
+            
+            dlb_adm_entity_id positionID = r.toId;
+            std::string coordinateName;
+            Position::COORDINATE coordinateValue;
+            AttributeValue value;
+
+            status = container.GetValue(value, positionID, DLB_ADM_TAG_POSITION_OFFSET_COORDINATE);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(coordinateName, value);
+            CHECK_STATUS(status);
+            status = GetPositionCoordinate(coordinateValue, coordinateName);
+            CHECK_STATUS(status);
+            status = IsOffsetCartesian(coordinateValue, cartesian);
+            CHECK_STATUS(status);
+
+            status = container.GetValue(value, positionID, DLB_ADM_TAG_POSITION_OFFSET_VALUE);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(coord1, value);
+#ifndef NDEBUG
+            CHECK_STATUS(status);
+#endif
+            return status;
+        };
+        status = container.ForEachRelationship(parentID, DLB_ADM_ENTITY_TYPE_POSITION_OFFSET, ingestPositionOffset);
+        CHECK_STATUS(status);
+
+        position = Position(coord1, cartesian ? true : false);
+
+        return status;
+    }
+
+    static int IngestLoudnessMetadata(LoudnessMetadata &loudness, dlb_adm_entity_id parentId, XMLContainer &container)
+    {
+        int status = DLB_ADM_STATUS_OK;
+
+        size_t loudnessCount = container.RelationshipCount(parentId, DLB_ADM_ENTITY_TYPE_LOUDNESS_METADATA);
+
+        if(loudnessCount == 0)
+        {
+            loudness = LoudnessMetadata(0.0f, DLB_ADM_LOUDNESS_TYPE_NOT_INITIALIZED);
+        }
+        else if(loudnessCount > 1)
+        {
+            status = DLB_ADM_STATUS_ERROR; // no more than 1 loudnessMetadata allowed for now
+#ifndef NDEBUG
+            CHECK_STATUS(status);
+#endif
+        }
+        else
+        {
+            DLB_ADM_LOUDNESS_TYPE   loudnessType = DLB_ADM_LOUDNESS_TYPE_NOT_INITIALIZED;
+            dlb_adm_gain_value      loudnessValue;
+
+            RelationshipDB::RelationshipCallbackFn ingestLoudness = [&](const RelationshipRecord &r)
+            {
+                bool loudnessFound = false;
+                
+                RelationshipDB::RelationshipCallbackFn ingestLoudnessValueAndType = [&](const RelationshipRecord &r)
+                {
+                    if(loudnessFound)
+                    {
+                        status = DLB_ADM_STATUS_ERROR; // only 1 loudness entity allowed inside lodudness metadata
+                    }
+                    else
+                    {
+                        loudnessFound = true;
+                    }
+                    CHECK_STATUS(status);
+                    
+                    AttributeValue value;
+                    DLB_ADM_TAG loudnessTypeTag;
+
+                    switch (r.GetToEntityType())
+                    {
+                        case DLB_ADM_ENTITY_TYPE_INTEGRATED_LOUDNESS:
+                            loudnessType = DLB_ADM_LOUDNESS_TYPE_INTEGRATED;
+                            loudnessTypeTag = DLB_ADM_TAG_INTEGRATED_LOUDNESS_VALUE;
+                            break;
+
+                        case DLB_ADM_ENTITY_TYPE_DIALOGUE_LOUDNESS:
+                            loudnessType = DLB_ADM_LOUDNESS_TYPE_DIALOGUE;
+                            loudnessTypeTag = DLB_ADM_TAG_DIALOGUE_LOUDNESS_VALUE;
+                            break;
+                        
+                        default:
+                            status = DLB_ADM_STATUS_ERROR; // unknown loudness type
+                            CHECK_STATUS(status);
+                            break;
+                    }
+
+                    status = container.GetValue(value, r.GetToId(), loudnessTypeTag);
+                    CHECK_STATUS(status);
+                    status = GetAttributeValue(loudnessValue, value);
+#ifndef NDEBUG
+                    CHECK_STATUS(status);
+#endif
+                    return status;
+                };
+                return container.ForEachRelationship(r.GetToId(), ENTITY_RELATIONSHIP::CONTAINS, ingestLoudnessValueAndType);
+            };
+            status = container.ForEachRelationship(parentId, DLB_ADM_ENTITY_TYPE_LOUDNESS_METADATA, ingestLoudness);
+            CHECK_STATUS(status);
+
+            loudness = LoudnessMetadata(loudnessValue, loudnessType);
+        }
+        return status;
+    }
+
     static int IngestName(ModelEntity &entity, XMLContainer &container, DLB_ADM_TAG nameTag, DLB_ADM_TAG langTag)
     {
         /*
@@ -464,8 +658,194 @@ namespace DlbAdm
         return status;
     }
 
+    static int IngestObjectInteraction(AudioObjectInteraction &aoi, XMLContainer &container, const dlb_adm_entity_id objectID)
+    {
+        /*
+            <audioObjectInteraction onOffInteract="1" gainInteract="1" positionInteract="1">
+                <positionInteractionRange coordinate="elevation" bound="min">-10.0</positionInteractionRange>
+                <positionInteractionRange coordinate="elevation" bound="max">+10.0</positionInteractionRange>
+                <positionInteractionRange coordinate="azimuth" bound="min">-30.0</positionInteractionRange>
+                <positionInteractionRange coordinate="azimuth" bound="max">+30.0</positionInteractionRange>
+                <gainInteractionRange gainUnit="Linear" bound="min">0.5</positionInteractionRange>
+                <gainInteractionRange bound="max">1</positionInteractionRange>
+            </audioObjectInteraction>
+        */
+        int status;
+        dlb_adm_bool aoiOnOff = false;
+        dlb_adm_bool aoiGainInteraction = false;
+        dlb_adm_bool aoiPositionInteraction = false;
+
+        Gain minGain;
+        Gain maxGain;
+
+        std::map<Position::COORDINATE, float> minPositions;
+        std::map<Position::COORDINATE, float> maxPositions;
+
+        RelationshipDB::RelationshipCallbackFn IngestAudioObjectInteraction = [&](const RelationshipRecord &r)
+        {
+            AttributeValue attributeValue;
+            dlb_adm_entity_id aoiID = r.GetToId();
+
+            status = container.GetValue(attributeValue, aoiID, DLB_ADM_TAG_OBJECT_INTERACTION_ON_OFF);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(aoiOnOff, attributeValue);
+            CHECK_STATUS(status);
+
+            status = container.GetValue(attributeValue, aoiID, DLB_ADM_TAG_OBJECT_INTERACTION_GAIN);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(aoiGainInteraction, attributeValue);
+            CHECK_STATUS(status);
+
+            status = container.GetValue(attributeValue, aoiID, DLB_ADM_TAG_OBJECT_INTERACTION_POSITION);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(aoiPositionInteraction, attributeValue);
+            CHECK_STATUS(status);
+
+            if (aoiGainInteraction)
+            {
+                RelationshipDB::RelationshipCallbackFn ingestGainRange = [&](const RelationshipRecord &r)
+                {
+                    dlb_adm_entity_id gainRangeID = r.GetToId();
+                    std::string bound;
+                    std::string unit = "linear";
+                    float gain;
+
+                    Gain::GAIN_UNIT gainUnit = Gain::GAIN_UNIT::LINEAR;
+                    float gainValue = 1.0f;
+
+                    status = container.GetValue(attributeValue, gainRangeID, DLB_ADM_TAG_GAIN_INTERACTION_RANGE_BOUND);
+                    CHECK_STATUS(status);
+                    status = GetAttributeValue(bound, attributeValue);
+                    CHECK_STATUS(status);
+                    status = container.GetValue(attributeValue, gainRangeID, DLB_ADM_TAG_GAIN_INTERACTION_RANGE_VALUE);
+                    CHECK_STATUS(status);
+                    status = GetAttributeValue(gain, attributeValue);
+                    CHECK_STATUS(status);
+                    status = container.GetValue(attributeValue, gainRangeID, DLB_ADM_TAG_GAIN_INTERACTION_RANGE_UNIT);
+                    if (  status != DLB_ADM_STATUS_OK
+                       && status != DLB_ADM_STATUS_NOT_FOUND)
+                    {
+                        return status;
+                    }
+                    if (status == DLB_ADM_STATUS_OK)
+                    {
+                        status = GetAttributeValue(unit, attributeValue);
+                        CHECK_STATUS(status);
+                    }
+
+                    boost::to_lower(unit);
+                    if (unit == "db")
+                    {
+                        gainUnit = Gain::GAIN_UNIT::DECIBELS;
+                    }
+                    else if (unit != "linear")
+                    {
+                        status = DLB_ADM_STATUS_ERROR;
+                    }
+                    CHECK_STATUS(status);
+
+                    boost::to_upper(bound);
+                    if (bound == "min")
+                    {
+                        minGain = Gain(gainValue, gainUnit);
+                    }
+                    else if (bound == "max")
+                    {
+                        maxGain = Gain(gainValue, gainUnit);
+                    }
+                    else
+                    {
+                        status = DLB_ADM_STATUS_ERROR;
+                    }
+                    return status;
+                };
+
+                status = container.ForEachRelationship(aoiID, DLB_ADM_ENTITY_TYPE_GAIN_INTERACTION_RANGE, ingestGainRange);
+                CHECK_STATUS(status);
+            }
+
+            /* position interaction range needs to be ingested any way even if aoiPositionInteraction is set to 0 
+             * bacause it is required by position offset
+             */
+            RelationshipDB::RelationshipCallbackFn ingestPositionRange = [&](const RelationshipRecord &r)
+            {
+                dlb_adm_entity_id positionRangeID = r.GetToId();
+                float value = 0.0f;
+                std::string bound, coordinate;
+                Position::COORDINATE positionCordinate;
+
+                status = container.GetValue(attributeValue, positionRangeID, DLB_ADM_TAG_POSITION_INTERACTION_RANGE_BOUND);
+                CHECK_STATUS(status);
+                status = GetAttributeValue(bound, attributeValue);
+                CHECK_STATUS(status);
+                status = container.GetValue(attributeValue, positionRangeID, DLB_ADM_TAG_POSITION_INTERACTION_RANGE_COORDINATE);
+                CHECK_STATUS(status);
+                status = GetAttributeValue(coordinate, attributeValue);
+                CHECK_STATUS(status);
+                status = container.GetValue(attributeValue, positionRangeID, DLB_ADM_TAG_POSITION_INTERACTION_RANGE_VALUE);
+                CHECK_STATUS(status);
+                status = GetAttributeValue(value, attributeValue);
+                CHECK_STATUS(status);
+
+                status = GetPositionCoordinate(positionCordinate, coordinate);
+                CHECK_STATUS(status);
+                boost::to_lower(bound);
+                if (bound == "min")
+                {
+                    minPositions[positionCordinate] = value;
+                }
+                else if (bound == "max")
+                {
+                    maxPositions[positionCordinate] = value;
+                }
+                else
+                {
+                    status = DLB_ADM_STATUS_ERROR;
+                }
+                return status;
+            };
+
+            status = container.ForEachRelationship(aoiID, DLB_ADM_ENTITY_TYPE_POSITION_INTERACTION_RANGE, ingestPositionRange);
+            CHECK_STATUS(status);
+
+            if (minPositions.size() != maxPositions.size())
+            {
+                status = DLB_ADM_STATUS_ERROR;
+            }
+            CHECK_STATUS(status);
+
+            auto minIt = minPositions.begin();
+            auto maxIt = maxPositions.begin();
+            while (minIt != minPositions.end())
+            {
+                if (minIt->first != maxIt->first)
+                {
+                    status = DLB_ADM_STATUS_ERROR;
+                    break;
+                }
+                ++minIt;
+                ++maxIt;
+            }
+            return status;
+        };
+
+        status = container.ForEachRelationship(objectID, DLB_ADM_ENTITY_TYPE_OBJECT_INTERACTION, IngestAudioObjectInteraction);
+        CHECK_STATUS(status);
+
+        aoi = AudioObjectInteraction(aoiOnOff, aoiGainInteraction, aoiPositionInteraction, minGain, maxGain, minPositions, maxPositions);
+
+        return status;
+    }
+
     template <class T>
-    int IngestLabels(T &parent, XMLContainer &container, DLB_ADM_ENTITY_TYPE labelType, DLB_ADM_TAG nameTag, DLB_ADM_TAG langTag)
+    int IngestLabels
+        (T &parent
+        ,XMLContainer &container
+        ,DLB_ADM_ENTITY_TYPE labelType
+        ,DLB_ADM_TAG nameTag
+        ,DLB_ADM_TAG langTag
+        ,dlb_adm_entity_id id
+        )
     {
         /*
             Multiple entities may have label elements:
@@ -483,9 +863,22 @@ namespace DlbAdm
 
          */
 
-        int status = DLB_ADM_STATUS_OK;
-        dlb_adm_entity_id parentId = parent.GetEntityID();
+         /* For audioComplementaryObjectGroupLabel, in container labels are connected with Complementary leader object
+            but should be inserted in ComplementaryElement for ComplementaryLeader
 
+            <audioObject audioObjectID="AO_1002" audioObjectName="audioObject_2" interact="0">
+              <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
+              <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+              <audioComplementaryObjectGroupLabel language="eng">Talk</audioComplementaryObjectGroupLabel>
+              <audioComplementaryObjectGroupLabel language="fre">Conversation</audioComplementaryObjectGroupLabel>
+              <audioComplementaryObjectGroupLabel language="ita">Conversazione</audioComplementaryObjectGroupLabel>
+              <audioComplementaryObjectGroupLabel language="ger">Gesprach</audioComplementaryObjectGroupLabel>
+              <audioComplementaryObjectIDRef>AO_1003</audioComplementaryObjectIDRef>
+              <audioComplementaryObjectIDRef>AO_1004</audioComplementaryObjectIDRef>
+              <audioComplementaryObjectIDRef>AO_1005</audioComplementaryObjectIDRef>
+            </audioObject>          */
+
+        int status = DLB_ADM_STATUS_OK;
         RelationshipDB::RelationshipCallbackFn ingestLabel = [&](const RelationshipRecord &r)
         {
             int status = DLB_ADM_STATUS_OK;
@@ -519,7 +912,7 @@ namespace DlbAdm
 
             return status;
         };
-        status = container.ForEachRelationship(parentId, labelType, ingestLabel);
+        status = container.ForEachRelationship(id, labelType, ingestLabel);
         CHECK_STATUS(status);
 
         return status;
@@ -549,6 +942,11 @@ namespace DlbAdm
     int XMLIngester::Ingest()
     {
         int status;
+
+        // Step 0: check profile version of S-ADM
+
+        status = IngestProfileList();
+        CHECK_STATUS(status);
 
         // Step 1: ingest the model entities
 
@@ -649,7 +1047,7 @@ namespace DlbAdm
                 RelationshipDB::RelationshipCallbackFn elementFn = [&](const RelationshipRecord &r)
                 {
                     dlb_adm_entity_id targetGroupID = r.GetToId();
-                    ContentRecord cr(targetGroupID, contentID, contentGroup->GetContentKind());
+                    ContentRecord cr(targetGroupID, objectID, contentID, contentGroup->GetContentKind());
                     bool inserted = cr.Validate() && container.insert(cr).second;
                     int status = inserted ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR;
                     return status;
@@ -725,52 +1123,6 @@ namespace DlbAdm
         }
 
         return status;
-    }
-
-    int XMLIngester::GetObjectClass(DLB_ADM_OBJECT_CLASS &objectClass, dlb_adm_entity_id id) const
-    {
-        ContentContainer &container = mData->GetContentContainer();
-        auto itPair = container.equal_range(id, TargetGroupIdCompare());
-        auto it = itPair.first;
-
-        DLB_ADM_OBJECT_CLASS c = DLB_ADM_OBJECT_CLASS_NONE;
-        DLB_ADM_CONTENT_KIND contentKind = DLB_ADM_CONTENT_KIND_UNKNOWN;
-        int status = DLB_ADM_STATUS_OK;
-        bool found = false;
-
-        objectClass = DLB_ADM_OBJECT_CLASS_GENERIC;
-        while (it != itPair.second)
-        {
-            if (found)
-            {
-                if (it->mContentKind != contentKind)
-                {
-                    status = DLB_ADM_STATUS_ERROR;
-                    break;
-                }
-            }
-            else
-            {
-                contentKind = it->mContentKind;
-                c = dlb_adm_translate_content_kind(contentKind);
-                found = true;
-            }
-            ++it;
-        }
-        CHECK_STATUS(status);
-
-        if (found)
-        {
-            objectClass = c;
-        }
-#if 0
-        else
-        {
-            Dump(container, "ContentContainer.csv");
-        }
-#endif
-
-        return DLB_ADM_STATUS_OK;
     }
 
     int XMLIngester::IngestFrameFormat()
@@ -850,6 +1202,97 @@ namespace DlbAdm
         return status;
     }
 
+static int RecognizeProfile
+    ( const std::string profileName
+    , const std::string profileVersion
+    , const dlb_adm_uint profileLevel
+    , const std::string profileValue
+    , DLB_ADM_PROFILE & outProfile
+    )
+{
+    int status = DLB_ADM_STATUS_OK;
+    bool recognised = false;
+
+    for(auto & supportedProfile : SUPPORTED_PROFILES)
+    {
+        if  (    profileName    == supportedProfile.name 
+            &&   profileVersion == supportedProfile.version
+            &&   profileValue   == supportedProfile.value
+            &&   profileLevel   == supportedProfile.level
+            )
+            {
+                outProfile = supportedProfile.type;
+                recognised = true;
+                break;
+            }
+    }
+
+    if(!recognised)
+    {
+        status = DLB_ADM_STATUS_ERROR; // unknown profile
+#ifndef NDEBUG
+        CHECK_STATUS(status);
+#endif
+    }
+
+    return status;
+}
+
+    int XMLIngester::IngestProfileList()
+    {
+        /*
+            <profileList>
+              <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]</profile>
+            </profileList>
+        */
+
+        int status = DLB_ADM_STATUS_OK;
+
+        EntityDB::EntityCallbackFn ingestProfile = [&](const EntityRecord &e)
+        {
+            dlb_adm_entity_id id = e.id;
+            AttributeValue attrValue;
+
+            std::string profileName, profileVersion, profileValue;
+            dlb_adm_uint profileLevel;
+
+            DLB_ADM_PROFILE recognizedProfileType = DLB_ADM_PROFILE_NOT_INITIALIZED;
+
+            // read all params 
+            status = mContainer.GetValue(attrValue, id, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_NAME);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(profileName, attrValue);
+            CHECK_STATUS(status);
+
+            status = mContainer.GetValue(attrValue, id, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_VERSION);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(profileVersion, attrValue);
+            CHECK_STATUS(status);
+
+            status = mContainer.GetValue(attrValue, id, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_VALUE);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(profileValue, attrValue);
+            CHECK_STATUS(status);
+
+            status = mContainer.GetValue(attrValue, id, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_LEVEL);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(profileLevel, attrValue);
+            CHECK_STATUS(status);
+
+            status = RecognizeProfile(profileName, profileVersion, profileLevel, profileValue, recognizedProfileType);
+            CHECK_STATUS(status);
+
+            mModel.AddProfile(recognizedProfileType);
+
+            return status;
+        };
+        status = mContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION, ingestProfile);
+#ifndef NDEBUG
+        CHECK_STATUS(status);
+#endif
+        return status;
+    }
+
     int XMLIngester::IngestSources()
     {
         /*
@@ -878,6 +1321,23 @@ namespace DlbAdm
             return status;
         };
         return mContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_AUDIO_TRACK, ingestAudioTrack);
+    }
+
+    static bool isCommonDefinition(const EntityRecord &e)
+    {
+        return e.status == EntityRecord::STATUS::COMMON_DEFINITION;
+    }
+    
+    static int isCommonDefinition(const dlb_adm_entity_id id, XMLContainer & container, bool & isCommon)
+    {
+        int status;
+        EntityRecord e;
+
+        status = container.GetEntity(e, id);
+        CHECK_STATUS(status);
+
+        isCommon = isCommonDefinition(e);
+        return status;
     }
 
     int XMLIngester::IngestTargets()
@@ -930,14 +1390,29 @@ namespace DlbAdm
                 Position position;
                 Gain gain;
 
+                dlb_adm_time start;
+                dlb_adm_time duration;
+                dlb_adm_time *startPtr = &start;
+                dlb_adm_time *durationPtr = &duration;
+
+                status = IngestStartDuration(start, duration, mContainer, blockFormatId);
+                CHECK_OPTIONAL(status);
+                if(status == DLB_ADM_STATUS_NOT_FOUND)
+                {
+                    startPtr = nullptr;
+                    durationPtr = nullptr;
+                }
+
                 status = IngestPosition(position, blockFormatId, mContainer);
                 CHECK_STATUS(status);
                 status = IngestGain(gain, mContainer, blockFormatId);
                 CHECK_STATUS(status);
 
-                // TODO: start, duration
+                bool isCommon;
+                status = isCommonDefinition(blockFormatId, mContainer, isCommon);
+                CHECK_STATUS(status);
 
-                BlockUpdate update(blockFormatId, position, gain);  // TODO: start, duration
+                BlockUpdate update(blockFormatId, position, gain, startPtr, durationPtr, isCommon);  
 
                 if (!mModel.AddEntity(update))
                 {
@@ -968,7 +1443,9 @@ namespace DlbAdm
             status = mContainer.ForEachRelationship(channelFormatID, DLB_ADM_ENTITY_TYPE_BLOCK_FORMAT, ingestBlockFormat);
             CHECK_STATUS(status);
 
-            Target target(channelFormatID, audioType, speakerLabel);
+            bool isCommon = isCommonDefinition(e);
+
+            Target target(channelFormatID, audioType, speakerLabel, isCommon);
 
             status = mContainer.GetValue(attrValue, channelFormatID, DLB_ADM_TAG_CHANNEL_FORMAT_NAME);
             CHECK_STATUS(status);
@@ -1010,7 +1487,6 @@ namespace DlbAdm
             AttributeValue attrValue;
             DLB_ADM_AUDIO_TYPE audioType;
             DLB_ADM_SPEAKER_CONFIG speakerConfig;
-            DLB_ADM_OBJECT_CLASS objectClass;
             std::string name;
             int status;
 
@@ -1031,7 +1507,9 @@ namespace DlbAdm
                 status = GetSpeakerConfig(speakerConfig, id);
                 CHECK_STATUS(status);
 
-                TargetGroup targetGroup(id, speakerConfig);
+                bool isCommon = isCommonDefinition(e);
+
+                TargetGroup targetGroup(id, speakerConfig, isCommon);
 
                 if (!name.empty())
                 {
@@ -1046,11 +1524,8 @@ namespace DlbAdm
 
             case DLB_ADM_AUDIO_TYPE_OBJECTS:
             {
-                status = GetObjectClass(objectClass, id);
-                CHECK_STATUS(status);
-
                 bool isDynamic = false;     // TODO: how to set this correctly?
-                TargetGroup targetGroup(id, objectClass, isDynamic);
+                TargetGroup targetGroup(id, audioType, isDynamic);
                 
                 if (!name.empty())
                 {
@@ -1122,6 +1597,98 @@ namespace DlbAdm
         return mContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_TRACK_UID, ingestTrackUID);
     }
 
+    static int GetObjectClass(XMLContainer &container
+                             ,CoreModel &model
+                             ,DLB_ADM_OBJECT_CLASS &objectClass
+                             ,const RelationshipRecord &r)
+    {
+        int status;
+        dlb_adm_entity_id entity_id = r.GetToId();
+        AdmIdTranslator translator;
+        DLB_ADM_ENTITY_TYPE type = translator.GetEntityType(entity_id);
+
+        switch (type)
+        {
+        case DLB_ADM_ENTITY_TYPE_CONTENT:
+            {
+                const ContentGroup *content;
+                status = model.GetEntity(entity_id, &content);
+                CHECK_STATUS(status);
+
+                objectClass = dlb_adm_translate_content_kind(content->GetContentKind());
+            }
+            break;
+
+        case DLB_ADM_ENTITY_TYPE_OBJECT:
+            {
+                status = container.ForEachRelationship(entity_id
+                                                      ,ENTITY_RELATIONSHIP::REFERENCED_BY
+                                                      ,std::bind(GetObjectClass
+                                                                ,std::ref(container)
+                                                                ,std::ref(model)
+                                                                ,std::ref(objectClass)
+                                                                ,std::placeholders::_1));
+            }
+            break;
+
+        default:
+            status = DLB_ADM_STATUS_ERROR;
+            break;
+        }
+        return status;
+    }
+
+    static
+    int IngestComplementaryObjects(XMLContainer &container
+                                  ,CoreModel &model
+                                  ,dlb_adm_entity_id comp_leader_id
+                                  )
+    {
+        int status;
+
+        RelationshipDB::RelationshipCallbackFn IngestComplementaryObject = [&](const RelationshipRecord &r)
+        {
+            AttributeValue attributeValue;
+            dlb_adm_entity_id objectId;
+            int status;
+
+            dlb_adm_entity_id compObjId = r.GetToId();
+            status = container.GetValue(attributeValue, compObjId, DLB_ADM_TAG_COMPLEMENTARY_OBJECT_ID_REF);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(objectId, attributeValue);
+            CHECK_STATUS(status);
+
+            ComplementaryElement element(compObjId, objectId, comp_leader_id);
+            if (!model.AddEntity(element))
+            {
+                status = DLB_ADM_STATUS_ERROR;
+            }
+
+            return status;
+        };
+
+        dlb_adm_entity_id compObjId = container.GetGenericID(DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF);
+        ComplementaryElement leader_element(compObjId, comp_leader_id, comp_leader_id);
+
+        status = IngestLabels(leader_element
+                     ,container
+                     ,DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_GROUP_LABEL
+                     ,DLB_ADM_TAG_COMPLEMENTARY_OBJECT_GROUP_LABEL_VALUE
+                     ,DLB_ADM_TAG_COMPLEMENTARY_OBJECT_GROUP_LABEL_LANGUAGE
+                     ,comp_leader_id);
+        CHECK_STATUS(status);
+
+        if (!model.AddEntity(leader_element))
+        {
+            return DLB_ADM_STATUS_ERROR;
+        }
+
+        status = container.ForEachRelationship(comp_leader_id, DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF, IngestComplementaryObject);
+        CHECK_STATUS(status);
+
+        return status;
+    }
+
     int XMLIngester::IngestAudioObjects()
     {
         EntityDB::EntityCallbackFn ingestObject = [&](const EntityRecord &e)
@@ -1130,6 +1697,8 @@ namespace DlbAdm
             dlb_adm_entity_id id = e.id;
             AttributeValue attributeValue;
             std::string name;
+            dlb_adm_bool interact = false;
+            AudioObjectInteraction aoi;
             int status;
 
             status = IngestGain(gain, mContainer, id);
@@ -1138,6 +1707,22 @@ namespace DlbAdm
             CHECK_STATUS(status);
             status = GetAttributeValue(name, attributeValue);
             CHECK_STATUS(status);
+            status = mContainer.GetValue(attributeValue, id, DLB_ADM_TAG_OBJECT_INTERACT);
+            if (status == DLB_ADM_STATUS_OK)
+            {
+                status = GetAttributeValue(interact, attributeValue);
+                CHECK_STATUS(status);
+            }
+            else if (mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE) || status != DLB_ADM_STATUS_NOT_FOUND)
+            {
+                return status;
+            }
+
+            if (interact)
+            {
+                status = IngestObjectInteraction(aoi, mContainer, id);
+                CHECK_STATUS(status);
+            }
             
             // Is this object:
             // 1) a container for a group of other audio objects (ElementGroup)?
@@ -1151,6 +1736,15 @@ namespace DlbAdm
                 {
                     elementGroup.AddName(name.data());
                 }
+
+                status = IngestLabels( elementGroup
+                                     , mContainer
+                                     , DLB_ADM_ENTITY_TYPE_OBJECT_LABEL
+                                     , DLB_ADM_TAG_OBJECT_LABEL_VALUE
+                                     , DLB_ADM_TAG_OBJECT_LABEL_LANGUAGE
+                                     , id);
+                CHECK_STATUS(status);
+
                 if (!mModel.AddEntity(elementGroup))
                 {
                     status = DLB_ADM_STATUS_ERROR;
@@ -1158,22 +1752,99 @@ namespace DlbAdm
             } 
             else
             {
-                AudioElement audioElement(id, gain);
+                Position positionOffset;
+                DLB_ADM_OBJECT_CLASS objectClass = DLB_ADM_OBJECT_CLASS_NONE;
+
+                status = IngestPositionOffset(positionOffset, mContainer, id);
+                CHECK_STATUS(status);
+
+                status = mContainer.ForEachRelationship(id
+                                                       ,ENTITY_RELATIONSHIP::REFERENCED_BY
+                                                       ,std::bind(GetObjectClass
+                                                                 ,std::ref(mContainer)
+                                                                 ,std::ref(mModel)
+                                                                 ,std::ref(objectClass)
+                                                                 ,std::placeholders::_1));
+                CHECK_STATUS(status);
+
+                AudioElement audioElement(id, gain, positionOffset, objectClass, interact, aoi);
 
                 if (!name.empty())
                 {
                     audioElement.AddName(name.data());
                 }
+                status = IngestLabels( audioElement
+                                     , mContainer
+                                     , DLB_ADM_ENTITY_TYPE_OBJECT_LABEL
+                                     , DLB_ADM_TAG_OBJECT_LABEL_VALUE
+                                     , DLB_ADM_TAG_OBJECT_LABEL_LANGUAGE
+                                     , id);
+                CHECK_STATUS(status);
                 if (!mModel.AddEntity(audioElement))
                 {
                     status = DLB_ADM_STATUS_ERROR;
                 }
-            }
-#ifndef NDEBUG
+            }            
             CHECK_STATUS(status);
+
+            RelationshipDB::RelationshipCallbackFn IngestAlternativeValueSet = [&](const RelationshipRecord &r)
+            {
+                int status;
+                
+                dlb_adm_entity_id avsId = r.GetToId();
+
+                boost::optional<Position> positionOffset = boost::none;
+                boost::optional<Gain> gain = boost::none;
+
+                if(mContainer.RelationshipExists(avsId, DLB_ADM_ENTITY_TYPE_POSITION_OFFSET))
+                {
+                    Position pos;
+                    status = IngestPositionOffset(pos, mContainer, avsId);
+                    CHECK_STATUS(status);
+                    positionOffset = boost::make_optional(pos);
+                }
+
+                if(mContainer.RelationshipExists(avsId, DLB_ADM_ENTITY_TYPE_GAIN))
+                {
+                    Gain g;
+                    status = IngestGain(g, mContainer, avsId);
+                    CHECK_STATUS(status);
+                    gain = boost::make_optional(g);
+                }
+
+                AlternativeValueSet avs(avsId, positionOffset, gain);
+
+                status = IngestLabels(avs
+                                     ,mContainer
+                                     ,DLB_ADM_ENTITY_TYPE_OBJECT_LABEL
+                                     ,DLB_ADM_TAG_OBJECT_LABEL_VALUE
+                                     ,DLB_ADM_TAG_OBJECT_LABEL_LANGUAGE
+                                     ,avsId);
+                CHECK_STATUS(status);
+
+                if( !mModel.AddEntity(avs))
+                {
+                    status = DLB_ADM_STATUS_ERROR;
+                }
+#ifndef NDEBUG
+                CHECK_STATUS(status);
 #endif
-            return status;
-        };
+                return status;
+            };
+
+            status = mContainer.ForEachRelationship(id, DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET, IngestAlternativeValueSet);
+#ifndef NDEBUG
+                CHECK_STATUS(status);
+#endif
+
+            if (mContainer.RelationshipExists(id, DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF) ||
+               (mContainer.RelationshipExists(id, DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_GROUP_LABEL)))
+                {
+                    status = IngestComplementaryObjects(mContainer, mModel, id);
+                }
+
+                return status;
+            };
         return mContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_OBJECT, ingestObject);
     }
 
@@ -1324,15 +1995,24 @@ namespace DlbAdm
             status = mContainer.ForEachRelationship(id, DLB_ADM_ENTITY_TYPE_DIALOGUE, ingestDialogue);
             CHECK_STATUS(status);
 
+            LoudnessMetadata loudness;
+            status = IngestLoudnessMetadata(loudness, e.id, mContainer);
+            CHECK_STATUS(status);
+
             // Create the ContentGroup instance
-            ContentGroup cg(id, contentKind);
+            ContentGroup cg(id, contentKind, loudness);
 
             // Ingest the name and language attributes
             status = IngestName(cg, mContainer, DLB_ADM_TAG_CONTENT_NAME, DLB_ADM_TAG_CONTENT_LANGUAGE);
             CHECK_STATUS(status);
 
             // Ingest the content label elements
-            status = IngestLabels(cg, mContainer, DLB_ADM_ENTITY_TYPE_CONTENT_LABEL, DLB_ADM_TAG_CONTENT_LABEL_VALUE, DLB_ADM_TAG_CONTENT_LABEL_LANGUAGE);
+            status = IngestLabels(cg
+                                 ,mContainer
+                                 ,DLB_ADM_ENTITY_TYPE_CONTENT_LABEL
+                                 ,DLB_ADM_TAG_CONTENT_LABEL_VALUE
+                                 ,DLB_ADM_TAG_CONTENT_LABEL_LANGUAGE
+                                 ,id);
             CHECK_STATUS(status);
 
             // Add the ContentGroup to the model
@@ -1360,11 +2040,20 @@ namespace DlbAdm
         EntityDB::EntityCallbackFn ingestPresentation = [&](const EntityRecord &e)
         {
             int status = DLB_ADM_STATUS_OK;
-            Presentation presentation(e.id);
+
+            LoudnessMetadata loudness;
+            status = IngestLoudnessMetadata(loudness, e.id, mContainer);
+            CHECK_STATUS(status);
+
+            Presentation presentation(e.id, loudness);
 
             status = IngestName(presentation, mContainer, DLB_ADM_TAG_PROGRAMME_NAME, DLB_ADM_TAG_PROGRAMME_LANGUAGE);
             CHECK_STATUS(status);
-            status = IngestLabels(presentation, mContainer, DLB_ADM_ENTITY_TYPE_PROGRAMME_LABEL, DLB_ADM_TAG_PROGRAMME_LABEL_VALUE, DLB_ADM_TAG_PROGRAMME_LABEL_LANGUAGE);
+            status = IngestLabels(presentation
+                                 ,mContainer, DLB_ADM_ENTITY_TYPE_PROGRAMME_LABEL
+                                 ,DLB_ADM_TAG_PROGRAMME_LABEL_VALUE
+                                 ,DLB_ADM_TAG_PROGRAMME_LABEL_LANGUAGE
+                                 ,e.id);
             CHECK_STATUS(status);
 
             if (!mModel.AddEntity(presentation))
@@ -1379,12 +2068,75 @@ namespace DlbAdm
         return mContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_PROGRAMME, ingestPresentation);
     }
 
+static int FindObjectsAltValSetReferencedByProgramme
+    ( XMLContainer & container              /** [in] */
+    , const dlb_adm_entity_id programmeId   /** [in] */
+    , const dlb_adm_entity_id objectId      /** [in] */
+    , dlb_adm_entity_id & avsId)            /** [out] NULL_ID means that no suitable AltValSet was found*/
+{
+    int status;
+
+    avsId = DLB_ADM_NULL_ENTITY_ID;
+
+    RelationshipDB::RelationshipCallbackFn searchInProgrammeReferences = [&](const RelationshipRecord &r)
+    {
+        dlb_adm_entity_id referencedAvsId = r.GetToId();
+
+        if(container.RelationshipExists(objectId, referencedAvsId))
+        {
+            avsId = referencedAvsId;
+        }
+
+        return DLB_ADM_STATUS_OK;
+    };
+    status = container.ForEachRelationship(programmeId, DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET, searchInProgrammeReferences);
+#ifndef NDEBUG
+    CHECK_STATUS(status);
+#endif
+    return status;
+}
+
+    static int FindIfObjectIsComplementary
+        (XMLContainer & container              /** [in] */
+        ,const dlb_adm_entity_id objectId      /** [in] */
+        ,dlb_adm_entity_id & compRefID)        /** [out] NULL_ID means that no suitable Complementary reference entity was found*/
+        {
+        int status;
+
+        compRefID = DLB_ADM_NULL_ENTITY_ID;
+
+        EntityDB::EntityCallbackFn searchObjectID = [&](const EntityRecord &e)
+        {
+            dlb_adm_entity_id compObjectRefID= e.id;
+            dlb_adm_entity_id ReferencedObjectID;
+            AttributeValue attrValue;
+
+            status = container.GetValue(attrValue, compObjectRefID, DLB_ADM_TAG_COMPLEMENTARY_OBJECT_ID_REF);
+            CHECK_STATUS(status);
+            status = GetAttributeValue(ReferencedObjectID, attrValue);
+            CHECK_STATUS(status);
+
+            if (objectId == ReferencedObjectID)
+            {
+                compRefID = compObjectRefID;
+            }
+
+            return status;
+        };
+        status = container.ForEachEntity(DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF, searchObjectID);
+    #ifndef NDEBUG
+        CHECK_STATUS(status);
+    #endif
+
+        return status;
+    }
+
     int XMLIngester::IngestPresentationTable()
     {
         // Build the presentation table.  We start with each AudioElement entity and do recursive
         // backward-chaining through ElementGroup, ContentGroup and finally, Presentation entities,
-        // keeping track of each entity ID along the way.  When we get to Presentation, we create
-        // the PresentationRecord and add it to the table.
+        // keeping track of each entity ID along the way.  When we get to Presentation, we search for
+        // AlternativeValueSet and then create the PresentationRecord and add it to the table.
 
         // TODO: would forward-chaining also work?  If so, we might be able to drop representation
         // of inverse relationships altogether.
@@ -1393,6 +2145,8 @@ namespace DlbAdm
         dlb_adm_entity_id contentGroupID = DLB_ADM_NULL_ENTITY_ID;
         dlb_adm_entity_id elementGroupID = DLB_ADM_NULL_ENTITY_ID;
         dlb_adm_entity_id audioElementID = DLB_ADM_NULL_ENTITY_ID;
+        dlb_adm_entity_id altValSetID    = DLB_ADM_NULL_ENTITY_ID;
+        dlb_adm_entity_id compRefID = DLB_ADM_NULL_ENTITY_ID;
         int status = DLB_ADM_STATUS_OK;
 
         EntityDB::EntityFilterFn isAudioElement = [&](const EntityRecord &e)
@@ -1425,13 +2179,21 @@ namespace DlbAdm
 
                     gotPres = true;
                     presentationID = r.toId;
-                    PresentationRecord p(presentationID, contentGroupID, audioElementID, elementGroupID);
+
+                    status = FindObjectsAltValSetReferencedByProgramme(mContainer, presentationID, audioElementID, altValSetID);
+                    CHECK_STATUS(status);
+
+                    status = FindIfObjectIsComplementary(mContainer, audioElementID, compRefID);
+                    CHECK_STATUS(status);
+
+                    PresentationRecord p(presentationID, contentGroupID, audioElementID, elementGroupID, altValSetID, compRefID);
                     if (!mModel.AddRecord(p))
                     {
                         status = DLB_ADM_STATUS_ERROR;
                     }
                     CHECK_STATUS(status);
                     presentationID = DLB_ADM_NULL_ENTITY_ID;
+                    altValSetID = DLB_ADM_NULL_ENTITY_ID;
 
                     return status;
                 };
@@ -1442,7 +2204,10 @@ namespace DlbAdm
 
                 if (!gotPres)
                 {
-                    PresentationRecord p(DLB_ADM_NULL_ENTITY_ID, contentGroupID, audioElementID, elementGroupID);
+                    status = FindIfObjectIsComplementary(mContainer, audioElementID, compRefID);
+                    CHECK_STATUS(status);
+
+                    PresentationRecord p(DLB_ADM_NULL_ENTITY_ID, contentGroupID, audioElementID, elementGroupID, altValSetID, compRefID);
                     if (!mModel.AddRecord(p))
                     {
                         status = DLB_ADM_STATUS_ERROR;
@@ -1471,6 +2236,7 @@ namespace DlbAdm
             CHECK_STATUS(status);
             status = mContainer.ForEachRelationship(audioElementID, ENTITY_RELATIONSHIP::REFERENCED_BY, elementGroupCallback, isElementGroup);
             CHECK_STATUS(status);
+
             audioElementID = DLB_ADM_NULL_ENTITY_ID;
 
             return status;

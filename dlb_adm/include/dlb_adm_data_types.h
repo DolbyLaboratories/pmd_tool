@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -47,6 +48,9 @@
 #define DLB_ADM_DATA_LANG_LEN (3)
 #define DLB_ADM_DATA_LANG_SZ (DLB_ADM_DATA_LANG_LEN + 1)
 
+#define DLB_ADM_DATA_BOUND_LEN (3)
+#define DLB_ADM_DATA_BOUND_SZ (DLB_ADM_DATA_BOUND_LEN + 1)
+
 #define DLB_ADM_DATA_SPEAKER_LABEL_LEN (31)
 #define DLB_ADM_DATA_SPEAKER_LABEL_SZ (DLB_ADM_DATA_SPEAKER_LABEL_LEN + 1)
 
@@ -72,6 +76,7 @@ extern "C" {
 
 typedef uint16_t    dlb_adm_channel_count;  /* We need at least [0, 256] so uint8_t won't work */
 typedef uint8_t     dlb_adm_element_count;  /* The number of audio elements in a presentation */
+typedef uint8_t     dlb_adm_alt_val_count;  /* The number of AlternativeValueSet in audioElement */
 
 typedef struct
 {
@@ -79,7 +84,19 @@ typedef struct
     DLB_ADM_GAIN_UNIT        gain_unit;
 } dlb_adm_data_gain;
 
-typedef struct 
+typedef struct
+{
+    dlb_adm_gain_value       loudness_value;
+    DLB_ADM_LOUDNESS_TYPE    loudness_type;
+} dlb_adm_data_loudness;
+
+typedef struct
+{
+    dlb_adm_float            offset_value;
+    dlb_adm_bool             cartesian;
+} dlb_adm_data_position_offset;
+
+typedef struct
 {
     char                   **names;
     char                   **langs;
@@ -128,7 +145,7 @@ typedef struct
 {
     dlb_adm_entity_id        id;
     DLB_ADM_SPEAKER_CONFIG   speaker_config;        /**< DLB_ADM_SPEAKER_CONFIG_NONE for an object */
-    DLB_ADM_OBJECT_CLASS     object_class;          /**< DLB_ADM_OBJECT_CLASS_NONE for a bed */
+    DLB_ADM_AUDIO_TYPE       audio_type;            /**< DLB_ADM_AUDIO_TYPE_DIRECT_SPEAKERS for bed */
     dlb_adm_bool             is_dynamic;            /**< For an object, are dynamic updates allowed? */
 } dlb_adm_data_target_group;
 
@@ -142,19 +159,62 @@ typedef struct
 typedef struct
 {
     dlb_adm_entity_id        id;
+    dlb_adm_bool             has_position_offset;
+    dlb_adm_bool             cartesian;
+    dlb_adm_float            position[DLB_ADM_COORDINATE_COUNT];
+    dlb_adm_bool             has_gain;
     dlb_adm_data_gain        gain;
+} dlb_adm_data_alt_value_set;
+
+typedef struct
+{
+    dlb_adm_bool            cartesian;
+    DLB_ADM_COORDINATE      coordinate;
+    float                   minValue;
+    float                   maxValue;
+} dlb_adm_data_position_interaction_range;
+
+typedef struct 
+{
+    dlb_adm_bool onOffInteract;
+    dlb_adm_bool gainInteract;
+    dlb_adm_bool positionInteract;
+    dlb_adm_data_position_interaction_range    positionRanges[DLB_ADM_COORDINATE_COUNT];
+    dlb_adm_data_gain                          minGain;
+    dlb_adm_data_gain                          maxGain;
+
+} dlb_adm_data_audio_object_interaction;
+
+
+typedef struct
+{
+    dlb_adm_entity_id                       id;
+    dlb_adm_data_gain                       gain;
+    dlb_adm_data_position_offset            position_offset;
+    DLB_ADM_OBJECT_CLASS                    object_class;
+    dlb_adm_bool                            interact;
+    dlb_adm_data_audio_object_interaction   audio_object_interaction;
 } dlb_adm_data_audio_element;
+
+typedef struct
+{
+    dlb_adm_entity_id        id;
+    dlb_adm_entity_id        audio_element_id;
+    dlb_adm_entity_id        complementary_leader_id;
+} dlb_adm_data_complementary_element;
 
 typedef dlb_adm_data_audio_element dlb_adm_data_element_group;
 
 typedef struct
 {
+    dlb_adm_data_loudness    loudness;
     dlb_adm_entity_id        id;
     DLB_ADM_CONTENT_KIND     content_kind;
 } dlb_adm_data_content_group;
 
 typedef struct
 {
+    dlb_adm_data_loudness    loudness;
     dlb_adm_entity_id        id;
 } dlb_adm_data_presentation;
 
@@ -173,6 +233,7 @@ typedef struct
 typedef struct
 {
     dlb_adm_data_audio_element   audio_element;
+    dlb_adm_data_alt_value_set  *alt_val_sets;
     dlb_adm_data_target_group    target_group;
     dlb_adm_data_target         *targets;
     dlb_adm_data_audio_track    *audio_tracks;
@@ -182,6 +243,8 @@ typedef struct
 
     dlb_adm_channel_count        channel_count;
     dlb_adm_channel_count        channel_capacity;
+    dlb_adm_alt_val_count        alt_val_count;
+    dlb_adm_alt_val_count        alt_val_capacity;
     uint8_t                     *array_storage;
 
 } dlb_adm_data_audio_element_data;
@@ -196,6 +259,8 @@ typedef struct
     dlb_adm_data_content_group  *content_groups;
     dlb_adm_data_element_group  *element_groups;
     dlb_adm_data_audio_element  *audio_elements;
+    dlb_adm_data_alt_value_set  *alt_val_sets;
+    dlb_adm_data_complementary_element  *comp_elements;
 
     dlb_adm_element_count        element_count;
     dlb_adm_element_count        element_capacity;

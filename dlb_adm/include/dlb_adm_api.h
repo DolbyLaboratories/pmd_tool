@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -311,6 +312,14 @@ dlb_adm_container_read_xml_file
     ,dlb_adm_bool                use_common_defs
     );
 
+/* XML Model Flattener */
+
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_container_flatten
+    (dlb_adm_xml_container      *container
+    ,dlb_adm_xml_container      *flattened_container
+    );
 
 /* XML Writer */
 
@@ -358,6 +367,21 @@ int
 dlb_adm_core_model_ingest_xml_container
     (dlb_adm_core_model         *model
     ,dlb_adm_xml_container      *container
+    );
+
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_add_profile
+    (dlb_adm_core_model         *model
+    ,DLB_ADM_PROFILE             profile
+    );
+
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_has_profile
+    (const dlb_adm_core_model   *model          /**< [in] The model to test */
+    ,const DLB_ADM_PROFILE       profile        /**< [in] The profile to test against */
+    ,dlb_adm_bool               *has_profile    /**< [out] Whether the specific profile is set in Core Model */
     );
 
 /**
@@ -511,6 +535,40 @@ dlb_adm_core_model_add_element_group
     ,dlb_adm_data_names         *names
     );
 
+/**
+ * @brief Add a AlternativeValueSet instance to the model.
+ * - If #parent_id is DLB_ADM_NULL_ENTITY_ID, #alt_val_set.id must be the correct, full entity ID for the set.
+ * - Otherwise, #alt_val_set.id must be DLB_ADM_NULL_ENTITY_ID, and #parent_id must contain the entity ID for an
+ *   existing AudioElement. On exit, #alt_val_set.id will be the full entity ID for the AlternativeValueSet.
+ */
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_add_alt_value_set
+    (dlb_adm_core_model         *model          /**< [in]     The model to which to add the AlternativeValueSet instance */
+    ,dlb_adm_entity_id           parent_id      /**< [in]     The entity ID of the parent AudioElement (see note above) */
+    ,dlb_adm_data_alt_value_set *alt_val_set    /**< [in/out] Descriptor for the new AlternativeValueSet instance */
+    ,dlb_adm_data_names         *labels         /**< [in]     Labels of AlternativeValueSet */
+    );
+
+/**
+ * @brief Add a ComplementaryElement instance to the model.
+ * For Complementary Leader ComplementaryElement with audio_element_id == complementary_leader_id should be created
+ * for storing audioComplementaryObjectGroupLabel
+ *   #comp_elem.id should be genereted as generic id for entity type DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF
+ *       or if comp_elem.id is equal to DLB_ADM_NULL_ENTITY_ID, sequenceNumber for complementary element should be set
+ *   #comp_elem.audio_element_id should be valid audio element id
+ *   #comp_elem.complementary_leader_id should be valid audio element id
+ *   #labels nullptr for ordinary ComplementaryElement, contains labels for ComplementaryLeader element
+ */
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_add_complementary_element
+    (dlb_adm_core_model                 *model             /**< [in] The model to which to add the CompelemntaryElement instance */
+    ,dlb_adm_data_complementary_element *comp_elem         /**< [in] Descriptor for the new CompelemntaryElement instance */
+    ,uint32_t                            sequenceNumber    /**< [in] Sequence number of CompelemntaryElement instance */
+    ,dlb_adm_data_names                 *labels            /**< [in] Labels of audioComplementaryObjectGroupLabel */
+    );
+
 DLB_ADM_DLL_ENTRY
 int
 dlb_adm_core_model_add_content_group
@@ -575,6 +633,8 @@ dlb_adm_core_model_add_presentation_relation
     ,dlb_adm_entity_id       content_group_id
     ,dlb_adm_entity_id       element_group_id
     ,dlb_adm_entity_id       audio_element_id
+    ,dlb_adm_entity_id       alt_value_set_id
+    ,dlb_adm_entity_id       complementary_ref_id
     );
 
 /**
@@ -608,6 +668,7 @@ int
 dlb_adm_core_model_query_element_data_memory_size
     (size_t                     *sz                         /**< [out] size of memory needed */
     ,dlb_adm_channel_count       channel_capacity           /**< [in]  maximum number of channels */
+    ,dlb_adm_alt_val_count       alt_val_capacity           /**< [in]  maximum number of AlternativeValueSets */
     );
 
 /**
@@ -619,6 +680,7 @@ int
 dlb_adm_core_model_configure_element_data
     (dlb_adm_data_audio_element_data    *element_data       /**< [out] struct to configure */
     ,dlb_adm_channel_count               channel_capacity   /**< [in]  maximum number of channels */
+    ,dlb_adm_alt_val_count               alt_val_capacity   /**< [in]  maximum number of alternative value sets */
     ,uint8_t                            *memory             /**< [in]  memory to format for #element_data struct fields */
     );
 

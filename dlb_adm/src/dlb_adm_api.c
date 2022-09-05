@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +42,7 @@
 #include <string.h>
 #include <inttypes.h>
 
+#ifdef EXTERNAL_ADM_COMMON_DEFINITIONS
 #ifdef _WIN32
 #define MAX_COMMON_DEFS_PATH_LEN (260)
 #else
@@ -92,6 +94,15 @@ dlb_adm_configure
 
     return DLB_ADM_STATUS_OK;
 }
+#else
+int
+dlb_adm_configure
+    (const dlb_adm_library_config   *config
+    )
+{
+    return DLB_ADM_STATUS_OK;
+}
+#endif
 
 DLB_ADM_OBJECT_CLASS
 dlb_adm_translate_content_kind
@@ -339,6 +350,7 @@ int
 dlb_adm_core_model_query_element_data_memory_size
     (size_t                     *sz
     ,dlb_adm_channel_count       channel_capacity
+    ,dlb_adm_alt_val_count       alt_val_capacity
     )
 {
     static const size_t channel_sz =
@@ -346,6 +358,8 @@ dlb_adm_core_model_query_element_data_memory_size
         sizeof(dlb_adm_data_audio_track) +
         sizeof(dlb_adm_data_source) +
         sizeof(dlb_adm_data_block_update);
+
+    static const size_t alt_val_sz = sizeof(dlb_adm_data_alt_value_set);
 
     if (sz == NULL)
     {
@@ -357,7 +371,8 @@ dlb_adm_core_model_query_element_data_memory_size
     {
         return DLB_ADM_STATUS_OUT_OF_RANGE;
     }
-    *sz = channel_sz * channel_capacity;
+    *sz = channel_sz * channel_capacity +
+          alt_val_sz * alt_val_capacity;
 
     return DLB_ADM_STATUS_OK;
 }
@@ -366,26 +381,30 @@ int
 dlb_adm_core_model_configure_element_data
     (dlb_adm_data_audio_element_data    *element_data
     ,dlb_adm_channel_count               channel_capacity
+    ,dlb_adm_alt_val_count               alt_val_capacity
     ,uint8_t                            *memory
     )
 {
     uint8_t *p = memory;
     size_t memory_sz;
     int status;
-    
+
     if ((element_data == NULL) || (memory == NULL))
     {
         return DLB_ADM_STATUS_NULL_POINTER;
     }
 
-    status = dlb_adm_core_model_query_element_data_memory_size(&memory_sz, channel_capacity);
+    status = dlb_adm_core_model_query_element_data_memory_size(&memory_sz, channel_capacity, alt_val_capacity);
     if (status != DLB_ADM_STATUS_OK)
     {
         return status;
     }
-    
+
     memset(element_data, 0, sizeof(*element_data));
     memset(memory, 0, memory_sz);
+
+    element_data->alt_val_sets = (dlb_adm_data_alt_value_set *)p;
+    p += sizeof(dlb_adm_data_alt_value_set) * alt_val_capacity;
 
     element_data->targets = (dlb_adm_data_target *)p;
     p += sizeof(dlb_adm_data_target) * channel_capacity;
@@ -396,6 +415,7 @@ dlb_adm_core_model_configure_element_data
     element_data->block_updates = (dlb_adm_data_block_update *)p;
 
     element_data->channel_capacity = channel_capacity;
+    element_data->alt_val_capacity = alt_val_capacity;
     element_data->array_storage = memory;
 
     return DLB_ADM_STATUS_OK;
@@ -412,7 +432,7 @@ dlb_adm_core_model_clear_element_data
     }
 
     return dlb_adm_core_model_configure_element_data(
-	    element_data, element_data->channel_capacity, element_data->array_storage);
+	    element_data, element_data->channel_capacity, element_data->alt_val_capacity, element_data->array_storage);
 }
 
 int
@@ -424,7 +444,9 @@ dlb_adm_core_model_query_presentation_data_memory_size
     static const size_t element_sz =
         sizeof(dlb_adm_data_content_group) +
         sizeof(dlb_adm_data_element_group) +
-        sizeof(dlb_adm_data_audio_element);
+        sizeof(dlb_adm_data_audio_element) +
+        sizeof(dlb_adm_data_complementary_element) +
+        sizeof(dlb_adm_data_alt_value_set);
 
     if (sz == NULL)
     {
@@ -471,7 +493,11 @@ dlb_adm_core_model_configure_presentation_data
     presentation_data->element_groups = (dlb_adm_data_element_group *)p;
     p += sizeof(dlb_adm_data_element_group) * element_capacity;
     presentation_data->audio_elements = (dlb_adm_data_audio_element *)p;
-    /*p += sizeof(dlb_adm_data_audio_element) * element_capacity;*/
+    p += sizeof(dlb_adm_data_audio_element) * element_capacity;
+    presentation_data->alt_val_sets   = (dlb_adm_data_alt_value_set *)p;
+    p += sizeof(dlb_adm_data_alt_value_set) * element_capacity;
+    presentation_data->comp_elements = (dlb_adm_data_complementary_element *)p;
+    /*p += sizeof(dlb_adm_data_complementary_element) * element_capacity;*/
 
     presentation_data->element_capacity = element_capacity;
     presentation_data->array_storage = memory;

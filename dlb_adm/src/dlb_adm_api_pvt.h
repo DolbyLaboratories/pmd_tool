@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,10 +43,12 @@
 extern "C" {
 #endif
 
+#ifdef EXTERNAL_ADM_COMMON_DEFINITIONS
 const char *
 dlb_adm_get_common_defs_path
     (void
     );
+#endif
 
 DLB_ADM_OBJECT_CLASS
 dlb_adm_translate_content_kind

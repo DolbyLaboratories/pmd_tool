@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +44,8 @@ namespace DlbAdmTest
 {
 
     bool CheckNames(dlb_adm_core_model &model, dlb_adm_entity_id id, dlb_adm_data_names &names);
+
+    bool CheckLoudnessMetadata(dlb_adm_core_model &model, const dlb_adm_entity_id id, const dlb_adm_data_loudness &source_loudness, DLB_ADM_ENTITY_TYPE type);
 
 }
 

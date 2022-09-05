@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,26 +46,27 @@ namespace DlbAdm
     {
     public:
         TargetGroup();
-        TargetGroup(dlb_adm_entity_id id, DLB_ADM_SPEAKER_CONFIG speakerConfig);
-        TargetGroup(dlb_adm_entity_id id, DLB_ADM_OBJECT_CLASS objectClass, bool isDynamic);
+        TargetGroup(dlb_adm_entity_id id, DLB_ADM_SPEAKER_CONFIG speakerConfig, bool isCommon = false);
+        TargetGroup(dlb_adm_entity_id id, DLB_ADM_AUDIO_TYPE audioType, bool isDynamic);
         TargetGroup(const TargetGroup &x);
         virtual ~TargetGroup();
 
         TargetGroup &operator=(const TargetGroup &x);
 
-        bool IsBed() const { return mSpeakerConfig != DLB_ADM_SPEAKER_CONFIG_NONE; }
+        bool IsBed() const { return (mSpeakerConfig != DLB_ADM_SPEAKER_CONFIG_NONE) 
+                                 && (mAudioType == DLB_ADM_AUDIO_TYPE_DIRECT_SPEAKERS); }
 
-        bool IsObject() const { return mObjectClass != DLB_ADM_OBJECT_CLASS_NONE; }
+        bool IsObject() const { return mAudioType == DLB_ADM_AUDIO_TYPE_OBJECTS; }
 
         bool IsDynamic() const { return IsObject() && mIsDynamic; }
 
         DLB_ADM_SPEAKER_CONFIG GetSpeakerConfig() const { return mSpeakerConfig; }
 
-        DLB_ADM_OBJECT_CLASS GetObjectClass() const { return mObjectClass; }
+        DLB_ADM_AUDIO_TYPE GetAudioType() const { return mAudioType; }
 
     private:
         DLB_ADM_SPEAKER_CONFIG mSpeakerConfig;
-        DLB_ADM_OBJECT_CLASS mObjectClass;
+        DLB_ADM_AUDIO_TYPE mAudioType;
         bool mIsDynamic;
     };
 

@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -131,11 +132,11 @@ static const EntityDescriptor initializers[] =
     },
     {
         "audioComplementaryObjectIDRef",
-        DLB_ADM_ENTITY_TYPE_OBJECT,
+        DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF,
         false,
-        true,
-        true,
-        DLB_ADM_TAG_UNKNOWN
+        false,
+        false,
+        DLB_ADM_TAG_COMPLEMENTARY_OBJECT_ID_REF
     },
     {
         "alternativeValueSetIDRef",
@@ -244,6 +245,14 @@ static const EntityDescriptor initializers[] =
         false,
         DLB_ADM_TAG_ALT_VALUE_SET_ID
     },
+    {
+        "audioFormatCustomSet",
+        DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET,
+        true,
+        true,
+        false,
+        DLB_ADM_TAG_FORMAT_CUSTOM_SET_ID
+    },
     // ... entities with ADM identifiers
 
     // Component entities (no ADM identifier)...
@@ -286,6 +295,22 @@ static const EntityDescriptor initializers[] =
         false,
         false,
         DLB_ADM_TAG_UNKNOWN
+    },
+    {
+        "profileList",
+        DLB_ADM_ENTITY_TYPE_PROFILE_LIST,
+        true,
+        false,
+        false,
+        DLB_ADM_TAG_UNKNOWN
+    },
+    {
+        "profile",
+        DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION,
+        false,
+        false,
+        false,
+        DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_VALUE
     },
     {
         "changedIDs",
@@ -414,6 +439,94 @@ static const EntityDescriptor initializers[] =
         false,
         false,
         DLB_ADM_TAG_FREQUENCY_VALUE
+    },
+    {
+        "audioObjectInteraction",
+        DLB_ADM_ENTITY_TYPE_OBJECT_INTERACTION,
+        true,
+        false,
+        false,
+        DLB_ADM_TAG_UNKNOWN
+    },
+    {
+        "gainInteractionRange",
+        DLB_ADM_ENTITY_TYPE_GAIN_INTERACTION_RANGE,
+        false,
+        false,
+        false,
+        DLB_ADM_TAG_GAIN_INTERACTION_RANGE_VALUE
+    },
+    {
+        "positionInteractionRange",
+        DLB_ADM_ENTITY_TYPE_POSITION_INTERACTION_RANGE,
+        false,
+        false,
+        false,
+        DLB_ADM_TAG_POSITION_INTERACTION_RANGE_VALUE
+    },
+    {
+        "positionOffset",
+        DLB_ADM_ENTITY_TYPE_POSITION_OFFSET,
+        false,
+        false,
+        false,
+        DLB_ADM_TAG_POSITION_OFFSET_VALUE
+    },
+    {
+        "audioFormatCustom",
+        DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM,
+        true,
+        false,
+        false,
+        DLB_ADM_TAG_UNKNOWN
+    },
+    {
+        "admInformation",
+        DLB_ADM_ENTITY_TYPE_ADM_INFORMATION,
+        true,
+        false,
+        false,
+        DLB_ADM_TAG_UNKNOWN
+    },
+    {
+        "profile",
+        DLB_ADM_ENTITY_TYPE_PROFILE,
+        false,
+        false,
+        false,
+        DLB_ADM_TAG_UNKNOWN
+    },
+    {
+        "loudnessMetadata",
+        DLB_ADM_ENTITY_TYPE_LOUDNESS_METADATA,
+        true,
+        false,
+        false,
+        DLB_ADM_TAG_UNKNOWN
+    },
+    {
+        "integratedLoudness",
+        DLB_ADM_ENTITY_TYPE_INTEGRATED_LOUDNESS,
+        false,
+        false,
+        false,
+        DLB_ADM_TAG_INTEGRATED_LOUDNESS_VALUE
+    },
+    {
+        "dialogueLoudness",
+        DLB_ADM_ENTITY_TYPE_DIALOGUE_LOUDNESS,
+        false,
+        false,
+        false,
+        DLB_ADM_TAG_DIALOGUE_LOUDNESS_VALUE
+    },
+    {
+        "audioComplementaryObjectGroupLabel",
+        DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_GROUP_LABEL,
+        false,
+        false,
+        false,
+        DLB_ADM_TAG_COMPLEMENTARY_OBJECT_GROUP_LABEL_VALUE
     },
     // ... component entities (no ADM identifier)
 };

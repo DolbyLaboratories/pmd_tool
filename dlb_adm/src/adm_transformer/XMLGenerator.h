@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +50,9 @@ namespace DlbAdm
     class ModelEntity;
     class Gain;
     class Position;
+    class LoudnessMetadata;
     class XMLGeneratorData;
+    class AudioObjectInteraction;
 
     class XMLGenerator : public boost::noncopyable
     {
@@ -66,12 +69,17 @@ namespace DlbAdm
 
         int GenerateGain(dlb_adm_entity_id parentID, const Gain &gain);
         int GeneratePosition(dlb_adm_entity_id blockFormatID, const Position &position);
+        int GeneratePositionOffset(dlb_adm_entity_id audioElementID, const Position &position);
+        int GenerateAudioObjectInteraction(dlb_adm_entity_id audioElementID, const AudioObjectInteraction &aoi);
+        int GenerateLoudnessMetadata(dlb_adm_entity_id parentId, const LoudnessMetadata &loudness);
         int GenerateSpeakerLabel(dlb_adm_entity_id blockFormatID, dlb_adm_entity_id channelFormatID);
         int GenerateDialogue(dlb_adm_entity_id parentID, DLB_ADM_CONTENT_KIND contentKind);
         int GenerateLabels(const ModelEntity *e, DLB_ADM_ENTITY_TYPE labelType, DLB_ADM_TAG nameTag, DLB_ADM_TAG langTag);
 
         template <typename T>
         int GenerateObject(dlb_adm_entity_id audioFormatExtendedID, const ModelEntity *e);
+        int GenerateAltValSets();
+        int GenerateComplementaryObjects();
 
         int GenerateBlockFormats();
         int GenerateChannelFormats(dlb_adm_entity_id audioFormatExtendedID);
@@ -86,6 +94,7 @@ namespace DlbAdm
         int GenerateFrameFormat(dlb_adm_entity_id frameHeaderID);
         int GenerateTransportTrackFormat(dlb_adm_entity_id frameHeaderID);
         int GenerateFrameHeader(dlb_adm_entity_id frameID);
+        int GenerateProfileList(dlb_adm_entity_id frameHeaderID);
 
         int SetTransportCounts(dlb_adm_entity_id transportID, dlb_adm_uint numSignals, dlb_adm_uint numTracks);
 

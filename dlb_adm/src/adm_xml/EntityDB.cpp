@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -335,6 +336,7 @@ namespace DlbAdm
             {
                 if (!filterFn(*it))
                 {
+                    ++it;
                     continue;
                 }
                 status = callbackFn(*it);
@@ -344,7 +346,7 @@ namespace DlbAdm
                 }
                 ++it;
             }
-        } 
+        }
         else
         {
             while (it != itPair.second)

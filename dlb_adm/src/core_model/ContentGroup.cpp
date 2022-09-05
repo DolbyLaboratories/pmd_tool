@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +43,7 @@ namespace DlbAdm
     ContentGroup::ContentGroup()
         : ModelEntity()
         , mContentKind(DLB_ADM_CONTENT_KIND_UNKNOWN)
+        , mLoudness()
     {
         mNameLimit = DEFAULT_NAME_LIMIT;
     }
@@ -49,6 +51,23 @@ namespace DlbAdm
     ContentGroup::ContentGroup(dlb_adm_entity_id id, DLB_ADM_CONTENT_KIND contentKind)
         : ModelEntity(id, DEFAULT_NAME_LIMIT)
         , mContentKind(contentKind)
+        , mLoudness()
+    {
+        // Empty
+    }
+
+    ContentGroup::ContentGroup(dlb_adm_entity_id id, DLB_ADM_CONTENT_KIND contentKind, const LoudnessMetadata &loudness)
+        : ModelEntity(id, DEFAULT_NAME_LIMIT)
+        , mContentKind(contentKind)
+        , mLoudness(loudness)
+    {
+        // Empty
+    }
+
+    ContentGroup::ContentGroup(dlb_adm_entity_id id, DLB_ADM_CONTENT_KIND contentKind, const dlb_adm_data_loudness &loudness)
+        : ModelEntity(id, DEFAULT_NAME_LIMIT)
+        , mContentKind(contentKind)
+        , mLoudness(loudness.loudness_value, loudness.loudness_type)
     {
         // Empty
     }
@@ -56,6 +75,7 @@ namespace DlbAdm
     ContentGroup::ContentGroup(const ContentGroup &x)
         : ModelEntity(x)
         , mContentKind(x.mContentKind)
+        , mLoudness(x.GetLoudnessMetadata())
     {
         // Empty
     }
@@ -69,6 +89,7 @@ namespace DlbAdm
     {
         (void)ModelEntity::operator=(x);
         mContentKind = x.mContentKind;
+        mLoudness = x.mLoudness;
         return *this;
     }
 

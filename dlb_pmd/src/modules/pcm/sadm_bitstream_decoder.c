@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -144,6 +145,7 @@ sadm_bitstream_decoder_decode
 
     if (dlb_adm_container_open(&container, &counts)                                         ||
         dlb_adm_container_read_xml_buffer(container, dec->xmlbuf, dec->size, DLB_ADM_FALSE) ||
+        dlb_adm_core_model_clear(model)                                                     ||
         dlb_adm_core_model_ingest_xml_container(model, container)
        )
     {

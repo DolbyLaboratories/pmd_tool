@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -51,11 +52,12 @@ namespace DlbAdm
     struct ContentRecord
     {
         dlb_adm_entity_id mTargetGroupID;
+        dlb_adm_entity_id mObjectID;
         dlb_adm_entity_id mContentGroupID;
         DLB_ADM_CONTENT_KIND mContentKind;
 
         ContentRecord();
-        ContentRecord(dlb_adm_entity_id targetGroupID, dlb_adm_entity_id contentGroupID, DLB_ADM_CONTENT_KIND contentKind);
+        ContentRecord(dlb_adm_entity_id targetGroupID, dlb_adm_entity_id objectID, dlb_adm_entity_id contentGroupID, DLB_ADM_CONTENT_KIND contentKind);
         ContentRecord(const ContentRecord &x);
         ~ContentRecord();
 
@@ -65,7 +67,6 @@ namespace DlbAdm
 
         bool Validate() const;
 
-    private:
         void Clear();
     };
 
@@ -86,6 +87,12 @@ namespace DlbAdm
     // Functional object(s) for comparison in searching
 
     struct TargetGroupIdCompare
+    {
+        bool operator()(const ContentRecord &lhs, dlb_adm_entity_id   rhs) const;
+        bool operator()(dlb_adm_entity_id   lhs, const ContentRecord &rhs) const;
+    };
+
+    struct ObjectIdCompare
     {
         bool operator()(const ContentRecord &lhs, dlb_adm_entity_id   rhs) const;
         bool operator()(dlb_adm_entity_id   lhs, const ContentRecord &rhs) const;

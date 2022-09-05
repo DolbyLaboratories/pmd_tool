@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_xmllib
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +52,7 @@
 typedef int dlb_xml_bool;
 
 /** Context for each recursive level (one element) */
-#define MAX_TAG_LEN 32    /**< Maximum significant characters in element and attribute tags */
+#define MAX_TAG_LEN 34    /**< Maximum significant characters in element and attribute tags */
 #define MAX_TEXT_LEN 2048 /**< Maximum text length per comment, element or attribute */
 struct dlb_xml_level_context 
 {

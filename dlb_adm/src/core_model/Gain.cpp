@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -103,6 +104,17 @@ namespace DlbAdm
         }
 
         return lessp;
+    }
+
+    bool Gain::operator==(const Gain &x) const
+    {
+        return (mGainUnit == x.mGainUnit)
+            && (mGainValue == x.mGainValue);
+    }
+
+    bool Gain::operator!=(const Gain &x) const
+    {
+        return !operator==(x);
     }
 
     bool Gain::Convert(GAIN_UNIT gainUnit)

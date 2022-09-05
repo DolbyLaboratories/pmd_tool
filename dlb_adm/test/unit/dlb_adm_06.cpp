@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2020 - 2022, Dolby Laboratories Inc.
+ * Copyright (c) 2022, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -72,6 +73,7 @@ static const char stereoXMLInputFileName[] = "stereo_test_06.xml";
 static const char stereoXMLOutputFileName[] = "stereo_test_06.out.xml";
 static const char pmdXMLInputFileName[] = "pmd_test_06.xml";
 
+static const dlb_adm_alt_val_count MAX_SADM_ALT_VALUE_SETS = 8;
 static const dlb_adm_channel_count MAX_PMD_BED_CHANNELS = 16;
 static const dlb_adm_element_count MAX_PMD_PRESENTATION_ELEMENTS = 128;
 
@@ -83,7 +85,9 @@ protected:
     static const unsigned int mNameCount = DlbAdm::DEFAULT_NAME_LIMIT;
     char *mNamesMemory0;
     char *mNamesMemory1;
+    char *mAltValSetLabelsMemory;
     dlb_adm_data_names mNames;
+    dlb_adm_data_names mAltValSetLabels;
 
     uint8_t *mElementDataMemory;
     dlb_adm_data_audio_element_data mElementData;
@@ -104,6 +108,18 @@ protected:
 
             ofs << xmlString;
         }
+    }
+
+    bool CompareIds(const dlb_adm_entity_id sourceId, const char *idString)
+    {
+        int status;
+
+        dlb_adm_entity_id idFromString = DLB_ADM_NULL_ENTITY_ID;
+        status = ::dlb_adm_read_entity_id(&idFromString, idString, strlen(idString)+1);
+
+        bool ok = status == DLB_ADM_STATUS_OK ? true : false;
+
+        return ok && sourceId == idFromString;
     }
 
     bool CompareFiles(const char *fname1, const char *fname2)
@@ -150,6 +166,18 @@ protected:
             status = ::dlb_adm_core_model_configure_names(&mNames, mNameCount, mNamesMemory0, memorySize);
         }
 
+        if(status != DLB_ADM_STATUS_OK)
+        {
+            return status;
+        }
+
+        status = ::dlb_adm_core_model_query_names_memory_size(&memorySize, DLB_ADM_DATA_NAME_SZ, mNameCount);
+        if (status == DLB_ADM_STATUS_OK)
+        {
+            mAltValSetLabelsMemory = new char[memorySize];
+            status = ::dlb_adm_core_model_configure_names(&mAltValSetLabels, mNameCount, mAltValSetLabelsMemory, memorySize);
+        }
+
         return status;
     }
 
@@ -180,6 +208,7 @@ protected:
     {
         mNamesMemory0 = nullptr;
         mNamesMemory1 = nullptr;
+        mAltValSetLabelsMemory = nullptr;
 	    mElementDataMemory = nullptr;
         mPresentationDataMemory = nullptr;
         mXmlContainer = nullptr;
@@ -216,6 +245,11 @@ protected:
             delete[] mNamesMemory0;
             mNamesMemory0 = nullptr;
         }
+        if (mAltValSetLabelsMemory != nullptr)
+        {
+            delete[] mAltValSetLabelsMemory;
+            mAltValSetLabelsMemory = nullptr;
+        }
     }
 
 };
@@ -238,6 +272,57 @@ TEST(dlb_adm_test, NamesQueryMem)
     status = ::dlb_adm_core_model_query_names_memory_size(&memorySize, maxNameSize, nameCount);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_LT(0, memorySize);
+}
+
+TEST_F(DlbAdm06, Profiles)
+{
+    int status;
+    dlb_adm_bool hasProfile;
+    dlb_adm_bool isEmpty;
+
+    status = SetUpTestModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_core_model_add_profile(nullptr, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+
+    status = ::dlb_adm_core_model_add_profile(mCoreModel, DLB_ADM_PROFILE_NOT_INITIALIZED);
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
+
+    status = ::dlb_adm_core_model_has_profile(nullptr, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+    status = ::dlb_adm_core_model_has_profile(mCoreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+    status = ::dlb_adm_core_model_has_profile(nullptr, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &hasProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+
+    status = ::dlb_adm_core_model_has_profile(mCoreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &hasProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, hasProfile);
+    status = ::dlb_adm_core_model_is_empty(mCoreModel, &isEmpty);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_FALSE, isEmpty);
+
+    status = ::dlb_adm_core_model_clear(mCoreModel);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_core_model_has_profile(mCoreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &hasProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_FALSE, hasProfile);
+    status = ::dlb_adm_core_model_is_empty(mCoreModel, &isEmpty);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, isEmpty);
+
+
+    status = ::dlb_adm_core_model_add_profile(mCoreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_core_model_has_profile(mCoreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &hasProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, hasProfile);
+    status = ::dlb_adm_core_model_is_empty(mCoreModel, &isEmpty);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_FALSE, isEmpty);
 }
 
 TEST_F(DlbAdm06, ConfigureNames)
@@ -857,14 +942,14 @@ TEST_F(DlbAdm06, CoreModelAddTargetGroup)
     EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
 
     status = ::dlb_adm_core_model_add_target_group(mCoreModel, &targetGroup, &mNames);
-    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status); // No speaker config or object class in target group
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status); // No speaker config or audio type in target group
 
     targetGroup.speaker_config = DLB_ADM_SPEAKER_CONFIG_2_0;
-    targetGroup.object_class = DLB_ADM_OBJECT_CLASS_DIALOG;
+    targetGroup.audio_type = DLB_ADM_AUDIO_TYPE_OBJECTS;
     status = ::dlb_adm_core_model_add_target_group(mCoreModel, &targetGroup, &mNames);
-    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status); // Can't set both speaker config or object class
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status); // Can't set both speaker config or audio type
 
-    targetGroup.object_class = DLB_ADM_OBJECT_CLASS_NONE;
+    targetGroup.audio_type = DLB_ADM_AUDIO_TYPE_NONE;
     status = ::dlb_adm_core_model_add_target_group(mCoreModel, &targetGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status); // Name is required
 
@@ -910,11 +995,11 @@ TEST_F(DlbAdm06, CoreModelAddTargetGroup)
     status = ::dlb_adm_core_model_add_name(&mNames, "Object_1", LANG_1);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
-    targetGroup.object_class = DLB_ADM_OBJECT_CLASS_COUNT;
+    targetGroup.audio_type = DLB_ADM_AUDIO_TYPE_LAST_CUSTOM;
     status = ::dlb_adm_core_model_add_target_group(mCoreModel, &targetGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status); // Invalid object class
 
-    targetGroup.object_class = DLB_ADM_OBJECT_CLASS_DIALOG;
+    targetGroup.audio_type = DLB_ADM_AUDIO_TYPE_OBJECTS;
     status = ::dlb_adm_core_model_add_target_group(mCoreModel, &targetGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     id3 = targetGroup.id;
@@ -998,6 +1083,7 @@ TEST_F(DlbAdm06, CoreModelAddAudioElement)
     status = ::dlb_adm_core_model_add_audio_element(mCoreModel, &audioElement, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, audioElement.id);
+    EXPECT_TRUE(CompareIds(audioElement.id, "AO_1001"));
     id1 = audioElement.id;
     EXPECT_TRUE(CheckNames(*mCoreModel, id1, mNames));
 
@@ -1009,6 +1095,7 @@ TEST_F(DlbAdm06, CoreModelAddAudioElement)
     status = ::dlb_adm_core_model_add_audio_element(mCoreModel, &audioElement, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, audioElement.id);
+    EXPECT_TRUE(CompareIds(audioElement.id, "AO_1002"));
     id2 = audioElement.id;
     EXPECT_NE(id1, id2);
     EXPECT_TRUE(CheckNames(*mCoreModel, id2, mNames));
@@ -1022,6 +1109,7 @@ TEST_F(DlbAdm06, CoreModelAddAudioElement)
     status = ::dlb_adm_core_model_add_audio_element(mCoreModel, &audioElement, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, audioElement.id);
+    EXPECT_TRUE(CompareIds(audioElement.id, "AO_1003"));
     id3 = audioElement.id;
     EXPECT_NE(id2, id3);
     EXPECT_TRUE(CheckNames(*mCoreModel, id3, mNames));
@@ -1062,6 +1150,7 @@ TEST_F(DlbAdm06, CoreModelAddElementGroup)
     status = ::dlb_adm_core_model_add_element_group(mCoreModel, &elementGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, elementGroup.id);
+    EXPECT_TRUE(CompareIds(elementGroup.id, "AO_1001"));
     id1 = elementGroup.id;
     EXPECT_TRUE(CheckNames(*mCoreModel, id1, mNames));
 
@@ -1073,6 +1162,7 @@ TEST_F(DlbAdm06, CoreModelAddElementGroup)
     status = ::dlb_adm_core_model_add_element_group(mCoreModel, &elementGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, elementGroup.id);
+    EXPECT_TRUE(CompareIds(elementGroup.id, "AO_1002"));
     id2 = elementGroup.id;
     EXPECT_NE(id1, id2);
     EXPECT_TRUE(CheckNames(*mCoreModel, id2, mNames));
@@ -1086,9 +1176,228 @@ TEST_F(DlbAdm06, CoreModelAddElementGroup)
     status = ::dlb_adm_core_model_add_element_group(mCoreModel, &elementGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, elementGroup.id);
+    EXPECT_TRUE(CompareIds(elementGroup.id, "AO_1003"));
     id3 = elementGroup.id;
     EXPECT_NE(id2, id3);
     EXPECT_TRUE(CheckNames(*mCoreModel, id3, mNames));
+}
+
+TEST_F(DlbAdm06, CoreModelAddAlternativeValueSet)
+{
+
+    const char * avsIdString1 = "AVS_1001_0001";
+    const char * avsIdString2 = "AVS_1001_0002";
+    const char * objectIdString = "AO_1001";
+    const char * badParentIdString = "APR_1001";
+
+    dlb_adm_core_model_counts counts;
+    dlb_adm_data_audio_element audioElement;
+    dlb_adm_data_presentation badParent;
+    dlb_adm_data_alt_value_set altValSet;
+
+    dlb_adm_entity_id id1, id2;
+    dlb_adm_entity_id objectId;
+    dlb_adm_entity_id badParentId;
+
+    int status;
+
+    status = SetUpNames();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    ::memset(&counts, 0, sizeof(counts));
+    ::memset(&audioElement, 0, sizeof(audioElement));
+    ::memset(&altValSet, 0, sizeof(altValSet));
+    status = ::dlb_adm_core_model_open(&mCoreModel, &counts);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    ASSERT_NE(nullptr, mCoreModel);
+
+    status = ::dlb_adm_read_entity_id(&id1, avsIdString1, ::strlen(avsIdString1)+1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(id1, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_read_entity_id(&id2, avsIdString2, ::strlen(avsIdString2)+1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(id2, DLB_ADM_NULL_ENTITY_ID);
+
+    // set up bad parent
+    status = ::dlb_adm_read_entity_id(&badParentId, badParentIdString, ::strlen(badParentIdString)+1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(badParentId, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_read_entity_id(&badParent.id, badParentIdString, ::strlen(badParentIdString));
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_name(&mNames, "Presentation 1", LANG_1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_presentation(mCoreModel, &badParent, &mNames);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_clear_names(&mNames);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // status "NULL_POINTER"
+    status = ::dlb_adm_core_model_add_alt_value_set(nullptr, DLB_ADM_NULL_ENTITY_ID, nullptr, nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, DLB_ADM_NULL_ENTITY_ID, nullptr, nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, DLB_ADM_NULL_ENTITY_ID, &altValSet, nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+
+    // wrong parent type
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, badParentId, &altValSet, &mAltValSetLabels);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+
+    // Id of parent not in Core Model
+    status = ::dlb_adm_read_entity_id(&objectId, objectIdString, ::strlen(objectIdString)+1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(objectId, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, objectId, &altValSet, &mAltValSetLabels);
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
+
+    // null_id for parent and avs
+    objectId = DLB_ADM_NULL_ENTITY_ID;
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, objectId, &altValSet, &mAltValSetLabels);
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
+
+    // set up correct parent audio element
+    status = ::dlb_adm_core_model_add_name(&mNames, "Audio Element 1", nullptr);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_audio_element(mCoreModel, &audioElement, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    objectId = audioElement.id;
+
+    // both parent and avs has ID
+    altValSet.id = id1;
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, objectId, &altValSet, &mAltValSetLabels);
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
+    altValSet.id = DLB_ADM_NULL_ENTITY_ID;
+
+    // invalid gain
+    altValSet.has_gain = DLB_ADM_TRUE;
+    altValSet.gain.gain_unit = DLB_ADM_GAIN_UNIT_COUNT;
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, objectId, &altValSet, &mAltValSetLabels);
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
+    altValSet.has_gain = DLB_ADM_FALSE;
+    altValSet.gain.gain_unit = DLB_ADM_GAIN_UNIT_LINEAR;
+
+    // AVS can't have name
+    status = ::dlb_adm_core_model_add_name(&mAltValSetLabels, "AVS name", nullptr);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, objectId, &altValSet, &mAltValSetLabels);
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
+    status = ::dlb_adm_core_model_clear_names(&mAltValSetLabels);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // correct avs
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, objectId, &altValSet, &mAltValSetLabels);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(id1, altValSet.id);
+    EXPECT_TRUE(CheckNames(*mCoreModel, id1, mAltValSetLabels));
+
+    // duplicate entry not allowed
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, DLB_ADM_NULL_ENTITY_ID, &altValSet, &mAltValSetLabels);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+    EXPECT_EQ(id1, altValSet.id);
+
+    // avs with labels
+    altValSet.id = id2;
+    status = ::dlb_adm_core_model_add_label(&mAltValSetLabels, LABEL_1, LANG_1);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_label(&mAltValSetLabels, LABEL_2, LANG_2);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, DLB_ADM_NULL_ENTITY_ID, &altValSet, &mAltValSetLabels);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(id2, altValSet.id);
+    EXPECT_EQ(id2, id1 + 1u);
+    EXPECT_TRUE(CheckNames(*mCoreModel, id2, mAltValSetLabels));
+}
+
+
+TEST_F(DlbAdm06, CoreModelAddComplementaryObjects)
+{
+    const char * objectIdString = "AO_1001";
+    const char * ComplementaryLeaderdString = "AO_1002";
+
+    dlb_adm_core_model_counts counts;
+    dlb_adm_data_complementary_element comp_element;
+    dlb_adm_data_complementary_element comp_leader_element;
+    dlb_adm_data_audio_element audioElement;
+    dlb_adm_data_audio_element audioElementLeader;
+
+    dlb_adm_entity_id id1, id2;
+    dlb_adm_entity_id objectId;
+    dlb_adm_entity_id ComplementaryLeaderId;
+
+    int status;
+
+    status = SetUpNames();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    ::memset(&counts, 0, sizeof(counts));
+    ::memset(&comp_element, 0, sizeof(comp_element));
+    ::memset(&comp_leader_element, 0, sizeof(comp_leader_element));
+    ::memset(&audioElement, 0, sizeof(audioElement));
+    ::memset(&audioElementLeader, 0, sizeof(audioElementLeader));
+    status = ::dlb_adm_core_model_open(&mCoreModel, &counts);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    ASSERT_NE(nullptr, mCoreModel);
+
+    status = ::dlb_adm_read_entity_id(&objectId, objectIdString, ::strlen(objectIdString) + 1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(objectId, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_read_entity_id(&ComplementaryLeaderId, ComplementaryLeaderdString, ::strlen(ComplementaryLeaderdString) + 1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(ComplementaryLeaderId, DLB_ADM_NULL_ENTITY_ID);
+
+    comp_element.audio_element_id = objectId;
+    comp_element.complementary_leader_id = ComplementaryLeaderId;
+
+    // status "NULL_POINTER"
+    status = ::dlb_adm_core_model_add_complementary_element(nullptr, DLB_ADM_NULL_ENTITY_ID, 1, nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+    status = ::dlb_adm_core_model_add_complementary_element(mCoreModel, DLB_ADM_NULL_ENTITY_ID, 1, nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+    status = ::dlb_adm_core_model_add_complementary_element(mCoreModel, &comp_element, 0, nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
+
+    // Object not in CoreModel
+    status = ::dlb_adm_core_model_add_complementary_element(mCoreModel, &comp_element, 1, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
+
+    // Compelementary Leader not in CoreModel
+    status = ::dlb_adm_core_model_add_name(&mNames, "Audio Element 1", nullptr);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_audio_element(mCoreModel, &audioElement, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    comp_element.audio_element_id = audioElement.id;
+    status = ::dlb_adm_core_model_clear_names(&mNames);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_core_model_add_complementary_element(mCoreModel, &comp_element, 1, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
+
+    status = ::dlb_adm_core_model_add_name(&mNames, "Audio Element 2", nullptr);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_audio_element(mCoreModel, &audioElementLeader, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_clear_names(&mNames);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    comp_element.complementary_leader_id = audioElementLeader.id;
+    comp_leader_element.audio_element_id = audioElementLeader.id;
+    comp_leader_element.complementary_leader_id = audioElementLeader.id;
+
+    status = ::dlb_adm_core_model_add_label(&mNames, LABEL_1, LANG_1);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_label(&mNames, LABEL_2, LANG_2);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_complementary_element(mCoreModel, &comp_element, 1, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_complementary_element(mCoreModel, &comp_leader_element, 2, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_FALSE(CheckNames(*mCoreModel, comp_element.id, mNames));
+    EXPECT_TRUE(CheckNames(*mCoreModel, comp_leader_element.id, mNames));
+    EXPECT_EQ(comp_leader_element.id, comp_element.id + 1);
+
+    // duplicate entry not allowed
+    status = ::dlb_adm_core_model_add_complementary_element(mCoreModel, &comp_element, 1, nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
 }
 
 TEST_F(DlbAdm06, CoreModelAddContentGroup)
@@ -1103,6 +1412,10 @@ TEST_F(DlbAdm06, CoreModelAddContentGroup)
 
     ::memset(&counts, 0, sizeof(counts));
     ::memset(&contentGroup, 0, sizeof(contentGroup));
+
+    const dlb_adm_data_loudness sourceLoudness = {3.5, DLB_ADM_LOUDNESS_TYPE_INTEGRATED};
+    contentGroup.loudness = sourceLoudness;
+
     status = ::dlb_adm_core_model_open(&mCoreModel, &counts);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     ASSERT_NE(nullptr, mCoreModel);
@@ -1128,8 +1441,10 @@ TEST_F(DlbAdm06, CoreModelAddContentGroup)
     status = ::dlb_adm_core_model_add_content_group(mCoreModel, &contentGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, contentGroup.id);
+    EXPECT_TRUE(CompareIds(contentGroup.id, "ACO_1001"));
     id1 = contentGroup.id;
     EXPECT_TRUE(CheckNames(*mCoreModel, id1, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id1, sourceLoudness, DLB_ADM_ENTITY_TYPE_CONTENT));
 
     status = ::dlb_adm_core_model_add_content_group(mCoreModel, &contentGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);    // Duplicate entry not allowed
@@ -1139,9 +1454,11 @@ TEST_F(DlbAdm06, CoreModelAddContentGroup)
     status = ::dlb_adm_core_model_add_content_group(mCoreModel, &contentGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, contentGroup.id);
+    EXPECT_TRUE(CompareIds(contentGroup.id, "ACO_1002"));
     id2 = contentGroup.id;
     EXPECT_NE(id1, id2);
     EXPECT_TRUE(CheckNames(*mCoreModel, id2, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id2, sourceLoudness, DLB_ADM_ENTITY_TYPE_CONTENT));
 
     status = ::dlb_adm_core_model_add_label(&mNames, LABEL_1, LANG_1);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
@@ -1152,9 +1469,11 @@ TEST_F(DlbAdm06, CoreModelAddContentGroup)
     status = ::dlb_adm_core_model_add_content_group(mCoreModel, &contentGroup, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, contentGroup.id);
+    EXPECT_TRUE(CompareIds(contentGroup.id, "ACO_1003"));
     id3 = contentGroup.id;
     EXPECT_NE(id2, id3);
     EXPECT_TRUE(CheckNames(*mCoreModel, id3, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id3, sourceLoudness, DLB_ADM_ENTITY_TYPE_CONTENT));
 }
 
 TEST_F(DlbAdm06, CoreModelAddPresentation)
@@ -1169,6 +1488,10 @@ TEST_F(DlbAdm06, CoreModelAddPresentation)
 
     ::memset(&counts, 0, sizeof(counts));
     ::memset(&presentation, 0, sizeof(presentation));
+
+    const dlb_adm_data_loudness sourceLoudness = {2.0, DLB_ADM_LOUDNESS_TYPE_INTEGRATED};
+    presentation.loudness = sourceLoudness;
+
     status = ::dlb_adm_core_model_open(&mCoreModel, &counts);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     ASSERT_NE(nullptr, mCoreModel);
@@ -1189,8 +1512,10 @@ TEST_F(DlbAdm06, CoreModelAddPresentation)
     status = ::dlb_adm_core_model_add_presentation(mCoreModel, &presentation, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, presentation.id);
+    EXPECT_TRUE(CompareIds(presentation.id, "APR_1001"));
     id1 = presentation.id;
     EXPECT_TRUE(CheckNames(*mCoreModel, id1, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id1, sourceLoudness, DLB_ADM_ENTITY_TYPE_PROGRAMME));
 
     status = ::dlb_adm_core_model_add_presentation(mCoreModel, &presentation, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);    // Duplicate entry not allowed
@@ -1200,9 +1525,11 @@ TEST_F(DlbAdm06, CoreModelAddPresentation)
     status = ::dlb_adm_core_model_add_presentation(mCoreModel, &presentation, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, presentation.id);
+    EXPECT_TRUE(CompareIds(presentation.id, "APR_1002"));
     id2 = presentation.id;
     EXPECT_NE(id1, id2);
     EXPECT_TRUE(CheckNames(*mCoreModel, id2, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id2, sourceLoudness, DLB_ADM_ENTITY_TYPE_PROGRAMME));
 
     status = ::dlb_adm_core_model_add_label(&mNames, LABEL_1, LANG_1);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
@@ -1213,9 +1540,11 @@ TEST_F(DlbAdm06, CoreModelAddPresentation)
     status = ::dlb_adm_core_model_add_presentation(mCoreModel, &presentation, &mNames);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, presentation.id);
+    EXPECT_TRUE(CompareIds(presentation.id, "APR_1003"));
     id3 = presentation.id;
     EXPECT_NE(id2, id3);
     EXPECT_TRUE(CheckNames(*mCoreModel, id3, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id3, sourceLoudness, DLB_ADM_ENTITY_TYPE_PROGRAMME));
 }
 
 TEST_F(DlbAdm06, CoreModelAddElementRecord)
@@ -1383,7 +1712,7 @@ TEST_F(DlbAdm06, CoreModelAddBlockUpdate)
     status = ::dlb_adm_core_model_add_name(&mNames, "Object_1", LANG_1);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     parentGroup.id = parentId;
-    parentGroup.object_class = DLB_ADM_OBJECT_CLASS_DIALOG;
+    parentGroup.audio_type = DLB_ADM_AUDIO_TYPE_OBJECTS;
     status = ::dlb_adm_core_model_add_target_group(mCoreModel, &parentGroup, &mNames);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     ASSERT_EQ(parentId, parentGroup.id);
@@ -1412,6 +1741,9 @@ TEST_F(DlbAdm06, CoreModelAddPresentationRecord)
     dlb_adm_data_audio_element audioElement1;
     dlb_adm_data_audio_element audioElement2;
     dlb_adm_data_audio_element audioElement3;
+    dlb_adm_data_alt_value_set altValueSet1;
+    dlb_adm_data_complementary_element compElement1;
+    dlb_adm_data_complementary_element compElement2;
     int status;
 
     status = SetUpNames();
@@ -1426,6 +1758,8 @@ TEST_F(DlbAdm06, CoreModelAddPresentationRecord)
     ::memset(&audioElement1, 0, sizeof(audioElement1));
     ::memset(&audioElement2, 0, sizeof(audioElement2));
     ::memset(&audioElement3, 0, sizeof(audioElement3));
+    ::memset(&altValueSet1, 0, sizeof(altValueSet1));
+    ::memset(&compElement1, 0, sizeof(compElement1));
     status = ::dlb_adm_core_model_open(&mCoreModel, &counts);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     ASSERT_NE(nullptr, mCoreModel);
@@ -1486,22 +1820,41 @@ TEST_F(DlbAdm06, CoreModelAddPresentationRecord)
     status = ::dlb_adm_core_model_clear_names(&mNames);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
+    status = ::dlb_adm_core_model_add_label(&mNames, "Alternative Object label", LANG_1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_alt_value_set(mCoreModel, audioElement1.id, &altValueSet1, &mNames);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_clear_names(&mNames);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    compElement1.audio_element_id = audioElement3.id;
+    compElement1.complementary_leader_id = audioElement1.id;
+    status = ::dlb_adm_core_model_add_complementary_element(mCoreModel, &compElement1, 1, nullptr);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    compElement2.audio_element_id = audioElement1.id;
+    compElement2.complementary_leader_id = audioElement1.id;
+    status = ::dlb_adm_core_model_add_label(&mNames, "Complementary Group label", LANG_1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_add_complementary_element(mCoreModel, &compElement2, 2, &mNames);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_core_model_clear_names(&mNames);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
     // Null pointer/invalid argument
 
     status = ::dlb_adm_core_model_add_presentation_relation(
-        nullptr, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
+        nullptr, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
     EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
     status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel,
-        DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
+        DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
     EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
     status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, presentation1.id,
-        DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
+        DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
     EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
     status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, presentation1.id, contentGroup1.id,
-        DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
+        DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
     EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
     status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, contentGroup1.id, presentation1.id,
-        DLB_ADM_NULL_ENTITY_ID, audioElement1.id);
+        DLB_ADM_NULL_ENTITY_ID, audioElement1.id, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
     EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);        // Presentation and content group reversed -- wrong types
 
     // Test adding presentation relations --
@@ -1509,22 +1862,27 @@ TEST_F(DlbAdm06, CoreModelAddPresentationRecord)
     // Presentation 1
 
     status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, presentation1.id, contentGroup1.id,
-        DLB_ADM_NULL_ENTITY_ID, audioElement1.id);  // M&E
+        DLB_ADM_NULL_ENTITY_ID, audioElement1.id, altValueSet1.id, DLB_ADM_NULL_ENTITY_ID);  // M&E
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, presentation1.id, contentGroup1.id,
-        DLB_ADM_NULL_ENTITY_ID, audioElement1.id);
+        DLB_ADM_NULL_ENTITY_ID, audioElement1.id, altValueSet1.id, DLB_ADM_NULL_ENTITY_ID);
     EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);        // Duplicates not allowed
+    status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, presentation1.id, contentGroup1.id,
+        DLB_ADM_NULL_ENTITY_ID, audioElement2.id, altValueSet1.id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);        // AlternativeValueSet references wrong audioElement
     status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, presentation1.id, contentGroup2.id,
-        DLB_ADM_NULL_ENTITY_ID, audioElement2.id);  // English Dialog
+        DLB_ADM_NULL_ENTITY_ID, audioElement2.id, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);  // English Dialog
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Presentation 2
 
     status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, presentation2.id, contentGroup1.id,
-        DLB_ADM_NULL_ENTITY_ID, audioElement1.id);  // M&E
+        DLB_ADM_NULL_ENTITY_ID, audioElement1.id, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);  // M&E
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, presentation2.id, contentGroup3.id,
-        DLB_ADM_NULL_ENTITY_ID, audioElement3.id);  // French Dialog
+        DLB_ADM_NULL_ENTITY_ID, audioElement3.id, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);  // French Dialog
+    status = ::dlb_adm_core_model_add_presentation_relation(mCoreModel, presentation2.id, contentGroup3.id,
+        DLB_ADM_NULL_ENTITY_ID, audioElement3.id, DLB_ADM_NULL_ENTITY_ID, compElement1.id); // Complementry object
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 }
 
@@ -1567,13 +1925,18 @@ TEST(dlb_adm_test, ElementDataQueryMem)
     size_t memorySize;
     int status;
 
-    status = ::dlb_adm_core_model_query_element_data_memory_size(nullptr, 0);
+    status = ::dlb_adm_core_model_query_element_data_memory_size(nullptr, 0, 0);
     EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
-    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, 0);
+    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, 0, 0);
     EXPECT_EQ(DLB_ADM_STATUS_OUT_OF_RANGE, status);
 
     memorySize = 0;
-    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, MAX_PMD_BED_CHANNELS);
+    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, MAX_PMD_BED_CHANNELS, MAX_SADM_ALT_VALUE_SETS);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_LT(0, memorySize);
+
+    memorySize = 0;
+    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, MAX_PMD_BED_CHANNELS, 0);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_LT(0, memorySize);
 }
@@ -1583,31 +1946,47 @@ TEST_F(DlbAdm06, ElementDataConfigure)
     size_t memorySize;
     int status;
 
-    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, MAX_PMD_BED_CHANNELS);
+    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, MAX_PMD_BED_CHANNELS, MAX_SADM_ALT_VALUE_SETS);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     mElementDataMemory = new uint8_t[memorySize];
     ASSERT_NE(nullptr, mElementDataMemory);
 
-    status = ::dlb_adm_core_model_configure_element_data(nullptr, 0, nullptr);
+    status = ::dlb_adm_core_model_configure_element_data(nullptr, 0, 0, nullptr);
     EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
-    status = ::dlb_adm_core_model_configure_element_data(&mElementData, 0, nullptr);
+    status = ::dlb_adm_core_model_configure_element_data(&mElementData, 0, 0, nullptr);
     EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
-    status = ::dlb_adm_core_model_configure_element_data(&mElementData, 0, mElementDataMemory);
+    status = ::dlb_adm_core_model_configure_element_data(&mElementData, 0, 0, mElementDataMemory);
     EXPECT_EQ(DLB_ADM_STATUS_OUT_OF_RANGE, status);
 
-    status = ::dlb_adm_core_model_configure_element_data(&mElementData, MAX_PMD_BED_CHANNELS, mElementDataMemory);
+    // configure element_data with some memory for AltValSets
+    status = ::dlb_adm_core_model_configure_element_data(&mElementData, MAX_PMD_BED_CHANNELS, MAX_SADM_ALT_VALUE_SETS, mElementDataMemory);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(0, mElementData.channel_count);
+    EXPECT_EQ(0, mElementData.alt_val_count);
+    EXPECT_EQ(MAX_PMD_BED_CHANNELS, mElementData.channel_capacity);
+    EXPECT_EQ(MAX_SADM_ALT_VALUE_SETS, mElementData.alt_val_capacity);
+    EXPECT_EQ(mElementDataMemory, mElementData.array_storage);
+
+    status = ::dlb_adm_core_model_clear_element_data(&mElementData);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // configure element_data without memory for AltValSets
+    status = ::dlb_adm_core_model_configure_element_data(&mElementData, MAX_PMD_BED_CHANNELS, 0, mElementDataMemory);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_EQ(0, mElementData.channel_count);
     EXPECT_EQ(MAX_PMD_BED_CHANNELS, mElementData.channel_capacity);
+    EXPECT_EQ(0, mElementData.alt_val_capacity);
     EXPECT_EQ(mElementDataMemory, mElementData.array_storage);
 }
 
-TEST_F(DlbAdm06, ElementDataGet)
+TEST_F(DlbAdm06, ElementDataGet1)
 {
     static const char audioElementIDString[] = "AO_1001";
+    static const char altValSetIDString[] = "AVS_1001_0001";
     static const dlb_adm_channel_count CHANNEL_CAPACITY = 16;
     dlb_adm_data_audio_element_data nullData;
     dlb_adm_entity_id audioElementID;
+    dlb_adm_entity_id altValSetID;
     size_t memorySize;
     int status;
 
@@ -1615,14 +1994,26 @@ TEST_F(DlbAdm06, ElementDataGet)
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_read_entity_id(&audioElementID, audioElementIDString, ::strlen(audioElementIDString) + 1);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_read_entity_id(&altValSetID, altValSetIDString, ::strlen(altValSetIDString) + 1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // configure the element data
     ::memset(&nullData, 0, sizeof(nullData));
-    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, CHANNEL_CAPACITY);
+    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, CHANNEL_CAPACITY, MAX_SADM_ALT_VALUE_SETS);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     mElementDataMemory = new uint8_t[memorySize];
     ASSERT_NE(nullptr, mElementDataMemory);
-    status = ::dlb_adm_core_model_configure_element_data(&mElementData, CHANNEL_CAPACITY, mElementDataMemory);
+
+    // wrong configuration of element_data - not enough memory for AlternativeValueSets
+    status = ::dlb_adm_core_model_configure_element_data(&mElementData, CHANNEL_CAPACITY, 0, mElementDataMemory);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(0, mElementData.alt_val_capacity);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, mCoreModel, audioElementID);
+    EXPECT_EQ(DLB_ADM_STATUS_OUT_OF_MEMORY, status);
+
+    // correct configuration of element_data
+    status = ::dlb_adm_core_model_configure_element_data(&mElementData, CHANNEL_CAPACITY, MAX_SADM_ALT_VALUE_SETS, mElementDataMemory);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // begin testing
@@ -1639,6 +2030,69 @@ TEST_F(DlbAdm06, ElementDataGet)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_EQ(2, mElementData.channel_count);
     EXPECT_EQ(audioElementID, mElementData.audio_element.id);
+    EXPECT_EQ(1, mElementData.alt_val_count);
+    EXPECT_EQ(MAX_SADM_ALT_VALUE_SETS, mElementData.alt_val_capacity);
+
+    EXPECT_EQ(mElementData.audio_element.audio_object_interaction.onOffInteract, 0u);
+    EXPECT_EQ(mElementData.audio_element.audio_object_interaction.gainInteract, 0u);
+    EXPECT_EQ(mElementData.audio_element.audio_object_interaction.positionInteract, 1u);
+    EXPECT_EQ(mElementData.audio_element.audio_object_interaction.positionRanges[0].cartesian, 1u);
+    EXPECT_EQ(mElementData.audio_element.audio_object_interaction.positionRanges[0].coordinate, DLB_ADM_COORDINATE_X);
+    EXPECT_FLOAT_EQ(mElementData.audio_element.audio_object_interaction.positionRanges[0].minValue, -1.00);
+    EXPECT_FLOAT_EQ(mElementData.audio_element.audio_object_interaction.positionRanges[0].maxValue, 1.00);
+    // offset value set to default - not present
+    EXPECT_FLOAT_EQ(mElementData.audio_element.position_offset.offset_value, 0.00);
+    EXPECT_EQ(mElementData.audio_element.position_offset.cartesian, 0);
+
+    EXPECT_EQ(altValSetID, mElementData.alt_val_sets[0].id);
+    EXPECT_EQ(DLB_ADM_TRUE, mElementData.alt_val_sets[0].has_gain);
+    EXPECT_FLOAT_EQ(-1.5, mElementData.alt_val_sets[0].gain.gain_value);
+    EXPECT_EQ(DLB_ADM_GAIN_UNIT_DB, mElementData.alt_val_sets[0].gain.gain_unit);
+    EXPECT_EQ(DLB_ADM_FALSE, mElementData.alt_val_sets[0].has_position_offset);
+
+    // also test dlb_adm_core_model_clear_element_data()
+    status = ::dlb_adm_core_model_clear_element_data(nullptr);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+    status = ::dlb_adm_core_model_clear_element_data(&nullData);
+    EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+
+    status = ::dlb_adm_core_model_clear_element_data(&mElementData);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(0, mElementData.channel_count);
+    EXPECT_EQ(CHANNEL_CAPACITY, mElementData.channel_capacity);
+    EXPECT_EQ(DLB_ADM_NULL_ENTITY_ID, mElementData.audio_element.id);
+}
+
+TEST_F(DlbAdm06, ElementDataGet2)
+{
+    static const char audioElementIDString[] = "AO_1002";
+    static const dlb_adm_channel_count CHANNEL_CAPACITY = 16;
+    dlb_adm_data_audio_element_data nullData;
+    dlb_adm_entity_id audioElementID;
+    size_t memorySize;
+    int status;
+
+    status = SetUpTestModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_read_entity_id(&audioElementID, audioElementIDString, ::strlen(audioElementIDString) + 1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // configure the element data
+    ::memset(&nullData, 0, sizeof(nullData));
+    status = ::dlb_adm_core_model_query_element_data_memory_size(&memorySize, CHANNEL_CAPACITY, MAX_SADM_ALT_VALUE_SETS);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    mElementDataMemory = new uint8_t[memorySize];
+    ASSERT_NE(nullptr, mElementDataMemory);
+    status = ::dlb_adm_core_model_configure_element_data(&mElementData, CHANNEL_CAPACITY, MAX_SADM_ALT_VALUE_SETS, mElementDataMemory);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, mCoreModel, audioElementID);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(1, mElementData.channel_count);
+    EXPECT_EQ(audioElementID, mElementData.audio_element.id);
+
+    EXPECT_FLOAT_EQ(mElementData.audio_element.position_offset.offset_value, -0.5);
+    EXPECT_EQ(mElementData.audio_element.position_offset.cartesian, 1);
 
     // also test dlb_adm_core_model_clear_element_data()
     status = ::dlb_adm_core_model_clear_element_data(nullptr);
@@ -1696,14 +2150,18 @@ TEST_F(DlbAdm06, PresentationDataConfigure)
 TEST_F(DlbAdm06, PresentationDataGet)
 {
     static const char presentationIDString[] = "APR_1001";
+    static const char altValSetIDString[] = "AVS_1001_0001";
     dlb_adm_data_presentation_data nullData;
     dlb_adm_entity_id presentationID;
+    dlb_adm_entity_id altValSetID;
     size_t memorySize;
     int status;
 
     status = SetUpTestModel();
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_read_entity_id(&presentationID, presentationIDString, ::strlen(presentationIDString) + 1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_read_entity_id(&altValSetID, altValSetIDString, ::strlen(altValSetIDString) + 1);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // configure the presentation data
@@ -1729,12 +2187,67 @@ TEST_F(DlbAdm06, PresentationDataGet)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_EQ(2, mPresentationData.element_count);
     EXPECT_EQ(presentationID, mPresentationData.presentation.id);
+    EXPECT_EQ(mPresentationData.presentation.loudness.loudness_type, DLB_ADM_LOUDNESS_TYPE_NOT_INITIALIZED);
+
+    EXPECT_EQ(altValSetID, mPresentationData.alt_val_sets[0].id);
+    EXPECT_EQ(DLB_ADM_TRUE, mPresentationData.alt_val_sets[0].has_gain);
+    EXPECT_FLOAT_EQ(-1.5, mPresentationData.alt_val_sets[0].gain.gain_value);
+    EXPECT_EQ(DLB_ADM_GAIN_UNIT_DB, mPresentationData.alt_val_sets[0].gain.gain_unit);
+    EXPECT_EQ(DLB_ADM_FALSE, mPresentationData.alt_val_sets[0].has_position_offset);
 
     // also test dlb_adm_core_model_clear_presentation_data()
     status = ::dlb_adm_core_model_clear_presentation_data(nullptr);
     EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
     status = ::dlb_adm_core_model_clear_presentation_data(&nullData);
     EXPECT_EQ(DLB_ADM_STATUS_NULL_POINTER, status);
+
+    status = ::dlb_adm_core_model_clear_presentation_data(&mPresentationData);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(0, mPresentationData.element_count);
+    EXPECT_EQ(MAX_PMD_PRESENTATION_ELEMENTS, mPresentationData.element_capacity);
+    EXPECT_EQ(DLB_ADM_NULL_ENTITY_ID, mPresentationData.presentation.id);
+}
+
+TEST_F(DlbAdm06, PresentationDataGetCompObject)
+{
+    static const char presentationIDString[] = "APR_1002";
+    static const char compLeaderIDString[] = "AO_1002";
+    static const char compObjectIDString[] = "AO_1003";
+    dlb_adm_data_presentation_data nullData;
+    dlb_adm_entity_id presentationID;
+    dlb_adm_entity_id compLeaderID;
+    dlb_adm_entity_id compObjectID;
+    size_t memorySize;
+    int status;
+
+    status = SetUpTestModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_read_entity_id(&presentationID, presentationIDString, ::strlen(presentationIDString) + 1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_read_entity_id(&compLeaderID, compLeaderIDString, ::strlen(compLeaderIDString) + 1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_read_entity_id(&compObjectID, compObjectIDString, ::strlen(compObjectIDString) + 1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // configure the presentation data
+    ::memset(&nullData, 0, sizeof(nullData));
+    status = ::dlb_adm_core_model_query_presentation_data_memory_size(&memorySize, MAX_PMD_PRESENTATION_ELEMENTS);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    mPresentationDataMemory = new uint8_t[memorySize];
+    ASSERT_NE(nullptr, mPresentationDataMemory);
+    status = ::dlb_adm_core_model_configure_presentation_data(&mPresentationData, MAX_PMD_PRESENTATION_ELEMENTS, mPresentationDataMemory);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // begin testing
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, mCoreModel, presentationID);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(2, mPresentationData.element_count);
+    EXPECT_EQ(presentationID, mPresentationData.presentation.id);
+    EXPECT_EQ(DLB_ADM_NULL_ENTITY_ID, mPresentationData.comp_elements[0].id);
+    EXPECT_EQ(DLB_ADM_NULL_ENTITY_ID, mPresentationData.comp_elements[0].complementary_leader_id);
+    EXPECT_EQ(DLB_ADM_NULL_ENTITY_ID, mPresentationData.comp_elements[0].audio_element_id);
+    EXPECT_EQ(compLeaderID, mPresentationData.comp_elements[1].complementary_leader_id);
+    EXPECT_EQ(compObjectID, mPresentationData.comp_elements[1].audio_element_id);
 
     status = ::dlb_adm_core_model_clear_presentation_data(&mPresentationData);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
@@ -2032,4 +2545,119 @@ TEST_F(DlbAdm06, CoreModelIsEmpty)
     status = ::dlb_adm_core_model_is_empty(mCoreModel, &isEmpty);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_TRUE(isEmpty);
+}
+
+TEST_F(DlbAdm06, CoreModelPresentationLoudnessMetadata)
+{
+    dlb_adm_core_model_counts counts;
+    dlb_adm_data_presentation presentation;
+    dlb_adm_entity_id id1, id2, id3;
+    int status;
+
+    status = SetUpNames();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    const dlb_adm_data_loudness sourceLoudness1 = {-27.5, DLB_ADM_LOUDNESS_TYPE_INTEGRATED};
+    const dlb_adm_data_loudness sourceLoudness2 = {-15.5, DLB_ADM_LOUDNESS_TYPE_NOT_INITIALIZED};
+    const dlb_adm_data_loudness sourceLoudness3 = {-5.5, DLB_ADM_LOUDNESS_TYPE_COUNT};
+    const dlb_adm_data_loudness sourceLoudnessNotInitialized = {0.0, DLB_ADM_LOUDNESS_TYPE_NOT_INITIALIZED};
+
+    ::memset(&counts, 0, sizeof(counts));
+    ::memset(&presentation, 0, sizeof(presentation));
+
+    presentation.loudness = sourceLoudness1;
+
+    status = ::dlb_adm_core_model_open(&mCoreModel, &counts);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    ASSERT_NE(nullptr, mCoreModel);
+
+    status = ::dlb_adm_core_model_add_name(&mNames, "Presentation 1", LANG_2);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // initialised loudness
+    status = ::dlb_adm_core_model_add_presentation(mCoreModel, &presentation, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, presentation.id);
+    id1 = presentation.id;
+    EXPECT_TRUE(CheckNames(*mCoreModel, id1, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id1, sourceLoudness1, DLB_ADM_ENTITY_TYPE_PROGRAMME));
+
+    // uninitialized loudness
+    presentation.id = DLB_ADM_NULL_ENTITY_ID;
+    presentation.loudness = sourceLoudness2;
+    status = ::dlb_adm_core_model_add_presentation(mCoreModel, &presentation, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, presentation.id);
+    id2 = presentation.id;
+    EXPECT_NE(id1, id2);
+    EXPECT_TRUE(CheckNames(*mCoreModel, id2, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id2, sourceLoudnessNotInitialized, DLB_ADM_ENTITY_TYPE_PROGRAMME));
+
+    // incorrect loudness
+    presentation.id = DLB_ADM_NULL_ENTITY_ID;
+    presentation.loudness = sourceLoudness3;
+    status = ::dlb_adm_core_model_add_presentation(mCoreModel, &presentation, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, presentation.id);
+    id3 = presentation.id;
+    EXPECT_NE(id2, id3);
+    EXPECT_TRUE(CheckNames(*mCoreModel, id3, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id3, sourceLoudnessNotInitialized, DLB_ADM_ENTITY_TYPE_PROGRAMME));
+}
+
+TEST_F(DlbAdm06, CoreModelContentGroupLoudnessMetadata)
+{
+    dlb_adm_core_model_counts counts;
+    dlb_adm_data_content_group contentGroup;
+    dlb_adm_entity_id id1, id2, id3;
+    int status;
+
+    status = SetUpNames();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    const dlb_adm_data_loudness sourceLoudness1 = {-27.5, DLB_ADM_LOUDNESS_TYPE_INTEGRATED};
+    const dlb_adm_data_loudness sourceLoudness2 = {-15.5, DLB_ADM_LOUDNESS_TYPE_NOT_INITIALIZED};
+    const dlb_adm_data_loudness sourceLoudness3 = {-5.5, DLB_ADM_LOUDNESS_TYPE_COUNT};
+    const dlb_adm_data_loudness sourceLoudnessNotInitialized = {0.0, DLB_ADM_LOUDNESS_TYPE_NOT_INITIALIZED};
+
+    ::memset(&counts, 0, sizeof(counts));
+    ::memset(&contentGroup, 0, sizeof(contentGroup));
+
+    status = ::dlb_adm_core_model_open(&mCoreModel, &counts);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    ASSERT_NE(nullptr, mCoreModel);
+
+    status = ::dlb_adm_core_model_add_name(&mNames, "Content Group 1", LANG_1);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // initialised loudness
+    contentGroup.loudness = sourceLoudness1;
+    status = ::dlb_adm_core_model_add_content_group(mCoreModel, &contentGroup, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, contentGroup.id);
+    id1 = contentGroup.id;
+    EXPECT_TRUE(CheckNames(*mCoreModel, id1, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id1, sourceLoudness1, DLB_ADM_ENTITY_TYPE_CONTENT));
+
+    // uninitialized loudness
+    contentGroup.loudness = sourceLoudness2;
+    contentGroup.id = DLB_ADM_NULL_ENTITY_ID;
+    status = ::dlb_adm_core_model_add_content_group(mCoreModel, &contentGroup, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, contentGroup.id);
+    id2 = contentGroup.id;
+    EXPECT_NE(id1, id2);
+    EXPECT_TRUE(CheckNames(*mCoreModel, id2, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id2, sourceLoudnessNotInitialized, DLB_ADM_ENTITY_TYPE_CONTENT));
+
+    // incorrect loudness
+    contentGroup.loudness = sourceLoudness3;
+    contentGroup.id = DLB_ADM_NULL_ENTITY_ID;
+    status = ::dlb_adm_core_model_add_content_group(mCoreModel, &contentGroup, &mNames);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_NE(DLB_ADM_NULL_ENTITY_ID, contentGroup.id);
+    id3 = contentGroup.id;
+    EXPECT_NE(id2, id3);
+    EXPECT_TRUE(CheckNames(*mCoreModel, id3, mNames));
+    EXPECT_TRUE(CheckLoudnessMetadata(*mCoreModel, id3, sourceLoudnessNotInitialized, DLB_ADM_ENTITY_TYPE_CONTENT));
 }
