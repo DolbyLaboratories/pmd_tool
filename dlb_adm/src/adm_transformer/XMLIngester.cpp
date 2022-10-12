@@ -69,6 +69,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/optional.hpp>
 #include <map>
+#include <regex>
+#include <algorithm>
 
 //#define PRINT_ELEMENT_RECORDS
 #ifdef PRINT_ELEMENT_RECORDS
@@ -994,6 +996,19 @@ namespace DlbAdm
         return status;
     }
 
+    int XMLIngester::IngestCommonDefs()
+    {
+        int status;
+
+        /* Ingest only the common definitions */
+        status = IngestTargetGroups();
+        CHECK_STATUS(status);
+        status = IngestTargets();
+        CHECK_STATUS(status);
+
+        return status;
+    }
+
     int XMLIngester::AnalyzeContent()
     {
         /*
@@ -1213,12 +1228,29 @@ static int RecognizeProfile
     int status = DLB_ADM_STATUS_OK;
     bool recognised = false;
 
+    std::string upperProfileValue = boost::to_upper_copy(profileValue);
+
+    auto compare = [](std::string version_1, std::string version_2)
+    {
+        auto const re = std::regex{R"(\.)"};
+        auto vec1 = std::vector<std::string>(
+                std::sregex_token_iterator{begin(version_1), end(version_1), re, -1},
+                std::sregex_token_iterator{});
+        auto vec2 = std::vector<std::string>(
+                std::sregex_token_iterator{begin(version_2), end(version_2), re, -1},
+                std::sregex_token_iterator{});
+        size_t size = std::max(vec1.size(), vec2.size());
+        vec1.resize(size, "0");
+        vec2.resize(size, "0");
+
+        return vec1 == vec2;
+    };
+
     for(auto & supportedProfile : SUPPORTED_PROFILES)
     {
-        if  (    profileName    == supportedProfile.name 
-            &&   profileVersion == supportedProfile.version
-            &&   profileValue   == supportedProfile.value
-            &&   profileLevel   == supportedProfile.level
+        if  (  compare(profileVersion, supportedProfile.version)
+            && profileLevel         == supportedProfile.level
+            && upperProfileValue    == supportedProfile.value
             )
             {
                 outProfile = supportedProfile.type;
@@ -1242,7 +1274,7 @@ static int RecognizeProfile
     {
         /*
             <profileList>
-              <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]</profile>
+              <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
             </profileList>
         */
 
@@ -1279,10 +1311,13 @@ static int RecognizeProfile
             status = GetAttributeValue(profileLevel, attrValue);
             CHECK_STATUS(status);
 
-            status = RecognizeProfile(profileName, profileVersion, profileLevel, profileValue, recognizedProfileType);
-            CHECK_STATUS(status);
-
-            mModel.AddProfile(recognizedProfileType);
+            RecognizeProfile(profileName, profileVersion, profileLevel, profileValue, recognizedProfileType);
+            // Add only known profiles
+            if (recognizedProfileType != DLB_ADM_PROFILE_NOT_INITIALIZED)
+            {
+                mModel.AddProfile(recognizedProfileType);
+                status = DLB_ADM_STATUS_OK;
+            }
 
             return status;
         };

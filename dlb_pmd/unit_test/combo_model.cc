@@ -456,7 +456,7 @@ TEST_F(ComboModel, ConvertToCoreModel)
     int status;
 
     SetUpTestInput(extraObject_PMD_InputFileName, extraObjectPMD);
-    SetUpTestInput(extraObject_ADM_InputFileName, extraObjectADM);
+    SetUpTestInput(extraObject_ADM_InputFileName, extraObjectADMEmission);
 
     ASSERT_TRUE(InitComboModel(nullptr, nullptr));
     success = ::dlb_pmd_model_combo_get_writable_pmd_model(mPmdModelCombo, &pmd_model, PMD_TRUE);

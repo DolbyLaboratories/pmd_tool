@@ -94,7 +94,7 @@ namespace DlbAdm
         int GenerateFrameFormat(dlb_adm_entity_id frameHeaderID);
         int GenerateTransportTrackFormat(dlb_adm_entity_id frameHeaderID);
         int GenerateFrameHeader(dlb_adm_entity_id frameID);
-        int GenerateProfileList(dlb_adm_entity_id frameHeaderID);
+        int GenerateProfileList(dlb_adm_entity_id parentID);
 
         int SetTransportCounts(dlb_adm_entity_id transportID, dlb_adm_uint numSignals, dlb_adm_uint numTracks);
 

@@ -333,7 +333,7 @@ namespace DlbAdm
                         , true
                         );
 
-        status = ::dlb_xml_parse(&reader, &LineCallback, &ElementCallback, &AttributeCallback);   
+        status = ::dlb_xml_parse(&reader, &LineCallback, &ElementCallback, &AttributeCallback);
 #endif
         return status ? DLB_ADM_STATUS_ERROR : DLB_ADM_STATUS_OK;    
     }

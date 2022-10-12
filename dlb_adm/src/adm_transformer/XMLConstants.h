@@ -44,14 +44,11 @@
 static const std::string XML_VERSION = "1.0";
 static const std::string XML_ENCODING = "UTF-8";
 
-static const std::string AUDIO_FORMAT_EXT_VERSION = "ITU-R_BS.2076-2";
+static const std::string ADM_SPEC_VERSION = "ITU-R_BS.2076-3";
+static const std::string S_ADM_SPEC_VERSION = "ITU-R_BS.2125-1";
 
 static const std::string AUDIO_TRACK_FORMAT_LABEL = "0001";
 static const std::string AUDIO_TRACK_FORMAT_DEFINITION = "PCM";
-
-static const std::string AUDIO_FORMAT_CUSTOM_SET_ID = "AFC_1001";
-static const std::string AUDIO_FORMAT_CUSTOM_SET_TYPE = "CUSTOM_SET_TYPE_NGA_EMISSION";
-static const std::string AUDIO_FORMAT_CUSTOM_SET_VERSION = "1.0.0";
 
 static const dlb_adm_bool OBJECT_INTERACT = DLB_ADM_FALSE;
 
@@ -67,7 +64,7 @@ typedef struct
 const std::vector<ProfileDescriptor> SUPPORTED_PROFILES = 
     {
         // TODO: ensure those values are correct
-        ProfileDescriptor{"AdvSS Emission S-ADM Profile", "1.0.0", 1, "ITU-R BS.[ADM-NGA-EMISSION]", DLB_ADM_PROFILE_SADM_EMISSION_PROFILE}
+        ProfileDescriptor{"AdvSS Emission S-ADM Profile", "1.0.0", 1, "ITU-R BS.[ADM-NGA-EMISSION]-X", DLB_ADM_PROFILE_SADM_EMISSION_PROFILE}
     };
 
 #endif  // DLB_ADM_XML_CONSTANTS_H

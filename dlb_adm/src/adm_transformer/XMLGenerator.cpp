@@ -120,6 +120,8 @@ namespace DlbAdm
         CHECK_STATUS(status);
         status = mContainer.AddEntity(frameID);
         CHECK_STATUS(status);
+        status = mContainer.SetValue(frameID, DLB_ADM_TAG_FRAME_VERSION, AttributeValue(S_ADM_SPEC_VERSION));
+        CHECK_STATUS(status);
         status = mContainer.AddRelationship(topLevelID, frameID);
         CHECK_STATUS(status);
 
@@ -358,8 +360,8 @@ namespace DlbAdm
         if(loudness.IsInitialized())
         {
             dlb_adm_entity_id loundessMetadataID = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_LOUDNESS_METADATA);
-            DLB_ADM_ENTITY_TYPE loudnessType;
-            DLB_ADM_TAG loudnessValueTag;
+            DLB_ADM_ENTITY_TYPE loudnessType = DLB_ADM_ENTITY_TYPE_INTEGRATED_LOUDNESS;
+            DLB_ADM_TAG loudnessValueTag = DLB_ADM_TAG_INTEGRATED_LOUDNESS_VALUE;
 
             switch (loudness.GetLoudnessType())
             {
@@ -385,8 +387,11 @@ namespace DlbAdm
             CHECK_STATUS(status);
             status = mContainer.AddRelationship(parentID, loundessMetadataID);
             CHECK_STATUS(status);
-            status = mContainer.SetValue(loundessMetadataID, DLB_ADM_TAG_LOUDNESS_METHOD, "ITU-R BS.1770");
-            CHECK_STATUS(status);
+            if (!mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE))
+            {
+                status = mContainer.SetValue(loundessMetadataID, DLB_ADM_TAG_LOUDNESS_METHOD, "ITU-R BS.1770");
+                CHECK_STATUS(status);
+            }
 
             status = mContainer.AddEntity(loundessMetadataTypeID);
             CHECK_STATUS(status);
@@ -1030,6 +1035,42 @@ namespace DlbAdm
         return status;
     }
 
+    static int GetPresentationLanguage(const CoreModel &model, dlb_adm_entity_id contentGroupID, std::string &lang)
+    {
+        int status = DLB_ADM_STATUS_OK;
+        
+        CoreModel::PresentationCallbackFn presentationCallback = [&](const PresentationRecord &r)
+        {
+            if ((r.contentGroupID == contentGroupID) && (r.presentationID != DLB_ADM_NULL_ENTITY_ID))
+            {
+                const ModelEntity *program;
+                const ModelEntity *content;
+                EntityName entityName;
+                model.GetEntity(r.presentationID, &program);
+                model.GetEntity(contentGroupID, &content);
+                const ContentGroup *contentGroup = dynamic_cast<const ContentGroup *>(content);
+                
+                if (DLB_ADM_CONTENT_KIND_NK_MUSIC == contentGroup->GetContentKind() ||
+                    DLB_ADM_CONTENT_KIND_NK_EFFECTS == contentGroup->GetContentKind() ||
+                    !program->HasName()
+                   )
+                {
+                    lang = std::string("und");
+                }
+                else
+                {
+                    if (program->GetName(entityName, 0))
+                    {
+                        lang = entityName.GetLanguage();
+                    }
+                }
+            }
+            return status;
+        };
+        
+        return model.ForEach(presentationCallback);
+    }
+
     int XMLGenerator::GenerateContents(dlb_adm_entity_id audioFormatExtendedID)
     {
         int status;
@@ -1052,7 +1093,21 @@ namespace DlbAdm
             status = mContainer.AddRelationship(audioFormatExtendedID, contentGroupID);
             CHECK_STATUS(status);
 
-            status = GenerateLoudnessMetadata(contentGroupID, contentGroup->GetLoudnessMetadata());
+            if (  mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE)
+               && !contentGroup->GetLoudnessMetadata().IsInitialized())
+            {
+                LoudnessMetadata loudness = LoudnessMetadata(-23, DLB_ADM_LOUDNESS_TYPE_INTEGRATED);
+                if (contentKind == DLB_ADM_CONTENT_KIND_DK_DIALOGUE)
+                {
+                    loudness = LoudnessMetadata(-23, DLB_ADM_LOUDNESS_TYPE_DIALOGUE);
+                }
+                /* Emission profile requires Loudness. If it is unavailable generate default */
+                status = GenerateLoudnessMetadata(contentGroupID, loudness);
+            }
+            else
+            {
+                status = GenerateLoudnessMetadata(contentGroupID, contentGroup->GetLoudnessMetadata());
+            }
             CHECK_STATUS(status);
 
             if (e->HasName())
@@ -1070,6 +1125,13 @@ namespace DlbAdm
                 lang = entityName.GetLanguage();
                 status = mContainer.SetValue(contentGroupID, DLB_ADM_TAG_CONTENT_NAME, AttributeValue(name));
                 CHECK_STATUS(status);
+
+                if (lang.empty() && mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE))
+                {
+                    status = GetPresentationLanguage(mModel, contentGroupID, lang);
+                    CHECK_STATUS(status);
+                }
+
                 if (!lang.empty())
                 {
                     status = mContainer.SetValue(contentGroupID, DLB_ADM_TAG_CONTENT_LANGUAGE, AttributeValue(lang));
@@ -1112,7 +1174,16 @@ namespace DlbAdm
             status = mContainer.AddRelationship(audioFormatExtendedID, presentationID);
             CHECK_STATUS(status);
 
-            status = GenerateLoudnessMetadata(presentationID, presentation->GetLoudnessMetadata());
+            if (  mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE)
+               && !presentation->GetLoudnessMetadata().IsInitialized())
+            {
+                /* Emission profile requires Loudness. If it is unavailable generate default */
+                status = GenerateLoudnessMetadata(presentationID, LoudnessMetadata(-23, DLB_ADM_LOUDNESS_TYPE_INTEGRATED));
+            }
+            else
+            {
+                status = GenerateLoudnessMetadata(presentationID, presentation->GetLoudnessMetadata());
+            }
             CHECK_STATUS(status);
 
             if (e->HasName())
@@ -1156,7 +1227,7 @@ namespace DlbAdm
 
         status = mContainer.AddEntity(audioFormatExtendedID);
         CHECK_STATUS(status);
-        status = mContainer.SetValue(audioFormatExtendedID, DLB_ADM_TAG_AUDIO_FORMAT_EXT_VERSION, AttributeValue(AUDIO_FORMAT_EXT_VERSION));
+        status = mContainer.SetValue(audioFormatExtendedID, DLB_ADM_TAG_AUDIO_FORMAT_EXT_VERSION, AttributeValue(ADM_SPEC_VERSION));
         CHECK_STATUS(status);
         status = mContainer.AddRelationship(frameID, audioFormatExtendedID);
         CHECK_STATUS(status);
@@ -1172,6 +1243,8 @@ namespace DlbAdm
         status = GenerateContents(audioFormatExtendedID);
         CHECK_STATUS(status);
         status = GenerateProgrammes(audioFormatExtendedID);
+        CHECK_STATUS(status);
+        status = GenerateProfileList(audioFormatExtendedID);
         CHECK_STATUS(status);
 
         status = GenerateAudioElementRelationships();
@@ -1357,7 +1430,7 @@ namespace DlbAdm
         return status;
     }
 
-    int XMLGenerator::GenerateProfileList(dlb_adm_entity_id frameHeaderID)
+    int XMLGenerator::GenerateProfileList(dlb_adm_entity_id parentID)
     {
         int status = DLB_ADM_STATUS_OK;
         const std::set<DLB_ADM_PROFILE> profiles = mModel.GetProfiles();
@@ -1370,7 +1443,7 @@ namespace DlbAdm
         const dlb_adm_entity_id profileListID = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_PROFILE_LIST);
         status = mContainer.AddEntity(profileListID);
         CHECK_STATUS(status);
-        status = mContainer.AddRelationship(frameHeaderID, profileListID);
+        status = mContainer.AddRelationship(parentID, profileListID);
         CHECK_STATUS(status);
 
         for (auto & profile : profiles)

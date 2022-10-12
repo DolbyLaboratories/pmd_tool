@@ -196,6 +196,9 @@ typedef enum
     /* ituADM */
     DLB_ADM_TAG_ITU_ADM_XMLNS,
 
+    /* DLB_ADM_TAG_FRAME_VERSION */
+    DLB_ADM_TAG_FRAME_VERSION,
+
     /* frameFormat */
     DLB_ADM_TAG_FRAME_FORMAT_ID,
     DLB_ADM_TAG_FIRST = DLB_ADM_TAG_FRAME_FORMAT_ID,

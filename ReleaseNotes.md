@@ -1,4 +1,4 @@
-PMD 2.1.0 release notes
+PMD 2.1.1 release notes
 =======================
 
 Professional Metadata (PMD) is a format for specifying and
@@ -18,7 +18,7 @@ object-based audio subset of the serialized Audio Definition Model
 (S-ADM) format.
 
 S-ADM support has been extended and now inmplements 
-draft of new Recommendation ITU-R BS.[ADM-NGA-Emission].
+draft of new Recommendation ITU-R BS.[ADM-NGA-Emission]-X.
 Now it is possible to process complementary objects,
 alternative value sets and untangle them to simple "flat" format.
 
@@ -61,10 +61,16 @@ Known issues:
 - To build the test applications on Linux, you need the ICU unicode library and
   header files (http://site.icu-project.org/home)
 - pmd_studio will not build on Windows and OSX support is limited
+- PMD to S-ADM translation use hardcoded values
+
+Changes since 2.1.0
+--------------------
+- Add support to ITU-R_BS.2125-1 and ITU-R_BS.2076-3
+- Fix translation from PMD to S-ADM
 
 Changes since 2.0.0:
 --------------------
-- Added beta implementation of draft Recommendation ITU-R BS.[ADM-NGA-Emission]
+- Added beta implementation of draft Recommendation ITU-R BS.[ADM-NGA-Emission]-X
 - Added new component for flattening S-ADM metadata.
 
 Changes since 1.7.4:

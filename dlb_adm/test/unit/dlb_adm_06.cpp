@@ -2187,7 +2187,7 @@ TEST_F(DlbAdm06, PresentationDataGet)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_EQ(2, mPresentationData.element_count);
     EXPECT_EQ(presentationID, mPresentationData.presentation.id);
-    EXPECT_EQ(mPresentationData.presentation.loudness.loudness_type, DLB_ADM_LOUDNESS_TYPE_NOT_INITIALIZED);
+    EXPECT_EQ(mPresentationData.presentation.loudness.loudness_type, DLB_ADM_LOUDNESS_TYPE_INTEGRATED);
 
     EXPECT_EQ(altValSetID, mPresentationData.alt_val_sets[0].id);
     EXPECT_EQ(DLB_ADM_TRUE, mPresentationData.alt_val_sets[0].has_gain);

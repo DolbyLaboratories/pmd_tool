@@ -127,7 +127,7 @@ static const RelationshipDescriptor initializers[] =
         DLB_ADM_ENTITY_TYPE_FRAME_HEADER,
         DLB_ADM_ENTITY_TYPE_PROFILE_LIST,
         ENTITY_RELATIONSHIP::CONTAINS,
-        { 0, 1 },
+        { 0, RelationshipArity::ANY },
     },
 
     // profileList
@@ -264,6 +264,12 @@ static const RelationshipDescriptor initializers[] =
     {
         DLB_ADM_ENTITY_TYPE_AUDIO_FORMAT_EXTENDED,
         DLB_ADM_ENTITY_TYPE_TRACK_UID,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AUDIO_FORMAT_EXTENDED,
+        DLB_ADM_ENTITY_TYPE_PROFILE_LIST,
         ENTITY_RELATIONSHIP::CONTAINS,
         { 0, RelationshipArity::ANY },
     },

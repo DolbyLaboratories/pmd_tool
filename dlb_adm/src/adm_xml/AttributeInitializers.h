@@ -47,6 +47,9 @@ static const AttributeInitializer initializers[] =
     /* ituADM */
     { DLB_ADM_ENTITY_TYPE_ITU_ADM, "xmlns", DLB_ADM_TAG_ITU_ADM_XMLNS, DLB_ADM_VALUE_TYPE_STRING },
 
+    /* frame */
+    { DLB_ADM_ENTITY_TYPE_FRAME, "version", DLB_ADM_TAG_FRAME_VERSION, DLB_ADM_VALUE_TYPE_STRING },
+
     /* frameFormat */
     { DLB_ADM_ENTITY_TYPE_FRAME_FORMAT, "frameFormatID", DLB_ADM_TAG_FRAME_FORMAT_ID,             DLB_ADM_VALUE_TYPE_STRING },
     { DLB_ADM_ENTITY_TYPE_FRAME_FORMAT, "type",          DLB_ADM_TAG_FRAME_FORMAT_TYPE,           DLB_ADM_VALUE_TYPE_STRING },

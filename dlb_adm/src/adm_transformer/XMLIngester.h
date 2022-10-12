@@ -58,6 +58,8 @@ namespace DlbAdm
 
         int Ingest();
 
+        int IngestCommonDefs();
+
     private:
 
         int AnalyzeContent();

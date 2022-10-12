@@ -585,7 +585,9 @@ dlb_pmd_model_combo_convert_to_core_model
     ,const dlb_adm_core_model  **core_model
     )
 {
-    pmd_core_model_generator *generator;
+    pmd_core_model_generator *generator = NULL;
+    dlb_adm_xml_container    *container = NULL;
+    dlb_adm_container_counts  counts;
     dlb_pmd_success success;
     int status;
 
@@ -609,6 +611,14 @@ dlb_pmd_model_combo_convert_to_core_model
     }
 
     status = dlb_adm_core_model_clear(model_combo->core_model);
+    CHECK_STATUS_SUCCESS(status);
+    status = dlb_adm_core_model_add_profile(model_combo->core_model, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE);
+    CHECK_STATUS_SUCCESS(status);
+    status = dlb_adm_container_open(&container, &counts);
+    CHECK_STATUS_SUCCESS(status);
+    status = dlb_adm_container_load_common_definitions(container);
+    CHECK_STATUS_SUCCESS(status);
+    status = dlb_adm_core_model_ingest_common_definitions_container(model_combo->core_model, container);
     CHECK_STATUS_SUCCESS(status);
 
     success = pmd_core_model_generator_open(&generator, model_combo->converter_memory);

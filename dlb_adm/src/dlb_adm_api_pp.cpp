@@ -372,6 +372,19 @@ dlb_adm_container_close
 }
 
 int
+dlb_adm_container_load_common_definitions
+    (dlb_adm_xml_container      *container
+    )
+{
+    if (container == nullptr)
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    return unwind_protect([&] { return container->GetContainer().LoadCommonDefs(); });
+}
+
+int
 dlb_adm_container_add_reference
     (dlb_adm_xml_container      *container
     ,dlb_adm_entity_id           id
@@ -912,6 +925,30 @@ dlb_adm_core_model_ingest_xml_container
     {
         XMLIngester ingester(model->GetCoreModel(), *container);
         return ingester.Ingest();
+    };
+
+    status = unwind_protect(f);
+
+    return status;
+}
+
+int
+dlb_adm_core_model_ingest_common_definitions_container
+    (dlb_adm_core_model         *model
+    ,dlb_adm_xml_container      *container
+    )
+{
+    int status;
+
+    if ((model == nullptr) || (container == nullptr))
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    ActionFn f = [&]
+    {
+        XMLIngester ingester(model->GetCoreModel(), *container);
+        return ingester.IngestCommonDefs();
     };
 
     status = unwind_protect(f);

@@ -555,7 +555,8 @@ dlb_adm_file_is_sadm_xml
     if (count == FIRST_CHUNK_LEN)
     {
         static const char *tag1 = "<frame>";
-        static const char *tag2 = "<frameheader>";
+        static const char *tag2 = "<frame ";
+        static const char *tag3 = "<frameheader>";
         const size_t tag1_len = strlen(tag1);
         char *p = buffer;
         size_t i;
@@ -567,9 +568,13 @@ dlb_adm_file_is_sadm_xml
         }
 
         p = strstr(buffer, tag1);
+        if (p == NULL)
+        {
+            p = strstr(buffer, tag2);
+        }
         if (NULL != p)
         {
-            if (NULL != strstr(p + tag1_len, tag2))
+            if (NULL != strstr(p + tag1_len, tag3))
             {
                 *is_sadm = DLB_ADM_TRUE;
             }

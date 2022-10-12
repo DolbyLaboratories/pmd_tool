@@ -202,6 +202,7 @@ pmd_core_model_generator_init
     )
 {
     dlb_adm_data_source_group source_group;
+    dlb_adm_bool hasProfile = DLB_ADM_FALSE;
     int status;
 
     if ((g == NULL) || (core_model == NULL) || (pmd_model == NULL))
@@ -226,6 +227,42 @@ pmd_core_model_generator_init
     CHECK_STATUS(status);
     g->source_group_id = source_group.id;
 
+    /* Add Common Definition references */
+    status = dlb_adm_core_model_has_profile(g->core_model
+                                           ,DLB_ADM_PROFILE_SADM_EMISSION_PROFILE
+                                           ,&hasProfile);
+    CHECK_STATUS(status);
+
+    if (hasProfile)
+    {
+        /* Mark AudioPackFormat -> TargetGroup */
+        g->bed_target_groups[DLB_PMD_SPEAKER_CONFIG_2_0] = 0x801000200000000;   // AP_00010002
+        g->bed_target_groups[DLB_PMD_SPEAKER_CONFIG_5_1] = 0x801000300000000;   // AP_00010003
+        g->bed_target_groups[DLB_PMD_SPEAKER_CONFIG_5_1_4] = 0x801000500000000; // AP_00010005
+
+        /* Mark AudioChannelFormat -> Target */
+        /* 2.0 channels */
+        g->bed_targets[0] = 0xA01000100000000;    // AC_00010001
+        g->bed_targets[1] = 0xA01000200000000;    // AC_00010002
+        /* 5.1 channels */
+        g->bed_targets[5] = 0xA01000100000000;    // AC_00010001
+        g->bed_targets[6] = 0xA01000200000000;    // AC_00010002
+        g->bed_targets[7] = 0xA01000300000000;    // AC_00010003
+        g->bed_targets[8] = 0xA01000400000000;    // AC_00010004
+        g->bed_targets[9] = 0xA01000500000000;    // AC_00010005
+        g->bed_targets[10] = 0xA01000600000000;    // AC_00010006
+        /* 5.1.4 channels */
+        g->bed_targets[19] = 0xA01000100000000;    // AC_00010001
+        g->bed_targets[20] = 0xA01000200000000;    // AC_00010002
+        g->bed_targets[21] = 0xA01000300000000;    // AC_00010003
+        g->bed_targets[22] = 0xA01000400000000;    // AC_00010004
+        g->bed_targets[23] = 0xA01000500000000;    // AC_00010005
+        g->bed_targets[24] = 0xA01000600000000;    // AC_00010006
+        g->bed_targets[25] = 0xA01000D00000000;    // AC_0001000D
+        g->bed_targets[26] = 0xA01000F00000000;    // AC_0001000F
+        g->bed_targets[27] = 0xA01001000000000;    // AC_00010010
+        g->bed_targets[28] = 0xA01001200000000;    // AC_00010012
+    }
     return status;
 }
 

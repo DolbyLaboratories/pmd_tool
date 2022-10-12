@@ -130,6 +130,12 @@ dlb_adm_container_close
 
 DLB_ADM_DLL_ENTRY
 int
+dlb_adm_container_load_common_definitions
+    (dlb_adm_xml_container      *container
+    );
+
+DLB_ADM_DLL_ENTRY
+int
 dlb_adm_container_add_reference
     (dlb_adm_xml_container      *container
     ,dlb_adm_entity_id           id
@@ -365,6 +371,13 @@ dlb_adm_core_model_open_from_xml_container
 DLB_ADM_DLL_ENTRY
 int
 dlb_adm_core_model_ingest_xml_container
+    (dlb_adm_core_model         *model
+    ,dlb_adm_xml_container      *container
+    );
+
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_ingest_common_definitions_container
     (dlb_adm_core_model         *model
     ,dlb_adm_xml_container      *container
     );

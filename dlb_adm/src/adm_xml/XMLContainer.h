@@ -89,12 +89,13 @@ namespace DlbAdm
 
         int WriteXmlFile(const char *filePath);
 
+        int LoadCommonDefs();
+
         dlb_adm_entity_id GetTopLevelID();
 
         dlb_adm_entity_id GetGenericID(DLB_ADM_ENTITY_TYPE entityType);
 
     private:
-        int LoadCommonDefs();
 
         EntityDB mEntityDB;
         RelationshipDB mRelationshipDB;
