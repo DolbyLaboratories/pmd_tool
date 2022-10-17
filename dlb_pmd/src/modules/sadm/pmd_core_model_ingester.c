@@ -280,7 +280,7 @@ generate_pmd_object
     obj.size_3d         = 0;
     obj.diverge         = 0;
     obj.source          = (dlb_pmd_signal)data->sources[0].channel;
-    obj.source_gain     = (dlb_pmd_gain)dlb_adm_gain_in_decibels(data->audio_element.gain); /* TODO: gain from audio_element or from block_update?  or both?? */
+    obj.source_gain     = (dlb_pmd_gain)dlb_adm_add_gains_in_decibels(data->block_updates[0].gain, data->audio_element.gain); /* TODO: gain from audio_element or from block_update?  or both?? */
 
     if (ingester->names.name_count > 0)
     {
@@ -399,7 +399,8 @@ generate_pmd_bed
         success = find_speaker_position(&sources[i].target, &data->block_updates[i], alt_spkrs);
         CHECK_SUCCESS(success);
         sources[i].source = (dlb_pmd_signal)data->sources[i].channel;
-        sources[i].gain = (dlb_pmd_gain)dlb_adm_gain_in_decibels(data->block_updates[i].gain);
+        /*check later if that correct to add gains from block update and audio element*/
+        sources[i].gain = (dlb_pmd_gain)dlb_adm_add_gains_in_decibels(data->block_updates[i].gain, data->audio_element.gain);
     }
 
     if (dlb_pmd_set_bed(ingester->pmd_model, &bed))

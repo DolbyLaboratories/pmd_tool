@@ -39,7 +39,7 @@
 
 #define DLB_PMD_VERSION_EPOCH (2)
 #define DLB_PMD_VERSION_MAJOR (1)
-#define DLB_PMD_VERSION_MINOR (1)
+#define DLB_PMD_VERSION_MINOR (2)
 #define DLB_PMD_VERSION_BUILD (1)
 
 #endif /*__DLB_PMD_API_VERSION_H__ */

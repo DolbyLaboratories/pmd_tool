@@ -2549,8 +2549,8 @@ dlb_adm_core_model_add_frame_format
     std::string frameType(frame_format->type);
 
     if ((frameType != std::string("full")) ||
-        (std::string(frame_format->start   ).empty()) ||
-        (std::string(frame_format->duration).empty()))
+        (frame_format->timeReference != std::string("local"))
+       )
     {
         return DLB_ADM_STATUS_INVALID_ARGUMENT;
     }
@@ -2804,4 +2804,45 @@ dlb_adm_gain_in_decibels
     }
 
     return gain_in_db;
+}
+
+dlb_adm_gain_value
+dlb_adm_add_gains_in_decibels
+    (dlb_adm_data_gain       gain1
+    ,dlb_adm_data_gain       gain2
+    )
+{
+    dlb_adm_gain_value gain;
+
+    /* convert to linear */
+    if (gain1.gain_unit == DLB_ADM_GAIN_UNIT_DB)
+    {
+        gain = gain1.gain_value;
+    }
+    else
+    {
+        ActionFn convertGain1 = [&]
+        {
+            gain = Gain::LinearToDecibels(gain1.gain_value);
+            return DLB_ADM_STATUS_OK;
+        };
+        (void)unwind_protect(convertGain1);
+    }
+
+    /* convert to linear */
+    if (gain2.gain_unit == DLB_ADM_GAIN_UNIT_DB)
+    {
+        gain += gain2.gain_value;
+    }
+    else
+    {
+        ActionFn convertGain2 = [&]
+        {
+            gain += Gain::LinearToDecibels(gain2.gain_value);
+            return DLB_ADM_STATUS_OK;
+        };
+        (void)unwind_protect(convertGain2);
+    }
+
+    return gain;
 }

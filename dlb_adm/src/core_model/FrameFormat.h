@@ -49,24 +49,26 @@ namespace DlbAdm
         FrameFormat(
             dlb_adm_entity_id entityID,
             const std::string &type,
-            const std::string &start,
-            const std::string &duration,
+            const dlb_adm_time &start,
+            const dlb_adm_time &duration,
             const std::string &flowID
         );
         FrameFormat(const FrameFormat &x);
         virtual ~FrameFormat();
 
         std::string GetType() const { return mType; }
-        std::string GetStart() const { return mStart; }
-        std::string GetDuration() const { return mDuration; }
+        dlb_adm_time GetStart() const { return mStart; }
+        dlb_adm_time GetDuration() const { return mDuration; }
+        std::string GetTimeReference() const { return mTimeReference; }
         std::string GetFlowID() const { return mFlowID; }
 
         FrameFormat &operator=(const FrameFormat &x);
 
     private:
         std::string mType;
-        std::string mStart;	// TODO: dlb_adm_time
-        std::string mDuration;  // TODO: dlb_adm_time
+        dlb_adm_time mStart;
+        dlb_adm_time mDuration;
+        std::string mTimeReference;
         std::string mFlowID;
     };
 

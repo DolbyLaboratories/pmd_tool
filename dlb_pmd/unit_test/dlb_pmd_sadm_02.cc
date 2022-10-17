@@ -39,6 +39,7 @@
 #include "gtest/gtest.h"
 
 #include "dlb_pmd/include/dlb_pmd_pcm.h"
+#include "dlb_pmd_sadm_buffer.h"
 #include "dlb_pmd_sadm_file.h"
 #include "sadm_bitstream_encoder.h"
 #include "sadm_bitstream_decoder.h"
@@ -254,7 +255,7 @@ TEST_F(DlbPmdSadm02, BitstreamCompressDecompress)
     ::strcpy(encoder->xmlbuf, smallXML1);
     len = ::strlen(encoder->xmlbuf);
     encoder->size = len;
-    encodedCount = ::compress_sadm_xml(encoder, binaryBuffer);
+    encodedCount = ::compress_sadm_xml(encoder, binaryBuffer, MAX_DATA_BYTES);
     EXPECT_LT(0, encodedCount);
 
     sz = ::sadm_bitstream_decoder_query_mem();
@@ -492,4 +493,58 @@ TEST_F(DlbPmdSadm02, InOutAndCompareADM)
     ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
     compare = ::strcmp(decodedXml, compareXml);
     EXPECT_EQ(0, compare);  // v2.0.0 no longer takes S-ADM through the PMD model, so they are the same
+}
+
+TEST_F(DlbPmdSadm02, SADMEncodeDecodeBuffer)
+{
+    /* prepare buffer */
+    dlb_pmd_sadm_buffer_reader *reader = NULL;
+    dlb_pmd_sadm_buffer_writer *writer = NULL;
+    const uint8_t* sadm_input_buffer = (uint8_t*)stereo_2D_ADM;
+    uint8_t output_buffer[DLB_PMD_SADM_MAX_XML_SIZE];
+    dlb_pmd_success success;
+    size_t mem_size;
+    void *mem;
+    int compare;
+
+    ASSERT_TRUE(InitComboModel(nullptr, nullptr));
+    memset(output_buffer, '\0', DLB_PMD_SADM_MAX_XML_SIZE);
+
+    mem_size = dlb_pmd_sadm_buffer_reader_query_mem();
+    ASSERT_NE(0u, mem_size);
+    mem = malloc(mem_size);
+    ASSERT_NE(nullptr, mem);
+
+    success = dlb_pmd_sadm_buffer_reader_init(&reader, mem);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    success = dlb_pmd_sadm_buffer_read(reader
+                                      ,sadm_input_buffer
+                                      ,strlen(stereo_2D_ADM)
+                                      ,mPmdModelCombo
+                                      ,PMD_FALSE
+                                      ,errorCallback
+                                      ,NULL);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    /* Write test input file */
+
+    mem_size = dlb_pmd_sadm_buffer_writer_query_mem();
+    ASSERT_NE(0u, mem_size);
+    mem = malloc(mem_size);
+    ASSERT_NE(nullptr, mem);
+
+    success = dlb_pmd_sadm_buffer_writer_init(&writer, mem);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    success = dlb_pmd_sadm_buffer_write(writer
+                                       ,output_buffer
+                                       ,sizeof(output_buffer)
+                                       ,mPmdModelCombo
+                                       ,PMD_FALSE);
+    ASSERT_EQ(static_cast<dlb_pmd_success>(PMD_SUCCESS), success);
+
+    /* Compare */
+    compare = ::strcmp(decodedXml, compareXml);
+    EXPECT_EQ(0, compare);
 }

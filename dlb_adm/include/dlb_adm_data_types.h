@@ -221,10 +221,11 @@ typedef struct
 typedef struct
 {
     dlb_adm_entity_id        id;
-    char                     type    [DLB_ADM_DATA_FF_TYPE_SZ];
-    char                     start   [DLB_ADM_DATA_FF_TIME_SZ];
-    char                     duration[DLB_ADM_DATA_FF_TIME_SZ];
-    char                     flow_id [DLB_ADM_DATA_FF_UUID_SZ];
+    char                     type[DLB_ADM_DATA_FF_TYPE_SZ];
+    char                     flow_id[DLB_ADM_DATA_FF_UUID_SZ];
+    char                     timeReference[DLB_ADM_DATA_FF_UUID_SZ];
+    dlb_adm_time             start;
+    dlb_adm_time             duration;
 } dlb_adm_data_frame_format;
 
 /**

@@ -42,15 +42,29 @@
 #ifndef DLB_PMD_SADM_H
 #define DLB_PMD_SADM_H
 
+#include "dlb_pmd_model_combo.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 /**
- * @def DLB_PMD_SADM_XML_COMPRESSION (10)
- * @brief approximate compression factor of XML by zlib - used to size buffers
+ * @def DLB_PMD_SADM_MAX_XML_SIZE
+ * @brief approximate maximal size of the S-ADM XML transmitted over SMPTE S337M
  */
-#define DLB_PMD_SADM_XML_COMPRESSION (10)
+#define DLB_PMD_SADM_MAX_XML_SIZE (120120)
+
+
+/**
+ * @brief type of error callback
+ */
+typedef
+void
+(*dlb_pmd_sadm_error_callback)
+    (const char *msg
+    ,void *arg
+    );
 
 #ifdef __cplusplus
 }

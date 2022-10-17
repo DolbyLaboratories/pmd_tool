@@ -361,6 +361,30 @@ generate_content_group_id
 }
 
 /**
+* @brief generate the required form of a alternative value set id
+*
+* This is derived from the id of the corresponding PMD element
+*/
+static
+int                         /** @return 0 on success and non-zero otherwise */
+generate_alternative_value_set_id
+    (dlb_pmd_element_id          peid   /**< [in] parent element identifier */
+    ,unsigned int                sn     /**< [in] sequence number */
+    ,dlb_adm_entity_id          *id     /**< [out] core model ID to generate */
+    )
+{
+    char id_string[ID_STRING_SIZE];
+    int status;
+
+    snprintf(id_string, sizeof(id_string), "AVS_%04x_%04x", 0x1000 + peid, 0x0000 + sn);
+    status = dlb_adm_read_entity_id(id, id_string, sizeof(id_string));
+#ifndef NDEBUG
+    CHECK_STATUS(status);
+#endif
+    return status;
+}
+
+/**
  * @brief generate the required form of an element group or audio element id
  *
  * This is derived from the id of the corresponding PMD element
@@ -816,7 +840,7 @@ generate_bed_target_objects
             block_update.position[DLB_ADM_COORDINATE_Y] = sb->y;
             block_update.position[DLB_ADM_COORDINATE_Z] = sb->z;
             block_update.gain.gain_unit = DLB_ADM_GAIN_UNIT_DB;
-            block_update.gain.gain_value = bed->sources[channel_index].gain;
+            block_update.gain.gain_value = 0.0;
             status = dlb_adm_core_model_add_block_update(g->core_model, target.id, &block_update);
             CHECK_STATUS_SUCCESS(status);
         }
@@ -1039,7 +1063,11 @@ generate_nonbed_objects
     block_update.position[DLB_ADM_COORDINATE_Y] = obj->y;
     block_update.position[DLB_ADM_COORDINATE_Z] = obj->z;
     block_update.gain.gain_unit = DLB_ADM_GAIN_UNIT_DB;
-    block_update.gain.gain_value = obj->source_gain;
+    block_update.gain.gain_value = 0.0;
+    block_update.has_time = PMD_TRUE;
+    /* TODO: Add proper start and duration */
+    block_update.duration.fraction_numerator = 1920;
+    block_update.duration.fraction_denominator = 48000;
     status = dlb_adm_core_model_add_block_update(g->core_model, target.id, &block_update);
     CHECK_STATUS_SUCCESS(status);
 
@@ -1130,6 +1158,133 @@ generate_element_objects
 }
 
 /**
+* @brief generate core model alternative value sets for a PMD element
+*/
+static
+dlb_pmd_success             /** @return PMD_SUCCESS(=0) on success and PMD_FAIL(=1) otherwise */
+generate_alternative_value_set
+    (pmd_core_model_generator   *g                 /**< [in] PMD -> core model converter */
+    ,dlb_pmd_element_id          element_id        /**< [in] PMD element ID for which to generate alternative value set */
+    ,dlb_pmd_element_id          parent_element_id /**< [in] parent PMD element ID for alternative value set */
+    )
+{
+    dlb_adm_data_audio_element audio_element;
+    dlb_adm_data_alt_value_set alt_set;
+    dlb_pmd_source sources[MAX_BED_CHANNEL_COUNT];
+    dlb_pmd_bool exists;
+    dlb_pmd_object object;
+    dlb_pmd_bed bed;
+    int status;
+
+    memset(&audio_element, 0, sizeof(audio_element));
+    memset(&alt_set, 0, sizeof(alt_set));
+
+    status = generate_element_id(parent_element_id, &audio_element.id);
+    CHECK_STATUS_SUCCESS(status);
+    status = dlb_adm_core_model_entity_exists(g->core_model, audio_element.id, &exists);
+    CHECK_STATUS_SUCCESS(status);
+    if (!exists)
+    {
+        return FAILURE;
+    }
+
+    alt_set.gain.gain_unit = DLB_ADM_GAIN_UNIT_DB;
+    if (!dlb_pmd_bed_lookup(g->pmd_model, element_id, &bed, MAX_BED_CHANNEL_COUNT, sources))
+    {
+        alt_set.has_gain = DLB_ADM_TRUE;
+        alt_set.gain.gain_value = bed.sources[0].gain;    /* we'll check other gains for equality later */
+    }
+    else if (!dlb_pmd_object_lookup(g->pmd_model, element_id, &object))
+    {
+        alt_set.has_gain = DLB_ADM_TRUE;
+        alt_set.gain.gain_value = object.source_gain;
+        alt_set.has_position_offset = DLB_ADM_TRUE;
+        alt_set.cartesian = DLB_ADM_TRUE;
+        alt_set.position[DLB_ADM_COORDINATE_X] = object.x;
+        alt_set.position[DLB_ADM_COORDINATE_Y] = object.y;
+        alt_set.position[DLB_ADM_COORDINATE_Z] = object.z;
+    }
+
+    status = dlb_adm_core_model_clear_names(&g->names);
+    CHECK_STATUS_SUCCESS(status);
+    status = dlb_adm_core_model_add_alt_value_set(g->core_model, audio_element.id, &alt_set, &g->names);
+    CHECK_STATUS_SUCCESS(status);
+
+    return PMD_SUCCESS;
+}
+
+/**
+* @brief check if exist bed with same sources
+*
+* unique_id - audio element id which is added to CoreModel. To this audio element will be added checked element data as alternative value set
+*/
+static
+dlb_pmd_bool
+check_if_bed_has_same_source
+    (const dlb_pmd_model *model                  /**<[in] PMD model */
+    ,dlb_pmd_element_id  *unique_elements        /**<[in] array with bed ids which will be added as AudioObjects */
+    ,unsigned int         unum                   /**<[in] number of elements in array */
+    ,dlb_pmd_element_id  *unique_id              /**<[out] parent audio element id */
+    ,dlb_pmd_source      *sources                /**<[in] sources of checked audio element */
+    )
+{
+    unsigned int uid = 0;
+
+    for (uid = 0; uid < unum; uid++)
+    {
+        dlb_pmd_source usources[MAX_BED_CHANNEL_COUNT];
+        dlb_pmd_bed ubed;
+
+        memset(usources, 0, sizeof(usources));
+        if (dlb_pmd_bed_lookup(model, unique_elements[uid], &ubed, MAX_BED_CHANNEL_COUNT, usources) == PMD_SUCCESS)
+        {
+            if (memcmp(sources, usources, sizeof(sources)) == 0)
+            {
+                *unique_id = unique_elements[uid];
+                return PMD_TRUE;
+            }
+        }
+    }
+
+    return PMD_FALSE;
+}
+
+/**
+* @brief check if exist object with same sources
+*
+* unique_id - audio element id which is added to CoreModel. To this audio element will be added checked element data as alternative value set
+*/
+static
+dlb_pmd_bool
+check_if_object_has_same_source
+    (const dlb_pmd_model *model                  /**<[in] PMD model */
+    ,dlb_pmd_element_id  *unique_elements        /**<[in] array with object ids which will be added as AudioObjects */
+    ,unsigned int         unum                   /**<[in] number of elements in array */
+    ,dlb_pmd_element_id  *unique_id              /**<[out] parent audio element id */
+    ,dlb_pmd_signal       source                 /**<[in] sources of checked audio element */
+    )
+{
+    unsigned int uid = 0;
+
+    for (uid = 0; uid < unum; uid++)
+    {
+        dlb_pmd_object uobject;
+
+        if (dlb_pmd_object_lookup(model, unique_elements[uid], &uobject) == PMD_SUCCESS)
+        {
+            if (uobject.source == source)
+            {
+                *unique_id = unique_elements[uid];
+                return PMD_TRUE;
+            }
+        }
+    }
+
+    return PMD_FALSE;
+}
+
+
+/**
  * @brief generate a core model element for each PMD element
  */
 static
@@ -1139,10 +1294,12 @@ generate_elements
     )
 {
     dlb_pmd_bed_iterator     bi;
+    dlb_pmd_element_id       unique_elements[DLB_PMD_MAX_AUDIO_ELEMENTS];
     dlb_pmd_bed              bed;
     dlb_pmd_object_iterator  oi;
     dlb_pmd_object           object;
     dlb_pmd_source           sources[MAX_BED_CHANNEL_COUNT];
+    unsigned int             unum = 0;
 
     if (dlb_pmd_bed_iterator_init(&bi, g->pmd_model))
     {
@@ -1150,11 +1307,23 @@ generate_elements
     }
 
     memset(sources, 0, sizeof(sources));
+    memset(unique_elements, 0, sizeof(unique_elements));
+
     while (!dlb_pmd_bed_iterator_next(&bi, &bed, MAX_BED_CHANNEL_COUNT, sources))
     {
-        if (generate_element_objects(g, bed.id))
+        dlb_pmd_element_id main_id;
+        if (check_if_bed_has_same_source(g->pmd_model, unique_elements, unum, &main_id, sources))
         {
-            return FAILURE;
+            generate_alternative_value_set(g, bed.id, main_id);
+        }
+        else
+        {
+            if (generate_element_objects(g, bed.id))
+            {
+                return FAILURE;
+            }
+            unique_elements[unum] = bed.id;
+            unum++;
         }
     }
 
@@ -1165,9 +1334,19 @@ generate_elements
 
     while (!dlb_pmd_object_iterator_next(&oi, &object))
     {
-        if (generate_element_objects(g, object.id))
+        dlb_pmd_element_id main_id;
+        if (check_if_object_has_same_source(g->pmd_model, unique_elements, unum, &main_id, object.source))
         {
-            return FAILURE;
+            generate_alternative_value_set(g, object.id, main_id);
+        }
+        else
+        {
+            if (generate_element_objects(g, object.id))
+            {
+                return FAILURE;
+            }
+            unique_elements[unum] = object.id;
+            unum++;
         }
     }
 
@@ -1210,6 +1389,38 @@ check_presentation_config
     return PMD_SUCCESS;
 }
 
+/**
+* @brief add presentation relation for alternative value set
+*
+*/
+static
+int
+add_avs_presentation_relation
+    (pmd_core_model_generator   *g                     /**< [in] PMD -> core model converter */
+    ,dlb_adm_entity_id           presentation_id       /**< [in] presentation id */
+    ,dlb_pmd_element_id          parent_element_id     /**< [in] parent audio element id */
+    ,unsigned int                sequence_num          /**< [in] sequence number of current audio element */
+    )
+{
+    dlb_adm_entity_id content_group_id;
+    dlb_adm_entity_id avs_id;
+    dlb_adm_entity_id audio_element_id;
+    int status;
+
+    status = generate_content_group_id(parent_element_id, &content_group_id);
+    CHECK_STATUS(status);
+    status = generate_alternative_value_set_id(parent_element_id, sequence_num, &avs_id);
+    CHECK_STATUS(status);
+    status = generate_element_id(parent_element_id, &audio_element_id);
+    CHECK_STATUS(status);
+
+    status = dlb_adm_core_model_add_presentation_relation(
+        g->core_model, presentation_id, content_group_id, DLB_ADM_NULL_ENTITY_ID, audio_element_id, avs_id, DLB_ADM_NULL_ENTITY_ID);
+    CHECK_STATUS(status);
+
+    return status;
+}
+
 static
 int
 add_presentation_relation
@@ -1226,11 +1437,92 @@ add_presentation_relation
     CHECK_STATUS(status);
     status = generate_element_id(element_id, &audio_element_id);
     CHECK_STATUS(status);
+
     status = dlb_adm_core_model_add_presentation_relation(
         g->core_model, presentation_id, content_group_id, DLB_ADM_NULL_ENTITY_ID, audio_element_id, DLB_ADM_NULL_ENTITY_ID, DLB_ADM_NULL_ENTITY_ID);
     CHECK_STATUS(status);
 
     return status;
+}
+
+/**
+* @brief check if audio element has same sources as another audio element in pmd model
+*
+* parent_element_id - element which will be added to Core model as AudioObject
+* sequence_number - the number of element with same sources in model (it's needed to create alternative value set id)
+*/
+static
+dlb_pmd_bool             /** @return PMD_TRUE(=1) if avs should be added and PMD_FALSE(=0) otherwise */
+check_if_avs_should_be_added
+    (const dlb_pmd_model *model                  /**< [in] PMD model */
+    ,dlb_pmd_element_id   element_id             /**< [in] audio element */
+    ,dlb_pmd_element_id  *parent_element_id      /**< [out] parent audio element */
+    ,unsigned int        *sequence_number        /**< [out] audio element serial number*/
+    )
+{
+    dlb_pmd_bed_iterator             bi;
+    dlb_pmd_bed                      bed, current_bed;
+    dlb_pmd_object_iterator          oi;
+    dlb_pmd_object                   object, current_object;
+    dlb_pmd_source                   sources[MAX_BED_CHANNEL_COUNT];
+    dlb_pmd_source                   current_bed_sources[MAX_BED_CHANNEL_COUNT];
+    unsigned int                     index = 0;
+
+    memset(current_bed_sources, 0, sizeof(current_bed_sources));
+    if (dlb_pmd_bed_lookup(model, element_id, &current_bed, MAX_BED_CHANNEL_COUNT, current_bed_sources) == PMD_SUCCESS)
+    {
+
+        if (dlb_pmd_bed_iterator_init(&bi, model))
+        {
+            return FAILURE;
+        }
+
+        memset(sources, 0, sizeof(sources));
+        while (!dlb_pmd_bed_iterator_next(&bi, &bed, MAX_BED_CHANNEL_COUNT, sources))
+        {
+            if (bed.id == element_id)
+            {
+                *sequence_number = index;
+                return (index == 0) ? PMD_FALSE : PMD_TRUE;
+            }
+
+            if (memcmp(sources, current_bed_sources, sizeof(sources))== 0)
+            {
+                if (index == 0)
+                {
+                    *parent_element_id = bed.id;
+                }
+                index++;
+            }
+        }
+    }
+    else if(dlb_pmd_object_lookup(model, element_id, &current_object) == PMD_SUCCESS)
+    {
+        if (dlb_pmd_object_iterator_init(&oi, model))
+        {
+            return FAILURE;
+        }
+
+        while (!dlb_pmd_object_iterator_next(&oi, &object))
+        {
+            if (object.id == element_id)
+            {
+                *sequence_number = index;
+                return (index == 0) ? PMD_FALSE : PMD_TRUE;
+            }
+
+            if (object.source == current_object.source)
+            {
+                if (index == 0)
+                {
+                    *parent_element_id = object.id;
+                }
+                index++;
+            }
+        }
+    }
+
+    return PMD_FALSE;
 }
 
 /**
@@ -1297,13 +1589,23 @@ generate_presentations
         CHECK_STATUS_SUCCESS(status);
         for (i = 0; i != pmd_pres.num_elements; i++)
         {
+            unsigned int sequence_number = 0;
+            dlb_pmd_element_id parent_element_id;
             dlb_pmd_element_id element_id = pmd_pres.elements[i];
 
             /* Keep track of all the elements contained in presentations */
             set_element_bit(element_set, element_id);
 
-            status = add_presentation_relation(g, adm_pres.id, element_id);
-            CHECK_STATUS_SUCCESS(status);
+            if (check_if_avs_should_be_added(g->pmd_model, element_id, &parent_element_id, &sequence_number))
+            {
+                status = add_avs_presentation_relation(g, adm_pres.id, parent_element_id, sequence_number);
+                CHECK_STATUS_SUCCESS(status);
+            }
+            else
+            {
+                status = add_presentation_relation(g, adm_pres.id, element_id);
+                CHECK_STATUS_SUCCESS(status);
+            }
         }
     }
 
@@ -1365,8 +1667,9 @@ generate_frame_format
 
     memset(&frame_format, 0, sizeof(frame_format));
     snprintf(frame_format.type,     sizeof(frame_format.type),     "%s", "full");
-    snprintf(frame_format.start,    sizeof(frame_format.start),    "%s", "00:00:00.00000");
-    snprintf(frame_format.duration, sizeof(frame_format.duration), "%s", "00:00:00.02000");
+    snprintf(frame_format.timeReference, sizeof(frame_format.timeReference), "%s", "local");
+    frame_format.duration.fraction_numerator = 1920;
+    frame_format.duration.fraction_denominator = 48000;
 
     if (iat_success == PMD_SUCCESS && iat.content_id.size > 0)
     {

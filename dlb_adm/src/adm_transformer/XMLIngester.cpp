@@ -1168,8 +1168,8 @@ namespace DlbAdm
                 dlb_adm_entity_id id = e.id;
                 AttributeValue attrValue;
                 std::string type;
-                std::string start;
-                std::string duration;
+                dlb_adm_time start;
+                dlb_adm_time duration;
                 std::string flowID;
 
                 found = true;

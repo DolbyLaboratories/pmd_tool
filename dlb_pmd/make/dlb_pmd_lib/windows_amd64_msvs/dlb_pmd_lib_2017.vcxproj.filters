@@ -86,17 +86,21 @@
 <Filter>dlb_pmd\src\modules\pcm</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\modules\pcm\pmd_smpte_337m.c">
 <Filter>dlb_pmd\src\modules\pcm</Filter></ClCompile>
-<ClCompile Include="..\..\..\src\modules\pcm\sadm_bitstream_decoder.c">
-<Filter>dlb_pmd\src\modules\pcm</Filter></ClCompile>
-<ClCompile Include="..\..\..\src\modules\pcm\sadm_bitstream_encoder.c">
-<Filter>dlb_pmd\src\modules\pcm</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_core_model_generator.c">
 <Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_core_model_ingester.c">
 <Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_read_buffer.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_read_file.c">
 <Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_buffer.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\modules\sadm\pmd_sadm_write_file.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm_bitstream_decoder.c">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
+<ClCompile Include="..\..\..\src\modules\sadm\sadm_bitstream_encoder.c">
 <Filter>dlb_pmd\src\modules\sadm</Filter></ClCompile>
 <ClCompile Include="..\..\..\src\modules\xml\pmd_xml_read_file.c">
 <Filter>dlb_pmd\src\modules\xml</Filter></ClCompile>
@@ -140,6 +144,8 @@
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_buffer.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
@@ -249,10 +255,6 @@
 <Filter>dlb_pmd\src\modules\pcm</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\pcm\pmd_smpte_337m.h">
 <Filter>dlb_pmd\src\modules\pcm</Filter></ClInclude>
-<ClInclude Include="..\..\..\src\modules\pcm\sadm_bitstream_decoder.h">
-<Filter>dlb_pmd\src\modules\pcm</Filter></ClInclude>
-<ClInclude Include="..\..\..\src\modules\pcm\sadm_bitstream_encoder.h">
-<Filter>dlb_pmd\src\modules\pcm</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\sadm\pmd_bitset.h">
 <Filter>dlb_pmd\src\modules\sadm</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\sadm\pmd_core_model_generator.h">
@@ -264,6 +266,10 @@
 <ClInclude Include="..\..\..\src\modules\sadm\pmd_speaker_blkupdt.h">
 <Filter>dlb_pmd\src\modules\sadm</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\sadm\pmd_speaker_position.h">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\sadm\sadm_bitstream_decoder.h">
+<Filter>dlb_pmd\src\modules\sadm</Filter></ClInclude>
+<ClInclude Include="..\..\..\src\modules\sadm\sadm_bitstream_encoder.h">
 <Filter>dlb_pmd\src\modules\sadm</Filter></ClInclude>
 <ClInclude Include="..\..\..\src\modules\xml\parser_tagstack.h">
 <Filter>dlb_pmd\src\modules\xml</Filter></ClInclude>

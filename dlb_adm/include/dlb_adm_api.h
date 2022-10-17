@@ -854,6 +854,16 @@ dlb_adm_gain_in_decibels
     );
 
 /**
+* @brief Add two gains and convert to a dimensionless value in dB.
+*/
+DLB_ADM_DLL_ENTRY
+dlb_adm_gain_value
+dlb_adm_add_gains_in_decibels
+    (dlb_adm_data_gain       gain1   /**< [in] Dimensioned (dB or linear) gain value */
+    ,dlb_adm_data_gain       gain2   /**< [in] Dimensioned (dB or linear) gain value */
+    );
+
+/**
  * @brief Is the file named by the path in #filename a S-ADM xml file?
  *
  * Note: #is_sadm true indicates a high probability it is actually S-ADM; #is_sadm false indicates

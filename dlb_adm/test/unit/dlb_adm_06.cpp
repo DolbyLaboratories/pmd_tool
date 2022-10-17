@@ -54,6 +54,7 @@
 #include "CoreModelTest.h"
 #include "dlb_adm_data.h"
 
+#include "AttributeValue.h"
 #include <cstring>
 #include <fstream>
 
@@ -1890,6 +1891,8 @@ TEST_F(DlbAdm06, CoreModelAddFrameFormatBasic)
 {
     dlb_adm_core_model_counts counts;
     dlb_adm_data_frame_format frameFormat;
+    std::string startString("00:00:00.00000");
+    std::string durationString("00:00:00.02000");
     int status;
 
     ::memset(&counts, 0, sizeof(counts));
@@ -1907,8 +1910,11 @@ TEST_F(DlbAdm06, CoreModelAddFrameFormatBasic)
     EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);
 
     ::snprintf(frameFormat.type,     sizeof(frameFormat.type),     "%s", "intermediate");
-    ::snprintf(frameFormat.start,    sizeof(frameFormat.start),    "%s", "00:00:00.00000");
-    ::snprintf(frameFormat.duration, sizeof(frameFormat.duration), "%s", "00:00:00.02000");
+    ::snprintf(frameFormat.timeReference, sizeof(frameFormat.timeReference), "%s", "local");
+    status = DlbAdm::ParseValue(frameFormat.start, startString);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = DlbAdm::ParseValue(frameFormat.start, durationString);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_core_model_add_frame_format(mCoreModel, &frameFormat);
     EXPECT_EQ(DLB_ADM_STATUS_INVALID_ARGUMENT, status);     // type is not "full"

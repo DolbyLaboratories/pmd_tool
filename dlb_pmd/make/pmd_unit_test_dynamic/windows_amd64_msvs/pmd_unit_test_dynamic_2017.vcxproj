@@ -42,7 +42,7 @@
 <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='release|x64'">false</LinkIncremental></PropertyGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\..\Lawo\ember-plus\libember_slim\Source;..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\frontend\pmd_tool;..\..\..\frontend;..\..\..\include;..\..\..\include;..\..\..\os;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\pcm;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\..\Lawo\ember-plus\libember_slim\Source;..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\frontend\pmd_tool;..\..\..\frontend;..\..\..\include;..\..\..\include;..\..\..\os;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\pcm;..\..\..\src\modules\sadm;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
 <BufferSecurityCheck>true</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
@@ -72,7 +72,7 @@
 <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers></Link></ItemDefinitionGroup>
 <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='release|x64'">
 <ClCompile>
-<AdditionalIncludeDirectories>..\..\..\..\Lawo\ember-plus\libember_slim\Source;..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\frontend\pmd_tool;..\..\..\frontend;..\..\..\include;..\..\..\include;..\..\..\os;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\pcm;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>..\..\..\..\Lawo\ember-plus\libember_slim\Source;..\..\..\..\dlb_buffer\1.3;..\..\..\..\dlb_octfile\1.1;..\..\..\frontend\pmd_tool;..\..\..\frontend;..\..\..\include;..\..\..\include;..\..\..\os;..\..\..\os;..\..\..\src\model;..\..\..\src\modules\pcm;..\..\..\src\modules\sadm;..\..\..;..\..\..\..\dlb_wave\1.6;..\..\..\..\googletest\1.8.0\include;..\..\..\..\googletest\1.8.0\include;..\..\..\..;..\..\..\..;..\..\..\..\zlib\1.2.11\zlib-1.2.11</AdditionalIncludeDirectories>
 <BasicRuntimeChecks>Default</BasicRuntimeChecks>
 <BufferSecurityCheck>false</BufferSecurityCheck>
 <CompileAs>Default</CompileAs>
@@ -130,6 +130,7 @@
 <ClInclude Include="..\..\..\include\dlb_pmd_model_combo.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_buffer.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_types.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_xml.h" />

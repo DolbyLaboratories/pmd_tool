@@ -55,6 +55,8 @@
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_buffer.h">
+<Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h">
 <Filter>dlb_pmd\include</Filter></ClInclude>
 <ClInclude Include="..\..\..\include\dlb_pmd_types.h">

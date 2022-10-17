@@ -44,6 +44,7 @@ namespace DlbAdm
         , mType()
         , mStart()
         , mDuration()
+        , mTimeReference()
         , mFlowID()
     {
         // Empty
@@ -52,14 +53,15 @@ namespace DlbAdm
     FrameFormat::FrameFormat(
         dlb_adm_entity_id entityID,
         const std::string &type,
-        const std::string &start,
-        const std::string &duration,
+        const dlb_adm_time &start,
+        const dlb_adm_time &duration,
         const std::string &flowID
     )
         : ModelEntity(entityID)
         , mType(type)
         , mStart(start)
         , mDuration(duration)
+        , mTimeReference("local")
         , mFlowID(flowID)
     {
         // Empty
@@ -70,6 +72,7 @@ namespace DlbAdm
         , mType(x.mType)
         , mStart(x.mStart)
         , mDuration(x.mDuration)
+        , mTimeReference(x.mTimeReference)
         , mFlowID(x.mFlowID)
     {
         // Empty
@@ -86,6 +89,7 @@ namespace DlbAdm
         mType = x.mType;
         mStart = x.mStart;
         mDuration = x.mDuration;
+        mTimeReference = x.mTimeReference;
         mFlowID = x.mFlowID;
         return *this;
     }

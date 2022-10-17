@@ -1,4 +1,4 @@
-PMD 2.1.1 release notes
+PMD 2.1.2 release notes
 =======================
 
 Professional Metadata (PMD) is a format for specifying and
@@ -62,6 +62,12 @@ Known issues:
   header files (http://site.icu-project.org/home)
 - pmd_studio will not build on Windows and OSX support is limited
 - PMD to S-ADM translation use hardcoded values
+
+Changes since 2.1.1
+--------------------
+- Add read/write to/from S-ADM buffer
+- Emission Profile fixes
+- Fix translation from PMD to S-ADM (AVS)
 
 Changes since 2.1.0
 --------------------

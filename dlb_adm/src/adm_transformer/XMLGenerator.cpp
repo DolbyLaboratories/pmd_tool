@@ -750,8 +750,6 @@ namespace DlbAdm
         CoreModel::EntityCallbackFn blockFormatCallback = [&](const ModelEntity *e)
         {
             const BlockUpdate *update = dynamic_cast<const BlockUpdate *>(e);
-            DLB_ADM_TAG startTag;
-            DLB_ADM_TAG durationTag;
 
             if (update == nullptr)
             {
@@ -772,26 +770,24 @@ namespace DlbAdm
             CHECK_STATUS(status);
             status = mContainer.AddRelationship(channelFormatID, blockFormatID);
             CHECK_STATUS(status);
-            if (mModel.HasProfile(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE))
+
+            if (!hasStart || !hasDuration)
             {
-                startTag = DLB_ADM_TAG_BLOCK_FORMAT_RTIME;
-                durationTag = DLB_ADM_TAG_BLOCK_FORMAT_DURATION;
+                status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_FRAME_FORMAT,
+                                        [&](const ModelEntity *e)
+                                        {
+                                            const FrameFormat *frameFormat = dynamic_cast<const FrameFormat *>(e);
+                                            start = frameFormat->GetStart();
+                                            duration = frameFormat->GetDuration();
+                                            return status;
+                                        }
+                                        );
             }
-            else
-            {
-                startTag = DLB_ADM_TAG_BLOCK_FORMAT_LSTART;
-                durationTag = DLB_ADM_TAG_BLOCK_FORMAT_DURATION;
-            }
-            if (hasStart)
-            {
-                status = mContainer.SetValue(blockFormatID, startTag, AttributeValue(start));
-                CHECK_STATUS(status);
-            }
-            if (hasDuration)
-            {
-                status = mContainer.SetValue(blockFormatID, durationTag, AttributeValue(duration));
-                CHECK_STATUS(status);
-            }
+            status = mContainer.SetValue(blockFormatID, DLB_ADM_TAG_BLOCK_FORMAT_LSTART, AttributeValue(start));
+            CHECK_STATUS(status);
+            status = mContainer.SetValue(blockFormatID, DLB_ADM_TAG_BLOCK_FORMAT_LDURATION, AttributeValue(duration));
+            CHECK_STATUS(status);
+
             if (UpdateHasGain(update))
             {
                 status = GenerateGain(blockFormatID, gain);
@@ -1310,8 +1306,9 @@ namespace DlbAdm
 
             dlb_adm_entity_id frameFormatID = frameFormat->GetEntityID();
             std::string type = frameFormat->GetType();
-            std::string start = frameFormat->GetStart();
-            std::string duration = frameFormat->GetDuration();
+            dlb_adm_time start = frameFormat->GetStart();
+            dlb_adm_time duration = frameFormat->GetDuration();
+            std::string timeRef = frameFormat->GetTimeReference();
             std::string flowID = frameFormat->GetFlowID();
             int status = DLB_ADM_STATUS_OK;
 
@@ -1325,6 +1322,9 @@ namespace DlbAdm
             CHECK_STATUS(status);
             status = mContainer.SetValue(frameFormatID, DLB_ADM_TAG_FRAME_FORMAT_DURATION, AttributeValue(duration));
             CHECK_STATUS(status);
+            status = mContainer.SetValue(frameFormatID, DLB_ADM_TAG_FRAME_FORMAT_TIME_REFERENCE, AttributeValue(timeRef));
+            CHECK_STATUS(status);
+
             if (!flowID.empty())
             {
                 status = mContainer.SetValue(frameFormatID, DLB_ADM_TAG_FRAME_FORMAT_FLOW_ID, AttributeValue(flowID));

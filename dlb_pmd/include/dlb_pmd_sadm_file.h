@@ -43,20 +43,12 @@
 #define DLB_PMD_SADM_FILE_H
 
 #include "dlb_pmd_api.h"
+#include "dlb_pmd_sadm.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @brief type of error callback
- */
-typedef
-void
-(*dlb_pmd_sadm_error_callback)
-    (const char *msg
-    ,void *arg
-    );
 
 /**
  * @brief decide whether the given XML file contains S-ADM or not

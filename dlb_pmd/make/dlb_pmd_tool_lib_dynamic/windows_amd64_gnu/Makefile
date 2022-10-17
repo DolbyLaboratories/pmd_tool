@@ -31,12 +31,14 @@ INPUTS_ARCHIVE_debug = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_tool_lib_dynamic_wi
                        $(TMP)dlb_pmd/src/modules/klv/pmd_klv_writer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/pcm/pmd_bitstream.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
-                       $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
+                       $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
                        $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.o\
@@ -100,12 +102,14 @@ INPUTS_ARCHIVE_release = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_tool_lib_dynamic_
                          $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
-                         $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
-                         $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
+                         $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
                          $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.o\
@@ -200,12 +204,14 @@ CLEAN_COMPILE_debug = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_tool_lib_dynamic_win
                       $(TMP)dlb_pmd/src/modules/klv/pmd_klv_writer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/pcm/pmd_bitstream.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
-                      $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
+                      $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
                       $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d $(TMP)dlb_pmd/src/modules/xml/pmd_xml_write_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d\
@@ -268,12 +274,14 @@ CLEAN_COMPILE_release = $(TMP)dlb_adm/src/dlb_adm_api.dlb_pmd_tool_lib_dynamic_w
                         $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
-                        $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
+                        $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
                         $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d\
@@ -378,12 +386,14 @@ include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_bitstream.dlb_pmd_tool_lib_
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_debug.d)
@@ -488,12 +498,14 @@ include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_bitstream.dlb_pmd_tool_lib_
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_augmentor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_pcm_extractor.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/pmd_smpte_337m.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
-include $(wildcard $(TMP)dlb_pmd/src/modules/pcm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_generator.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_core_model_ingester.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_buffer.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/pmd_sadm_write_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_decoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
+include $(wildcard $(TMP)dlb_pmd/src/modules/sadm/sadm_bitstream_encoder.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_file.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_read_string.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)
 include $(wildcard $(TMP)dlb_pmd/src/modules/xml/pmd_xml_reader.dlb_pmd_tool_lib_dynamic_windows_amd64_gnu_release.d)

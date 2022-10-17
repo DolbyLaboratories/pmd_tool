@@ -120,6 +120,7 @@
 <ClInclude Include="..\..\..\include\dlb_pmd_model_combo.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_pcm.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm.h" />
+<ClInclude Include="..\..\..\include\dlb_pmd_sadm_buffer.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_sadm_file.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_types.h" />
 <ClInclude Include="..\..\..\include\dlb_pmd_xml.h" />

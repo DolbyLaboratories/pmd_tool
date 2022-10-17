@@ -229,7 +229,7 @@ pcm_next_block
                 } 
                 else
                 {
-                    ok = !sadm_bitstream_decoder_decode(ext->sdec, ext->klv_buf, datasize, core_model, sadm_dec_callback, s337m->nextarg);
+                    ok = !sadm_bitstream_decoder_decode(ext->sdec, ext->klv_buf, datasize, core_model, PMD_FALSE, sadm_dec_callback, s337m->nextarg);
                 }
             } 
             else

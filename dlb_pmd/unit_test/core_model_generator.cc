@@ -461,7 +461,7 @@ TEST_F(CoreModelGenerator, AltSpkrs)
     DlbAdm::DlbPmdModelWrapper sadmWrapper(&comboModel, mCoreModel, PMD_FALSE);
     const dlb_pmd_model *pmdModel;
 
-    success = ::dlb_pmd_sadm_file_read(altSpkrADMOutputFileName, comboModel, PMD_FALSE, nullptr, nullptr);
+    success = ::dlb_pmd_sadm_file_read(altSpkrADMOutputFileName, comboModel, PMD_TRUE, nullptr, nullptr);
     ASSERT_EQ(PMD_SUCCESS, success);
     success = ::dlb_pmd_model_combo_ensure_readable_pmd_model(comboModel, &pmdModel, PMD_FALSE);
     ASSERT_EQ(PMD_SUCCESS, success);
