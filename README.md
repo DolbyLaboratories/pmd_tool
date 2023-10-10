@@ -1,5 +1,5 @@
 # pmd_tool (dlb_pmd_lib)
-# version 1.7.4
+# version 2.2.0
 
 This project provides applications and libraries to assist with conversion between
 various professional audio metadata formats and containers.
@@ -30,6 +30,8 @@ running on your local machine for development and testing purposes.
 
 - **LICENSE** Terms of use.
 
+- **cmake/** Additional cmake files
+
 - **dlb_buffer/** Buffer management component.
 
 - **dlb_octfile/** This component defines a wrapper around the stdio
@@ -40,11 +42,11 @@ running on your local machine for development and testing purposes.
 
 - **dlb_socket/** Cross-platform socket component.
 
+- **dlb_st2110/** IP stream management layer
+
 - **dlb_wave/** Component providing read/write to Microsoft (broadcast) audio WAV format.
 
 - **dlb_xmllib/** XML parser.
-
-- **dlb_st2110/** IP stream management layer
 
 - **googletest/** C++ test framework from Google.
 
@@ -61,10 +63,14 @@ running on your local machine for development and testing purposes.
 
 ### Prerequisites
 
-For Linux and OSX, the library and tool can be built using GNU makefiles.
-For Windows, Visual Studio 2015 and 2017 projects and solutions are provided.
-For all platforms, 64-bit targets are supported.
+For all platforms, 64-bit targets are supported. (tested on Linux)
 For Linux, 32-bit platforms are supported.
+
+The following tools are required for building the libraries and tools:
+
+- CMake
+- Conan 1.XX (tested on 1.58)
+- Git LFS
 
 #### Professional Sound Card
 
@@ -120,28 +126,23 @@ Verify that the last status command shows the services running with stable clock
 
 ### Build instructions
 
-#### Using the GNU makefiles
+Building dlb_pmd follows a similar process as most CMake-ready projects:
+1. Create a build directory and enter it (e.g. `mkdir build; cd build`)
+2. Generate makefiles using CMake with optional variables specified: <br>
 
-Use the makefiles located in dlb_pmd/make. Go to the appropriate directory
-and run GNU make. Release and debug executables are created in the same
-directory as the makefile. When using a professional sound card supporting
-the ALSA or Core Audio interfaces use the makefile in the pmd_studio
-directory. When using an NVidia ConnectX SMARTNIC ethernet card, use the
-makefile in the pmd_studio_rivermax directory.
+| Variable name             | Possible values      | Description | Default value |
+|---------------------------|----------------------|-------------|---------------|
+| BUILD_PMD_STUDIO_RIVERMAX | TRUE / FALSE         | Builds dlb_pmd_studio_rivermax (requires Rivermax SDK, use when using NVidia ConnectX SMARTNIC ethernet card) | FALSE |
+| RIVERMAX_API_INCLUDE_DIR  | Path                 | Specify the Rivermax API directory | `/usr/include/mellanox/` |
+| CMAKE_BUILD_TYPE          | "Release" / "Debug"  | Project build type | "Release" |
+| USE_CONAN                 | TRUE / FALSE         | Use Conan for dependencies     | FALSE
 
-#### Using Microsoft Visual Studio (on Windows)
+  USE_CONAN should be set to TRUE for NMOS dependency.
 
-Go to the 64 bit Windows MSVS directory under dlb_pmd/make/pmd_tool.
-In Visual Studio 2015 or 2017, open the corresponding solution file (.sln).
-Select build solution in MSVS.
+  Example: `cmake .. -DCMAKE_BUILD_TYPE="Release" -DBUILD_PMD_STUDIO_RIVERMAX=TRUE -DUSE_CONAN=TRUE`
 
-Alternatively, run msbuild from the Windows command line:
+3. Build the project with `cmake --build .`
 
-```
->call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\vsvars32.bat"
->msbuild pmd_tool_2015.sln /property:Configuration=debug
->msbuild pmd_tool_2015.sln /property:Configuration=release
-```
 
 ## Running the applications
 
@@ -169,18 +170,14 @@ Basic usage of the command line when launching PMD Studio is obtained using '-h'
 
 ## Testing the library
 
-To test the basic functionality of the library, there is an additional
-pmd_test tool. The build makefiles and projects are found under
-dlb_pmd/make/pmd_test, and the test suite can be built in the same
-manner as the pmd_tool.
+Along the project, two testing tools are built - `pmd_test` and `pmd_unit_tests`. 
 
-pmd_test is built on top of the googletest framework, so the complete
+Both are built on top of the googletest framework, so the complete
 suite can be run simply by running the executable without arguments.
 Note that the tests take a long time to start up, and take several
 hours to run.
 
-pmd_fuzz is an experimental model-based fuzzer that generates random
-models and tests that serialization/deserialization works correctly.
+These tools are also added as CTests, so you can launch them using the `ctest` command.
 
 ## Known Limitations
 

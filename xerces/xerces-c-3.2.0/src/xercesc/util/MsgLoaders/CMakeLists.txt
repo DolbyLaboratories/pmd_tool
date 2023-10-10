@@ -1,0 +1,11 @@
+if(UNIX)
+    if(${OS} MATCHES linux)
+        add_subdirectory(ICU)
+    else()
+        add_subdirectory(MsgCatalog)
+    endif()
+else()
+    add_subdirectory(Win32)
+endif()
+
+add_subdirectory(InMemory)

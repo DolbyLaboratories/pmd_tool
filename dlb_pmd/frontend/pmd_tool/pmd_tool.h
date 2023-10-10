@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,10 @@
 #include "dlb_pmd/include/dlb_pmd_lib_dll.h"
 #include "dlb_pmd/include/dlb_pmd_types.h"
 #include "dlb_pmd/include/dlb_pmd_klv.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /**
@@ -99,7 +103,7 @@ typedef struct
 /**
  * @brief print the PMD Tool version number to stdout
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_tool_print_version
     (void
@@ -109,7 +113,7 @@ dlb_pmd_tool_print_version
 /**
  * @brief print the PMD Tool usage instructions to stdout
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 void
 dlb_pmd_tool_usage
     (const Args *args   /**< [in] control arguments -- may be NULL */
@@ -119,7 +123,7 @@ dlb_pmd_tool_usage
 /**
  * @brief parse command-line arguments
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_bool
 dlb_pmd_tool_parse_cmdline_args
     (      Args  *args
@@ -131,11 +135,15 @@ dlb_pmd_tool_parse_cmdline_args
 /**
  * @brief process files according to the arguments
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 int
 dlb_pmd_tool_process
     (const Args *args
     );
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

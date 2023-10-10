@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,30 +37,15 @@
 #define __PMD_STUDIO_AUDIO_OUTPUTS_PVT_H__
 
 #include "pmd_studio_audio_outputs.h"
-
+#include "pmd_studio_device.h"
 
 /* Definitons */
-
-typedef enum
-{
-    PMD_OUTPUT_MODE,
-    SADM_OUTPUT_MODE,
-    NUM_METADATA_FORMATS
-} pmd_studio_metadata_format;
-
-#define PMD_STUDIO_OUTPUT_NUM_CONFIG 3
 
 static const dlb_pmd_speaker_config pmd_studio_output_config[PMD_STUDIO_OUTPUT_NUM_CONFIG] =
 {
     DLB_PMD_SPEAKER_CONFIG_2_0,
     DLB_PMD_SPEAKER_CONFIG_5_1,
     DLB_PMD_SPEAKER_CONFIG_5_1_4
-};
-
-static const char pmd_studio_metadata_format_names[][MAX_LABEL_LENGTH] = 
-{
-    "PMD",
-    "sADM"
 };
 
 // Required so can distinguish between Metadata and audio outputs in common
@@ -97,17 +82,19 @@ struct pmd_studio_metadata_output
 {
     pmd_studio_outputs *outputs;
     dlb_pmd_bool enabled;
+    dlb_pmd_bool smpte337_wrapped;
     unsigned int id;
     pmd_studio_metadata_format format;
     dlb_pmd_bool subframemode;
     unsigned int channel; // Starts at 1, 0 is unassigned
+    pmd_studio_video_frame_rate frame_rate;
     uiLabel    *label;
     uiCheckbox *enable;
     uiCombobox *fmt;
+    uiCombobox *fps;
     uiCombobox *mode;
     uiCombobox *chan;
     dlb_pmd_bool augmentor_error;
-    pmd_studio_ring_buffer_struct *assigned_ring_buffer_struct;
 };
 
 struct pmd_studio_outputs

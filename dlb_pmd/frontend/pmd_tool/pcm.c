@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -285,33 +285,32 @@ payload_set_status_callback
 
 int
 pcm_read
-    (const char               *infile
-    ,const char               *logfile
-    ,      dlb_pmd_frame_rate  rate
-    ,      unsigned int        chan
-    ,      dlb_pmd_bool        ispair
-    ,      size_t              vsync
-    ,      size_t              skip
-    ,      dlb_pmd_model      *model
+    (const char             *infile
+    ,const char             *logfile
+    ,dlb_pmd_frame_rate      rate
+    ,unsigned int            chan
+    ,dlb_pmd_bool            is_pair
+    ,size_t                  vsync
+    ,size_t                  skip
+    ,dlb_pmd_model_combo    *model
     )
 {
-    dlb_pmd_model_constraints  limits;
-    dlb_pcmpmd_extractor      *ext;
-    dlb_wave_file              source;
-    dlb_buffer                 buffer;
-    unsigned int               nchans;
-    unsigned int               block_count;
-    unsigned int               frame_count;
-    unsigned int               error_count;
-    size_t                     read;
-    size_t                     sz;
-    void                      *mem;
-    vsync_timer                vt;
-    size_t                     video_sync;
-    FILE                      *filelog = NULL;
-    dlb_pmd_bool               close_log_file = PMD_FALSE;
-    dlb_pmd_success            success;
-    int                        res;
+    dlb_pcmpmd_extractor    *ext;
+    dlb_wave_file            source;
+    dlb_buffer               buffer;
+    unsigned int             nchans;
+    unsigned int             block_count;
+    unsigned int             frame_count;
+    unsigned int             error_count;
+    size_t                   read;
+    size_t                   sz;
+    void                    *mem;
+    vsync_timer              vt;
+    size_t                   video_sync;
+    FILE                    *filelog = NULL;
+    dlb_pmd_bool             close_log_file = PMD_FALSE;
+    dlb_pmd_success          success;
+    int                      res;
 
     dlb_pmd_payload_status_record    update_array[DLB_PMD_MAX_UPDATES];
     dlb_pmd_payload_set_status       payload_set_status;
@@ -319,8 +318,7 @@ pcm_read
     memset(&update_array, 0, sizeof(update_array));
     memset(&payload_set_status, 0, sizeof(payload_set_status));
 
-    dlb_pmd_get_constraints(model, &limits);
-    sz  = dlb_pcmpmd_extractor_query_mem2(1, &limits);
+    sz  = dlb_pcmpmd_extractor_query_mem(PMD_TRUE);
     mem = malloc(sz);
     if (NULL == mem)
     {
@@ -368,7 +366,7 @@ pcm_read
         return 1;
     }
 
-    dlb_pcmpmd_extractor_init2(&ext, mem, rate, chan, nchans, ispair, model, &payload_set_status, 1);
+    dlb_pcmpmd_extractor_init2(&ext, mem, rate, chan, nchans, is_pair, model, &payload_set_status, 1);
 
     buffer_init(&buffer, nchans);
     vsync_timer_init(&vt, rate, vsync);
@@ -401,7 +399,13 @@ pcm_read
             if (video_sync != DLB_PMD_VSYNC_NONE) { TRACE(("video sync in %u\n", video_sync)); }
             if (dlb_pcmpmd_extract(ext, channeldata, read, video_sync))
             {
-                printf("%s", dlb_pmd_error(model));
+                const char *msg = dlb_pcmpmd_extractor_error_msg(ext);
+
+                if (msg[0] == '\0')
+                {
+                    msg = "error";
+                }
+                printf("%s", msg);
                 printf("    at block %u of frame %u\n", block_count, frame_count);
                 error_count += 1;
             }
@@ -432,18 +436,17 @@ pcm_read
 
 int
 pcm_write
-    (const char                       *infile
-    ,const char                       *outfile
-    ,      dlb_pmd_frame_rate          rate
-    ,      unsigned int                chan
-    ,      dlb_pmd_bool                ispair
-    ,      dlb_klvpmd_universal_label  ul
-    ,      dlb_pmd_bool                mark_empty_blocks
-    ,      dlb_pmd_bool                sadm
-    ,      dlb_pmd_model              *model
+    (const char                 *infile
+    ,const char                 *outfile
+    ,dlb_pmd_frame_rate          rate
+    ,unsigned int                chan
+    ,dlb_pmd_bool                is_pair
+    ,dlb_klvpmd_universal_label  ul
+    ,dlb_pmd_bool                mark_empty_blocks
+    ,dlb_pmd_bool                sadm
+    ,dlb_pmd_model_combo        *model
     )
 {
-    dlb_pmd_model_constraints  limits;
     dlb_pcmpmd_augmentor      *aug;
     dlb_wave_file              source;
     dlb_wave_file              sink;
@@ -456,8 +459,7 @@ pcm_write
     size_t                     video_sync;
     int                        res;
 
-    dlb_pmd_get_constraints(model, &limits);
-    sz  = dlb_pcmpmd_augmentor_query_mem2(sadm, &limits);
+    sz  = dlb_pcmpmd_augmentor_query_mem(sadm);
     mem = malloc(sz);
     if (NULL == mem)
     {
@@ -472,7 +474,7 @@ pcm_write
     }
 
     dlb_pcmpmd_augmentor_init2(&aug, model, mem, rate, ul, mark_empty_blocks,
-                               nchans, nchans, ispair, chan, sadm);
+                               nchans, nchans, is_pair, chan, sadm);
 
     buffer_init(&buffer, nchans);
     vsync_timer_init(&vt, rate, 0);

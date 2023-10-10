@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 
 
 #include <stdio.h>
+#include <string.h>
 #include <arpa/inet.h>
 extern "C"{
 #include "ui.h"
@@ -47,6 +48,8 @@ extern "C"{
 #include "pmd_studio_settings_pvt.h"
 #include "pmd_studio_pvt.h"
 #include "pmd_studio_audio_presentations_pvt.h"
+#include "pmd_studio_services.h"
+
 
 #define CONFIG_FILENAME "pmd_studio.cfg"
 #define DEFAULT_LATENCY (1.0)
@@ -142,6 +145,13 @@ onSettingsApplyButtonClicked
     pmd_studio_get_supported_languages(&langs);
     memcpy(s->studio->settings->nlang_settings.preset_nlang, langs[uiComboboxSelected(s->nlang_preset)], 4);
 
+#ifdef LIMITED_MODE
+    dlb_pmd_bool new_limited_mode = uiCheckboxChecked(s->limited_mode) ? PMD_TRUE : PMD_FALSE;
+    if(s->studio->settings->limited_mode != new_limited_mode){
+        s->studio->settings->limited_mode = new_limited_mode;
+        pmd_studio_reset(s->studio);
+    }
+#endif
     result = pmd_studio_settings_update(s->studio, s->window);
     if (result != PMD_SUCCESS)
     {
@@ -314,6 +324,13 @@ edit_settings
     // Disable preset combobox if nlang_behaviour setting isn't preset
     onNlangBehaviourUpdate(settings->nlang_behaviour, settings);
 
+#ifdef LIMITED_MODE
+    // Custom AC4 safe mode
+    settings->limited_mode = uiNewCheckbox("Limited Mode");
+    uiCheckboxSetChecked(settings->limited_mode, (int) s->settings->limited_mode);
+    uiBoxAppend(vbox, uiControl(settings->limited_mode), 0);
+
+#endif
     uiBoxAppend(vbox, uiControl(uiNewHorizontalSeparator()), 0);
     settings->applybutton = uiNewButton("Apply");
     uiBoxAppend(vbox, uiControl(settings->applybutton), 0);
@@ -332,7 +349,13 @@ pmd_studio_settings_read_config_file
     size_t result;
     size_t file_size;
 
-    cfgFile = fopen(CONFIG_FILENAME, "rb");
+    char cfgFilePath[PMD_STUDIO_MAX_FILENAME_LENGTH];
+
+    pmd_studio_services_get_application_data_path(cfgFilePath);
+    strncat(cfgFilePath, "/", PMD_STUDIO_MAX_FILENAME_LENGTH);
+    strncat(cfgFilePath, CONFIG_FILENAME, PMD_STUDIO_MAX_FILENAME_LENGTH);
+
+    cfgFile = fopen(cfgFilePath, "rb");
     if (!cfgFile)
     {
         pmd_studio_information("Can't open config file for reading");
@@ -369,8 +392,15 @@ pmd_studio_settings_write_config_file
 {
     FILE *cfgFile;
     size_t result;
+    char cfgFilePath[PMD_STUDIO_MAX_FILENAME_LENGTH];
 
-    cfgFile = fopen(CONFIG_FILENAME, "w");
+    pmd_studio_create_application_data_path();
+
+    pmd_studio_services_get_application_data_path(cfgFilePath);
+    strncat(cfgFilePath, "/", PMD_STUDIO_MAX_FILENAME_LENGTH);
+    strncat(cfgFilePath, CONFIG_FILENAME, PMD_STUDIO_MAX_FILENAME_LENGTH);
+
+    cfgFile = fopen(cfgFilePath, "w");
     if (!cfgFile)
     {
         pmd_studio_error(PMD_STUDIO_ERR_FILE, "Can't open config file for writing");
@@ -413,6 +443,11 @@ pmd_studio_settings_init(pmd_studio_settings **settings)
     pmd_studio_get_supported_languages(&langs);
     memcpy((*settings)->nlang_settings.preset_nlang, langs[pmd_studio_get_default_language_index()], 4);
 
+#ifdef LIMITING_MODE
+    // Limited Mode defaults off 
+    (*settings)->limited_mode = PMD_FALSE;
+
+#endif
     /* Load config file first so it can be overwritten by command line option */
     pmd_studio_settings_read_config_file(*settings);
 

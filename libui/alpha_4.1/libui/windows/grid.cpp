@@ -596,19 +596,19 @@ static void add(uiGrid *g, struct gridChild *gc)
 
 static void remove(uiGrid *g, struct gridChild *gc)
 {
-	std::vector<struct gridChild *>::iterator iter;
-	std::vector<struct gridChild *>::iterator endIter = g->children->end();
-
-	for (iter = g->children->end() ; iter != endIter; ++iter)
-	{
-		if (*iter == gc)
-		{
-			g->children->erase(iter);
-		}
-	}
+	std::vector<struct gridChild *>::iterator iter;
+	std::vector<struct gridChild *>::iterator endIter = g->children->end();
+
+	for (iter = g->children->end() ; iter != endIter; ++iter)
+	{
+		if (*iter == gc)
+		{
+			g->children->erase(iter);
+		}
+	}
 	gridRecomputeMinMax(g);
 	gridArrangeChildren(g);
-	uiWindowsControlMinimumSizeChanged(uiWindowsControl(g));
+	uiWindowsControlMinimumSizeChanged(uiWindowsControl(g));
 }
 
 
@@ -622,7 +622,7 @@ void uiGridAppend(uiGrid *g, uiControl *c, int left, int top, int xspan, int ysp
 	add(g, gc);
 }
 
-void uiGridDelete(uiGrid *g, uiControl *c)
+void uiGridDelete(uiGrid *g, uiControl *c)
 {
 	struct gridChild *gc;
 	gc = (*(g->children))[(*(g->indexof))[c]];

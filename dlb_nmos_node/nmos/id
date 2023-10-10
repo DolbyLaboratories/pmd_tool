@@ -1,0 +1,38 @@
+capabilities.h:    // See https://github.com/AMWA-TV/nmos-receiver-capabilities/blob/v1.0.0/docs/1.0.%20Receiver%20Capabilities.md
+capabilities.h:    // See https://github.com/AMWA-TV/nmos-receiver-capabilities/blob/v1.0.0/docs/1.0.%20Receiver%20Capabilities.md#string-constraint-keywords
+capabilities.h:    // See https://github.com/AMWA-TV/nmos-receiver-capabilities/blob/v1.0.0/docs/1.0.%20Receiver%20Capabilities.md#integer-and-number-constraint-keywords
+capabilities.h:    // See https://github.com/AMWA-TV/nmos-receiver-capabilities/blob/v1.0.0/docs/1.0.%20Receiver%20Capabilities.md#integer-and-number-constraint-keywords
+capabilities.h:    // See https://github.com/AMWA-TV/nmos-receiver-capabilities/blob/v1.0.0/docs/1.0.%20Receiver%20Capabilities.md#boolean-constraint-keywords
+capabilities.h:    // See https://github.com/AMWA-TV/nmos-receiver-capabilities/blob/v1.0.0/docs/1.0.%20Receiver%20Capabilities.md#rational-constraint-keywords
+connection_api.cpp:            // See https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.0.2/APIs/schemas/v1.0-receiver-response-schema.json
+connection_api.cpp:            // and https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.1/APIs/schemas/receiver-transport-file.json
+connection_api.cpp:        // See https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.0/examples/v1.0-receiver-active-get-200.json
+connection_events_activation.cpp:                        if (nmos::transports::websocket.name != nmos::fields::transport(receiver->data)) continue;
+connection_events_activation.cpp:                        const std::pair<nmos::id, nmos::type> id_type{ receiver->id, receiver->type };
+connection_events_activation.cpp:                        const auto& endpoint_active = nmos::fields::endpoint_active(connection_receiver->data);
+connection_events_activation.cpp:                        const auto& event_type_caps_or_null = nmos::fields::event_types(nmos::fields::caps(receiver->data));
+connection_events_activation.cpp:                    if (nmos::transports::websocket.name != nmos::fields::transport(receiver->data)) continue;
+connection_events_activation.cpp:                    const std::pair<nmos::id, nmos::type> id_type{ receiver->id, receiver->type };
+connection_events_activation.cpp:                    const auto& endpoint_active = nmos::fields::endpoint_active(connection_receiver->data);
+connection_resources.cpp:        // and https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.1/APIs/schemas/receiver-response-schema.json
+connection_resources.cpp:        // See https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.1/APIs/schemas/receiver-transport-file.json
+connection_resources.cpp:        // See https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.1/docs/4.1.%20Behaviour%20-%20RTP%20Transport%20Type.md#receiver-parameter-sets
+connection_resources.cpp:        // See https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.1/docs/4.1.%20Behaviour%20-%20RTP%20Transport%20Type.md#receiver-parameter-sets
+connection_resources.cpp:        // See https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.1/docs/4.3.%20Behaviour%20-%20WebSocket%20Transport%20Type.md#receiver-parameter-sets
+connection_resources.cpp:        // See https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.1/docs/4.2.%20Behaviour%20-%20MQTT%20Transport%20Type.md#receiver-parameter-sets
+connection_resources.h:    // See https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.0/docs/3.1.%20Interoperability%20-%20NMOS%20IS-04.md#sender--receiver-ids
+connection_resources.h:    // "staged" and "active" fields, which must each have a value conforming to the sender-response-schema or receiver-response-schema,
+connection_resources.h:    // and https://github.com/AMWA-TV/nmos-device-connection-management/blob/v1.1/APIs/schemas/receiver-response-schema.json
+json_schema.cpp:            const web::uri nodeapi_receiver_target_put_request_uri = make_schema_uri(tag, _XPLATSTR("nodeapi-receiver-target.json"));
+json_schema.cpp:            const web::uri nodeapi_receiver_target_put_request_uri = make_schema_uri(tag, _XPLATSTR("nodeapi-receiver-target.json"));
+json_schema.cpp:            const web::uri nodeapi_receiver_target_put_request_uri = make_schema_uri(tag, _XPLATSTR("nodeapi-receiver-target.json"));
+json_schema.cpp:            const web::uri nodeapi_receiver_target_put_request_uri = make_schema_uri(tag, _XPLATSTR("nodeapi-receiver-target.json"));
+json_schema.cpp:            const web::uri connectionapi_receiver_staged_patch_request_uri = make_schema_uri(tag, _XPLATSTR("receiver-stage-schema.json"));
+json_schema.cpp:            const web::uri connectionapi_receiver_staged_patch_request_uri = make_schema_uri(tag, _XPLATSTR("v1.0-receiver-stage-schema.json"));
+json_schema.cpp:                { make_schema_uri(v1_3::tag, _XPLATSTR("nodeapi-receiver-target.json")), make_schema(v1_3::nodeapi_receiver_target) },
+json_schema.cpp:                { make_schema_uri(v1_2::tag, _XPLATSTR("nodeapi-receiver-target.json")), make_schema(v1_2::nodeapi_receiver_target) },
+json_schema.cpp:                { make_schema_uri(v1_1::tag, _XPLATSTR("nodeapi-receiver-target.json")), make_schema(v1_1::nodeapi_receiver_target) },
+json_schema.cpp:                { make_schema_uri(v1_0::tag, _XPLATSTR("nodeapi-receiver-target.json")), make_schema(v1_0::nodeapi_receiver_target) },
+json_schema.cpp:                { make_schema_uri(v1_1::tag, _XPLATSTR("receiver-stage-schema.json")), make_schema(v1_1::receiver_stage_schema) },
+json_schema.cpp:                { make_schema_uri(v1_1::tag, _XPLATSTR("receiver-transport-file.json")), make_schema(v1_1::receiver_transport_file) },
+json_schema.cpp:                { make_schema_uri(v1_0::tag, _XPLATSTR("v1.0-receiver-stage-schema.json")), make_schema(v1_0::v1_0_receiver_stage_schema) },

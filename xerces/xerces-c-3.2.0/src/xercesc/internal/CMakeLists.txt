@@ -1,0 +1,29 @@
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        BinFileOutputStream.cpp
+        BinMemOutputStream.cpp
+        DGXMLScanner.cpp
+        ElemStack.cpp
+        IGXMLScanner2.cpp
+        IGXMLScanner.cpp
+        MemoryManagerImpl.cpp
+        ReaderMgr.cpp
+        SGXMLScanner.cpp
+        ValidationContextImpl.cpp
+        VecAttributesImpl.cpp
+        VecAttrListImpl.cpp
+        WFXMLScanner.cpp
+        XMLReader.cpp
+        XMLScanner.cpp
+        XMLScannerResolver.cpp
+        XProtoType.cpp
+        XSAXMLScanner.cpp
+        XSerializeEngine.cpp
+        XSObjectFactory.cpp
+        XTemplateSerializer.cpp    
+)
+
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)

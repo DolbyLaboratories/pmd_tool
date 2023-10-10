@@ -1,0 +1,52 @@
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        DOMAttrImpl.cpp
+        DOMAttrMapImpl.cpp
+        DOMAttrNSImpl.cpp
+        DOMCDATASectionImpl.cpp
+        DOMCharacterDataImpl.cpp
+        DOMChildNode.cpp
+        DOMCommentImpl.cpp
+        DOMConfigurationImpl.cpp
+        DOMDeepNodeListImpl.cpp
+        DOMDocumentFragmentImpl.cpp
+        DOMDocumentImpl.cpp
+        DOMDocumentTypeImpl.cpp
+        DOMElementImpl.cpp
+        DOMElementNSImpl.cpp
+        DOMEntityImpl.cpp
+        DOMEntityReferenceImpl.cpp
+        DOMErrorImpl.cpp
+        DOMImplementationImpl.cpp
+        DOMImplementationListImpl.cpp
+        DOMImplementationRegistry.cpp
+        DOMLocatorImpl.cpp
+        DOMLSInputImpl.cpp
+        DOMLSOutputImpl.cpp
+        DOMLSSerializerImpl.cpp
+        DOMNamedNodeMapImpl.cpp
+        DOMNodeIDMap.cpp
+        DOMNodeImpl.cpp
+        DOMNodeIteratorImpl.cpp
+        DOMNodeListImpl.cpp
+        DOMNodeVector.cpp
+        DOMNormalizer.cpp
+        DOMNotationImpl.cpp
+        DOMParentNode.cpp
+        DOMProcessingInstructionImpl.cpp
+        DOMRangeImpl.cpp
+        DOMStringListImpl.cpp
+        DOMStringPool.cpp
+        DOMTextImpl.cpp
+        DOMTreeWalkerImpl.cpp
+        DOMTypeInfoImpl.cpp
+        DOMXPathExpressionImpl.cpp
+        DOMXPathNSResolverImpl.cpp
+        DOMXPathResultImpl.cpp
+        XSDElementNSImpl.cpp
+)
+
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)

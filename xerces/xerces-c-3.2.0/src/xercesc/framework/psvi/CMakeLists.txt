@@ -1,0 +1,32 @@
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        PSVIAttribute.cpp
+        PSVIAttributeList.cpp
+        PSVIElement.cpp
+        PSVIItem.cpp
+        XSAnnotation.cpp
+        XSAttributeDeclaration.cpp
+        XSAttributeGroupDefinition.cpp
+        XSAttributeUse.cpp
+        XSComplexTypeDefinition.cpp
+        XSElementDeclaration.cpp
+        XSFacet.cpp
+        XSIDCDefinition.cpp
+        XSModel.cpp
+        XSModelGroup.cpp
+        XSModelGroupDefinition.cpp
+        XSMultiValueFacet.cpp
+        XSNamespaceItem.cpp
+        XSNotationDeclaration.cpp
+        XSObject.cpp
+        XSParticle.cpp
+        XSSimpleTypeDefinition.cpp
+        XSTypeDefinition.cpp
+        XSValue.cpp
+        XSWildcard.cpp
+)
+
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)

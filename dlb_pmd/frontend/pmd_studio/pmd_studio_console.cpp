@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
 
 #include "pmd_studio.h"
 #include "pmd_studio_pvt.h"
-#include "pmd_studio_limits.h"
+#include "pmd_studio_common_defs.h"
 #include "pmd_studio_console.h"
 #include "pmd_studio_settings_pvt.h"
 #include "pmd_studio_console_emberplus.h"

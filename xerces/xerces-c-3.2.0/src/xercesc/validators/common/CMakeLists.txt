@@ -1,0 +1,19 @@
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        AllContentModel.cpp
+        CMAny.cpp
+        CMBinaryOp.cpp
+        CMUnaryOp.cpp
+        ContentLeafNameTypeVector.cpp
+        ContentSpecNode.cpp
+        DFAContentModel.cpp
+        Grammar.cpp
+        GrammarResolver.cpp
+        MixedContentModel.cpp
+        SimpleContentModel.cpp    
+)
+
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)

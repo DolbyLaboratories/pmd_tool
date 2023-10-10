@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,7 @@ extern "C" {
  * @note this function does not reset the model, it simply adds random
  * data to it.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                      /** @return 0 on success, 1 on failure */
 dlb_pmd_generate_random
     (dlb_pmd_model           *model  /**< [in] model to populate randomly */

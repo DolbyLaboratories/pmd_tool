@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@ extern "C"{
 #include "xml.h"
 #include "pcm.h"
 #include "pmd_model.h"
+#include "dlb_pmd_model_combo.h"
 }
 #include "pmd_studio.h"
 #include "pmd_studio_pvt.h"
@@ -62,7 +63,7 @@ extern "C"{
 
 pmd_studio_error_code c;
 
-#define PMD_STUDIO_VERSION "1.7.3"
+#define PMD_STUDIO_VERSION "1.8.2"
 
 
 const char* pmd_studio_error_messages[PMD_STUDIO_NUM_ERROR_MESSAGES] =
@@ -365,22 +366,18 @@ config_init(
     }
 }
 
-/* Private functions */
-
+/* Use of global variable to be able to create message window for error dialog box */
+/* As of Monterey, OSX only allows one uiWindow per App so context is required */
+/* Rather than force context through error handling calls I've reverted to a single global here */
+static uiWindow *top_window = NULL;
 
 static
 dlb_pmd_success
-pmd_studio_init
-    (pmd_studio *s,
-     int argc,
-     char **argv)
+pmd_studio_ui_init
+    (pmd_studio *s)
 {
     uiInitOptions options;
     const char *err;
-    uiBox *titlebox, *hbox1, *hbox2;
-    int i;
-    char *file_to_load = NULL;
-    dlb_pmd_success status;
 
     // First init UI so we can have dialog box errors
     memset(&options, 0, sizeof (uiInitOptions));
@@ -404,6 +401,99 @@ pmd_studio_init
         return PMD_FAIL;
     }
 
+    s->window = uiNewWindow(get_version_string("Professional Metadata Studio "), 640, 380, 1);
+
+    top_window = s->window;
+
+    uiWindowOnClosing(s->window, onClosing, s);
+    uiOnShouldQuit(onShouldQuit, s);
+return(PMD_SUCCESS);
+}
+
+static
+void
+pmd_studio_validate_command_line_options
+    (int argc,
+     char **argv)
+{
+    /* Process command line options */
+    /* Don't bother checking last argument as it should be a value */
+    /* This also avoids having to check i against argc */
+    int i;
+    for (i = 1; i < argc - 1; i++)
+    {
+        if (!strcmp(argv[i], "-buf"))
+        {
+            if (atoi(argv[i + 1]) > MAX_FRAMES_PER_BUFFER)
+            {
+                fprintf(stderr, "Error: Buffer size %s exceeds maximum allowed size of Frames: %u\n", argv[i + 1], MAX_FRAMES_PER_BUFFER);
+                print_usage();
+                exit(-1);                
+            }            
+            if (atoi(argv[i + 1]) < MIN_FRAMES_PER_BUFFER)
+            {
+                fprintf(stderr, "Error: Buffer size %s less than minimum allowed size of Frames: %u\n", argv[i + 1], MIN_FRAMES_PER_BUFFER);
+                print_usage();
+                exit(-1);                
+            }
+            i++;        
+        }
+        else if (!strcmp(argv[i], "-f"))
+        {
+            if ((strlen(argv[i + 1]) == 0) || strlen(argv[i + 1]) > PMD_STUDIO_MAX_FILENAME_LENGTH) 
+            {
+                fprintf(stderr, "Error: Invalid file name: \"%s\"", argv[i + 1]);
+                if(strlen(argv[i + 1]) == 0){
+                    fprintf(stderr, " - Empty string\n");
+                }
+                else{
+                    fprintf(stderr, " - Too long\n");
+                }
+                print_usage();
+                exit(-1);
+            }
+            i++;
+        }
+        else if (!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help"))
+        {
+            print_usage();
+            exit(0);
+        }
+        else if (!strcmp(argv[i],"-device"))
+        {
+            i++;
+        }
+        else
+        {
+            fprintf(stderr, "Error: Unknown option\n");
+            print_usage();
+            exit(-1);
+        }
+    }
+    if (i < argc)
+    {
+        /* Just in case the last argument is -h or --help */
+        if (!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help"))
+        {
+            print_usage();
+            exit(0);
+        }
+    }
+}
+
+static
+void
+pmd_studio_system_init
+    (void *data
+     )
+{
+    pmd_studio *s = (pmd_studio *)data;
+    int argc = s->argc;
+    char **argv = s->argv;
+    uiBox *titlebox, *hbox1, *hbox2;
+    int i;
+    char *file_to_load = NULL;
+    dlb_pmd_success status;
 
     /* initialize the system random number generator */
     srand((unsigned int)time(NULL));
@@ -432,55 +522,22 @@ pmd_studio_init
         else if (!strcmp(argv[i], "-buf"))
         {
             s->settings->common_device_settings.frames_per_buffer = atoi(argv[i + 1]);
-            if (s->settings->common_device_settings.frames_per_buffer > MAX_FRAMES_PER_BUFFER)
-            {
-                fprintf(stderr, "Error: Buffer size %u exceeds maximum allowed size of Frames: %u\n", s->settings->common_device_settings.frames_per_buffer, MAX_FRAMES_PER_BUFFER);
-                print_usage();
-                exit(-1);                
-            }            
-            if (s->settings->common_device_settings.frames_per_buffer < MIN_FRAMES_PER_BUFFER)
-            {
-                fprintf(stderr, "Error: Buffer size %u less than minimum allowed size of Frames: %u\n", s->settings->common_device_settings.frames_per_buffer, MIN_FRAMES_PER_BUFFER);
-                print_usage();
-                exit(-1);                
-            }
             i++;        
         }
         else if (!strcmp(argv[i], "-f"))
         {
             file_to_load = argv[i + 1];
-            if ((strlen(file_to_load) == 0) || strlen(file_to_load) > PMD_STUDIO_MAX_FILENAME_LENGTH) 
-            {
-                fprintf(stderr, "Error: Invalid file name: \"%s\"", file_to_load);
-                if(strlen(file_to_load) == 0){
-                    fprintf(stderr, " - Empty string\n");
-                }
-                else{
-                    fprintf(stderr, " - Too long\n");
-                }
-                print_usage();
-                exit(-1);
-            }
             i++;
-        }
-        else if (!strcmp(argv[i], "-h") || !strcmp(argv[i],"--help"))
-        {
-            print_usage();
-            exit(0);
-        }
-        else
-        {
-            fprintf(stderr, "Error: Unknown option\n");
-            print_usage();
-            exit(-1);
         }
     }
 
     if (model_init(&s->pmd))
     {
-        return PMD_FAIL;
+        pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Model Initization Failed");
     }
+#if LATER
     s->pmd.model->error_callback = pmd_studio_on_augmentor_fail_cb;
+#endif
 
     if (s->settings->file_based_mode)
     {
@@ -490,11 +547,6 @@ pmd_studio_init
     {
         s->mode = PMD_STUDIO_MODE_EDIT;        
     }
-
-    s->window = uiNewWindow(get_version_string("Professional Metadata Studio "), 640, 380, 1);
-    uiWindowOnClosing(s->window, onClosing, s);
-    uiOnShouldQuit(onShouldQuit, s);
-
 
     s->toplevelbox = uiNewVerticalBox();
     hbox1 = uiNewHorizontalBox();
@@ -533,7 +585,7 @@ pmd_studio_init
 
     if (status)
     {
-        return(PMD_FAIL);
+        pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "PMD Studio beds/objects/presentations failed to initialize");
     }
     else
     {
@@ -557,8 +609,6 @@ pmd_studio_init
             pmd_studio_reset(s);
             pmd_studio_open_file(s, file_to_load);
         }
-
-        return(PMD_SUCCESS);
     }
 }
 
@@ -598,6 +648,7 @@ refresh_ui
     (pmd_studio *s
     )
 {
+#if LATER
     dlb_pmd_model *m = s->pmd.model;
     const char *title;
 
@@ -605,6 +656,7 @@ refresh_ui
     {
         snprintf(s->title, sizeof(s->title), "%s", title);
     }
+#endif
 
     pmd_studio_audio_beds_refresh_ui(s->audio_beds);
     pmd_studio_audio_objects_refresh_ui(s->audio_objects);
@@ -670,6 +722,41 @@ generate_random_uuid
     }
 }
 
+static
+void
+update_model(void *data)
+{
+    string_uuid random_uuid;
+    dlb_pmd_model *m;
+
+    pmd_studio *s = (pmd_studio *)data;
+    memset(&random_uuid, 0, sizeof(random_uuid));
+    generate_random_uuid(random_uuid);
+   
+    if (   dlb_pmd_model_combo_clear(s->pmd.model)
+        || dlb_pmd_model_combo_get_writable_pmd_model(s->pmd.model, &m, PMD_FALSE)
+        || dlb_pmd_add_signals(m, MAX_STUDIO_AUDIO_SIGNALS)
+        || dlb_pmd_set_title(m, s->title)
+        || dlb_pmd_iat_add(m, (uint64_t)0u)
+        || dlb_pmd_iat_content_id_uuid(m, random_uuid))
+    {
+        uiMsgBoxError(s->window, "error updating model", dlb_pmd_error(m));
+        return;
+    }
+
+    pmd_studio_audio_beds_update_model(s->audio_beds, m);
+    pmd_studio_audio_objects_update_model(s->audio_objects, m);
+    pmd_studio_audio_presentations_update_model(s->audio_presentations, m);
+
+    // If we have an audio subsystem up and running then update the mix matrix
+    if (s->outputs)
+    {
+        pmd_studio_device_update_mix_matrix(s);
+        pmd_studio_audio_outputs_update_metadata_outputs(s);
+    }
+}
+
+
 /*** Public Functions ***/
 
 pmd_studio_audio_presentations *pmd_studio_get_presentations(pmd_studio *studio)
@@ -717,7 +804,7 @@ pmd_studio_reset
 {
     console_disconnect(s);
 
-    dlb_pmd_reset(s->pmd.model);
+    (void)dlb_pmd_model_combo_clear(s->pmd.model);
     snprintf(s->title, sizeof(s->title), "<untitled>");
     uiEntrySetText(s->title_entry, s->title);
 
@@ -754,8 +841,14 @@ pmd_studio_import
     (pmd_studio *s
     )
 {   
-    dlb_pmd_model *m = s->pmd.model;
+    dlb_pmd_model *m;
     const char *title;
+    
+    if(dlb_pmd_model_combo_get_writable_pmd_model(s->pmd.model, &m, PMD_FALSE))
+    {
+        uiMsgBoxError(s->window, "error getting writable core model", dlb_pmd_error(m));
+        dlb_pmd_reset(m);
+    }
     
     pmd_studio_audio_beds_reset(s->audio_beds);
     pmd_studio_audio_objects_reset(s->audio_objects);
@@ -770,6 +863,14 @@ pmd_studio_import
         dlb_pmd_reset(m);
     }
     refresh_ui(s);
+    pmd_studio_update_model(s);
+
+    if(pmd_studio_get_mode(s) == PMD_STUDIO_MODE_LIVE || pmd_studio_get_mode(s) == PMD_STUDIO_MODE_CONSOLE_LIVE)
+    {
+        // As newly created UI elements are enabled, re-trigger live mode.
+        pmd_studio_switch_mode(s, pmd_studio_get_mode(s));
+    }
+
     /* The code below was moved from the top of the function because its position there was ineffective on linux */
     /* It is unkown why exactly but it is thought to be to do with timing and the closing of the */
     /* file opening dialogue box */
@@ -786,13 +887,9 @@ pmd_studio_import
 
 void pmd_studio_information(const char message[])
 {
-    uiWindow *win;
-
-    win = uiNewWindow("PMD Studio Error", 400, 410, 0);
-    if (win)
+    if (top_window)
     {
-        uiMsgBoxError(win, "PMD Studio Information", message);
-        uiControlDestroy(uiControl(win));
+        uiMsgBoxError(top_window, "PMD Studio Information", message);
     }
     else
     {
@@ -803,27 +900,18 @@ void pmd_studio_information(const char message[])
     }
 }
 
-
 void pmd_studio_error(pmd_studio_error_code err, const char error_message[])
 {
-    uiWindow *win;
-
-    if (err == PMD_STUDIO_ERR_UI)
+    if (top_window)
     {
-        win = uiNewWindow("PMD Studio Error", 400, 410, 0);
-        if (win)
-        {
-            uiMsgBoxError(win, "PMD Studio Error", error_message);
-            uiControlDestroy(uiControl(win));
-        }
-        else
-        {
-            fprintf(stderr, "PMD Studio Error\n");            
-            fprintf(stderr, "%s\n", error_message);
-            fprintf(stderr, "Press Enter to continue\n");            
-            getchar();
-        }
-        return;
+        uiMsgBoxError(top_window, "PMD Studio Error", error_message);
+    }
+    else
+    {
+        fprintf(stderr, "PMD Studio Error\n");            
+        fprintf(stderr, "%s\n", error_message);
+        fprintf(stderr, "Press Enter to continue\n");            
+        getchar();
     }
 
 #ifndef NDEBUG
@@ -846,35 +934,13 @@ void pmd_studio_error(pmd_studio_error_code err, const char error_message[])
 void
 pmd_studio_update_model(pmd_studio *s)
 {
-    string_uuid random_uuid;
-    dlb_pmd_model *m = s->pmd.model;
-
-    memset(&random_uuid, 0, sizeof(random_uuid));
-    generate_random_uuid(random_uuid);
-   
-    if (   dlb_pmd_reset(m)
-        || dlb_pmd_add_signals(m, MAX_STUDIO_AUDIO_SIGNALS)
-        || dlb_pmd_set_title(m, s->title)
-        || dlb_pmd_iat_add(m, (uint64_t)0u)
-        || dlb_pmd_iat_content_id_uuid(m, random_uuid))
-    {
-        uiMsgBoxError(s->window, "error updating model", dlb_pmd_error(m));
-        return;
-    }
-
-    pmd_studio_audio_beds_update_model(s->audio_beds, m);
-    pmd_studio_audio_objects_update_model(s->audio_objects, m);
-    pmd_studio_audio_presentations_update_model(s->audio_presentations, m);
-
-    // If we have an audio subsystem up and running then update the mix matrix
-    if (s->outputs)
-    {
-        pmd_studio_device_update_mix_matrix(s);
-        pmd_studio_audio_outputs_update_metadata_outputs(s);
-    }
+    // Updates can come fast and frequent causing potential issues with race conditions etc.
+    // In order to synchronize updates with each other we place in a queue
+    uiQueueMain(update_model, s);
 }
 
-dlb_pmd_model
+
+dlb_pmd_model_combo
 *pmd_studio_get_model
     (pmd_studio *studio
     )
@@ -989,29 +1055,31 @@ pmd_studio_open_file
     ,const char *filename
     )
 {
-    dlb_pmd_model *model = s->pmd.model;
+    dlb_pmd_model_combo *combo_model = s->pmd.model;
     file_mode m;
+    
     m = read_file_mode(filename);
-    dlb_pmd_reset(model);
+    (void)dlb_pmd_model_combo_clear(combo_model);
+
     switch (m)
     {
         case MODE_XML:
-            if (xml_read(filename, model, 0))
+            if (xml_read(filename, combo_model, PMD_FALSE, PMD_TRUE))
             {
-                uiMsgBoxError(s->window, "open model", dlb_pmd_error(model));
+                uiMsgBoxError(s->window, "open model", "xml_read() failed");
                 return;
             }
             break;
         case MODE_KLV:
-            if (klv_read(filename, model))
+            if (klv_read(filename, combo_model))
             {
-                uiMsgBoxError(s->window, "open model", dlb_pmd_error(model));
+                uiMsgBoxError(s->window, "open model", "klv_read() failed");
                 return;
             }
             break;
 #ifdef todo
         case MODE_WAV:
-            if (pcm_read(filename, rate, chan, ispair, vsync, 0, model))
+            if (pcm_read(filename, rate, chan, ispair, vsync, 0, combo_model))
             {
                 uiMsgBoxError(s->window, "open model", dlb_pmd_error(model));                
                 return;
@@ -1019,11 +1087,15 @@ pmd_studio_open_file
             break;
 #endif
         default:
-            uiMsgBoxError(s->window, "open model", "Unknown file extension");
+            uiMsgBoxError(s->window, "open model", "Unsupported file extension");
             return;
             break;
     }
     pmd_studio_import(s);
+    // Currently when a file is loaded all the audio outputs and metadata outputs are reset
+    // So there is no output. With the -41 streams, because they are defined in the stream
+    // settings they don't get reset so the payload has to be recreated here just for the
+    // -41 outputs
 }
 
 
@@ -1035,7 +1107,7 @@ pmd_studio_save_file
     )
 {
     dlb_klvpmd_universal_label ul = DLB_PMD_KLV_UL_DOLBY;
-    dlb_pmd_model *model = s->pmd.model;
+    dlb_pmd_model_combo *combo_model = s->pmd.model;
     file_mode m;
     
     if (filename)
@@ -1044,15 +1116,15 @@ pmd_studio_save_file
         switch (m)
         {
         case MODE_XML:
-            if (xml_write(filename, model, sadm))
+            if (xml_write(filename, combo_model, sadm))
             {
-                uiMsgBoxError(s->window, "save model", dlb_pmd_error(model));
+                uiMsgBoxError(s->window, "save model", "xml_write() failed");
             }
             break;
         case MODE_KLV:
-            if (klv_write(filename, model, ul))
+            if (klv_write(filename, combo_model, ul))
             {
-                uiMsgBoxError(s->window, "save model", dlb_pmd_error(model));
+                uiMsgBoxError(s->window, "save model", "klv_write() failed");
             }
             break;
 #ifdef todo
@@ -1060,7 +1132,7 @@ pmd_studio_save_file
         {
             char pcm_out[256];
             generate_output_filename(filename, 0, pcm_out, sizeof(pcm_out));
-            if (pcm_write(filename, pcm_out, rate, chan, ispair, ul, mark, sadm, model))
+            if (pcm_write(filename, pcm_out, rate, chan, ispair, ul, mark, sadm, combo_model))
             {
                 uiMsgBoxError(s->window, "save model", dlb_pmd_error(model));
             }
@@ -1068,7 +1140,7 @@ pmd_studio_save_file
         }        
 #endif
         default:
-            uiMsgBoxError(s->window, "save model", "Unknown file extension");
+            uiMsgBoxError(s->window, "save model", "Unsupported file extension");
             break;
         }
     }
@@ -1080,6 +1152,12 @@ pmd_studio_settings_update
      uiWindow *win
     )
 {
+    // If no window specified, use top level by default
+    if (win == NULL)
+    {
+        win = s->window;
+    }
+
     pmd_studio_audio_presentations_update_nlang(s->audio_presentations);
     pmd_studio_audio_presentations_refresh_ui(s->audio_presentations);
 
@@ -1113,6 +1191,7 @@ pmd_studio_debug
     pmd_studio_audio_objects_print_debug(studio);
     pmd_studio_audio_presentations_print_debug(studio);
     pmd_studio_outputs_print_debug(studio);
+    pmd_studio_device_print_debug(studio);
 }
 
 static
@@ -1295,9 +1374,14 @@ main
     (int argc,
      char **argv)
 {
+    pmd_studio_validate_command_line_options(argc, argv);
+
     pmd_studio s;
-    if (!pmd_studio_init(&s, argc, argv))
+    s.argc = argc;
+    s.argv = argv;
+    if (!pmd_studio_ui_init(&s))
     {
+        uiQueueMain(pmd_studio_system_init, &s);
         pmd_studio_run(&s);
     }
 

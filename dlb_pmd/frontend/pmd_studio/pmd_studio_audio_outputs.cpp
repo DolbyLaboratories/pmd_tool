@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -40,9 +40,11 @@ extern "C"{
     #include "ui.h"
     #include "dlb_pmd_api.h"
     #include "pmd_model.h"
+    #include "dlb_pmd_model_combo.h"
+    #include "sadm_bitstream_encoder.h"
 }
 
-#include "pmd_studio_limits.h"
+#include "pmd_studio_common_defs.h"
 #include "pmd_studio.h"
 #include "pmd_studio_device.h"
 #include "pmd_studio_pvt.h"
@@ -50,7 +52,10 @@ extern "C"{
 
 #include "pmd_studio_audio_outputs.h"
 #include "pmd_studio_audio_outputs_pvt.h"
+#include "ring_buffer.h"
 /* Definitons */
+
+/* Definitions */
 
 static
 dlb_pmd_success allocateAudioOutput(
@@ -279,7 +284,10 @@ onOutputPresentationUpdated
         aout->presentation_id = (*aout->outputs->presentation_ids)[index];
     }
     // Enabled checkbox is enabled as soon as a valid presentation is selected
-    uiControlEnable(uiControl(aout->enable));
+    if (pmd_studio_get_mode(aout->outputs->studio) != PMD_STUDIO_MODE_CONSOLE_LIVE)
+    {
+        uiControlEnable(uiControl(aout->enable));
+    }
     if (aout->enabled)
     {
         pmd_studio_device_update_mix_matrix(aout->outputs->studio);
@@ -355,6 +363,30 @@ onMetadataFormatUpdated
         }
     }   
 }
+
+static
+void
+onMetadataFrameRateUpdated
+    (uiCombobox *c
+    ,void *data
+    )
+{
+    pmd_studio_metadata_output *mdout = (pmd_studio_metadata_output *)data;
+    mdout->frame_rate = (pmd_studio_video_frame_rate)uiComboboxSelected(c);
+    // If output is running, update ring buffer
+    if (mdout->enabled)
+    {
+        pmd_studio_outputs_stop_metadata_output(mdout);
+        // re-enable with new format/ Disable output on failure
+        if (pmd_studio_outputs_start_metadata_output(mdout))
+        {
+            // No ui error here as 
+            uiCheckboxSetChecked(mdout->enable, 0);
+            mdout->enabled = 0;
+        }
+    }
+}   
+
 
 static
 void
@@ -492,6 +524,7 @@ pmd_studio_metadata_output_init
     mdout->format = PMD_OUTPUT_MODE;
     mdout->subframemode = PMD_TRUE;
     mdout->channel = 0;
+    mdout->frame_rate = FPS_25;
 }
 
 
@@ -693,8 +726,8 @@ dlb_pmd_success deallocateMetadataOutput(
         {
             mdout->outputs->chan_allocated[alloc_idx] = 0;
             mdout->outputs->num_chan_allocated--;
+            channels_left--;
         }
-        channels_left--;
     }
 
     if (channels_left == 0)
@@ -742,7 +775,7 @@ add_audio_output
         uiComboboxAppend(aout->cfg, configs[i].config_string);
     }
 
-    uiComboboxSetSelected(aout->cfg, (int)aout->config_index); 
+    uiComboboxSetSelected(aout->cfg, DLB_PMD_SPEAKER_CONFIG_2_0);
     uiComboboxOnSelected(aout->cfg, onOutputConfigUpdated, aout);
 
     aout->pres = uiNewCombobox();
@@ -760,7 +793,7 @@ add_audio_output
         sprintf(tmp, "%d",i + 1); // uiLabels start at 1
         uiComboboxAppend(aout->schan, tmp);
     }
-    uiComboboxSetSelected(aout->schan, (int)aout->startchannel); 
+    uiComboboxSetSelected(aout->schan, 0); // Channel 1 
     uiComboboxOnSelected(aout->schan, onOutputStartChannelUpdated, aout);
  
     /* add end channel label */
@@ -805,14 +838,33 @@ add_metadata_output
     {
         uiComboboxAppend(mdout->fmt, pmd_studio_metadata_format_names[i]);
     }
-    uiComboboxSetSelected(mdout->fmt, (pmd_studio_metadata_format)mdout->format); 
+    mdout->format = SADM_OUTPUT_MODE;
+    uiComboboxSetSelected(mdout->fmt, mdout->format);
     uiComboboxOnSelected(mdout->fmt, onMetadataFormatUpdated, mdout);
 
     mdout->mode = uiNewCombobox();
     uiComboboxAppend(mdout->mode, "Frame (Stereo)");
     uiComboboxAppend(mdout->mode, "Subframe (Mono)");
-    uiComboboxSetSelected(mdout->mode, (dlb_pmd_bool)mdout->subframemode); 
+    mdout->subframemode = PMD_TRUE;
+    uiComboboxSetSelected(mdout->mode, 1); // Subframe mode 
     uiComboboxOnSelected(mdout->mode, onMetadataModeUpdated, mdout);
+
+    mdout->fps = uiNewCombobox();
+    for(unsigned int j = 0; j < NUM_VIDEO_FRAME_RATES ;  j++)
+    {
+        if ((((int)ceil(pmd_studio_video_frame_rate_floats[j]*100)) % 100) == 0)
+        {
+            snprintf(tmp, sizeof(tmp), "%.0f FPS", pmd_studio_video_frame_rate_floats[j]);
+        }
+        else
+        {
+            snprintf(tmp, sizeof(tmp), "%.2f FPS", pmd_studio_video_frame_rate_floats[j]);            
+        }
+        uiComboboxAppend(mdout->fps, tmp);
+    }
+    uiComboboxSetSelected(mdout->fps, (int)mdout->frame_rate);
+    uiComboboxOnSelected(mdout->fps, onMetadataFrameRateUpdated, mdout);
+
 
     mdout->chan = uiNewCombobox();
     for (i = 0 ; i < MAX_OUTPUT_CHANNELS ; i++)
@@ -820,15 +872,16 @@ add_metadata_output
         sprintf(tmp, "%d",i + 1); // uiLabels start at 1
         uiComboboxAppend(mdout->chan, tmp);
     }
-    uiComboboxSetSelected(mdout->chan, (int)mdout->channel); 
+    uiComboboxSetSelected(mdout->chan, 0); // Channel 1 
     uiComboboxOnSelected(mdout->chan, onMetadataChannelUpdated, mdout);
 
 
-    uiGridAppend(grid, uiControl(mdout->label),  1, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
-    uiGridAppend(grid, uiControl(mdout->enable), 2, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
-    uiGridAppend(grid, uiControl(mdout->fmt),    3, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
-    uiGridAppend(grid, uiControl(mdout->mode),   4, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
-    uiGridAppend(grid, uiControl(mdout->chan),   5, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend(grid, uiControl(mdout->label),      1, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend(grid, uiControl(mdout->enable),     2, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend(grid, uiControl(mdout->fmt),        3, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend(grid, uiControl(mdout->fps),        4, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);    
+    uiGridAppend(grid, uiControl(mdout->mode),       5, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend(grid, uiControl(mdout->chan),       6, gridYIndex, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
     outs->metadata_output_count++;
     return PMD_SUCCESS;
 }
@@ -875,18 +928,15 @@ pmd_studio_outputs_start_metadata_output
     )
 {
     pmd_studio *studio = mdout->outputs->studio;
-    if(mdout->assigned_ring_buffer_struct != nullptr){
-        pmd_studio_outputs_stop_metadata_output(mdout);
-    }
+
+
+    mdout->smpte337_wrapped = pmd_studio_device_channel_requires_smpte337(mdout->channel, studio);
 
     unsigned int num_channels = (mdout->subframemode)? 1:2;
-    unsigned int pcmbufsize = METADATA_SAMPLES_PER_FRAME * num_channels;
 
-    if (pmd_studio_device_add_ring_buffer(mdout->channel, num_channels, pcmbufsize, mdout->outputs->studio, &mdout->assigned_ring_buffer_struct) == PMD_FAIL)
-    {
-        uiMsgBoxError(studio->window, "Unable to start metadata output", "An error occored when starting the metadata output");
-        // pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Adding ring buffer failed");        
-    }
+    // Using invalid frame rate signals to the ring buffer to just use a large buffer as we are streaming
+    // to a data channel not audio channel
+    pmd_studio_device_add_ring_buffer(mdout->channel, num_channels, mdout->frame_rate, studio);
 
     // Update empty buffer with model
     if(pmd_studio_audio_outputs_update_metadata_output(mdout) == PMD_FAIL)
@@ -909,13 +959,9 @@ pmd_studio_outputs_stop_metadata_output
 {
     pmd_studio *studio = mdout->outputs->studio;
 
-    if (mdout->assigned_ring_buffer_struct == nullptr)
-    {
-        return(PMD_FAIL);
-    }
     // Check that channel isn't already being used in existing ring buffer?
-    pmd_studio_device_delete_ring_buffer(mdout->assigned_ring_buffer_struct, mdout->outputs->studio);
-    mdout->assigned_ring_buffer_struct = nullptr;
+    PMDStudioRingBufferList *ring_buffer_list = pmd_studio_device_get_ring_buffer_list(studio);
+    ring_buffer_list->DeleteRingBuffer(mdout->channel);
     
     if(pmd_studio_metadata_output_active(studio) == PMD_FALSE)
     {
@@ -937,6 +983,55 @@ disable_audio_output(
     recalculateAudioOutputChannelLabels(aout->outputs->studio);
     pmd_studio_device_update_mix_matrix(aout->outputs->studio);
 }
+
+static
+dlb_pmd_success
+get_sadm_payload(dlb_pmd_model_combo *model, void *payload, unsigned int &max_payload_size)
+{
+    sadm_bitstream_encoder *enc;
+    int sadm_payload_bytes;
+    size_t sadm_end_mem_size;
+
+    const dlb_adm_core_model *core_model = NULL;
+
+    if (max_payload_size > MAX_DATA_BYTES)
+    {
+        pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Memory for sADM payload not large enough");
+        return (PMD_FAIL);
+    }
+
+    sadm_end_mem_size = sadm_bitstream_encoder_query_mem();
+    void *mem = malloc(sadm_end_mem_size);
+
+    if(mem == nullptr)
+    {
+        pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Could not allocate memory for SADM/PMD encoder");
+        return(PMD_FAIL);
+    }
+
+    sadm_bitstream_encoder_init(mem, &enc);
+
+    if (!dlb_pmd_model_combo_ensure_readable_core_model(model, &core_model))
+    {
+        sadm_payload_bytes = sadm_bitstream_encoder_payload(enc, core_model, (uint8_t *)payload);
+    }
+    else
+    {
+        pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Failed to get readable core model from combo model");
+        return (PMD_FAIL);
+    }
+
+    if (sadm_payload_bytes > MAX_DATA_BYTES)
+    {
+        pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "sADM payload was larger than expected, corruption may have occurred");
+        return (PMD_FAIL);
+    }
+
+    max_payload_size = sadm_payload_bytes;
+
+    return (PMD_SUCCESS);
+}
+
 
 /* Public Functions */
 
@@ -1014,8 +1109,9 @@ pmd_studio_outputs_init
 
  	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("En")),      2, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
  	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Format")),  3, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
- 	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Mode")),    4, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
- 	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Channel")), 5, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Frame Rate")),  4, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+ 	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Mode")),    5, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+ 	uiGridAppend((*outs)->metadata_output_grid, uiControl(uiNewLabel("Channel")), 6, 1, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
 
 
     /* this appends the entire outputs box to the studio window */
@@ -1104,7 +1200,7 @@ pmd_studio_outputs_print_debug
     unsigned int i;
     pmd_studio_config *configs;
     unsigned int num_configs = get_pmd_studio_configs(outs->studio, &configs);
-    const dlb_pmd_bool mix_matrix_debug = PMD_FALSE; // Set to true to get matrix debug
+    const dlb_pmd_bool mix_matrix_debug = PMD_TRUE; // Set to true to get matrix debug
 
     if (!outs)
     {
@@ -1354,12 +1450,15 @@ pmd_studio_outputs_reset
         uiGridDelete(ao1->metadata_output_grid, uiControl(ao1->metadata_outputs[i].label));
         uiGridDelete(ao1->metadata_output_grid, uiControl(ao1->metadata_outputs[i].enable));
         uiGridDelete(ao1->metadata_output_grid, uiControl(ao1->metadata_outputs[i].fmt));
+        uiGridDelete(ao1->metadata_output_grid, uiControl(ao1->metadata_outputs[i].fps));
+
         uiGridDelete(ao1->metadata_output_grid, uiControl(ao1->metadata_outputs[i].mode));
         uiGridDelete(ao1->metadata_output_grid, uiControl(ao1->metadata_outputs[i].chan));
 
         uiControlDestroy(uiControl(ao1->metadata_outputs[i].label));
         uiControlDestroy(uiControl(ao1->metadata_outputs[i].enable));
         uiControlDestroy(uiControl(ao1->metadata_outputs[i].fmt));
+        uiControlDestroy(uiControl(ao1->metadata_outputs[i].fps));
         uiControlDestroy(uiControl(ao1->metadata_outputs[i].mode));
         uiControlDestroy(uiControl(ao1->metadata_outputs[i].chan));
     }
@@ -1383,65 +1482,85 @@ pmd_studio_outputs_finish
     return(PMD_SUCCESS);
 }
 
-
 dlb_pmd_success
 pmd_studio_audio_outputs_update_metadata_output
     (pmd_studio_metadata_output *mout
     )
 {
+    void *newbuf;
+    unsigned int newbuf_size_bytes = 0;
+    PMDStudioRingBufferList *ring_buffer_list = pmd_studio_device_get_ring_buffer_list(mout->outputs->studio);
+
     if(mout != nullptr)
     {
-        dlb_pmd_model *model = pmd_studio_get_model(mout->outputs->studio);
+        dlb_pmd_model_combo *combo_model = pmd_studio_get_model(mout->outputs->studio);
 
-        // Reset augmentor error flag and callback arg
-        mout->augmentor_error = PMD_FALSE;
-        model->error_cbarg = (void *) mout;
+        newbuf = ring_buffer_list->GetBufferForUpdate(mout->channel, newbuf_size_bytes);
 
-        dlb_pmd_model_constraints limits;
-        dlb_pmd_get_constraints(model, &limits);
-        dlb_pmd_bool sadm = (mout->format == SADM_OUTPUT_MODE)? PMD_TRUE : PMD_FALSE;
-        void *mem = malloc(dlb_pcmpmd_augmentor_query_mem2(sadm, &limits));
-        if(mem == nullptr){
-            pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Could not allocate memory for SADM/PMD encoder");
-            return(PMD_FAIL);
-        }
-        dlb_pmd_bool pair;
-        unsigned int num_channels;
-        if(mout->subframemode)
+        if (!mout->smpte337_wrapped)
         {
-            pair = PMD_FALSE;
-            num_channels = 1;
+            if (mout->format == SADM_OUTPUT_MODE)
+            {
+                // No SMPTE wrapping so just get payload
+                get_sadm_payload(combo_model, newbuf, newbuf_size_bytes);
+                // Commit with a fit to the data i.e. no padding
+                ring_buffer_list->CommitUpdate(mout->channel, newbuf_size_bytes);
+            }
+            else
+            {
+                pmd_studio_error(PMD_STUDIO_ERR_UI, "PMD over SMPTE ST 2110-41 is not supported");
+                return(PMD_FAIL);
+            }
         }
         else
         {
-            pair = PMD_TRUE;
-            num_channels = 2;
+            // Reset augmentor error flag and callback arg
+            mout->augmentor_error = PMD_FALSE;
+    #if LATER
+            model->error_cbarg = (void *) mout;
+    #endif
+
+            dlb_pmd_bool sadm = (mout->format == SADM_OUTPUT_MODE)? PMD_TRUE : PMD_FALSE;
+            void *mem = malloc(dlb_pcmpmd_augmentor_query_mem(sadm));
+            if(mem == nullptr){
+                pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Could not allocate memory for SADM/PMD encoder");
+                return(PMD_FAIL);
+            }
+            dlb_pmd_bool pair;
+            unsigned int num_channels;
+            if(mout->subframemode)
+            {
+                pair = PMD_FALSE;
+                num_channels = 1;
+            }
+            else
+            {
+                pair = PMD_TRUE;
+                num_channels = 2;
+            }
+            dlb_pcmpmd_augmentor *aug;
+            unsigned int wrap_depth = 0;    // TODO: add a SMPTE 337m wrapping bit depth UI element and use the value here
+            dlb_pcmpmd_augmentor_init3(&aug, combo_model, mem, wrap_depth, METADATA_DLB_PMD_FRAME_RATE, DLB_PMD_KLV_UL_ST2109, PMD_FALSE, num_channels, num_channels, pair, 0, sadm);
+
+            if(mout->augmentor_error == PMD_FALSE)
+            {
+                unsigned int num_frames = newbuf_size_bytes / (sizeof(uint32_t) * num_channels);
+                dlb_pcmpmd_augment(aug, (uint32_t *)newbuf, num_frames , 0);
+                dlb_pcmpmd_augmentor_finish(aug);
+
+                free(mem);
+                // Queue new buffer for update
+                ring_buffer_list->CommitUpdate(mout->channel);
+            }
+            else
+            {
+                free(mem);
+                // Force disable metadata output
+                uiCheckboxSetChecked(mout->enable, 0);
+                onEnableMetadataOutput(mout->enable, mout);
+                return PMD_FAIL;
+            }
         }
-        dlb_pcmpmd_augmentor *aug;
-        unsigned int wrap_depth = 0;    // TODO: add a SMPTE 337m wrapping bit depth UI element and use the value here
-        dlb_pcmpmd_augmentor_init3(&aug, model, mem, wrap_depth, METADATA_DLB_PMD_FRAME_RATE, DLB_PMD_KLV_UL_ST2109, PMD_FALSE, num_channels, num_channels, pair, 0, sadm);
-
-        if(mout->augmentor_error == PMD_FALSE)
-        {
-            PMDStudioDeviceRingBuffer *newbuf =PMDStudioDeviceRingBuffer::newBufferFromRingBufferStruct(mout->assigned_ring_buffer_struct);
-        
-            dlb_pcmpmd_augment(aug, newbuf->pcmbuf, newbuf->pcmbufsize, 0);
-            dlb_pcmpmd_augmentor_finish(aug);
-
-            free(mem);
-            // Queue new buffer for update
-            newbuf->push();
-        }
-        else
-        {
-            free(mem);
-
-            // Force disable metadata output
-            uiCheckboxSetChecked(mout->enable, 0);
-            onEnableMetadataOutput(mout->enable, mout);
-            return PMD_FAIL;
-        }
-
         return PMD_SUCCESS;
     }
     return PMD_FAIL;
@@ -1462,15 +1581,6 @@ pmd_studio_audio_outputs_update_metadata_outputs(
     }
 };
 
-void
-pmd_studio_metadata_output_assign_ring_buffer_struct
-    (pmd_studio_metadata_output *mdout
-    ,pmd_studio_ring_buffer_struct *assigned_struct
-    )
-{
-    mdout->assigned_ring_buffer_struct = assigned_struct;
-}
-
 /**
  * Returns PMD_TRUE if there is at least one metadata output active
  */
@@ -1488,6 +1598,24 @@ pmd_studio_metadata_output_active
     }
     return PMD_FALSE;
 }
+
+pmd_studio_video_frame_rate
+pmd_studio_metadata_output_frame_rate
+    (unsigned int channel
+    ,pmd_studio *studio)
+{
+    for(unsigned int i = 0; i < studio->outputs->metadata_output_count; i++)
+    {
+        pmd_studio_metadata_output *mout = &studio->outputs->metadata_outputs[i];
+        if(mout->channel == channel ||
+          (!mout->subframemode && (mout->channel == channel + 1)))
+        {
+            return(mout->frame_rate);
+        }
+    }
+    return(INVALID_FRAME_RATE);
+}
+
 
 void
 pmd_studio_on_augmentor_fail_cb

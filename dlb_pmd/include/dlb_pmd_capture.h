@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -83,7 +83,7 @@ typedef struct
 /**
  * @brief Query how much memory is needed for a frame captor instance, in bytes.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 int                                                 /** @return Status code. */
 dlb_pmd_frame_captor_query_memory_size
     (size_t *sz                                     /**< [out] Memory required. */
@@ -94,7 +94,7 @@ dlb_pmd_frame_captor_query_memory_size
  * @brief Initialize a frame captor instance.  Memory may be passed in from an external
  * source, and must be of sufficient size; if not given, uses malloc().
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 int                                                 /** @return Status code. */
 dlb_pmd_frame_captor_open
     (dlb_pmd_frame_captor   **captor                /**< [out] Frame captor instance pointer. */
@@ -106,7 +106,7 @@ dlb_pmd_frame_captor_open
  * of metadata into a PMD metadata set.  The metadata set will remain valid until the
  * next call to capture, or until the frame captor is closed.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 int                                                 /** @return Status code. */
 dlb_pmd_frame_captor_capture
     (dlb_pmd_metadata_set           **metadata_set  /**< [out] Metadata set pointer for result. */
@@ -120,7 +120,7 @@ dlb_pmd_frame_captor_capture
  * @brief Close a frame captor instance, freeing any internally-allocated resources.  Sets the
  * instance pointer to NULL.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 int                                                 /** @return Status code. */
 dlb_pmd_frame_captor_close
     (dlb_pmd_frame_captor   **captor                /**< [in/out] Frame captor instance pointer. */

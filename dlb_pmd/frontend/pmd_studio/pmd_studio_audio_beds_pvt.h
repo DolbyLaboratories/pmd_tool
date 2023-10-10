@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,16 +42,56 @@ extern "C"{
     #include "ui.h"
 }
 #include "pmd_studio_audio_beds.h"
-#include "pmd_studio_limits.h"
+#include "pmd_studio_common_defs.h"
 
 #define MAX_BED_SOURCES (16)
 /* Definitions */
+
+
+
+/**
+ * BedClassifiers
+ * As bed classifiers arent supported in PMD, they are implemented as unique
+ * name suffixes. The only exception is "DEFAULT", which is equivalent to no
+ * suffix.
+*/
+
+enum class BedClassifier
+{
+    DEFAULT,
+    COMPLETE_MAIN,
+    MUSIC_AND_EFFECTS,
+    BROADCAST_MIX,
+    LAST
+};
+
+// BedClassifier suffix and description definitions. 
+// Vector of [classifier, suffix, description] tuples
+const std::vector<std::tuple<const BedClassifier, const std::string, const std::string>> BED_CLASSIFIER_TAG_MAP {
+//  CLASSIFIER                          SUFFIX      DESCRIPTION
+    {BedClassifier::COMPLETE_MAIN,      "$[CM]",    "Complete Main"},
+    {BedClassifier::MUSIC_AND_EFFECTS,  "$[ME]",    "Music & Effects"},
+    {BedClassifier::BROADCAST_MIX,      "$[BM]",    "Broadcast Mix"}
+};
+
+// Scans for and extracts bed classifier strings from label. 
+// Returns [classifier, prefix] (where prefix is the remainder of the input post-extraction)
+std::tuple<BedClassifier, std::string> 
+parsePMDBedLabel
+    (std::string label
+    );
+
+// Generates PMD label - combines label with unique bed classifier suffix
+std::string 
+generatePMDBedLabel
+    (std::string label
+    ,BedClassifier bedClass
+    );
 
 const float config_mix_coefs[NUM_PMD_SPEAKER_CONFIGS] = 
 {
 	1.0, 1.0
 };
-
 
 typedef struct
 {
@@ -65,6 +105,7 @@ typedef struct
     uiEntry *name;
     uiCombobox *gain;
     uiCombobox *start;
+    uiCombobox *classifier;
     uiCheckbox *enable;
 
 } pmd_studio_audio_bed;

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -93,11 +93,9 @@ klv_decode_speaker_config
     return ok;    
 }
 
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#if __GNUC__ > 5 || defined(__APPLE_CC__)
-#pragma GCC diagnostic ignored "-Wtautological-constant-out-of-range-compare"
-#endif
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-constant-out-of-range-compare"
 #endif
 
 /**
@@ -123,8 +121,8 @@ klv_speaker_config_validate
     return status;
 }
 
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif
 
 #endif /* KLV_SPEAKER_CONFIG_H_ */

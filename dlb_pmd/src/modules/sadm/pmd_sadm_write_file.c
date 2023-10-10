@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,15 +33,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
-
 #include "dlb_pmd_sadm_file.h"
-#include "sadm/dlb_sadm_file.h"
-#include "sadm/dlb_sadm_model.h"
-#include "pmd_sadm_generator.h"
+#include "dlb_adm/include/dlb_adm_api.h"
+#include "dlb_pmd_model_combo.h"
 
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+
+
+#define CHECK_STATUS(S) if ((S) != DLB_ADM_STATUS_OK) goto finish
+#define CHECK_SUCCESS(S) if ((S) != PMD_SUCCESS) goto finish
+#define CHECK_NULL(P) if ((P) == NULL) goto finish
 
 
 /** ------------------------------ public API ------------------------- */
@@ -49,39 +50,31 @@
 
 dlb_pmd_success
 dlb_pmd_sadm_file_write
-   (const char    *filename
-   ,const dlb_pmd_model *model
+   (const char              *filename
+   ,dlb_pmd_model_combo     *model
    )
 {
-    dlb_pmd_model_constraints limits;
-    dlb_pmd_success res = PMD_FAIL;
-    dlb_sadm_counts sc;
-    dlb_sadm_model *sm;
-    pmd_sadm_generator *generator;
-    size_t sz;
-    void *smem;
-    void *cmem;
+    dlb_pmd_success ultimate_success = PMD_FAIL;
+    const dlb_adm_core_model *core_model = NULL;
+    dlb_adm_xml_container *container = NULL;
+    dlb_pmd_success success;
+    int status;
 
-    dlb_pmd_get_constraints(model, &limits);
-    compute_sadm_limits(&limits, &sc);
-    sz = dlb_sadm_query_memory(&sc);
-    smem = malloc(sz);
-    if (NULL == smem)                                        goto done0;
-    if (dlb_sadm_init(&sc, (void*)smem, &sm))                goto done1;
+    success = dlb_pmd_model_combo_ensure_readable_core_model(model, &core_model);
+    CHECK_SUCCESS(success);
+    status = dlb_adm_container_open_from_core_model(&container, core_model);
+    CHECK_STATUS(status);
+    status = dlb_adm_container_write_xml_file(container, filename);
+    CHECK_STATUS(status);
 
-    sz = pmd_sadm_generator_query_mem();
-    cmem = malloc(sz);
-    if (NULL == cmem)                                        goto done2;
-    if (pmd_sadm_generator_init(cmem, &generator))           goto done3;
-    if (pmd_sadm_generator_generate(generator, model, sm))   goto done4;
-    if (dlb_sadm_file_write(filename, sm))                   goto done4;
+    ultimate_success = PMD_SUCCESS;
 
-    res = PMD_SUCCESS;
+finish:
+    if (container != NULL)
+    {
+        (void)dlb_adm_container_close(&container);
+    }
 
-  done4: pmd_sadm_generator_finish(generator);
-  done3: free(cmem);
-  done2: dlb_sadm_finish(sm);
-  done1: free(smem);
-  done0: return res;
+    return ultimate_success;
 }
 

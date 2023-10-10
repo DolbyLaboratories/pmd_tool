@@ -1,23 +1,30 @@
-# 3 june 2016
-
-list(APPEND _LIBUI_SOURCES
-	common/attribute.c
-	common/attrlist.c
-	common/attrstr.c
-	common/areaevents.c
-	common/control.c
-	common/debug.c
-	common/matrix.c
-	common/opentype.c
-	common/shouldquit.c
-	common/tablemodel.c
-	common/tablevalue.c
-	common/userbugs.c
-	common/utf.c
+target_sources(libui_impl_alpha4_1
+	PRIVATE
+		userbugs.c
+		areaevents.c
+		attrlist.c
+		attrstr.c
+		control.c
+		matrix.c
+		opentype.c
+		tablemodel.c
+		utf.c
 )
-set(_LIBUI_SOURCES ${_LIBUI_SOURCES} PARENT_SCOPE)
 
-list(APPEND _LIBUI_INCLUDEDIRS
-	common
+target_sources(libui_alpha4_1
+	PRIVATE
+		attribute.c
+		debug.c
+		shouldquit.c
+		tablevalue.c
 )
-set(_LIBUI_INCLUDEDIRS ${_LIBUI_INCLUDEDIRS} PARENT_SCOPE)
+
+target_include_directories(libui_impl_alpha4_1
+	PRIVATE
+		.
+)
+
+target_include_directories(libui_alpha4_1
+	PRIVATE
+		.
+)

@@ -1,35 +1,32 @@
-PMD 1.7.4 release notes
+PMD 2.2.0 release notes
 =======================
 
-Professional Metadata (PMD) is a format for specifying and
-transmitting 'next-generation' audio authoring metadata in
-low-latency, real-time broadcaster workflows. For example, an
+Serialized ADM (ITU-R BS.2125) and Professional Metadata (PMD, SMPTE RDD-49)
+are formats for specifying and transmitting 'next-generation' audio authoring
+metadata in real-time broadcaster workflows. For example, an
 outside-broadcast mixing truck might encode Atmos-enabled content
-using this format before it transmits the content to the studio.
+using one of these formats before it transmits the content to the studio.
 
-PMD is conveyed either in XML, for human-readable, file-based
+S-ADM and PMD are conveyed either in XML, for human-readable, file-based
 workflows, or a compact binary representation for low-latency
 real-time workflows.  The PMD library provides a data structure that
 can be programmatically built and then translated to and from XML and
-to and from this binary format.
+to and from the binary formats.
 
 The PMD library contains support for conversion between PMD and an
-object-based audio subset of the serialized Audio Definition Model
-(S-ADM) format.
+object-based audio subset of the Serialized Audio Definition Model
+(S-ADM) format. The S-ADM produced by this library is compliant with the
+current drafts of the ITU-R Emission Profile.
 
 Supported/Tested Platforms:
 ---------------------------
 PMD Library
-- 64-bit Windows, Microsoft Visual Studio 2015 and 2017 compilers
-- 64-bit OSX, clang compiler
 - 64-bit Linux, GNU compiler
-- 32-bit Linux, GNU compiler
 - Build files for other platforms may be provided, but are not tested
 
 PMD Studio
 - 64-bit Linux, GNU compiler with PortAudio support
 - 64-bit Linux with NVidia Rivermax enabled ConnectX NIC
-- 64-bit OSX, clang compiler
 
 Components:
 -----------
@@ -41,6 +38,7 @@ Components:
   PMD and S-ADM XML files, streaming audio containing PMD or S-ADM metadata,
   interface with Lawo consoles and applications via the Ember+ library, and
   interface to audio over IP via the Rivermax library and drivers
+- Not all components are supported on all platforms
 
 Test applications:
 ------------------
@@ -52,9 +50,42 @@ Test applications:
 
 Known issues:
 -------------
+- Only Linux 64 is tested for 2.2.0
 - To build the test applications on Linux, you need the ICU unicode library and
   header files (http://site.icu-project.org/home)
 - pmd_studio will not build on Windows and OSX support is limited
+- PMD to S-ADM translation use hardcoded values
+
+Changes since 2.2:
+--------------------
+- Add bed type support to PMD to S-ADM translation
+- Add support for "qaa" language tag
+- Emission Profile fixes
+- Fix translation from PMD to S-ADM (AVS)
+- Partially fix dynamic memory allocation in dlb_adm 
+- PMD Studio is updated
+
+Changes since 2.1.1:
+--------------------
+- Add read/write to/from S-ADM buffer
+- Emission Profile fixes
+- Fix translation from PMD to S-ADM (AVS)
+
+Changes since 2.1.0:
+--------------------
+Add support to ITU-R_BS.2125-1 and ITU-R_BS.2076-3
+Fix translation from PMD to S-ADM
+Changes since 2.0.0:
+Added beta implementation of draft Recommendation ITU-R BS.[ADM-NGA-Emission]-X
+Added new component for flattening S-ADM metadata.
+
+Changes since 1.7.4:
+--------------------
+- Added the boost C++ library in support of the new ADM library.
+- Added the new ADM library, which is implemented in C++ with a C-callable
+  API.  There is an implementation guide in the dlb_adm folder.  This library
+  entirely replaces the original ADM implementation.  It is much more easily
+  maintained and extended, and is more than three times faster than the orginal.
 
 Changes since 1.7.3.34:
 -----------------------
@@ -63,7 +94,6 @@ Changes since 1.7.3.34:
   support is still provided using Portaudio but via a different build. See the
   [PMD Studio Quick Start Guide](PmdStudioQsg.md) for more information and
   requirements.
-
 
 Changes since 1.7.3.33:
 -----------------------

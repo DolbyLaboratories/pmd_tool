@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,150 +41,56 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
-#include "dlb_pmd_api.h"
-#include "dlb_pmd_xml_file.h"
-#include "dlb_pmd_sadm_file.h"
-#include "pmd_studio_limits.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "dlb_pmd_types.h"
+
 
 /**
  * @brief encapsulate model and its creation
  */
 typedef struct
 {
-    size_t size;
-    void *mem;
-    dlb_pmd_model *model;
+    size_t               size;
+    void                *mem;
+    dlb_pmd_model_combo *model;
 } model;
-    
-
-/**
- * @brief helper function to print errors
- */
-static
-void
-error_callback
-    (const char *msg
-    ,void *arg
-    )
-{
-    (void)arg;
-    puts(msg);
-}
 
 
 /**
  * @brief create a PMD model
  */
-static inline
 dlb_pmd_success
 model_init
     (model *m
-    )
-{
-    dlb_pmd_model_constraints mc;
-    
-    memset(&mc, '\0', sizeof(mc));
-    mc.max_elements           = MAX_AUDIO_OBJECTS + MAX_AUDIO_BEDS;
-    mc.max_presentation_names = MAX_AUDIO_PRESENTATIONS * 16;
-    mc.max.num_signals        = MAX_STUDIO_AUDIO_SIGNALS;
-    mc.max.num_beds           = MAX_AUDIO_BEDS;
-    mc.max.num_objects        = MAX_AUDIO_OBJECTS;
-    mc.max.num_presentations  = MAX_AUDIO_PRESENTATIONS;
-    mc.max.num_iat            = 1;
-
-    m->size = dlb_pmd_query_mem_constrained(&mc);
-    m->mem = malloc(m->size);
-    if (NULL == m->mem)
-    {
-        printf("could not allocate memory\n");
-        return PMD_FAIL;
-    }
-    dlb_pmd_init_constrained(&m->model, &mc, m->mem);
-    return PMD_SUCCESS;
-}
+    );
 
 
 /**
  * @brief destroy a PMD model
  */
-static inline
 void
 model_finish
     (model *m
-    )
-{
-    if (m->model)
-    {
-        dlb_pmd_finish(m->model);
-        free(m->mem);
-        m->model = NULL;
-        m->mem = NULL;
-    }
-}
+    );
 
 
 /**
  * @brief populate a model from an XML file
  */
-static inline
 dlb_pmd_success
 model_populate
-    (model *m
+    (model      *m
     ,const char *filename
-    )
-
-{
-    if (filename)
-    {
-        if (dlb_xmlpmd_file_is_pmd(filename))
-        {
-            if (dlb_xmlpmd_file_read(filename, m->model, !DLB_PMD_XML_STRICT, error_callback, NULL))
-            {
-                printf("XML read file failed: %s\n", dlb_pmd_error(m->model));
-                return PMD_FAIL;
-            }
-        }
-        else if (dlb_xmlpmd_file_is_sadm(filename))
-        {
-            if (dlb_pmd_sadm_file_read(filename, m->model, error_callback, NULL))
-            {
-                printf("XML read sADM file failed\n");
-                return PMD_FAIL;
-            }
-        }
-        else
-        {
-            printf("Could not determine XML format\n");
-            return PMD_FAIL;
-        }
-    }
-    return PMD_SUCCESS;
-}
+    );
 
 
 /**
  * @brief dump an XML representation of the model
  */
-static inline
 dlb_pmd_success
 model_dump
-    (model *m
+    (model      *m
     ,const char *filename
-    )
-{
-    if (filename)
-    {
-        if (dlb_xmlpmd_file_write(filename, m->model))
-        {
-            printf("XML read file failed: %s\n", dlb_pmd_error(m->model));
-            return PMD_FAIL;
-        }
-    }
-    return PMD_SUCCESS;
-}
+    );
 
 
 #endif /* __MODEL_H__ */

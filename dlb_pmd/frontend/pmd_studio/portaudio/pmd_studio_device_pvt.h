@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@
 #include "dlb_pmd_api.h"
 #include "am824_framer.h"
 #include "portaudio.h"
+#include "ring_buffer.h"
 #include <mutex>
 extern "C"{
 #include "ui.h"
@@ -63,11 +64,6 @@ struct pmd_studio_device_ring_buffer
     AM824Framer am824framer;
 };
 
-struct pmd_studio_ring_buffer_struct{
-    PMDStudioDeviceRingBufferHandler *handler;          // Handler for ring buffer. Enables changes to output buffer mid-operation.
-    std::mutex                      mutex;              // Should only be used when deleting (or in portaudio callback).
-};
-
 struct pmd_studio_device
 {
     PaStreamParameters  			inputParameters;
@@ -76,8 +72,7 @@ struct pmd_studio_device
     struct pmd_studio_comp_mix_matrix comp_mix_matrix1;
     struct pmd_studio_comp_mix_matrix comp_mix_matrix2;
     struct pmd_studio_comp_mix_matrix *active_comp_mix_matrix;    
-    unsigned int                    num_ring_buffers;
-    pmd_studio_ring_buffer_struct   ring_buffers[MAX_RING_BUFFERS];
+    PMDStudioRingBufferList         *ring_buffer_list;
     dlb_pmd_bool                    am824_mode;
     char                            input_device_names[MAX_DEVICES][MAX_DEVICE_NAME_LENGTH];
     char                            *input_device_name;

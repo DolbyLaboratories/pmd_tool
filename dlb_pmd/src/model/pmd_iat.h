@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -144,12 +144,11 @@ pmd_iat_init
 }
     
 
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#if __GNUC__ > 5 || defined(__APPLE_CC__)
-#pragma GCC diagnostic ignored "-Wtautological-constant-out-of-range-compare"
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-constant-out-of-range-compare"
 #endif
-#endif
+
 
 /**
  * @brief Validate the encoded value of an IAT content id type
@@ -198,8 +197,8 @@ pmd_validate_encoded_iat_distribution_id_type
     return status;
 }
 
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif
 
 

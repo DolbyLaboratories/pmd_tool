@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -80,11 +80,7 @@ extractor_init
 {
     if (args->md_file_out)
     {
-        dlb_pmd_model_constraints limits;
-        size_t sz;
-
-        dlb_pmd_get_constraints(mdr->next.model, &limits);
-        sz = dlb_pcmpmd_extractor_query_mem2(1, &limits);
+        size_t sz = dlb_pcmpmd_extractor_query_mem(PMD_TRUE);
 
         mdr->mem = malloc(sz);
         if (!mdr->mem) return PMD_FAIL;

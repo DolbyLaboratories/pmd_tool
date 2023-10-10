@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -94,8 +94,8 @@ get_buffer
 
 dlb_pmd_success
 dlb_xmlpmd_file_write
-   (const char    *filename
-   ,dlb_pmd_model *model
+   (const char          *filename
+   ,const dlb_pmd_model *model
    )
 {
     static xml_buffer xbuf;

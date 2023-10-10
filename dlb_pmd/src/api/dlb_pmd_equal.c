@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@
  * Defines which components of PMD should be considered
  * during comparison.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 const uint32_t PMD_COMPARE_MASK = PMD_EQUAL_MASK_SIGNALS
                                 | PMD_EQUAL_MASK_BEDS
                                 | PMD_EQUAL_MASK_OBJECTS
