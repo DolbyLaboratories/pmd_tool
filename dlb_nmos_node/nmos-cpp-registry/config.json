@@ -1,0 +1,208 @@
+// Note: C++/JavaScript-style single and multi-line comments are permitted and ignored in nmos-cpp config files
+
+// Configuration settings and defaults
+{
+    // Configuration settings and defaults for logging
+
+    // error_log [registry, node]: filename for the error log or an empty string to write to stderr
+    //"error_log": "",
+
+    // access_log [registry, node]: filename for the access log (in Common Log Format) or an empty string to discard
+    //"access_log": "",
+
+    // logging_level [registry, node]: integer value, between 40 (least verbose, only fatal messages) and -40 (most verbose)
+    //"logging_level": 0,
+
+    // logging_categories [registry, node]: array of logging categories to be included in the error log
+    //"logging_categories": ["send_query_ws_events"],
+
+    // Configuration settings and defaults for the NMOS APIs
+
+    // host_name [registry, node]: the fully-qualified host name for which to advertise services, also used to construct response headers and fields in the data model
+    //"host_name": "", // when omitted or an empty string, the default is used
+
+    // domain [registry, node]: the domain on which to browse for services or an empty string to use the default domain (specify "local." to explictly select mDNS)
+    //"domain": "",
+
+    // host_address/host_addresses [registry, node]: IP addresses used to construct response headers (e.g. 'Link' or 'Location'), and host and URL fields in the data model
+    //"host_address": "127.0.0.1",
+    //"host_addresses": array-of-ip-address-strings,
+
+    // is04_versions [registry, node]: used to specify the enabled API versions (advertised via 'api_ver') for a version-locked configuration
+    //"is04_versions": ["v1.2", "v1.3"],
+
+    // is09_versions [registry, node]: used to specify the enabled API versions (advertised via 'api_ver') for a version-locked configuration
+    //"is09_versions": ["v1.0"],
+
+    // pri [registry, node]: used for the 'pri' TXT record; specifying nmos::service_priorities::no_priority (maximum value) disables advertisement completely
+    //"pri": 100,
+
+    // port numbers [registry, node]: ports to which clients should connect for each API
+
+    // http_port [registry, node]: if specified, used in preference to the individual defaults for each HTTP API
+    //"http_port": 0,
+
+    //"query_port": 3211,
+    //"query_ws_port": 3213,
+    //"registration_port": 3210,
+    //"node_port": 3212,
+    //"system_port": 10641,
+
+    // listen_backlog [registry, node]: the maximum length of the queue of pending connections, or zero for the implementation default (the implementation may not honour this value)
+    //"listen_backlog": 0,
+
+    // registration_heartbeat_interval [registry, node]:
+    // [registry]: used in System API resource is04 object's heartbeat_interval field
+    // "Constants related to the AMWA IS-04 Discovery and Registration Specification are contained in the is04 object.
+    // heartbeat_interval defines how often Nodes should perform a heartbeat to maintain their resources in the Registration API."
+    // See https://specs.amwa.tv/is-09/releases/v1.0.0/docs/4.2._Behaviour_-_Global_Configuration_Parameters.html#amwa-is-04-nmos-discovery-and-registration-parameters
+    //"registration_heartbeat_interval": 5,
+
+    // registration_expiry_interval [registry]:
+    // "Registration APIs should use a garbage collection interval of 12 seconds by default (triggered just after two failed heartbeats at the default 5 second interval)."
+    // See https://github.com/AMWA-TV/nmos-discovery-registration/blob/v1.2/docs/4.1.%20Behaviour%20-%20Registration.md#heartbeating
+    //"registration_expiry_interval": 12,
+
+    // query_paging_default/query_paging_limit [registry]: default/maximum number of results per "page" when using the Query API (a client may request a lower limit)
+    //"query_paging_default": 10,
+    //"query_paging_limit": 100,
+
+    // ptp_announce_receipt_timeout [registry]: number of PTP announce intervals that must pass before declaring timeout, between 2 and 10 inclusive (default is 3, as per SMPTE ST 2059-2)
+    //"ptp_announce_receipt_timeout": 3,
+
+    // ptp_domain_number [registry]: the PTP domain number, between 0 and 127 (default is 127, as per SMPTE ST 2059-2)
+    //"ptp_domain_number": 127,
+
+    // Configuration settings and defaults for experimental extensions
+
+    // seed id [registry, node]: optional, used to generate repeatable id values when running with the same configuration
+    //"seed_id": uuid-string,
+
+    // label [registry, node]: used in resource label field
+    //"label": "",
+
+    // description [registry, node]: used in resource description field
+    //"description": "",
+
+    // registration_available [registry]: used to flag the Registration API as temporarily unavailable
+    //"registration_available": true,
+
+    // allow_invalid_resources [registry]: boolean value, true (attempt to ignore schema validation errors and cope with out-of-order registrations) or false (default)
+    //"allow_invalid_resources": false,
+
+    // port numbers [registry, node]: ports to which clients should connect for each API
+    // see http_port
+
+    //"settings_port": 3209,
+    //"logging_port": 5106,
+
+    // port numbers [registry]: ports to which clients should connect for each API
+    // see http_port
+
+    //"admin_port": 3208,
+    //"mdns_port": 3208,
+    //"schemas_port": 3208,
+
+    // addresses [registry, node]: addresses on which to listen for each API, or empty string for the wildcard address
+
+    //"settings_address": "127.0.0.1",
+    //"logging_address": "",
+
+    // addresses [registry]: addresses on which to listen for each API, or empty string for the wildcard address
+
+    //"admin_address": "",
+    //"mdns_address": "",
+    //"schemas_address": "",
+
+    // query_ws_paging_default/query_ws_paging_limit [registry]: default/maximum number of events per message when using the Query WebSocket API (a client may request a lower limit)
+    //"query_ws_paging_default": 10,
+    //"query_ws_paging_limit": 100,
+
+    // logging_limit [registry, node]: maximum number of log events cached for the Logging API
+    //"logging_limit": 1234,
+
+    // logging_paging_default/logging_paging_limit [registry, node]: default/maximum number of results per "page" when using the Logging API (a client may request a lower limit)
+    //"logging_paging_default": 100,
+    //"logging_paging_limit": 100,
+
+    // http_trace [registry, node]: whether server should enable (default) or disable support for HTTP TRACE
+    //"http_trace": true,
+
+    // proxy_map [registry, node]: mapping between the port numbers to which the client connects, and the port numbers on which the server should listen, if different
+    // for use with a reverse proxy; each element of the array is an object like { "client_port": 80, "server_port": 8080 }
+    //"proxy_map": array-of-mappings,
+
+    // proxy_address [registry, node]: address of the forward proxy to use when making HTTP requests or WebSocket connections, or an empty string for no proxy
+    //"proxy_address": "127.0.0.1",
+
+    // proxy_port [registry, node]: forward proxy port
+    //"proxy_port": 8080,
+
+    // href_mode [registry, node]: whether the host name (1), addresses (2) or both (3) are used to construct response headers, and host and URL fields in the data model
+    //"href_mode": 1,
+
+    // client_secure [registry, node]: whether clients should use a secure connection for communication (https and wss)
+    // when true, CA root certificates must also be configured
+    //"client_secure": false,
+
+    // ca_certificate_file [registry, node]: full path of certification authorities file in PEM format
+    // on Windows, if C++ REST SDK is built with CPPREST_HTTP_CLIENT_IMPL=winhttp (reported as "client=winhttp" by nmos::get_build_settings_info)
+    // the trusted root CA certificates must also be imported into the certificate store
+    //"ca_certificate_file": "ca.pem",
+
+    // server_secure [registry, node]: whether server should listen for secure connection for communication (https and wss)
+    // e.g. typically false when using a reverse proxy, or the same as client_secure otherwise
+    // when true, server certificates etc. must also be configured
+    //"server_secure": false,
+
+    // server_certificates [registry, node]: an array of server certificate objects, each has the name of the key algorithm, the full paths of private key file and certificate chain file
+    // each value must be an object like { "key_algorithm": "ECDSA", "private_key_file": "server-ecdsa-key.pem", "certificate_chain_file": "server-ecdsa-chain.pem" }
+    // key_algorithm (attribute of server_certificates objects): name of the key algorithm for the certificate, see nmos::key_algorithm
+    // private_key_file (attribute of server_certificates objects): full path of private key file in PEM format
+    // certificate_chain_file (attribute of server_certificates object): full path of certificate chain file in PEM format, which must be sorted
+    // starting with the server's certificate, followed by any intermediate CA certificates, and ending with the highest level (root) CA
+    // on Windows, if C++ REST SDK is built with CPPREST_HTTP_LISTENER_IMPL=httpsys (reported as "listener=httpsys" by nmos::get_build_settings_info)
+    // one of the certificates must also be bound to each port e.g. using 'netsh add sslcert'
+    //"server_certificates": [{"key_algorithm": "ECDSA", "private_key_file": "server-ecdsa-key.pem", "certificate_chain_file": "server-ecdsa-chain.pem"}, {"key_algorithm": "RSA", "private_key_file": "server-rsa-key.pem", "certificate_chain_file": "server-rsa-chain.pem"}],
+
+    // validate_certificates [registry, node]: boolean value, false (ignore all server certificate validation errors), or true (do not ignore, the default behaviour)
+    //"validate_certificates": true,
+
+    // dh_param_file [registry, node]: Diffie-Hellman parameters file in PEM format for ephemeral key exchange support, or empty string for no support
+    //"dh_param_file": "dhparam.pem",
+
+    // system_label [registry]: used in System API resource label field
+    //"system_label": "",
+
+    // system_description [registry]: used in System API resource description field
+    //"system_description": "",
+
+    // system_tags [registry]: used in System API resource tags field
+    // "Each tag has a single key, but MAY have multiple values."
+    // {
+    //     "tag_1": [ "tag_1_value_1", "tag_1_value_2" ],
+    //     "tag_2": [ "tag_2_value_1" ]
+    // }
+    // See https://specs.amwa.tv/is-09/releases/v1.0.0/docs/2.1._APIs_-_Common_Keys.html#tags
+    //"system_tags": {},
+
+    // "syslog contains hostname and port for the system's syslog "version 1" server using the UDP transport (IETF RFC 5246)"
+    // See https://specs.amwa.tv/is-09/releases/v1.0.0/docs/4.2._Behaviour_-_Global_Configuration_Parameters.html#syslog-parameters
+
+    // system_syslog_hostname [registry]: the fully-qualified host name or the IP address of the system's syslog "version 1" server
+    //"system_syslog_hostname": "",
+
+    // system_syslog_port [registry]: the port number for the system's syslog "version 1" server
+    //"system_syslog_port": 514,
+
+    // "syslogv2 contains hostname and port for the system's syslog "version 2" server using the TLS transport (IETF RFC 5245)"
+    // See https://specs.amwa.tv/is-09/releases/v1.0.0/docs/4.2._Behaviour_-_Global_Configuration_Parameters.html#syslog-parameters
+
+    // system_syslogv2_hostname [registry]: the fully-qualified host name or the IP address of the system's syslog "version 2" server
+    //"system_syslogv2_hostname": "",
+
+    // system_syslogv2_port [registry]: the port number for the system's syslog "version 2" server
+    //"system_syslogv2_port": 6514,
+
+    "don't worry": "about trailing commas"
+}

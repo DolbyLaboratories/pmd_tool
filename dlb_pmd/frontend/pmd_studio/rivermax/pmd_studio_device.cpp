@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,8 +37,18 @@
 #include <iostream>
 #include <vector>
 #include <ifaddrs.h>
+
+extern "C"{
+//    #include "dlb_pmd_pcm.h"
+//    #include "ui.h"
+//    #include "pmd_smpte_337m.h"
+//    #include "dlb_pmd_model_combo.h"
+//    #include "sadm_bitstream_encoder.h"
+}
+
+
 #include "pmd_studio.h"
-#include "pmd_studio_limits.h"
+#include "pmd_studio_common_defs.h"
 #include "pmd_studio_device.h"
 #include "pmd_studio_device_pvt.h"
 
@@ -46,6 +56,7 @@
 #include "dlb_st2110_api.h"
 #include "mclock.h"
 #include "mix_matrix.h"
+
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -56,90 +67,7 @@
 using namespace std;
 
 #define SAMPLE_RATE 48000
-
-PMDStudioDeviceRingBuffer::PMDStudioDeviceRingBuffer
-    (PMDStudioDeviceRingBufferHandler *parent
-    )
-{
-    this->parent = parent;
-    this->pcmbufsize = parent->pcmbufsize;
-    this->pcmbuf = new uint32_t[pcmbufsize * parent->num_channels];
-    memset(this->pcmbuf, 0, sizeof(pcmbufsize * parent->num_channels * sizeof(uint32_t)));
-}
-
-PMDStudioDeviceRingBuffer::~PMDStudioDeviceRingBuffer()
-{
-    delete this->pcmbuf;
-}
-
-PMDStudioDeviceRingBuffer *
-PMDStudioDeviceRingBuffer::newBufferFromRingBufferStruct
-        (pmd_studio_ring_buffer_struct *output_buf_struct
-        )
-{
-    PMDStudioDeviceRingBufferHandler *handler = output_buf_struct->handler;
-    return new PMDStudioDeviceRingBuffer(handler);
-}
-
-void 
-PMDStudioDeviceRingBuffer::push()
-{   
-    this->parent->queueNewBuffer(this);
-}
-
-PMDStudioDeviceRingBufferHandler::PMDStudioDeviceRingBufferHandler(unsigned int startchannel, unsigned int num_channels, unsigned int pcmbufsize):
-    startchannel{startchannel},
-    num_channels{num_channels},
-    index{0},
-    pcmbufsize{pcmbufsize},
-    active{nullptr},
-    queued{nullptr}
-    {}
-
-PMDStudioDeviceRingBufferHandler::~PMDStudioDeviceRingBufferHandler(){
-    if(active != nullptr) delete active;
-    if(queued != nullptr) delete queued;
-}
-
-void PMDStudioDeviceRingBufferHandler::queueNewBuffer(PMDStudioDeviceRingBuffer *buf){
-    // Make sure no other process is using the queued buffer pointer.
-    queued_mutex.lock();
-    if(active == nullptr){
-        active = buf;
-    }
-    else{
-        if(queued != nullptr) delete queued;
-        queued = buf;
-    }
-    queued_mutex.unlock();
-}
-
-void PMDStudioDeviceRingBufferHandler::updateBuffer(){
-    // Make sure no other process tries to queue a new buffer
-    queued_mutex.lock();
-    if(queued != nullptr){
-        if(active != nullptr) delete active;
-        active = queued;
-        queued = nullptr;
-    }
-    queued_mutex.unlock();
-}
-
-uint32_t PMDStudioDeviceRingBufferHandler::peek(){
-    if(active == nullptr) return uint32_t{0};
-    return active->pcmbuf[this->index];
-}
-
-uint32_t PMDStudioDeviceRingBufferHandler::next(){
-    if(active == nullptr) return uint32_t{0};
-    uint32_t to_ret = active->pcmbuf[index];
-    index++;
-    if(index >= pcmbufsize){
-        index = 0;
-        updateBuffer();
-    }
-    return to_ret;
-}
+#define SADM_DATA_ITEM_TYPE 0x3FF000 // First experimental data item type as per March 2020 Draft of SMPTE 2110-41
 
 const char
 *pmd_studio_device_get_settings_menu_name(void)
@@ -162,6 +90,7 @@ pmd_studio_mix_matrices_reset(
     device->active_comp_mix_matrix = &device->comp_mix_matrix1;
 }
 
+
 static
 bool RxTxCallback(void *data,
                   void *inputAudio,
@@ -172,7 +101,7 @@ bool RxTxCallback(void *data,
 {
     int32_t *readPtr = (int32_t *)inputAudio;
     int32_t *writePtr = (int32_t *)outputAudio;
-    unsigned int i,j,k;
+    unsigned int i,j;
     pmd_studio_device *device = (pmd_studio_device *)data;
     struct pmd_studio_comp_mix_matrix *cm = device->active_comp_mix_matrix;
     // frames per buffer is same for input and output buffer channels may not be
@@ -197,27 +126,7 @@ bool RxTxCallback(void *data,
             readPtr += device->input_stream_info.audio.numChannels;
         }
 	    // Now add ring buffers
-        for (i = 0 ; i < device->num_ring_buffers ; i++)
-        {   
-            if(device->ring_buffers[i].mutex.try_lock()){
-                PMDStudioDeviceRingBufferHandler *handle = device->ring_buffers[i].handler;
-                if (handle != nullptr)
-                {
-                    writePtr = (int32_t *) outputAudio;
-                    writePtr += handle->startchannel;
-                    for( j = 0; j < framesPerBuffer ; j++ )
-                    {
-                        for (k = 0 ; k < handle->num_channels ; k++)
-                        {
-                            *writePtr = handle->next();
-                            writePtr++;
-                        }
-                        writePtr += device->input_stream_info.audio.numChannels - handle->num_channels;
-                    }
-                }
-                device->ring_buffers[i].mutex.unlock();
-            }
-        } 
+        device->ring_buffer_list->WriteRingBuffers((int32_t *) outputAudio, device->input_stream_info.audio.numChannels, framesPerBuffer);
     }
     return(true); // always continue
 }
@@ -225,19 +134,14 @@ bool RxTxCallback(void *data,
 static
 bool TxCallback(void *data,
                 void *audioPtr,
-                unsigned int inputBytes,
+                unsigned int &inputBytes,
                 bool& haveTimeStamp,
                 uint32_t& timeStamp)
 {
-    int32_t *writePtr = (int32_t *)audioPtr;
-    unsigned int i,j,k;
     pmd_studio_tx_call_back_data *tx_call_back_data = (pmd_studio_tx_call_back_data *)data;
     pmd_studio_device *device = tx_call_back_data->device;
     unsigned int tx_index = tx_call_back_data->index;
-    unsigned int tx_start_channel = device->output_stream_info[tx_index].sourceIndex;
     unsigned int tx_num_channels = device->output_stream_info[tx_index].audio.numChannels;
-    unsigned int tx_last_channel = tx_start_channel + tx_num_channels - 1;
-    unsigned int overlap_start, overlap_end;
     unsigned int framesPerBuffer = inputBytes / (tx_num_channels * GetAoipBytesPerSample(device->tx_call_back_info.audioFormat));
     // frames per buffer is same for input and output buffer channels may not be
     // Doesn't matter whether you use input or output here but you can't mix the two. Audio format is common (32 bit)
@@ -247,40 +151,48 @@ bool TxCallback(void *data,
         // Clear the entire output buffer
         // This is slightly inefficient as we will probably overwrite later but is simple
         
-        for( i = 0; i < framesPerBuffer * device->output_stream_info[tx_index].audio.numChannels ; i++ )
-        {
-            *writePtr++ = 0;
-        }
-        
-       // Only ring buffers as no input audio
-        for (i = 0 ; i < device->num_ring_buffers ; i++)
-        {   
-            if(device->ring_buffers[i].mutex.try_lock())
-            {
-                PMDStudioDeviceRingBufferHandler *handle = device->ring_buffers[i].handler;
-                overlap_start = max(handle->startchannel, tx_start_channel);
-                overlap_end = min(handle->startchannel + handle->num_channels - 1, tx_last_channel);
-                if ((handle != nullptr) && (overlap_end >= overlap_start))
-                {
-                    writePtr = (int32_t *) audioPtr;
-                    writePtr += overlap_start - tx_start_channel;
-                    for( j = 0; j < framesPerBuffer ; j++ )
-                    {
-                        for (k = 0 ; k < (overlap_end - overlap_start + 1) ; k++)
-                        {
-                            *writePtr = handle->next();
-                            writePtr++;
-                        }
-                        writePtr += tx_num_channels - k;
-                    }
-                }
-                device->ring_buffers[i].mutex.unlock();
-            }
-        } 
+        memset(audioPtr, 0, framesPerBuffer * device->output_stream_info[tx_index].audio.numChannels * sizeof(int32_t));
+ 
+        device->ring_buffer_list->WriteRingBuffers((int32_t *) audioPtr, tx_num_channels, framesPerBuffer);
     }
     haveTimeStamp = false;
     return(true); // always continue
 }
+
+static
+bool Tx41Callback(void *data,
+                void *metadataPtr,
+                unsigned int &inputBytes,
+                bool& haveTimeStamp,
+                uint32_t& timeStamp)
+{
+    pmd_studio_tx_call_back_data *tx_call_back_data = (pmd_studio_tx_call_back_data *)data;
+    pmd_studio_device *device = tx_call_back_data->device;
+    unsigned int tx_index = tx_call_back_data->index;
+
+    if (device->output_stream_info[tx_index].metadata.dataItemTypes.size() < 1)
+    {
+        pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Missing DIT");
+    }
+
+    if (device->output_stream_info[tx_index].metadata.dataItemTypes.size() > 1)
+    {
+        pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Multiple DITs - not supported");
+    }
+
+    if (device->output_stream_info[tx_index].metadata.dataItemTypes.front() != SADM_DATA_ITEM_TYPE)
+    { 
+        pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Wrong DIT, Only sADM supported");
+    }
+
+    // Copy ring buffer associated with this output
+
+    inputBytes = device->ring_buffer_list->CopyEntireActiveBufferBytes(device->output_stream_info[tx_index].sourceIndex, (uint32_t *)metadataPtr);
+
+    haveTimeStamp = false;
+    return(true); // always continue
+}
+
 
 static
 void pmd_studio_device_init_transceiver(
@@ -292,30 +204,104 @@ void pmd_studio_device_init_transceiver(
     pmd_studio_device *device = pmd_studio_get_device(studio);
     unsigned int i;
     dlb_pmd_bool status = PMD_FAIL; // suppress warning    
+    std::vector<StreamInfo>         txStreamInfos;
+    std::vector<StreamInfo>         tx41StreamInfos;
 
-    try
+
+    // Prepare lists for transceiver and transmitters based on streamInfo lists
+
+    if ((device->input_stream_active) && (device->num_output_streams > 0))
     {
-        if (device->input_stream_active)
+        // Input stream is active so create list of audio streams for transceiver and additional list for -41 streams
+        unsigned int j = 0; // Counting -41 streams
+        for (i = 0 ; i < device->num_output_streams ; i++)
         {
-            device->rxtx_hdl = device->aoip_services->AddRxTxStream(device->input_stream_info, device->txStreamInfos, device->latency, device->rxtx_call_back_info);
-            if (device->aoip_services->StartRxTxStream(device->rxtx_hdl))
+            if ((device->output_stream_info[i].streamType == AES67) || (device->output_stream_info[i].streamType == AM824))
             {
-                status = PMD_SUCCESS;
+                txStreamInfos.push_back(device->output_stream_info[i]);
             }
             else
             {
-                status = PMD_FAIL;
+                tx41StreamInfos.push_back(device->output_stream_info[i]);
+                device->tx_call_back_data[j].device = device;
+                device->tx_call_back_data[j++].index = i; // i = index into streamInfo list
+            }
+        }
+    }
+    else
+    {
+        for (i = 0 ; i < device->num_output_streams ; i++)
+        {
+            txStreamInfos.push_back(device->output_stream_info[i]);
+            device->tx_call_back_data[i].device = device;
+            device->tx_call_back_data[i].index = i;
+        }
+    }
+
+    try
+    {
+        // Only do rxtx if there are both input and output streams
+        // It is possible to have an input stream without an output stream as the only outputstreams could be -41 metadata
+        if ((device->input_stream_active) && (device->num_output_streams > 0))
+        {
+            if (txStreamInfos.size() > 0)
+            {
+                device->rxtx_hdl = device->aoip_services->AddRxTxStream(device->input_stream_info, txStreamInfos, device->latency, device->rxtx_call_back_info);
+                try {
+                    if (device->aoip_services->StartRxTxStream(device->rxtx_hdl))
+                    {
+                        status = PMD_SUCCESS;
+                    }
+                }
+                catch(runtime_error& e)
+                {
+                    char errStr[PMD_STUDIO_ERROR_MESSAGE_SIZE];
+                    strcpy(errStr, "Failed to Start Streams");
+                    strncat(errStr, e.what(), PMD_STUDIO_ERROR_MESSAGE_SIZE);
+                    uiMsgBoxError(win, "PMD Studio Error", errStr);
+                }
+            }
+            else
+            {
+                    status = PMD_SUCCESS;
+            }
+            i = 0;
+            for (vector<StreamInfo>::iterator tx41StreamInfo = tx41StreamInfos.begin() ; tx41StreamInfo != tx41StreamInfos.end() ; tx41StreamInfo++)
+            {
+                ST2110TransmitterCallBackInfo *call_back_info = &device->tx_41call_back_info;
+                call_back_info->data = &device->tx_call_back_data[i];
+                try
+                {
+                    device->aoip_services->AddTxStream(*tx41StreamInfo, call_back_info);
+                    device->aoip_services->StartTxStream(tx41StreamInfo->streamName);
+                }
+                catch(runtime_error& e)
+                {
+                    char errStr[PMD_STUDIO_ERROR_MESSAGE_SIZE];
+                    strcpy(errStr, "Failed to Start Streams");
+                    strncat(errStr, e.what(), PMD_STUDIO_ERROR_MESSAGE_SIZE);
+                    uiMsgBoxError(win, "PMD Studio Error", errStr);
+                }                
+                i++;
             }
         }
         else
         {
             i = 0;
-            for (vector<StreamInfo>::iterator txStreamInfo = device->txStreamInfos.begin() ; txStreamInfo != device->txStreamInfos.end() ; txStreamInfo++)
+            for (vector<StreamInfo>::iterator txStreamInfo = txStreamInfos.begin() ; txStreamInfo != txStreamInfos.end() ; txStreamInfo++)
             {
-                device->tx_call_back_data[i].device = device;
-                device->tx_call_back_data[i].index = i;
-                device->tx_call_back_info.data = &device->tx_call_back_data[i];
-                device->aoip_services->AddTxStream(*txStreamInfo, &device->tx_call_back_info);
+                ST2110TransmitterCallBackInfo *call_back_info;
+
+                if (txStreamInfo->streamType == SMPTE2110_41)
+                {
+                    call_back_info = &device->tx_41call_back_info;
+                }
+                else
+                {
+                    call_back_info = &device->tx_call_back_info;
+                }
+                call_back_info->data = &device->tx_call_back_data[i];
+                device->aoip_services->AddTxStream(*txStreamInfo, call_back_info);
                 device->aoip_services->StartTxStream(txStreamInfo->streamName);
                 i++;
             }
@@ -324,8 +310,10 @@ void pmd_studio_device_init_transceiver(
     }
     catch(runtime_error& e)
     {
-        cout << e.what() << "\n";
-        uiMsgBoxError(win, "PMD Studio Error", "Failed to Start IP Streams - Check Interface");
+        char msg[PMD_STUDIO_ERROR_MESSAGE_SIZE];
+        strcpy(msg, "Failed to Start IP Streams - ");
+        strncat(msg, e.what(), PMD_STUDIO_ERROR_MESSAGE_SIZE);
+        uiMsgBoxError(win, "PMD Studio Error", msg);
     }
 
     if (status != PMD_SUCCESS)
@@ -430,15 +418,40 @@ int pmd_studio_device_receive_poll(
     }
 }
 
+/*
+
+static
+void
+pmd_studio_device_on_augmentor_fail_cb
+    (void* data
+    ,dlb_pmd_model *model
+    )
+{
+    pmd_studio_device *device = (pmd_studio_device *) data;
+    
+    // Incase there's an augmentor error before mdout is set.
+    if(device != nullptr)
+    {
+        pmd_studio_warning(model->error);
+        device->augmentor_error = PMD_TRUE;  
+    }
+}
+
+*/
+
+
 /* Public Functions */
 
 unsigned int
 pmd_studio_device_get_input_stream_names(
     pmd_studio *studio,
-    pmd_device_input_stream_list *stream_list)
+    pmd_device_input_stream_list *stream_list,
+    unsigned int services)
 {
     pmd_studio_device *device;
     unsigned int num_input_streams;
+    StreamInfo streamInfo;
+    AoipServiceType service_type;
 
     if (!studio)
     {
@@ -460,9 +473,16 @@ pmd_studio_device_get_input_stream_names(
     num_input_streams = 0;
     for (vector<AoipService>::iterator service = rxServices.begin() ; (service != rxServices.end()) && (num_input_streams < MAX_NUM_INPUT_STREAMS) ; service++)
     {
-        (*stream_list)[num_input_streams].service = service->GetType();
-        display_name = service->GetName();
-        strncpy((*stream_list)[num_input_streams++].name, display_name.c_str(), MAX_STREAM_NAME_LENGTH);
+        service_type = service->GetType();
+        // If this service is included in the provided mask then add it to the list
+        if (service_type & services)
+        {
+            (*stream_list)[num_input_streams].service = service_type;
+            streamInfo = service->GetStreamInfo();
+            (*stream_list)[num_input_streams].num_channels = streamInfo.audio.numChannels;
+            display_name = service->GetName();
+            strncpy((*stream_list)[num_input_streams++].name, display_name.c_str(), MAX_STREAM_NAME_LENGTH);
+        }
     }
     return(num_input_streams);
 }
@@ -503,6 +523,67 @@ unsigned int pmd_studio_device_get_interface_names(
     return(num_interfaces);
 }
 
+static
+void pmd_studio_device_async_settings_update(
+    void *data
+    )
+{
+    pmd_studio *studio = (pmd_studio *)data;
+    pmd_studio_settings_update(studio, NULL); // NULL is window, this signals to use default window    
+}
+
+
+void pmd_studio_device_enable_settings_window_updates(pmd_studio *studio, pmd_studio_device_settings_window *settings_window)
+{
+    pmd_studio_device *device = pmd_studio_get_device(studio);
+    device->settings_window = settings_window;
+}
+
+void pmd_studio_device_disable_settings_window_updates(pmd_studio *studio)
+{
+    pmd_studio_device *device = pmd_studio_get_device(studio);
+    device->settings_window = NULL;
+}
+
+
+static
+void pmd_studio_device_async_new_service(
+    void *data
+    )
+{
+    pmd_studio_device  *device = (pmd_studio_device *)data;
+    // Now in UI context so can recreate Combobox with new service
+    pmd_studio_device_recreate_input_stream_combo_box(device->settings_window);
+}
+
+
+void pmd_studio_device_new_service(pmd_studio_device *device, pmd_studio_device_settings *settings, const AoipService &newService)
+{
+    string display_name = newService.GetName();
+
+    // Only update new service list immediately if setting window is currently active
+    if (device->settings_window)
+    {
+        uiQueueMain(pmd_studio_device_async_new_service, device);
+    }
+}
+
+
+void pmd_studio_device_receive_stream_changed(pmd_studio_device *device, pmd_studio_device_settings *settings, string streamName)
+{
+    // Check to see if name has actually changed from Nmos or this is just a confirmation of change request
+    if (device->input_stream_info.streamName != streamName)
+    {
+        device->input_stream_info.streamName = streamName;
+        strncpy(settings->input_stream_name, streamName.c_str(), MAX_STREAM_NAME_LENGTH);
+        // This is a deep callback
+        // To perform reset we need to be in uiContext
+        uiQueueMain(pmd_studio_device_async_settings_update, device->studio);
+    }
+}
+
+
+
 /* This can be called with *s as a NULL pointer to indicate first time initialization */
 /* if *s is non null then we are applying new settings to existing device */
 dlb_pmd_success
@@ -520,6 +601,7 @@ pmd_studio_device_init(
     pmd_device_interface_list output_interface_list;
     dlb_pmd_bool transmit_only_mode = (strlen(settings->input_stream_name) == 0);
     unsigned int sourceIndex, i;
+    AoipServices::CallBacks serviceCallBacks;
 
     #ifdef LOGGING
     InitLogging(0, nullptr, "");
@@ -537,13 +619,13 @@ pmd_studio_device_init(
         {
             return(PMD_FAIL);
         }
-
         device = *retdevice;
+        device->settings_window = NULL;
         device->studio = studio;
+        device->ring_buffer_list = nullptr;
         device->aoip_services = nullptr;
 
-        device->num_ring_buffers = 0;
-
+        pmd_studio_mix_matrices_reset(device);
     }
     else
     {
@@ -551,14 +633,12 @@ pmd_studio_device_init(
         // This is a device update. We need to recreate the stream using the new settings
         // Try and maintain UI settings such as matrix and ring buffers
         // Stop any existing outputs
-        //pmd_studio_outputs_stop_all_metadata_outputs(studio);
+        pmd_studio_outputs_stop_all_metadata_outputs(studio);
 
         // Implement sutting down services and reopening them
-        
+
+        // destroy ring buffer list if it exists so new one can be created
     }
-
-    MClock::CheckTaiOffset();
-
 
     sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
     status = sched_setscheduler(0, SCHED_FIFO, &sp);
@@ -569,9 +649,11 @@ pmd_studio_device_init(
     }
 
     /* Interface Name */
-    device->aoip_system.interface = settings->interface_name;
+    device->aoip_system.mediaInterface.interfaceName = settings->media_interface_name;
+    device->aoip_system.manageInterface.interfaceName = settings->manage_interface_name;
     // An empty interface name means we need to get the default
-    if (device->aoip_system.interface.empty())
+    if (device->aoip_system.mediaInterface.interfaceName.empty() ||
+        device->aoip_system.manageInterface.interfaceName.empty())
     {
 
         if (pmd_studio_device_get_interface_names(studio, &output_interface_list) == 0)
@@ -582,44 +664,76 @@ pmd_studio_device_init(
         else
         {
             // Take first interface by default
-            device->aoip_system.interface = output_interface_list[0];
+            if (device->aoip_system.mediaInterface.interfaceName.empty())
+            {
+                device->aoip_system.mediaInterface.interfaceName = output_interface_list[0];
+            }
+            if (device->aoip_system.manageInterface.interfaceName.empty())
+            {
+                device->aoip_system.manageInterface.interfaceName = output_interface_list[0];
+            }
         }
     }
 
     device->aoip_system.samplingFrequency = SAMPLE_RATE;
     device->aoip_system.name = "pmd-studio";
+    device->aoip_system.nmosRegistry = settings->nmos_registry;
 
     if (device->aoip_services != nullptr)
     {
         // In this case we are updating the device with new settings so the
         // services need to be torn down and recreated
         delete device->aoip_services;
+
+        // As rx/tx services have now stopped, it is now safe to tear down the buffer lists as well
+        // ready for the update
+        if (device->ring_buffer_list != nullptr)
+        {
+            delete device->ring_buffer_list;
+            device->ring_buffer_list = nullptr;
+        }
     }
 
     // Start Aoip Services to kick off discovery
     try
     {
-        device->aoip_services = new AoipServices(device->aoip_system, nullptr);
+        // Create null callbacks for now
+        AoipServices::NewRxServiceCallBack newRxServiceCallBack;
+        serviceCallBacks.newRxServiceCallBack = [device, settings](const AoipService &newService)
+        {
+            pmd_studio_device_new_service(device, settings, newService);
+        };
+
+        
+        serviceCallBacks.connectionReqCallBack = [device, settings](string streamName)
+        {
+            pmd_studio_device_receive_stream_changed(device, settings, streamName);
+        };
+        device->aoip_system.domain = settings->ptp_domain;
+        device->aoip_services = new AoipServices(device->aoip_system, settings->enabled_services, serviceCallBacks);
     }
     catch(runtime_error& e)
     {
-        cout << e.what() << "\n";
-        uiMsgBoxError(win, "PMD Studio Error", "Failed to Initialize IP");
+        char errStr[PMD_STUDIO_ERROR_MESSAGE_SIZE];
+        strcpy(errStr, "Failed to Initialize IP - ");
+        strncat(errStr, e.what(), PMD_STUDIO_ERROR_MESSAGE_SIZE);
+        uiMsgBoxError(win, "PMD Studio Error", errStr);
+        // As the Aoip service is on the last line of the try we know that either it
+        // wasn't reached or the exception occurred inside the new
+        // either way allocation did not occur or memory was deallocated so safe to reset pointer for next time
+        device->aoip_services = nullptr;
         return(PMD_FAIL);
     }
 
     // Nothing more can happen without output streams
-    if (settings->num_output_streams == 0)
+    device->num_output_streams = settings->num_output_streams;
+    if (device->num_output_streams == 0)
     {
-        device->num_output_streams = 0;
         device->input_stream_active = PMD_FALSE;
         uiMsgBoxError(win, "PMD Studio Error", "No output streams defined");
         return(PMD_FAIL);        
     }
-    else
-    {
-        device->num_output_streams = settings->num_output_streams;
-    }
+
     // Record common setting so can be retrieved with only device context
     device->latency = common_settings->latency;
 
@@ -627,6 +741,7 @@ pmd_studio_device_init(
     device->input_stream_active = PMD_FALSE;
 
     // Setup callbacks for both options
+
     device->rxtx_call_back_info.audioFormat = DLB_AOIP_AUDIO_FORMAT_32BIT_LPCM;
     device->rxtx_call_back_info.callBack = RxTxCallback;
     device->rxtx_call_back_info.data = (void *)device;
@@ -636,17 +751,15 @@ pmd_studio_device_init(
     device->tx_call_back_info.callBack = TxCallback;
     device->tx_call_back_info.blockSize = common_settings->frames_per_buffer;
 
+    device->tx_41call_back_info.callBack = Tx41Callback;
+    // Blocksize and Audio Format are not used by -41 transmitter
 
     // Setup txStreamInfos
     device->num_output_channels = 0;
     sourceIndex = 0;
     // Empty txStreamInfos
-    while(!device->txStreamInfos.empty())
-    {
-        device->txStreamInfos.pop_back();
-    }
-
-    for (i = 0 ; i < device->num_output_streams ; i++)
+    device->txStreamInfos.clear();
+    for (i = 0 ; i < settings->num_output_streams ; i++)
     {
         if (device->input_stream_active)
         {
@@ -672,35 +785,50 @@ pmd_studio_device_init(
                 device->output_stream_info[i].streamType = AM824;
                 device->output_stream_info[i].audio.payloadBytesPerSample = 3;
             break;
+            case PMD_STUDIO_STREAM_CODEC::SMPTE2110_41:
+                device->output_stream_info[i].streamType = SMPTE2110_41;
+                device->output_stream_info[i].metadata.maxPayloadSizeBytes = MAX_DATA_BYTES;
+                device->output_stream_info[i].metadata.packetTimeMs = 40.0; // set to 25fps by default, will be changed by output stream
+                device->output_stream_info[i].metadata.dataItemTypes.clear();
+                device->output_stream_info[i].metadata.dataItemTypes.push_back(SADM_DATA_ITEM_TYPE); // Hardcode to SADM for now
+             break;
             default:
                 pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Unknown Codec");
                 return(PMD_FAIL);
         }
         device->output_stream_info[i].payloadType = 98; // Dynamic payloads only 96 - 127
         device->output_stream_info[i].port = 0; // Select for aoipSystem to select Port
-        device->output_stream_info[i].dstIpStr = string("239.150.150.") + to_string(i + 1); // Multicast address range used is 239.150.150.N where N is 1..M
-        device->output_stream_info[i].audio.numChannels = settings->num_output_channel[i];
+        device->output_stream_info[i].dstIpStr = settings->output_stream_address[i];
         device->output_stream_info[i].sourceIndex = sourceIndex;
-        sourceIndex += device->output_stream_info[i].audio.numChannels;
-        if (device->output_stream_info[i].audio.numChannels == 0)
-        {
-            pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Can't have zero channels in output stream");
-            return(PMD_FAIL);
-        }
-        else if (device->output_stream_info[i].audio.numChannels < 9)
-        {
-            device->output_stream_info[i].audio.samplesPerPacket = 48; // 2110-30/31 class A     
-        }
-        else
-        {
-            device->output_stream_info[i].audio.samplesPerPacket = 6; // 2110-30/31 class C  
-        }
 
-        device->num_output_channels += device->output_stream_info[i].audio.numChannels;
-        device->txStreamInfos.push_back(device->output_stream_info[i]);
+        if ((device->output_stream_info[i].streamType == AES67) ||
+            (device->output_stream_info[i].streamType == AM824))
+        {
+            device->output_stream_info[i].audio.numChannels = settings->num_output_channel[i];
+            sourceIndex += device->output_stream_info[i].audio.numChannels;
+            if (device->output_stream_info[i].audio.numChannels == 0)
+            {
+                pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Can't have zero channels in output stream");
+                return(PMD_FAIL);
+            }
+            else if (device->output_stream_info[i].audio.numChannels < 9)
+            {
+                device->output_stream_info[i].audio.samplesPerPacket = 48; // 2110-30/31 class A     
+            }
+            else
+            {
+                device->output_stream_info[i].audio.samplesPerPacket = 6; // 2110-30/31 class C  
+            }
+            device->num_output_channels += device->output_stream_info[i].audio.numChannels;
+        }
     }
 
-    pmd_studio_mix_matrices_reset(device);
+    device->ring_buffer_list = new PMDStudioRingBufferList(MAX_OUTPUT_CHANNELS);
+
+
+    // initialize metadata elements, ready for an update
+    device->active_metadata = device->metadata1;
+    device->active_metadata_size = 0;
 
     if (!transmit_only_mode)
     { 
@@ -716,6 +844,63 @@ pmd_studio_device_init(
     return(PMD_SUCCESS);
 }
 
+PMDStudioRingBufferList *pmd_studio_device_get_ring_buffer_list(pmd_studio *studio)
+{
+    pmd_studio_device *device = pmd_studio_get_device(studio);
+    return device->ring_buffer_list;
+}
+
+
+dlb_pmd_success
+pmd_studio_device_add_ring_buffer(
+    unsigned int ring_buffer_channel,         // output channel index starting at 0
+    unsigned int ring_buffer_num_channels,         // number of channels (1/2)
+    pmd_studio_video_frame_rate frame_rate,
+    pmd_studio *studio
+    )
+{
+    pmd_studio_device *device = pmd_studio_get_device(studio);
+
+
+    if (frame_rate == INVALID_FRAME_RATE)
+    {
+        std::runtime_error("INVALID_FRAME_RATE");
+    }
+
+    StreamInfo *output_stream_info;
+    bool found = false;
+    for (unsigned int i = 0 ; i < device->num_output_streams ; i++)
+    {
+        unsigned int start_channel = device->output_stream_info[i].sourceIndex;
+        unsigned int num_channels = (device->output_stream_info[i].streamType == SMPTE2110_41) ? 1 : device->output_stream_info[i].audio.numChannels;
+        unsigned int last_channel = start_channel + num_channels - 1;
+        if ((ring_buffer_channel >= start_channel) && (ring_buffer_channel <= last_channel))
+        {
+            found = true;
+            output_stream_info = &device->output_stream_info[i];
+        }
+    }
+    if (!found)
+    {
+        return PMD_FAIL;
+    }
+    if (output_stream_info->streamType == SMPTE2110_41)
+    {
+        device->aoip_services->StopTxStream(output_stream_info->streamName);
+        output_stream_info->metadata.packetTimeMs = 1000.0 / pmd_studio_video_frame_rate_floats[frame_rate];
+        device->ring_buffer_list->AddRingBuffer(ring_buffer_channel, ring_buffer_num_channels, INVALID_FRAME_RATE);
+        device->aoip_services->UpdateTxStream(*output_stream_info);
+        device->aoip_services->StartTxStream(output_stream_info->streamName);
+    }
+    else
+    {
+        device->ring_buffer_list->AddRingBuffer(ring_buffer_channel, ring_buffer_num_channels, frame_rate);
+    }
+    return PMD_SUCCESS;
+ }
+
+
+
 dlb_pmd_success
 pmd_studio_device_reset(
     pmd_studio_device *device
@@ -723,11 +908,7 @@ pmd_studio_device_reset(
 {
     pmd_studio_mix_matrices_reset(device);
 
-    // reset ring buffers
-    for (unsigned int i = 0 ; i < device->num_ring_buffers ; i++ )
-    {
-        pmd_studio_device_delete_ring_buffer(&device->ring_buffers[i], device->studio);
-    }
+    device->ring_buffer_list->Reset();
 
     device->num_ring_buffers = 0;
     return(PMD_SUCCESS);
@@ -751,7 +932,8 @@ pmd_studio_device_update_mix_matrix(
 	pmd_studio_device *dev = pmd_studio_get_device(studio);
 
     // If no input stream then nothing to do
-    if (!dev->input_stream_active)
+    // If using only -41 then num_output_channels could be 0
+    if (!dev->input_stream_active || (dev->num_output_channels == 0))
     {
         return(PMD_SUCCESS);
     }
@@ -789,95 +971,30 @@ pmd_studio_device_update_mix_matrix(
 	return(PMD_SUCCESS);
 }
 
-dlb_pmd_success
-pmd_studio_device_add_ring_buffer(
-        unsigned int startchannel,         // output channel index starting at 0
-        unsigned int num_channels,         // number of channels (1/2)
-        unsigned int pcm_bufsize,
-        pmd_studio *studio,
-        pmd_studio_ring_buffer_struct **assigned_struct
-    )
+bool pmd_studio_device_channel_requires_smpte337(unsigned int channel, pmd_studio *studio)
 {
     pmd_studio_device *device = pmd_studio_get_device(studio);
-    unsigned int i;
-    unsigned int first_free_ring_buffer;
-    
-    if (device->num_ring_buffers >= MAX_RING_BUFFERS)
+    for (unsigned int i = 0 ; i < device->num_output_streams ; i++)
     {
-        return(PMD_FAIL);
-    }
-
-    // Check that channel isn't already being used in existing ring buffer
-    // Also find empty ring buffer slot
-    first_free_ring_buffer = device->num_ring_buffers;
-    for (i = 0 ; i < device->num_ring_buffers ; i++)
-    {
-        if (device->ring_buffers[i].handler == nullptr)
+        unsigned int start_channel = device->output_stream_info[i].sourceIndex;
+        unsigned int num_channels = device->output_stream_info[i].audio.numChannels;
+        unsigned int last_channel = start_channel + num_channels - 1;
+        if ((channel >= start_channel) && (channel <= last_channel))
         {
-            first_free_ring_buffer = i;
-            break;
-        }
-        // Check for overlap in request ring buffer and existing ring buffer
-        // The last check is to avoid the 0,0 case which causes the last channel index to underflow i.e. 0 + 0 -1 = max unsigned int
-        if (((startchannel + num_channels - 1) >= device->ring_buffers[i].handler->startchannel) &&
-            startchannel <= ((device->ring_buffers[i].handler->startchannel + device->ring_buffers[i].handler->num_channels - 1)) &&
-            (device->ring_buffers[i].handler->num_channels > 0))
-        {
-            return(PMD_FAIL);            
+            // Found txInfo that relates to requested channel
+            if (device->output_stream_info[i].streamType == AM824)
+            {
+                return(true);
+            }
+            else
+            {
+                return(false);
+            }
         }
     }
-    device->ring_buffers[first_free_ring_buffer].mutex.lock();
-    device->ring_buffers[first_free_ring_buffer].handler = new PMDStudioDeviceRingBufferHandler(startchannel, num_channels, pcm_bufsize);
-    
-    (*assigned_struct) = &device->ring_buffers[first_free_ring_buffer];
-
-    // Register mutex to mdout for future use (when stopping metadata output)
-    // mdout->ring_buffer_handle_parent_mutex = &device->ring_buffers[first_free_ring_buffer].mutex;
-    
-    device->ring_buffers[first_free_ring_buffer].mutex.unlock();
-
-    // if we've needed to use a new ring buffer then increment total
-    if (first_free_ring_buffer >= device->num_ring_buffers)
-    {
-        device->num_ring_buffers = first_free_ring_buffer + 1;
-    }
-
-    return(PMD_SUCCESS);
+    return(false);
 }
 
-
-dlb_pmd_success
-pmd_studio_device_delete_ring_buffer(
-        pmd_studio_ring_buffer_struct *rbuf,
-        pmd_studio *studio
-    )
-{
-    pmd_studio_device *device = pmd_studio_get_device(studio);
-    int i;
-
-    if (rbuf->handler == nullptr)
-    {
-        return(PMD_FAIL);
-    }
-
-    // Check that channel isn't already being used in existing ring buffer?
-    rbuf->mutex.lock();
-    delete rbuf->handler;
-    rbuf->handler = nullptr;
-    rbuf->mutex.unlock();
-
-    // try and reduce device->num_ring_buffers
-    for (i = device->num_ring_buffers - 1 ; i >= 0  ; i--)
-    {
-        if (device->ring_buffers[i].handler != nullptr)
-        {
-            break;
-        }
-    }
-    device->num_ring_buffers = i + 1;
-
-    return(PMD_SUCCESS);
-}
 
 void
 pmd_studio_device_print_debug(
@@ -885,7 +1002,6 @@ pmd_studio_device_print_debug(
     )
 {
     pmd_studio_device *device;
-    unsigned int i;
 
     if (!studio)
     {
@@ -899,17 +1015,10 @@ pmd_studio_device_print_debug(
     }
 
     printf("Devices\n=======\n");
-    printf("Number of ring buffers: %u\n", device->num_ring_buffers);
-    for (i = 0 ; i < device->num_ring_buffers ; i++)
+
+    if (device->ring_buffer_list != nullptr)
     {
-        PMDStudioDeviceRingBufferHandler *handler = device->ring_buffers[i].handler;
-        if(handler != nullptr){
-            printf("Ring Buffer#%u\n---- --------\n", i+1);
-            printf("\tStart Channel: %u\n", handler->startchannel);
-            printf("\tNumber of Channel: %u\n", handler->num_channels);
-            printf("\tindex: %u\n", handler->index);
-            printf("\tBuffer Size: %u\n", handler->pcmbufsize);
-        }
+        device->ring_buffer_list->PrintDebug();
     }
 }
 

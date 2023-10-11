@@ -1,0 +1,32 @@
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)
+
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        ASCIIRangeFactory.cpp
+        BlockRangeFactory.cpp
+        BMPattern.cpp
+        CharToken.cpp
+        ClosureToken.cpp
+        ConcatToken.cpp
+        Match.cpp
+        Op.cpp
+        OpFactory.cpp
+        ParenToken.cpp
+        ParserForXMLSchema.cpp
+        RangeFactory.cpp
+        RangeToken.cpp
+        RangeTokenMap.cpp
+        RegularExpression.cpp
+        RegxParser.cpp
+        RegxUtil.cpp
+        StringToken.cpp
+        Token.cpp
+        TokenFactory.cpp
+        UnicodeRangeFactory.cpp
+        UnionToken.cpp
+        XMLRangeFactory.cpp
+        XMLUniCharacter.cpp
+)

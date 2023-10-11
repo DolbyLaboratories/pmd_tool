@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,17 +34,19 @@
  **********************************************************************/
 
 /**
- * @file klv.h
+ * @file pmd_tool_klv.h
  * @brief KLV reader/writer functionality for pmd tool
  */
+
+#include "dlb_pmd_klv.h"
 
 /**
  * @brief parse a KLV file to ingest a PMD model
  */
 int                                 /** @return 0 on success, 1 on failure */
 klv_read
-    (const char          *filename  /**< [in]  name of file to ingest */
-    ,      dlb_pmd_model *model     /**< [out] destination struct for model */
+    (const char                 *filename   /**< [in]  name of file to ingest */
+    ,dlb_pmd_model_combo        *model      /**< [out] destination struct for model */
     );
 
 
@@ -53,10 +55,9 @@ klv_read
  *
  * @todo - complete: only dumps audio objects for now
  */
-int                                             /** @return 0 on success, 1 on failure */
+int                                 /** @return 0 on success, 1 on failure */
 klv_write
-    (const char                       *filename /**< [in] name of file to write */
-    ,      dlb_pmd_model              *model    /**< [in] PMD model to write */
-    ,      dlb_klvpmd_universal_label  ul       /**< [in] SMPTE2109 Universal Label */
+    (const char                 *filename   /**< [in] name of file to write */
+    ,dlb_pmd_model_combo        *model      /**< [in] PMD model to write */
+    ,dlb_klvpmd_universal_label  ul         /**< [in] SMPTE2109 Universal Label */
     );
-

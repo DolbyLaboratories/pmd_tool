@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -69,9 +69,9 @@ static const char *FRAME_RATE_NAMES[] =
  */
 typedef struct
 {
-    size_t         size;
-    void          *mem;
-    dlb_pmd_model *model;
+    size_t               size;
+    void                *mem;
+    dlb_pmd_model_combo *model;
 } model;
 
 
@@ -212,24 +212,31 @@ void dlb_pmd_tool_usage
  * @brief create a PMD model
  */
 static
-int
+dlb_pmd_bool
 model_init
-    (model          *m
-    ,const Args     *args
+    (model      *m
+    ,const Args *args
     )
 {
-    dlb_pmd_model_constraints c;
+    dlb_pmd_success success;
 
-    dlb_pmd_max_constraints(&c, args->sadm_common);
-    m->size = dlb_pmd_query_mem_constrained(&c);
-    m->mem  = malloc(m->size);
+    memset(m, 0, sizeof(*m));
+    m->size = dlb_pmd_model_combo_query_mem(NULL, NULL);
+    m->mem = malloc(m->size);
     if (NULL == m->mem)
     {
         fprintf(stderr, "could not allocate memory\n");
-        return 0;
+        return PMD_FALSE;
     }
-    dlb_pmd_init_constrained(&m->model, &c, m->mem);
-    return 1;
+
+    success = dlb_pmd_model_combo_init(&m->model, NULL, NULL, args->sadm_common, m->mem);
+    if (success != PMD_SUCCESS)
+    {
+        fprintf(stderr, "could not initialize model\n");
+        return PMD_FALSE;
+    }
+
+    return PMD_TRUE;
 }
 
 
@@ -242,7 +249,7 @@ model_finish
     (model *m
     )
 {
-    dlb_pmd_finish(m->model);
+    (void)dlb_pmd_model_combo_destroy(&m->model);
     free(m->mem);
 }
 
@@ -289,7 +296,6 @@ read_file_mode
     {
         return MODE_WAV;
     }
-
     return MODE_UNKNOWN;
 }
 
@@ -376,6 +382,8 @@ parse_pair_number
     args->chan = (unsigned int)tmp * (is_pair ? 2 : 1);
     return 1;
 }
+
+
 
 
 /**
@@ -758,14 +766,22 @@ dlb_pmd_tool_parse_cmdline_args
 static
 int                           /** @return 0 on success, 1 on failure */
 prng_read
-    (Args          *args      /**< [in]  control arguments */
-    ,dlb_pmd_model *model     /**< [out] PMD model to read */
+    (Args                   *args   /**< [in]  control arguments */
+    ,dlb_pmd_model_combo    *model  /**< [out] PMD model to read */
     )
 {
-    if (dlb_pmd_generate_random(model, &args->random_counts, args->random_seed,
+    dlb_pmd_model       *pmd_model;
+
+    if (dlb_pmd_model_combo_get_writable_pmd_model(model, &pmd_model, PMD_TRUE))
+    {
+        printf("Could not get writable PMD model\n");
+        return 1;
+    }
+
+    if (dlb_pmd_generate_random(pmd_model, &args->random_counts, args->random_seed,
                                 args->generate_ascii_strings, args->sadm_out))
     {
-        fprintf(stderr, "Failed to generate random model: %s\n", dlb_pmd_error(model));
+        fprintf(stderr, "Failed to generate random model: %s\n", dlb_pmd_error(pmd_model));
         return 1;
     }
     return 0;
@@ -778,8 +794,8 @@ prng_read
 static
 int                           /** @return 0 on success, 1 on failure */
 read_input
-    (const Args    *args      /**< [in]  control arguments */
-    ,dlb_pmd_model *model     /**< [out] PMD model to read */
+    (const Args             *args   /**< [in]  control arguments */
+    ,dlb_pmd_model_combo    *model  /**< [out] PMD model to read */
     )
 
 {
@@ -796,7 +812,7 @@ read_input
     switch (args->inmode)
     {
     case MODE_XML:
-        result = xml_read(in, model, args->strict_xml);
+        result = xml_read(in, model, args->strict_xml, args->sadm_common);
         try_it = args->try_frame;
         break;
     case MODE_KLV:
@@ -895,8 +911,8 @@ generate_output_filename
 static
 int                           /** @return 0 on success, 1 on failure */
 write_output
-    (const Args    *args      /**< [in]  control arguments */
-    ,dlb_pmd_model *model     /**< [out] PMD model to write */
+    (const Args             *args   /**< [in]  control arguments */
+    ,dlb_pmd_model_combo    *model  /**< [out] PMD model to write */
     )
 {
           char                         pcm_out[256];

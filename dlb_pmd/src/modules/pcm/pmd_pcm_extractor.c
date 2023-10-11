@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +49,7 @@
 #include <stdlib.h>
 
 #include "dlb_pmd_pcm.h"
+#include "dlb_pmd_model_combo.h"
 #include "dlb_pmd_klv.h"
 #include "pmd_model.h"
 #include "pmd_error_helper.h"
@@ -75,7 +77,7 @@
  */
 struct dlb_pcmpmd_extractor
 {
-    dlb_pmd_model       *model;                     /**< source model */
+    dlb_pmd_model_combo *model;                     /**< source model */
     uint8_t              klv_buf[MAX_DATA_BYTES];   /**< current KLV block */
 
     pmd_s337m            s337m;                     /**< SMPTE 337m wrapping state */
@@ -102,7 +104,27 @@ struct dlb_pcmpmd_extractor
     sadm_bitstream_decoder      *sdec;
 
     dlb_pmd_payload_set_status  *payload_set_status;
+
+    dlb_pmd_bool     error_flag;                    /**< was there an error? */
+    char             error_msg[PMD_ERROR_SIZE];     /**< error string, if any */
 };
+
+
+static
+void
+reset_extractor_error
+    (dlb_pcmpmd_extractor   *extractor
+    )
+{
+    const dlb_pmd_model *pmd_model;
+
+    if (!dlb_pmd_model_combo_get_readable_pmd_model(extractor->model, &pmd_model, PMD_FALSE))
+    {
+        error_reset(pmd_model);
+    }
+    memset(extractor->error_msg, 0, sizeof(extractor->error_msg));
+    extractor->error_flag = PMD_FALSE;
+}
 
 
 /**
@@ -184,21 +206,31 @@ pcm_next_block
     dlb_pcmpmd_extractor *ext = (dlb_pcmpmd_extractor*)s337m->nextarg;
     int res = 1;
     
-    if (0 != s337m->data)
+    if (0 != s337m->data)       /* neither init time nor callback with 0 data */
     {
         /* we have extracted data from SMPTE 337m stream. Now decode it */
         size_t datasize = s337m->data - ext->klv_buf;
         int new_frame = ext->new_frame;
         dlb_pmd_bool ok = 0;
+
         ext->new_frame = 0;
         res = !new_frame;
 
-        /* neither init time nor callback with 0 data */
         if (s337m->sadm)
         {
             if (ext->sdec != NULL)
             {
-                ok = !sadm_bitstream_decoder_decode(ext->sdec, ext->klv_buf, datasize, ext->model, sadm_dec_callback, s337m->nextarg);
+                dlb_adm_core_model *core_model;
+
+                if (dlb_pmd_model_combo_get_writable_core_model(ext->model, &core_model))
+                {
+                    TRACE(("Serial ADM detected but could not get a writable core model!\n"));
+                    ok = PMD_FALSE;
+                } 
+                else
+                {
+                    ok = !sadm_bitstream_decoder_decode(ext->sdec, ext->klv_buf, datasize, core_model, PMD_TRUE, sadm_dec_callback, s337m->nextarg);
+                }
             } 
             else
             {
@@ -209,11 +241,28 @@ pcm_next_block
         }
         else 
         {
-            ok = !dlb_klvpmd_read_payload(ext->klv_buf, datasize, ext->model, new_frame, NULL, ext->payload_set_status);
+            dlb_pmd_model *pmd_model;
+
+            if (dlb_pmd_model_combo_get_writable_pmd_model(ext->model, &pmd_model, PMD_FALSE))
+            {
+                TRACE(("PMD detected but could not get a writable PMD model!\n"));
+                ok = PMD_FALSE;
+            } 
+            else
+            {
+                ok = !dlb_klvpmd_read_payload(ext->klv_buf, datasize, pmd_model, new_frame, NULL, ext->payload_set_status);
+                if ((!ok) && (pmd_model->error[0] != '\0'))
+                {
+                    strncpy(ext->error_msg, pmd_model->error, sizeof(ext->error_msg));
+                }
+            }
             s337m->framelen = DLB_PCMPMD_BLOCK_SIZE;
         }
 
-        (void)ok;
+        if (!ok)
+        {
+            ext->error_flag = PMD_TRUE;
+        }
         TRACE(("block %s\n", ok ? "decoded OK" : "failed to decode"));
     }
     else
@@ -230,16 +279,17 @@ pcm_next_block
 
 
 size_t
-dlb_pcmpmd_extractor_query_mem2
+dlb_pcmpmd_extractor_query_mem
     (dlb_pmd_bool sadm
-    ,dlb_pmd_model_constraints *limits
     )
 {
     size_t sz = sizeof(struct dlb_pcmpmd_extractor);
+
     if (sadm)
     {
-        sz += sadm_bitstream_decoder_query_mem(limits);
+        sz += sadm_bitstream_decoder_query_mem();
     }
+
     return sz;
 }
 
@@ -253,7 +303,7 @@ dlb_pcmpmd_extractor_init3
     ,unsigned int chan
     ,unsigned int stride
     ,dlb_pmd_bool ispair
-    ,dlb_pmd_model *model
+    ,dlb_pmd_model_combo            *model
     ,dlb_pmd_payload_set_status *status
     ,dlb_pmd_bool sadm
     )
@@ -312,9 +362,9 @@ dlb_pcmpmd_extractor_init3
 
     if (sadm)
     {
-        dlb_pmd_model_constraints limits;
-        dlb_pmd_get_constraints(model, &limits);
-        sadm_bitstream_decoder_init(&limits, (void*)(ext+1), &ext->sdec);
+        uint8_t *p = (uint8_t *)ext;
+        p += sizeof(*ext);
+        sadm_bitstream_decoder_init(p, &ext->sdec);
     }
 
     pmd_s337m_init(&ext->s337m, wd, stride, pcm_next_block, ext, ext->klv_pair, ext->klv_chan, 0, sadm);
@@ -331,7 +381,7 @@ dlb_pcmpmd_extractor_init2
     ,unsigned int chan
     ,unsigned int stride
     ,dlb_pmd_bool ispair
-    ,dlb_pmd_model *model
+    ,dlb_pmd_model_combo            *model
     ,dlb_pmd_payload_set_status *status
     ,dlb_pmd_bool sadm
     )
@@ -342,18 +392,17 @@ dlb_pcmpmd_extractor_init2
 
 void
 dlb_pcmpmd_extractor_init
-    (dlb_pcmpmd_extractor          **extptr     /**< [out] PCM extractor to initialize */
-    ,void                           *mem        /**< [in]  memory to use to initialize extractor */
-    ,dlb_pmd_frame_rate              rate       /**< [in]  video frame rate */
-    ,unsigned int                    chan       /**< [in]  channel (or 1st channel of pair) to decode */
-    ,unsigned int                    nstride    /**< [in]  PCM stride */
-    ,dlb_pmd_bool                    ispair     /**< [in]  1: extract a pair, 0: extract single channel */
-    ,dlb_pmd_model                  *model      /**< [in]  model to populate */
-    ,dlb_pmd_payload_set_status     *status     /**< [out] payload set status, may be NULL; if given,
-                                                           must be initialized properly */
+    (dlb_pcmpmd_extractor          **extptr
+    ,void                           *mem
+    ,dlb_pmd_frame_rate              rate
+    ,unsigned int                    chan
+    ,unsigned int                    stride
+    ,dlb_pmd_bool                    ispair
+    ,dlb_pmd_model_combo            *model
+    ,dlb_pmd_payload_set_status     *status
     )
 {
-    dlb_pcmpmd_extractor_init2(extptr, mem, rate, chan, nstride, ispair, model, status, 0);
+    dlb_pcmpmd_extractor_init2(extptr, mem, rate, chan, stride, ispair, model, status, 0);
 }
 
     
@@ -415,7 +464,7 @@ dlb_pcmpmd_extract
 {
     size_t remaining = num_samples;
 
-    error_reset(ext->model);
+    reset_extractor_error(ext);
 
     ext->callback = NULL;
     ext->sadm_callback = NULL;
@@ -451,7 +500,7 @@ dlb_pcmpmd_extract
     }
 
     /* return 0 (success) if there is no error */
-    return ext->model->error[0] != '\0';
+    return (ext->error_flag ? PMD_FAIL : PMD_SUCCESS);
 }
 
 
@@ -486,7 +535,7 @@ dlb_pcmpmd_extract3
     }
 
     vs = (ext->prev_pa == NO_PA_FOUND) ? 0 : NO_PA_FOUND;
-    error_reset(ext->model);
+    reset_extractor_error(ext);
     pcm += ext->klv_chan;
     ext->no_vsync = 1;
 
@@ -518,7 +567,7 @@ dlb_pcmpmd_extract3
     }
 
     /* return 0 (success) if there is no error */
-    return ext->model->error[0] != '\0';
+    return (ext->error_flag ? PMD_FAIL : PMD_SUCCESS);
 }
 
 
@@ -533,4 +582,36 @@ dlb_pcmpmd_extract2
     )
 {
     return dlb_pcmpmd_extract3(ext, pcm, num_samples, callback, NULL, NULL, cbarg, video_sync);
+}
+
+
+dlb_pmd_bool
+dlb_pcmpmd_extractor_error_flag
+    (dlb_pcmpmd_extractor   *ext            /**< [in]  PCM extractor struct */
+    )
+{
+    dlb_pmd_bool flag = PMD_FALSE;
+
+    if (ext)
+    {
+        flag = ext->error_flag;
+    }
+
+    return flag;
+}
+
+
+const char *
+dlb_pcmpmd_extractor_error_msg
+    (dlb_pcmpmd_extractor   *ext            /**< [in]  PCM extractor struct */
+    )
+{
+    const char *msg = "";
+
+    if (ext)
+    {
+        msg = ext->error_msg;   /* TODO: not exactly memory-safe... */
+    }
+
+    return msg;
 }

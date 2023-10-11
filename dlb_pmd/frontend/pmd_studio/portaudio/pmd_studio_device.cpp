@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,10 +35,11 @@
 
 #include "portaudio.h"
 #include "pmd_studio.h"
-#include "pmd_studio_limits.h"
+#include "pmd_studio_common_defs.h"
 #include "pmd_studio_device.h"
 #include "am824_framer.h"
 #include <iostream>
+#include <string.h>
 #include "pmd_studio_device_pvt.h"
 #include "mix_matrix.h"
 
@@ -58,90 +59,6 @@
 #define SAMPLE_RATE 48000
 #define DEFAULT_FRAMES_PER_BUFFER (128)
 #define DEFAULT_LATENCY (0.0)
-
-PMDStudioDeviceRingBuffer::PMDStudioDeviceRingBuffer
-    (PMDStudioDeviceRingBufferHandler *parent
-    )
-{
-    this->parent = parent;
-    this->pcmbufsize = parent->pcmbufsize;
-    this->pcmbuf = new uint32_t[pcmbufsize * parent->num_channels];
-    memset(this->pcmbuf, 0, sizeof(pcmbufsize * parent->num_channels * sizeof(uint32_t)));
-}
-
-PMDStudioDeviceRingBuffer::~PMDStudioDeviceRingBuffer()
-{
-    delete this->pcmbuf;
-}
-
-PMDStudioDeviceRingBuffer *
-PMDStudioDeviceRingBuffer::newBufferFromRingBufferStruct
-        (pmd_studio_ring_buffer_struct *output_buf_struct
-        )
-{
-    PMDStudioDeviceRingBufferHandler *handler = output_buf_struct->handler;
-    return new PMDStudioDeviceRingBuffer(handler);
-}
-
-void 
-PMDStudioDeviceRingBuffer::push()
-{   
-    this->parent->queueNewBuffer(this);
-}
-
-PMDStudioDeviceRingBufferHandler::PMDStudioDeviceRingBufferHandler(unsigned int startchannel, unsigned int num_channels, unsigned int pcmbufsize):
-    startchannel{startchannel},
-    num_channels{num_channels},
-    index{0},
-    pcmbufsize{pcmbufsize},
-    active{nullptr},
-    queued{nullptr}
-    {}
-
-PMDStudioDeviceRingBufferHandler::~PMDStudioDeviceRingBufferHandler(){
-    if(active != nullptr) delete active;
-    if(queued != nullptr) delete queued;
-}
-
-void PMDStudioDeviceRingBufferHandler::queueNewBuffer(PMDStudioDeviceRingBuffer *buf){
-    // Make sure no other process is using the queued buffer pointer.
-    queued_mutex.lock();
-    if(active == nullptr){
-        active = buf;
-    }
-    else{
-        if(queued != nullptr) delete queued;
-        queued = buf;
-    }
-    queued_mutex.unlock();
-}
-
-void PMDStudioDeviceRingBufferHandler::updateBuffer(){
-    // Make sure no other process tries to queue a new buffer
-    queued_mutex.lock();
-    if(queued != nullptr){
-        if(active != nullptr) delete active;
-        active = queued;
-        queued = nullptr;
-    }
-    queued_mutex.unlock();
-}
-
-uint32_t PMDStudioDeviceRingBufferHandler::peek(){
-    if(active == nullptr) return uint32_t{0};
-    return active->pcmbuf[this->index];
-}
-
-uint32_t PMDStudioDeviceRingBufferHandler::next(){
-    if(active == nullptr) return uint32_t{0};
-    uint32_t to_ret = active->pcmbuf[index];
-    index++;
-    if(index >= pcmbufsize){
-        index = 0;
-        updateBuffer();
-    }
-    return to_ret;
-}
 
 const char
 *pmd_studio_device_get_settings_menu_name(void)
@@ -280,7 +197,7 @@ recordCallback( const void *inputBuffer, void *outputBuffer,
 {
     int *readPtr = (int *)inputBuffer;
     int *writePtr = (int *)outputBuffer;
-    unsigned int i,j,k;
+    unsigned int i,j;
     pmd_studio_device *device = (pmd_studio_device *)userData;
     struct pmd_studio_comp_mix_matrix *cm = device->active_comp_mix_matrix;
 
@@ -303,33 +220,8 @@ recordCallback( const void *inputBuffer, void *outputBuffer,
             writePtr += device->outputParameters.channelCount;
             readPtr += device->inputParameters.channelCount;
         }
-	    // Now add ring buffers
-        for (i = 0 ; i < device->num_ring_buffers ; i++)
-        {   
-            if(device->ring_buffers[i].mutex.try_lock()){
-                PMDStudioDeviceRingBufferHandler *handle = device->ring_buffers[i].handler;
-                if (handle != nullptr)
-                {
-                    writePtr = (int *) outputBuffer;
-                    writePtr += handle->startchannel;
-                    for( j = 0; j < framesPerBuffer ; j++ )
-                    {
-                        for (k = 0 ; k < handle->num_channels ; k++)
-                        {
-                            if(device->am824_mode){
-                                getAM824Sample(handle->am824framer, handle->next() >> 8, (uint8_t *)writePtr);
-                            }
-                            else{
-                                *writePtr = handle->next();
-                            }
-                            writePtr++;
-                        }
-                        writePtr += device->outputParameters.channelCount - handle->num_channels;
-                    }
-                }
-                device->ring_buffers[i].mutex.unlock();
-            }
-        } 
+        // Now add ring buffers
+        device->ring_buffer_list->WriteRingBuffers((int32_t *)outputBuffer, device->outputParameters.channelCount, framesPerBuffer);
     }
     return paContinue; // returning paComplete would terminate stream
 }
@@ -460,6 +352,14 @@ pmd_studio_device_list(
 
 /* Public Functions */
 
+void
+pmd_studio_device_update_metadata_outputs(
+    pmd_studio *studio
+)
+{
+    /* Do nothing as only channel based metadata outputs supported in this version */
+}
+
 /* This can be called with *s as a NULL pointer to indicate first time initialization */
 /* if *s is non null then we are applying new settings to existing device */
 dlb_pmd_success
@@ -491,7 +391,7 @@ pmd_studio_device_init(
 
         device = *retdevice;
         device->studio = studio;
-
+        device->ring_buffer_list = nullptr;
         #if defined(_WIN32) || defined(_WIN64)
         struct PaWasapiStreamInfo wasapiInfo;
         WSADATA data;
@@ -525,20 +425,27 @@ pmd_studio_device_init(
             }
             device->stream = nullptr;
         }
+        if (device->ring_buffer_list != nullptr)
+        {
+            delete device->ring_buffer_list;
+            device->ring_buffer_list = nullptr;
+        }
         
     }
 
     status = pmd_studio_set_input_device_name(settings->input_device, studio);
     if (status != PMD_SUCCESS)
     {
-        uiMsgBoxError(win, "Input Device Error", "Name not recognized - using default input device");
+        pmd_studio_information("Input Device Name not recognized - using default input device");
+        //fprintf(stderr, "Input Device Error, Name not recognized - using default input device\n");
         device->inputParameters.device = paNoDevice;
     }
 
     status = pmd_studio_set_output_device_name(settings->output_device, studio);
     if (status != PMD_SUCCESS)
     {
-        uiMsgBoxError(win, "Output Device Error", "Name not recognized - using default output device");
+        pmd_studio_information("Output Device Name not recognized - using default output device");
+        //fprintf(stderr, "output Device Error, Name not recognized - using default output device\n");
         device->outputParameters.device = paNoDevice;
     }
 
@@ -546,14 +453,14 @@ pmd_studio_device_init(
         status = pmd_studio_set_input_device_name(Pa_GetDeviceInfo(Pa_GetDefaultInputDevice())->name, studio);
     }
     if (device->inputParameters.device == paNoDevice) {
-        Pa_Terminate();
+        //Pa_Terminate();
         return(PMD_FAIL);
     }
     if (device->outputParameters.device == paNoDevice) {
         status = pmd_studio_set_output_device_name(Pa_GetDeviceInfo(Pa_GetDefaultOutputDevice())->name, studio);
     }
     if (device->outputParameters.device == paNoDevice) {
-        Pa_Terminate();
+        //Pa_Terminate();
         return(PMD_FAIL);
     }
 
@@ -562,14 +469,14 @@ pmd_studio_device_init(
 
     if (inputdevinfo->maxInputChannels == 0)
     {
-        printf("Input: Device #%u = %s, Channels = %u\n", device->inputParameters.device, inputdevinfo->name, inputdevinfo->maxInputChannels);
+        //printf("Input: Device #%u = %s, Channels = %u\n", device->inputParameters.device, inputdevinfo->name, inputdevinfo->maxInputChannels);
     	pmd_studio_error(PMD_STUDIO_ERR_PA_ERROR, "Input device has zero channels");
         return(PMD_FAIL);
     }
 
     if (outputdevinfo->maxOutputChannels == 0)
     {
-        printf("Input: Device #%u = %s, Channels = %u, Latency = %f\n", device->outputParameters.device, outputdevinfo->name, outputdevinfo->maxOutputChannels);
+        //printf("Input: Device #%u = %s, Channels = %u\n", device->outputParameters.device, outputdevinfo->name, outputdevinfo->maxOutputChannels);
     	pmd_studio_error(PMD_STUDIO_ERR_PA_ERROR, "Output device has zero channels");
         return(PMD_FAIL);
     }
@@ -577,7 +484,7 @@ pmd_studio_device_init(
     // Make sure that the number of channels selected does not exceed the capabilities of the device or global maximum
     settings->num_channels = std::min(settings->num_channels, std::min(inputdevinfo->maxInputChannels, std::min(outputdevinfo->maxOutputChannels, MAX_INPUT_CHANNELS)));
 
-    pmd_studio_mix_matrix_unity(mix_matrix);
+    pmd_studio_mix_matrix_reset(mix_matrix);
     compress_mix_matrix(mix_matrix, &device->comp_mix_matrix1, settings->num_channels, settings->num_channels);
     pmd_studio_mix_matrix_reset(mix_matrix);
     compress_mix_matrix(mix_matrix, &device->comp_mix_matrix2, settings->num_channels, settings->num_channels);
@@ -601,7 +508,6 @@ pmd_studio_device_init(
     device->outputParameters.sampleFormat = PA_SAMPLE_TYPE;
 	device->outputParameters.hostApiSpecificStreamInfo = NULL;
     device->am824_mode = settings->am824_mode;
-    device->num_ring_buffers = 0;
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -627,21 +533,24 @@ pmd_studio_device_init(
 	err = Pa_IsFormatSupported(&device->inputParameters, &device->outputParameters, SAMPLE_RATE);
 	if (err != paNoError)
 	{
-    	Pa_Terminate();
+    	//Pa_Terminate();
 		pmd_studio_error(PMD_STUDIO_ERR_PA_ERROR, "Pa_IsFormatSupported Failed");
 	}
 
-	printf("Pa_IsFormatSupported succeeded\n");
+	//printf("Pa_IsFormatSupported succeeded\n");
 
     // Check for automatic frames per buffer selection
     if (common_settings->frames_per_buffer == AUTO_FRAMES_PER_BUFFER)
     {
         common_settings->frames_per_buffer = DEFAULT_FRAMES_PER_BUFFER;
     }
-
+/*
     printf("Frames_per_buffer = %u\n", common_settings->frames_per_buffer);
     printf("Input: Device = %u, Channels = %u, Latency = %f\n", device->inputParameters.device, device->inputParameters.channelCount, device->inputParameters.suggestedLatency);
     printf("Output: Device = %u, Channels = %u, Latency = %f\n", device->outputParameters.device, device->outputParameters.channelCount, device->outputParameters.suggestedLatency);
+*/
+    device->ring_buffer_list = new PMDStudioRingBufferList(device->outputParameters.channelCount);
+
     err = Pa_OpenStream(
               &device->stream,
               &device->inputParameters,
@@ -654,19 +563,40 @@ pmd_studio_device_init(
 
     if( err != paNoError )
     {
-    	Pa_Terminate();
+    	//Pa_Terminate();
     	pmd_studio_error(PMD_STUDIO_ERR_PA_ERROR, "Pa_OpenStream Failed");
     }
 
     err = Pa_StartStream( device->stream );
     if( err != paNoError )
     {
-    	Pa_Terminate();
+    	//Pa_Terminate();
    		pmd_studio_error(PMD_STUDIO_ERR_PA_ERROR, "Pa_StartStream Failed");
     }
     
     return(PMD_SUCCESS);
 }
+
+
+dlb_pmd_success
+pmd_studio_device_add_ring_buffer(
+    unsigned int ring_buffer_channel,         // output channel index starting at 0
+    unsigned int ring_buffer_num_channels,         // number of channels (1/2)
+    pmd_studio_video_frame_rate frame_rate,
+    pmd_studio *studio
+    )
+{
+    pmd_studio_device *device = pmd_studio_get_device(studio);
+
+
+    if (frame_rate == INVALID_FRAME_RATE)
+    {
+        std::runtime_error("INVALID_FRAME_RATE");
+    }
+
+    device->ring_buffer_list->AddRingBuffer(ring_buffer_channel, ring_buffer_num_channels, frame_rate);
+    return PMD_SUCCESS;
+ }
 
 
 dlb_pmd_success
@@ -710,6 +640,12 @@ pmd_studio_device_update_mix_matrix(
 	return(PMD_SUCCESS);
 }
 
+bool pmd_studio_device_channel_requires_smpte337(unsigned int channel, pmd_studio *studio)
+{
+    (void)channel;
+    (void)studio;
+    return(true);
+}
 
 dlb_pmd_success
 pmd_studio_get_input_device_name(
@@ -810,112 +746,15 @@ pmd_studio_device_reset(
     pmd_studio_mix_matrices_reset(device);
 
     // reset ring buffers
-    for (unsigned int i = 0 ; i < device->num_ring_buffers ; i++ )
-    {
-        pmd_studio_device_delete_ring_buffer(&device->ring_buffers[i], device->studio);
-    }
-
-    device->num_ring_buffers = 0;
-    return(PMD_SUCCESS);
-}
-
-
-dlb_pmd_success
-pmd_studio_device_add_ring_buffer(
-        unsigned int startchannel,         // output channel index starting at 0
-        unsigned int num_channels,         // number of channels (1/2)
-        unsigned int pcm_bufsize,
-        pmd_studio *studio,
-        pmd_studio_ring_buffer_struct **assigned_struct
-    )
-{
-    pmd_studio_device *device = pmd_studio_get_device(studio);
-    unsigned int i;
-    unsigned int first_free_ring_buffer;
-    
-    if (device->num_ring_buffers >= MAX_RING_BUFFERS)
-    {
-        return(PMD_FAIL);
-    }
-
-    // Check that channel isn't already being used in existing ring buffer
-    // Also find empty ring buffer slot
-    first_free_ring_buffer = device->num_ring_buffers;
-    for (i = 0 ; i < device->num_ring_buffers ; i++)
-    {
-        if (device->ring_buffers[i].handler == nullptr)
-        {
-            first_free_ring_buffer = i;
-            break;
-        }
-        // Check for overlap in request ring buffer and existing ring buffer
-        // The last check is to avoid the 0,0 case which causes the last channel index to underflow i.e. 0 + 0 -1 = max unsigned int
-        if (((startchannel + num_channels - 1) >= device->ring_buffers[i].handler->startchannel) &&
-            startchannel <= ((device->ring_buffers[i].handler->startchannel + device->ring_buffers[i].handler->num_channels - 1)) &&
-            (device->ring_buffers[i].handler->num_channels > 0))
-        {
-            return(PMD_FAIL);            
-        }
-    }
-    device->ring_buffers[first_free_ring_buffer].mutex.lock();
-    device->ring_buffers[first_free_ring_buffer].handler = new PMDStudioDeviceRingBufferHandler(startchannel, num_channels, pcm_bufsize);
-    
-    (*assigned_struct) = &device->ring_buffers[first_free_ring_buffer];
-
-    // Register mutex to mdout for future use (when stopping metadata output)
-    // mdout->ring_buffer_handle_parent_mutex = &device->ring_buffers[first_free_ring_buffer].mutex;
-    
-    if (device->am824_mode)
-    {
-    	 if (AM824Framer_init(device->ring_buffers[first_free_ring_buffer].handler->am824framer, (uint8_t)num_channels, 24, AM824_LITTLE_ENDIAN)
-    	 	!= AM824_ERR_OK)
-    	{
-    		return(PMD_FAIL);
-    	}
-    }
-    device->ring_buffers[first_free_ring_buffer].mutex.unlock();
-
-    // if we've needed to use a new ring buffer then increment total
-    if (first_free_ring_buffer >= device->num_ring_buffers)
-    {
-        device->num_ring_buffers = first_free_ring_buffer + 1;
-    }
+    device->ring_buffer_list->Reset();
 
     return(PMD_SUCCESS);
 }
 
-
-dlb_pmd_success
-pmd_studio_device_delete_ring_buffer(
-        pmd_studio_ring_buffer_struct *rbuf,
-        pmd_studio *studio
-    )
+PMDStudioRingBufferList *pmd_studio_device_get_ring_buffer_list(pmd_studio *studio)
 {
     pmd_studio_device *device = pmd_studio_get_device(studio);
-    int i;
-
-    if (rbuf->handler == nullptr)
-    {
-        return(PMD_FAIL);
-    }
-
-    // Check that channel isn't already being used in existing ring buffer?
-    rbuf->mutex.lock();
-    delete rbuf->handler;
-    rbuf->handler = nullptr;
-    rbuf->mutex.unlock();
-
-    // try and reduce device->num_ring_buffers
-    for (i = device->num_ring_buffers - 1 ; i >= 0  ; i--)
-    {
-        if (device->ring_buffers[i].handler != nullptr)
-        {
-            break;
-        }
-    }
-    device->num_ring_buffers = i + 1;
-
-    return(PMD_SUCCESS);
+    return device->ring_buffer_list;
 }
 
 void
@@ -924,7 +763,6 @@ pmd_studio_device_print_debug(
     )
 {
     pmd_studio_device *device;
-    unsigned int i;
 
     if (!studio)
     {
@@ -938,19 +776,11 @@ pmd_studio_device_print_debug(
     }
 
     printf("Devices\n=======\n");
-    printf("Number of ring buffers: %u\n", device->num_ring_buffers);
-    for (i = 0 ; i < device->num_ring_buffers ; i++)
-    {
-        PMDStudioDeviceRingBufferHandler *handler = device->ring_buffers[i].handler;
-        if(handler != nullptr){
-            printf("Ring Buffer#%u\n---- --------\n", i+1);
-            printf("\tStart Channel: %u\n", handler->startchannel);
-            printf("\tNumber of Channel: %u\n", handler->num_channels);
-            printf("\tindex: %u\n", handler->index);
-            printf("\tBuffer Size: %u\n", handler->pcmbufsize);
-        }
-    }
+
+    device->ring_buffer_list->PrintDebug();
+
 }
+
 
 
 void

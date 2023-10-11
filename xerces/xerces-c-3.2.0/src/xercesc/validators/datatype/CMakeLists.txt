@@ -1,0 +1,42 @@
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        AbstractNumericFacetValidator.cpp
+        AbstractNumericValidator.cpp
+        AbstractStringValidator.cpp
+        AnySimpleTypeDatatypeValidator.cpp
+        AnyURIDatatypeValidator.cpp
+        Base64BinaryDatatypeValidator.cpp
+        BooleanDatatypeValidator.cpp
+        DatatypeValidator.cpp
+        DatatypeValidatorFactory.cpp
+        DateDatatypeValidator.cpp
+        DateTimeDatatypeValidator.cpp
+        DateTimeValidator.cpp
+        DayDatatypeValidator.cpp
+        DecimalDatatypeValidator.cpp
+        DoubleDatatypeValidator.cpp
+        DurationDatatypeValidator.cpp
+        ENTITYDatatypeValidator.cpp
+        FloatDatatypeValidator.cpp
+        HexBinaryDatatypeValidator.cpp
+        IDDatatypeValidator.cpp
+        IDREFDatatypeValidator.cpp
+        ListDatatypeValidator.cpp
+        MonthDatatypeValidator.cpp
+        MonthDayDatatypeValidator.cpp
+        NameDatatypeValidator.cpp
+        NCNameDatatypeValidator.cpp
+        NOTATIONDatatypeValidator.cpp
+        QNameDatatypeValidator.cpp
+        StringDatatypeValidator.cpp
+        TimeDatatypeValidator.cpp
+        UnionDatatypeValidator.cpp
+        XMLCanRepGroup.cpp
+        YearDatatypeValidator.cpp
+        YearMonthDatatypeValidator.cpp
+)
+
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)

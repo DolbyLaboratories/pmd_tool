@@ -1,0 +1,23 @@
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        FieldActivator.cpp
+        FieldValueMap.cpp
+        IC_Field.cpp
+        IC_Key.cpp
+        IC_KeyRef.cpp
+        IC_Selector.cpp
+        IC_Unique.cpp
+        IdentityConstraint.cpp
+        IdentityConstraintHandler.cpp
+        ValueStoreCache.cpp
+        ValueStore.cpp
+        XercesXPath.cpp
+        XPathMatcher.cpp
+        XPathMatcherStack.cpp
+        XPathSymbols.cpp       
+)
+
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)

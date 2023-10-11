@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,7 @@ extern "C"{
 #include "ui.h"
 #include "dlb_pmd_api.h"
 }
-#include "pmd_studio_limits.h"
+#include "pmd_studio_common_defs.h"
 #include "pmd_studio.h"
 #include "pmd_studio_device.h"
 
@@ -119,22 +119,19 @@ pmd_studio_audio_outputs_update_metadata_outputs
     );
 
 /**
- * Add links between metadata output and ring buffer struct for
- * mutex access and more.
- */
-void
-pmd_studio_metadata_output_assign_ring_buffer_struct
-    (pmd_studio_metadata_output *mdout
-    ,pmd_studio_ring_buffer_struct *assigned_struct
-    );
-
-/**
  * Returns true if there is at least one metadata output active
  */
 dlb_pmd_bool
 pmd_studio_metadata_output_active
     (pmd_studio *studio
     );
+
+pmd_studio_video_frame_rate
+pmd_studio_metadata_output_frame_rate
+    (unsigned int channel
+    ,pmd_studio *studio
+    );
+
 
 /**
  * Callback for when augmentor fails to generate metadata from model

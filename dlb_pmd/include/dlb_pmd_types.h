@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -186,6 +186,18 @@ enum
 
 
 /**
+ * @brief PMD success type
+ *
+ */
+typedef dlb_pmd_bool dlb_pmd_success;
+enum
+{
+    PMD_SUCCESS,
+    PMD_FAIL
+};
+
+
+/**
  * @brief signal ID
  *
  * A 'signal' is just a single mono PCM track, delivered alongside the PMD
@@ -206,6 +218,16 @@ typedef uint8_t dlb_pmd_signal;
  * @brief largest acceptable signal id
  */
 #define DLB_PMD_MAX_SIGNAL_ID (255)
+
+
+/**
+ * @def DLB_PMD_USE_ALT_SPKRS
+ * @brief use alternative speaker positions for 5.x.x formats?  May be overridden
+ * in compiler command line.
+ */
+#ifndef DLB_PMD_USE_ALT_SPKRS
+#define DLB_PMD_USE_ALT_SPKRS 1
+#endif
 
 
 /**
@@ -264,7 +286,9 @@ typedef enum
     DLB_PMD_SPEAKER_CONFIG_HEADPHONE, /**< L, R, portable headphones */
 
     DLB_PMD_SPEAKER_CONFIG_LAST = DLB_PMD_SPEAKER_CONFIG_HEADPHONE,
-    NUM_PMD_SPEAKER_CONFIGS
+    NUM_PMD_SPEAKER_CONFIGS,
+
+    DLB_PMD_SPEAKER_CONFIG_NONE = NUM_PMD_SPEAKER_CONFIGS
 
 } dlb_pmd_speaker_config;
 
@@ -1385,6 +1409,12 @@ typedef struct dlb_pmd_model_constraints
  * @brief abstract type representing the internal PMD model
  */
 typedef struct dlb_pmd_model dlb_pmd_model;
+
+
+/**
+ * @brief abstract type representing the internal combination model
+ */
+typedef struct dlb_pmd_model_combo dlb_pmd_model_combo;
 
 
 /**

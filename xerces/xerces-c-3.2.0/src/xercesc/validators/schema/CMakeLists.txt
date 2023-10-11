@@ -1,0 +1,30 @@
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        ComplexTypeInfo.cpp
+        GeneralAttributeCheck.cpp
+        NamespaceScope.cpp
+        SchemaAttDef.cpp
+        SchemaAttDefList.cpp
+        SchemaElementDecl.cpp
+        SchemaGrammar.cpp
+        SchemaInfo.cpp
+        SchemaSymbols.cpp
+        SchemaValidator.cpp
+        SubstitutionGroupComparator.cpp
+        TraverseSchema.cpp
+        XercesAttGroupInfo.cpp
+        XercesElementWildcard.cpp
+        XercesGroupInfo.cpp
+        XMLSchemaDescriptionImpl.cpp
+        XSDDOMParser.cpp
+        XSDErrorReporter.cpp
+        XSDLocator.cpp
+        XUtil.cpp      
+)
+
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)
+
+add_subdirectory(identity)

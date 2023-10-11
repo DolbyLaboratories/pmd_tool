@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -98,6 +98,9 @@ typedef struct
        const dlb_pmd_speaker (*config_channels)[16];
 } pmd_studio_config;
 
+#define PMD_STUDIO_OUTPUT_NUM_CONFIG 3
+
+
 #define PMD_STUDIO_M3DB (0.7071f)
 #define PMD_STUDIO_M6DB (0.5f)
 
@@ -187,7 +190,7 @@ pmd_studio_update_model
     (pmd_studio *studio
     );
 
-dlb_pmd_model
+dlb_pmd_model_combo
 *pmd_studio_get_model
     (pmd_studio *studio
     );

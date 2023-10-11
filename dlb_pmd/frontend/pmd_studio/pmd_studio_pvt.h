@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
 
-#ifndef EMBERPLUS_MXBOLT_PMD_STUDIO_PVT_H
-#define EMBERPLUS_MXBOLT_PMD_STUDIO_PVT_H
+#ifndef PMD_STUDIO_PVT_H
+#define PMD_STUDIO_PVT_H
 
 #include "ui.h"
 #include "pmd_studio.h"
@@ -45,6 +45,8 @@
 
 struct pmd_studio
 {
+    int                             argc;
+    char                            **argv;
     char title[PMD_STUDIO_MAX_FILENAME_LENGTH];
     model pmd;
     uiWindow 						*window;
@@ -67,4 +69,4 @@ struct pmd_studio
     unsigned int                    num_eids;
 };
 
-#endif //EMBERPLUS_MXBOLT_PMD_STUDIO_PVT_H
+#endif //PMD_STUDIO_PVT_H

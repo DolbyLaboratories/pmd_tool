@@ -1,0 +1,37 @@
+add_library(zlib)
+
+target_sources(zlib
+    PRIVATE
+        compress.c	
+        crc32.h		
+        deflate.h	
+        gzguts.h	
+        gzread.c	
+        infback.c	
+        inffast.h	
+        inflate.c	
+        inftrees.c	
+        trees.h		
+        zconf.h		
+        zutil.c
+        adler32.c	
+        crc32.c		
+        deflate.c	
+        gzclose.c	
+        gzlib.c		
+        gzwrite.c	
+        inffast.c	
+        inffixed.h	
+        inflate.h	
+        inftrees.h	
+        trees.c		
+        uncompr.c	
+        zlib.h		
+        zutil.h
+)
+
+target_include_directories(zlib
+    PUBLIC
+        .
+        ..
+)

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -64,6 +64,9 @@ struct pmd_studio_nlang_settings
 struct pmd_studio_settings
 {
     dlb_pmd_bool file_based_mode;
+#ifdef LIMITED_MODE
+    dlb_pmd_bool limited_mode;
+#endif
     pmd_studio_device_settings      device_settings;
     pmd_studio_common_device_settings common_device_settings;
     pmd_studio_console_settings     console_settings;
@@ -81,6 +84,9 @@ struct pmd_studio_settings_window
     uiEntry *console_port;
     uiCombobox *nlang_behaviour;
     uiCombobox *nlang_preset;
+#ifdef LIMITED_MODE
+    uiCheckbox *limited_mode;
+#endif
     pmd_studio_settings *settings;
 };
 

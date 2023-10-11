@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 #include <string.h>
 #include "ui.h"
 #include "dlb_pmd_api.h"
-#include "pmd_studio_limits.h"
+#include "pmd_studio_common_defs.h"
 #include "pmd_studio.h"
 #include "pmd_studio_audio_presentations.h"
 #include "pmd_studio_audio_presentations_pvt.h"
@@ -57,7 +57,7 @@
 static const char *SUPPORTED_LANGUAGES[] =
 {
     "alb", "bul", "cze", "dan", "dut", "eng", "est", "fin", "fre", "ger", "gre", "hun", "ice", "ita",
-    "lav", "lit", "nor", "pol", "por", "rum", "rus", "slo", "slv", "spa", "srp", "swe", "ukr", "und"
+    "lav", "lit", "nor", "pol", "por", "qaa", "rum", "rus", "slo", "slv", "spa", "srp", "swe", "ukr", "und"
 };
 
 #define NUM_SUPPORTED_LANGUAGES (sizeof(SUPPORTED_LANGUAGES)/sizeof(SUPPORTED_LANGUAGES[0]))

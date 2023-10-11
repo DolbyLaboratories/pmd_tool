@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,8 @@
  * @file pmd_unit_test.cc
  * @brief Unit tests for the PMD API
  */
+
+#define _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
 
 #include "gtest/gtest.h"
 

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -90,7 +90,6 @@ open_model
     filename = uiOpenFile(window);
     if (filename)
     {
-        pmd_studio_reset(s);
         pmd_studio_open_file(s, filename);
     }
 }

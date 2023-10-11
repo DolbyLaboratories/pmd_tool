@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -547,6 +548,7 @@ static uint32_t ISO_639_CODES[] =
     MAKE_ISO_639_CODE('p','s','\0'),    /* Pushto; Pashto*/
     MAKE_ISO_639_CODE('p','t','\0'),    /* Portuguese*/
     MAKE_ISO_639_CODE('p','u','s'),     /* Pushto; Pashto*/
+    MAKE_ISO_639_CODE('q','a','a'),     /* Reserved for local use*/
     MAKE_ISO_639_CODE('q','u','\0'),    /* Quechua*/
     MAKE_ISO_639_CODE('q','u','e'),     /* Quechua*/
     MAKE_ISO_639_CODE('r','a','j'),     /* Rajasthani*/

@@ -1,10 +1,12 @@
 # PMD Studio Quick Start Guide
-# Version 1.7.4
+# Version 2.2.0
 
 PMD Studio is an application for authoring professional metadata.
 It provides a simple user interface for configuring audio beds, objects
 and presentations. The authored metadata may be saved as an XML file in
-either Serial ADM or PMD formats or streamed using a professional sound card.
+either Serialized ADM or PMD formats or streamed using a professional
+sound card or a Nvidia/Mellanox Connect-X Smart NIC.
+The latter requires 
 
 ## Standards and References
 Serial ADM is defined jointly in ITU-R B.S. 2076 and 2125. Streaming Serial
@@ -20,9 +22,10 @@ SMPTE ST 2109.
 
 ### Operating System
 
-PMD Studio is supported on Mac and Linux only.
+PMD Studio is supported on Mac and Linux only. Professional Sound Card
+support is provided for both operating systems but 
 
-Tested on Ubuntu 19.10 for Linux and OSX Mojave. There is a known issue with
+Tested on Ubuntu 18.04 and 20.04 for Linux and OSX Mojave. There is a known issue with
 OSX Catalina that the menu-bar is unresponsive. The simple
 workaroud for the issue to take focus away to another application and then
 return focus. The menu-bar will now respond normally.
@@ -164,14 +167,25 @@ number of channels to be used.
 
 When using an NVIDIA Rivermax enabled NIC, a stream setting menu option is available.
 This allows selection of the input and output streams. Input streams are discovered
-via multicast DNS and RTSP (Ravenna) or SAP (Dante). Only a single input stream can
-be selected but multiple output streams can be defined. For each outputs stream the
-name of the stream is defined as well as the output codec to be used and the channel
-allocation. Channels are automatically allocated in order based on the number of
-channels in each stream. Available codecs are SMPTE ST 2110-30/AES 67 with either
-16 or 24 bits or SMPTE ST 2110-31/AM824. The former should not be used for metadata
-outputs as SMPTE ST 2110-30 / AES67 is defined to only carry linear PCM. Output
-streams are advertised on the network using both Ravenna and Dante methods.
+via multicast DNS and RTSP (Ravenna), SAP (Dante) or NMOS IS-04. The IP address and
+port of the NMOS registry can be explicitly defined or left blank to be discovered
+via multicast DNS. 
+
+The startup procedure is as follows:
+
+On first invocation open the stream settings panel and select the correct interface,
+PTP Clock Domain, annnoucement methods and add at least one output stream. Apply the
+settings and close the panel. Reopen the panel and select the correct input stream.
+Add any necessary output streams.
+
+Only a single input stream can be selected but multiple output streams can be defined.
+For each outputs stream the name of the stream is defined as well as the output codec
+to be used and the channel allocation. Channels are automatically allocated in order
+based on the number of channels in each stream. Available codecs are
+SMPTE ST 2110-30/AES 67 with either 16 or 24 bits, SMPTE ST 2110-31/AM824 or
+SMPTE ST 2110-41. The former should not be used for metadata outputs as
+SMPTE ST 2110-30 / AES67 is defined to only carry linear PCM. Output streams are
+advertised on the network using Ravenna, Dante or NMOS methods.
 
 Once the stream settings are applied the IP subsystem will be restarted with the
 new settings. A progress bar may be displayed when searching for a Dante stream. This
@@ -202,16 +216,21 @@ displayed. When the 'En' or enable checkbox is selected the audio output will be
 live. Multiple audio outputs are possible by using the 'Add Audio Output Button'.
 
 Each metadata output be be configured to generate Serial ADM or PMD output as
-selected by the format drop-down menu. The Mode selection allows the use of either
+selected by the format drop-down menu. The rate at which metadata is generated can
+be selected using the frame-rate drop menu. Common broadcast rates are available.
+The Mode selection allows the use of either
 frame-mode or subframe-mode as defined in SMPTE ST 337. Frame mode places the metadata
 across two consecutive channels. Subframe places all the metadata in a single
-mono channel. The metadata repetition rate is fixed at 25fps and is asynchronous.
-When a metadata output is enabled PMD Studio enters live mode. In this state the
-metadata configuration is fixed except for gain and positional settings. 
+mono channel. The mapping of metadata and audio outputs is achieved by a matching of the
+channels specified on the output controls to the streams defined in the streams
+settings panel. For SMPTE ST 2110-41 metadata streams a mono channel is sufficient.
+When a metadata output is enabled PMD Studio enters live mode. In this
+state the metadata configuration is fixed except for gain and positional settings. 
+
 
 ### Ember+ client
 
-PMD Studio 1.7.3 introduces a simple Ember+ consumer (client) that allows an Ember+ 
+PMD Studio provides a simple Ember+ consumer (client) that allows an Ember+ 
 provider (server) on the same network to control a restricted set of metadata values.
 The server IP address and port are configured from the settings panel under the 
 file menu. Connection to the server or console is initiated using the Connect option 
@@ -226,7 +245,9 @@ OSX Catalina requires focus to be moved from and to application to enable menu-b
 Audio elements and outputs can be added to the user interface but cannot be
 removed. Unused elements and outputs should just be disabled.
 
-Metadata frames are always sent at 25fps.
+Custom Ports are not supported.
+
+Certain features relating to NMOS IS-04 and IS-05 are not implemented. Basic patching of connections has been tested with Riedel NMOS Explorer.
 
 ## Trademarks
 

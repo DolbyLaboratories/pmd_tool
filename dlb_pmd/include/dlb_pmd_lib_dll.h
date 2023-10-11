@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,13 +37,13 @@
 #define DLB_PMD_LIB_DLL_H
 
 #if defined(_WIN32) && defined(DLB_PMD_LIB_DLL)
-    #ifdef DLB_DLL_EXPORT
-        #define DLB_DLL_ENTRY __declspec(dllexport)
+    #ifdef DLB_PMD_DLL_EXPORT
+        #define DLB_PMD_DLL_ENTRY __declspec(dllexport)
     #else
-        #define DLB_DLL_ENTRY __declspec(dllimport)
+        #define DLB_PMD_DLL_ENTRY __declspec(dllimport)
     #endif
 #else
-    #define DLB_DLL_ENTRY
+    #define DLB_PMD_DLL_ENTRY
 #endif
 
 #endif /* DLB_PMD_LIB_DLL_H */

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -220,6 +220,8 @@ dlb_pmd_init_constrained
         model->version_maj = PMD_BITSTREAM_VERSION_MAJOR;
         model->version_min = PMD_BITSTREAM_VERSION_MINOR;
         model->mallocated = mallocated;
+        model->error_callback = NULL;
+        model->error_cbarg = NULL;
         *modelptr = model;
     }
 }

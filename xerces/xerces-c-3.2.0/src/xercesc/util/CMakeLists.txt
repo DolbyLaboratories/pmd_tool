@@ -1,0 +1,61 @@
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        Base64.cpp
+        BinFileInputStream.cpp
+        BinInputStream.cpp
+        BinMemInputStream.cpp
+        BitSet.cpp
+        DefaultPanicHandler.cpp
+        EncodingValidator.cpp
+        HeaderDummy.cpp
+        HexBin.cpp
+        KVStringPair.cpp
+        Mutexes.cpp
+        PanicHandler.cpp
+        PlatformUtils.cpp
+        PSVIUni.cpp
+        QName.cpp
+        StringPool.cpp
+        SynchronizedStringPool.cpp
+        TransService.cpp
+        XMemory.cpp
+        XML256TableTranscoder.cpp
+        XML88591Transcoder.cpp
+        XMLAbstractDoubleFloat.cpp
+        XMLASCIITranscoder.cpp
+        XMLBigDecimal.cpp
+        XMLBigInteger.cpp
+        XMLChar.cpp
+        XMLChTranscoder.cpp
+        XMLDateTime.cpp
+        XMLDouble.cpp
+        XMLEBCDICTranscoder.cpp
+        XMLException.cpp
+        XMLFloat.cpp
+        XMLIBM1047Transcoder.cpp
+        XMLIBM1140Transcoder.cpp
+        XMLInitializer.cpp
+        XMLMsgLoader.cpp
+        XMLNumber.cpp
+        XMLString.cpp
+        XMLStringTokenizer.cpp
+        XMLUCS4Transcoder.cpp
+        XMLUni.cpp
+        XMLUri.cpp
+        XMLURL.cpp
+        XMLUTF16Transcoder.cpp
+        XMLUTF8Transcoder.cpp
+        XMLWin1252Transcoder.cpp
+)
+
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)
+
+add_subdirectory(FileManagers)
+add_subdirectory(MsgLoaders)
+add_subdirectory(MutexManagers)
+add_subdirectory(NetAccessors)
+add_subdirectory(regx)
+add_subdirectory(Transcoders)

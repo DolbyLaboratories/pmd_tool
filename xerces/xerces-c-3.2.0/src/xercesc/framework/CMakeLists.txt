@@ -1,0 +1,37 @@
+target_sources(xerces_3_2_0_lib
+    PRIVATE
+        BinOutputStream.cpp
+        LocalFileFormatTarget.cpp
+        LocalFileInputSource.cpp
+        MemBufFormatTarget.cpp
+        MemBufInputSource.cpp
+        StdInInputSource.cpp
+        StdOutFormatTarget.cpp
+        URLInputSource.cpp
+        Wrapper4DOMLSInput.cpp
+        Wrapper4InputSource.cpp
+        XMLAttDef.cpp
+        XMLAttDefList.cpp
+        XMLAttr.cpp
+        XMLBuffer.cpp
+        XMLBufferMgr.cpp
+        XMLContentModel.cpp
+        XMLDTDDescription.cpp
+        XMLElementDecl.cpp
+        XMLEntityDecl.cpp
+        XMLFormatter.cpp
+        XMLGrammarDescription.cpp
+        XMLGrammarPoolImpl.cpp
+        XMLNotationDecl.cpp
+        XMLRecognizer.cpp
+        XMLRefInfo.cpp
+        XMLSchemaDescription.cpp
+        XMLValidator.cpp
+)
+
+target_include_directories(xerces_3_2_0_lib
+    PUBLIC
+        .
+)
+
+add_subdirectory(psvi)

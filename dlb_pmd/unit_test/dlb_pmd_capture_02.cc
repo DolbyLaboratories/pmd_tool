@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
+
+#define _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
 
 #include "gtest/gtest.h"
 
@@ -407,7 +409,8 @@ TEST_F(DlbPmdCapture02, SliceItSadmRaw)
     theBinaryFile = ::fopen(testFileName, "rb");
     if (theBinaryFile != nullptr)
     {
-        // TODO: sanity checks on the captured metadata set...
+        // BIG FAT NOTE: the SMPTE 337M pC values in the test input file are not correct
+        // for our current S-ADM parsing, so we won't get any actual decodes!
 
         size_t channelCount = 2;
         size_t bitDepth = 32;

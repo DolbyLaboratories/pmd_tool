@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -98,7 +98,7 @@ int  /** @return 1 on success, 0 on failure */
 /**
  * @brief decide whether the given XML buffer contains PMD or not
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_bool              /** @return 1 if buffer has ProfessionalMetadata tag, 0 otherwise */
 dlb_xmlpmd_is_pmd
     (const char *buffer   /**< [in] XML buffer */
@@ -134,7 +134,7 @@ dlb_xmlpmd_is_pmd
  * rejected (e.g., if we choose to specify the objects, but do so
  * incorrectly, that will be regarded as an error).
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                    /** @return 0 on success, 1 on failure */
 dlb_xmlpmd_parse
     (dlb_xmlpmd_line_callback lcb  /**< [in] get-more-input callback */
@@ -152,7 +152,7 @@ dlb_xmlpmd_parse
  * to fill.  When the callback is invoked, it is safe to write the
  * existing data to file.
  */
-DLB_DLL_ENTRY
+DLB_PMD_DLL_ENTRY
 dlb_pmd_success                     /** @return 0 on success, 1 on failure */
 dlb_xmlpmd_write
    (      dlb_xmlpmd_get_buffer gb  /**< [in] callback when writer needs more output space */

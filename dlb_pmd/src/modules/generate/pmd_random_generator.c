@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -142,7 +142,6 @@ pop_count
 #elif defined (_MSC_VER)
     return __popcnt(a);
 #else
-    /* default implementation is lifted from the intrinsics DLB_Uones32 function */
     a = a - ((a >> 1u) & 0x55555555);
     a = (((a >> 2u) & 0x33333333) + (a & 0x33333333));
     a = (((a >> 4u) + a) & 0x0f0f0f0f);

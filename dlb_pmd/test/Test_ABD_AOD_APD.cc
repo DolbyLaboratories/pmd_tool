@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,8 @@
  * @file Test_ABD_AOD_APD.cc
  * @brief Test different combinations of beds, objects and presentations
  */
+
+#define _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
 
 #include "dlb_pmd_api.h"
 #include "src/model/pmd_model.h"
@@ -139,6 +141,8 @@ static BitCapacity estimate_pcmklv_capacity(unsigned int frame_length, bool ispa
     
     return BitCapacity(mtx0_bits, num_bits);
 }
+
+
 
 
 /**
@@ -654,13 +658,13 @@ TEST_P(ElementTest, combo_testing)
 }
 
 
+
 INSTANTIATE_TEST_CASE_P(PMD_ElementPresPCM, ElementTest,
            testing::Combine(testing::Range(MAX_BASIC_BEDS/4, MAX_BEDS/4+1),
                             testing::Range(MAX_BASIC_OBJS/4, MAX_OBJS/4+1),
                             testing::Range(MAX_BASIC_PRES/4, MAX_PRES/16+1, 2),
                             testing::Range(TestModel::FIRST_TEST_TYPE,
                                            TestModel::TEST_PCM_CHAN_12000+1)));
-
 
 INSTANTIATE_TEST_CASE_P(PMD_SADM_ElementPres, ElementTest,
            testing::Combine(testing::Range(MAX_BASIC_BEDS/4, MAX_BEDS/4+1),
@@ -680,5 +684,3 @@ INSTANTIATE_TEST_CASE_P(PMD_SADM_ElementPresPCM, ElementTest,
                             testing::Range((int)TestModel::TEST_SADM_PCM_PAIR_2398,
                                            (int)TestModel::TEST_SADM_PCM_CHAN_3000+1)));
 #endif
-
-

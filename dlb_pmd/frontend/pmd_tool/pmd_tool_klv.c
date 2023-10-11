@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@
 #include <assert.h>
 
 #include "dlb_pmd_api.h"
+#include "dlb_pmd_model_combo.h"
 #include "dlb_pmd_klv.h"
 #include "pmd_tool_klv.h"
 
@@ -53,15 +54,22 @@
 
 int
 klv_read
-    (const char          *filename
-    ,      dlb_pmd_model *model
+    (const char                 *filename
+    ,dlb_pmd_model_combo        *model
     )
 {
-    uint8_t      *buffer;
-    unsigned int  length;
-    size_t        res;
-    long          pos;
-    FILE         *f;
+    dlb_pmd_model   *pmd_model;
+    uint8_t         *buffer;
+    unsigned int     length;
+    size_t           res;
+    long             pos;
+    FILE            *f;
+
+    if (dlb_pmd_model_combo_get_writable_pmd_model(model, &pmd_model, PMD_TRUE))
+    {
+        printf("Could not get writable PMD model\n");
+        return 1;
+    }
 
     f = fopen(filename, "rb");
     if (NULL == f)
@@ -102,10 +110,10 @@ klv_read
         assert((long)res == pos);
     }
 
-    res = dlb_klvpmd_read_payload(buffer, length, model, 1, NULL, NULL);
+    res = dlb_klvpmd_read_payload(buffer, length, pmd_model, 1, NULL, NULL);
     if (res)
     {
-        const char *errmsg = dlb_pmd_error(model);
+        const char *errmsg = dlb_pmd_error(pmd_model);
         puts(errmsg);
     }
 
@@ -117,14 +125,21 @@ klv_read
 
 int
 klv_write
-    (const char                       *filename
-    ,      dlb_pmd_model              *model
-    ,      dlb_klvpmd_universal_label  ul
+    (const char                 *filename
+    ,dlb_pmd_model_combo        *model
+    ,dlb_klvpmd_universal_label  ul
     )
 {
-    unsigned char *buffer  = malloc(KLV_BUF_SIZE);
-    int            length;
-    FILE          *f;
+    const dlb_pmd_model *pmd_model;
+    unsigned char       *buffer  = malloc(KLV_BUF_SIZE);
+    int                  length;
+    FILE                *f;
+
+    if (dlb_pmd_model_combo_ensure_readable_pmd_model(model, &pmd_model, PMD_TRUE))
+    {
+        printf("Could not ensure readable PMD model\n");
+        return 1;
+    }
 
     f = fopen(filename, "wb");
     if (NULL == f)
@@ -134,7 +149,7 @@ klv_write
         return 1;
     }
 
-    length = dlb_klvpmd_write_all(model, 0, buffer, KLV_BUF_SIZE, ul);
+    length = dlb_klvpmd_write_all((dlb_pmd_model *)pmd_model, 0, buffer, KLV_BUF_SIZE, ul); /* const cast */
     if (length)
     {
         fwrite(buffer, 1, length, f);

@@ -1,0 +1,14 @@
+target_sources(gtest
+    PRIVATE
+        gtest-linked_ptr.h
+        gtest-port.h
+        gtest-death-test-internal.h
+        gtest-filepath.h
+        gtest-internal.h
+        gtest-param-util.h
+        gtest-param-util-generated.h
+        gtest-port-arch.h
+        gtest-string.h
+        gtest-tuple.h
+        gtest-type-util.h
+)

@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -115,6 +115,7 @@ public:
 
         TEST_PCM_PAIR_12000,
         TEST_PCM_CHAN_12000,
+
 
         NUM_PMD_TEST_TYPES,
 
@@ -250,6 +251,7 @@ public:
      */
     void set_ed2_system (const TestModel& other);
     
+
     /**
      * @brief apply updates to the model
      */

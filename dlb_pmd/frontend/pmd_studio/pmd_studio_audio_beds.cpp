@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,11 +35,17 @@
 
 #include "ui.h"
 #include "dlb_pmd_api.h"
-#include "pmd_studio_limits.h"
+#include "pmd_studio_common_defs.h"
 #include "pmd_studio.h"
 #include "pmd_studio_audio_beds.h"
 #include "pmd_studio_audio_beds_pvt.h"
+#include "pmd_studio_settings_pvt.h"
 #include <stdio.h>
+#include <vector>
+#include <boost/algorithm/string/predicate.hpp>
+#include <sstream>
+
+using namespace std;
 
 static
 dlb_pmd_success
@@ -49,7 +55,7 @@ add_audio_bed
 
 /* Call backs */
 
-static
+inline
 void
 onEnableBed
     (uiCheckbox *en
@@ -64,7 +70,7 @@ onEnableBed
 }
 
 
-static
+inline
 void
 onBedConfigUpdated
     (uiCombobox *c
@@ -96,7 +102,7 @@ onBedConfigUpdated
 }
 
 
-static
+inline
 void
 onBedStartUpdated
     (uiCombobox *c
@@ -118,8 +124,30 @@ onBedStartUpdated
     pmd_studio_update_model(abed->audio_beds->studio);
 }
 
+inline
+void
+updateStudioAbedNameFromUi
+    (pmd_studio_audio_bed *abed
+    )
+{
+    BedClassifier classifier = static_cast<BedClassifier>(uiComboboxSelected(abed->classifier));
+    std::string pmdBedLabel = generatePMDBedLabel(uiEntryText(abed->name), classifier);
+    snprintf(abed->bed.name, sizeof(abed->bed.name), "%s", pmdBedLabel.c_str());
+    pmd_studio_update_model(abed->audio_beds->studio);
+}
 
-static
+inline
+void
+updateUiFromStudioAbedName
+    (pmd_studio_audio_bed *abed
+    )
+{
+    auto [classifier, label] = parsePMDBedLabel(abed->bed.name);
+    uiComboboxSetSelected(abed->classifier, static_cast<int>(classifier));
+    uiEntrySetText(abed->name, label.c_str());
+}
+
+inline
 void
 onBedNameUpdated
     (uiEntry *e
@@ -127,10 +155,21 @@ onBedNameUpdated
     )
 {
     pmd_studio_audio_bed *abed = (pmd_studio_audio_bed *)data;
-    snprintf(abed->bed.name, sizeof(abed->bed.name), "%s", uiEntryText(e));
-    pmd_studio_update_model(abed->audio_beds->studio);
+    updateStudioAbedNameFromUi(abed);
 }
 
+inline
+void
+onBedClassUpdated
+    (uiCombobox *cb
+    ,void *data
+    )
+{
+    pmd_studio_audio_bed *abed = (pmd_studio_audio_bed *) data;
+    updateStudioAbedNameFromUi(abed);
+}
+
+inline
 void
 onBedGainUpdated
     (uiCombobox *c
@@ -158,9 +197,16 @@ onAddAudioBedButtonClicked
 
     (void)button;
 
-    if (abeds->bed_count == MAX_AUDIO_BEDS)
+#ifdef LIMITED_MODE 
+    pmd_studio_settings *settings = pmd_studio_get_settings(abeds->studio);
+    if(abeds->bed_count >= (settings->limited_mode ? 1 : MAX_AUDIO_BEDS))
+    {
+        uiMsgBoxError(abeds->window, "error setting object", settings->limited_mode ? "Max beds reached. To add more, disable limited mode in settings" : "max beds reached");
+#else
+    if(abeds->bed_count == MAX_AUDIO_BEDS)
     {
         uiMsgBoxError(abeds->window, "error setting object", "max beds reached");
+#endif
     }
     else 
     {
@@ -215,7 +261,12 @@ add_audio_bed
     pmd_studio_config *configs;
     unsigned int num_configs = get_pmd_studio_configs(abeds->studio, &configs);
 
+#ifdef LIMITED_MODE
+    pmd_studio_settings *settings = pmd_studio_get_settings(abeds->studio);
+    if (abeds->bed_count == (settings->limited_mode ? 1 : MAX_AUDIO_BEDS))
+#else
     if (abeds->bed_count == MAX_AUDIO_BEDS)
+#endif
     {
         return(PMD_FAIL);
     }
@@ -234,6 +285,36 @@ add_audio_bed
     uiCheckboxOnToggled(abed->enable, onEnableBed, abed);
     uiCheckboxSetChecked(abed->enable, abed->enabled);
 
+    abed->classifier = uiNewCombobox();
+
+    for(int i=0; i<static_cast<int>(BedClassifier::LAST); i++)
+    {
+        if(i == static_cast<int>(BedClassifier::DEFAULT))
+        {
+            uiComboboxAppend(abed->classifier, "Default");
+        } 
+        else 
+        {
+            // Search for description definition
+            auto c = static_cast<BedClassifier>(i);
+            for(auto [classifier, tag, description] : BED_CLASSIFIER_TAG_MAP)
+            {
+                if(classifier == c)
+                {
+                    // Found description.
+                    uiComboboxAppend(abed->classifier, description.c_str());
+                    break;
+                }
+            }
+        }
+    }
+
+    uiComboboxOnSelected(abed->classifier, onBedClassUpdated, abed);
+
+    abed->name = uiNewEntry();
+
+    // With classifier and name initialized, now parse bed label and update.
+    updateUiFromStudioAbedName(abed);
 
     abed->cfg = uiNewCombobox();
     for (i = 0 ; i < num_configs ; i++)
@@ -258,22 +339,31 @@ add_audio_bed
         snprintf(tmp, sizeof(tmp), "%0.1f", ((double)(62 - i) * 0.5) - 25.0);
         uiComboboxAppend(abed->gain, tmp);
     }
-    uiComboboxAppend(abed->gain, "-inf");
+
+#ifdef LIMITED_MODE
+    if(settings->limited_mode == PMD_FALSE)
+    {
+        uiComboboxAppend(abed->gain, "-inf");
+    }
+#else  
+    uiComboboxAppend(abed->gain, "-inf");       
+#endif
 
     uiComboboxSetSelected(abed->gain, 12); /* default to 0.0 dB */
     uiComboboxOnSelected(abed->gain, onBedGainUpdated, abed);
 
     //uiGridAppend(gbed, uiControl(uiNewLabel("  ")), 4, top, 1, 1, 0, uiAlignFill, 0, uiAlignFill);
-    abed->name = uiNewEntry();
-    uiEntrySetText(abed->name, (const char*)abed->bed.name);
+
     uiEntryOnChanged(abed->name, onBedNameUpdated, abed);
 
-    uiGridAppend(abeds->grid, uiControl(abed->label),  0, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
-    uiGridAppend(abeds->grid, uiControl(abed->enable), 1, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
-    uiGridAppend(abeds->grid, uiControl(abed->cfg),    2, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
-    uiGridAppend(abeds->grid, uiControl(abed->start),  3, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
-    uiGridAppend(abeds->grid, uiControl(abed->gain),   4, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);    
-    uiGridAppend(abeds->grid, uiControl(abed->name),   5, row, 1, 1, 1, uiAlignFill, 1, uiAlignCenter);
+    i=0;
+    uiGridAppend(abeds->grid, uiControl(abed->label),       i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
+    uiGridAppend(abeds->grid, uiControl(abed->enable),      i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
+    uiGridAppend(abeds->grid, uiControl(abed->classifier),  i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
+    uiGridAppend(abeds->grid, uiControl(abed->cfg),         i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
+    uiGridAppend(abeds->grid, uiControl(abed->start),       i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
+    uiGridAppend(abeds->grid, uiControl(abed->gain),        i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);    
+    uiGridAppend(abeds->grid, uiControl(abed->name),        i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignCenter);
 
     // Add bed to presentations bed comboboxes if intialized enabled
     if(abed->enabled) pmd_studio_presentations_bed_enable(abed->bed.id, PMD_TRUE, abeds->studio);
@@ -326,11 +416,13 @@ pmd_studio_audio_beds_init
     uiGridSetPadded((*ab1)->grid, 1);
     uiBoxAppend(vbox, uiControl((*ab1)->grid), 0);
 
-    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("En")),     1, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
-    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Config")), 2, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
-    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Start")),  3, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
-    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Gain")),   4, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
-    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Name")),   5, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+    int i=1;
+    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("En")),     i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Class")),  i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Config")), i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Start")),  i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Gain")),   i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Name")),   i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
 
     (*ab1)->bed_count = 0;
     
@@ -365,20 +457,26 @@ pmd_studio_audio_beds_refresh_ui
         uiCheckboxSetChecked (abed->enable,  abed->enabled);
         uiComboboxSetSelected(abed->start,   abed->bed.sources[0].source - 1);
         /* Calculate bed gain index from dB float */
+#ifdef LIMITED_MODE
+        pmd_studio_settings *settings = pmd_studio_get_settings(abeds->studio);
+        unsigned int index_limit = settings->limited_mode ? 62 : 63;
+#else
+        unsigned int index_limit = 63;
+#endif
         if (abed->bed.sources[0].gain == -INFINITY)
         {
-            uiComboboxSetSelected(abed->gain, 63);
+            uiComboboxSetSelected(abed->gain, index_limit);
         }
         else
         {
             gain_index = 12 - (2 * (unsigned int)(abed->bed.sources[0].gain));
-            if (gain_index > 63)
+            if (gain_index > index_limit)
             {
-                gain_index = 63;
+                gain_index = index_limit;
             }
             uiComboboxSetSelected(abed->gain, gain_index);
         }
-        uiEntrySetText(abed->name, abed->bed.name);
+        updateUiFromStudioAbedName(abed);
     }
 }
 
@@ -440,12 +538,14 @@ pmd_studio_audio_beds_reset
         uiGridDelete(abeds->grid, uiControl(abeds->beds[i].gain));
         uiGridDelete(abeds->grid, uiControl(abeds->beds[i].start));
         uiGridDelete(abeds->grid, uiControl(abeds->beds[i].enable));
+        uiGridDelete(abeds->grid, uiControl(abeds->beds[i].classifier));
         uiControlDestroy(uiControl(abeds->beds[i].label));
         uiControlDestroy(uiControl(abeds->beds[i].cfg));
         uiControlDestroy(uiControl(abeds->beds[i].name));
         uiControlDestroy(uiControl(abeds->beds[i].gain));
         uiControlDestroy(uiControl(abeds->beds[i].start));
         uiControlDestroy(uiControl(abeds->beds[i].enable));
+        uiControlDestroy(uiControl(abeds->beds[i].classifier));
     }
     abeds->bed_count = 0;
 }
@@ -463,6 +563,7 @@ pmd_studio_audio_beds_enable
         uiControlEnable(uiControl(abeds->beds[i].start));
         uiControlEnable(uiControl(abeds->beds[i].enable));
         uiControlEnable(uiControl(abeds->beds[i].name));
+        uiControlEnable(uiControl(abeds->beds[i].classifier));
     }
 
 }
@@ -481,6 +582,7 @@ pmd_studio_audio_beds_disable
         uiControlDisable(uiControl(abeds->beds[i].start));
         uiControlDisable(uiControl(abeds->beds[i].enable));
         uiControlDisable(uiControl(abeds->beds[i].name));
+        uiControlDisable(uiControl(abeds->beds[i].classifier));
         if(!live_mode)
         {
             uiControlDisable(uiControl(abeds->beds[i].gain));
@@ -766,10 +868,59 @@ pmd_studio_set_bed_gain
         if(bed->bed.id == eid)
         {
             combo_index = pmd_studio_gaindb_to_combobox_index(gain_db);
+#ifdef LIMITED_MODE
+            pmd_studio_settings *settings = pmd_studio_get_settings(studio);
+            if(settings->limited_mode)
+            {
+                combo_index = combo_index > 62 ? 62 : combo_index;
+            }
+#endif
             uiComboboxSetSelected(bed->gain, combo_index);
             onBedGainUpdated(bed->gain, bed);
             return PMD_SUCCESS;
         }
     }
     return PMD_FAIL;
+}
+
+
+// Scans for and parses bed classifier strings in label
+std::tuple<BedClassifier, std::string> 
+parsePMDBedLabel
+    (std::string label
+    )
+{
+    for(auto [classifier, tag, description] : BED_CLASSIFIER_TAG_MAP)
+    {
+        if(tag.size() > label.size()) continue;
+        if(boost::algorithm::ends_with(label, tag))
+        {
+            std::string text = label.substr(0, label.size() - tag.size());
+            return{classifier, text};
+        }
+    }
+    // Default bed classifier is first defined classifier
+    return {BedClassifier::DEFAULT, label};
+}
+
+// Generates PMD label with bed classifier string
+std::string 
+generatePMDBedLabel
+    (std::string label
+    ,BedClassifier bedClass
+    )
+{
+    if(bedClass == BedClassifier::DEFAULT) return label;
+
+    std::stringstream ss;
+    ss << label;
+    for(auto [classifier, tag, description] : BED_CLASSIFIER_TAG_MAP)
+    {
+        if(classifier == bedClass)
+        {
+            ss << tag;
+            break;
+        }
+    }
+    return ss.str();
 }

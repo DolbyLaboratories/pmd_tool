@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -86,11 +86,9 @@ augmentor_init
 {
     if (!mdw->mem)
     {
-        dlb_pmd_model_constraints limits;
         size_t sz;
 
-        dlb_pmd_get_constraints(mdw->current.model, &limits);
-        sz = dlb_pcmpmd_augmentor_query_mem2(args->sadm, &limits);
+        sz = dlb_pcmpmd_augmentor_query_mem(args->sadm);
         mdw->mem = malloc(sz);
     }
     if (!mdw->mem)

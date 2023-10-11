@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,14 +36,20 @@
 #ifndef __PMD_STUDIO_DEVICE_SETTINGS_H__
 #define __PMD_STUDIO_DEVICE_SETTINGS_H__
 
+#include "pmd_studio_audio_outputs.h"
+#include "pmd_studio.h"
+
 #define MAX_STREAM_NAME_LENGTH (128)
-#define MAX_NUM_OUTPUT_STREAMS (3) // actual maximum number of simultaneous output streams
+#define MAX_HOSTNAME_LENGTH (254)
+#define MAX_NUM_OUTPUT_STREAMS (6)
+#define MAX_ADDRESS_STRING_LEN (40) // COPES WITH IPV6
 
 enum class PMD_STUDIO_STREAM_CODEC
 {
     AES67_L16 = 0,
     AES67_L24,
     AM824,
+    SMPTE2110_41,
     NUM_CODECS
 };
 
@@ -52,10 +58,15 @@ struct pmd_studio_device_settings
     char input_stream_name[MAX_STREAM_NAME_LENGTH];
     unsigned int num_output_streams;
     char output_stream_name[MAX_NUM_OUTPUT_STREAMS][MAX_STREAM_NAME_LENGTH];
+    char output_stream_address[MAX_NUM_OUTPUT_STREAMS][MAX_ADDRESS_STRING_LEN];
     enum PMD_STUDIO_STREAM_CODEC output_stream_codec[MAX_NUM_OUTPUT_STREAMS];
     unsigned int num_output_channel[MAX_NUM_OUTPUT_STREAMS];
     unsigned int num_output_channels;
-    char interface_name[IFNAMSIZ];
+    char media_interface_name[IFNAMSIZ];
+    char manage_interface_name[IFNAMSIZ];
+    unsigned int ptp_domain;
+    unsigned int enabled_services;
+    char nmos_registry[MAX_HOSTNAME_LENGTH];
 };
 
 #endif // __PMD_STUDIO_DEVICE_SETTINGS_H__

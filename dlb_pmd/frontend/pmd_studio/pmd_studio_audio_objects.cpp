@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,11 +36,12 @@
 #include <math.h>
 #include "ui.h"
 #include "dlb_pmd_api.h"
-#include "pmd_studio_limits.h"
+#include "pmd_studio_common_defs.h"
 #include "pmd_studio.h"
 #include "pmd_studio_audio_presentations.h"
 #include "pmd_studio_audio_objects.h"
 #include "pmd_studio_audio_objects_pvt.h"
+#include "pmd_studio_settings_pvt.h"
 
 static
 dlb_pmd_success
@@ -122,6 +123,25 @@ onObjectGainUpdated
 
 }
 
+#ifdef LIMITED_MODE
+static
+void 
+checkObjectBounds
+    (pmd_studio_audio_object *aobj
+    )
+{
+    pmd_studio_settings *settings = pmd_studio_get_settings(aobj->objects->studio);
+    if(settings->limited_mode)
+    {
+        if(aobj->object.y == 1.0 && std::abs(aobj->object.x) == 1.0 && aobj->object.z == 0.0)
+        {
+            // Avoid panning into front corners
+            aobj->object.x = aobj->object.x > 0 ? 0.9 : -0.9;
+            uiComboboxSetSelected(aobj->x, (int)(aobj->object.x * 10.0f) + 10.0f);
+        }
+    }
+}
+#endif
 
 static
 void
@@ -132,6 +152,9 @@ onObjectXUpdated
 {
     pmd_studio_audio_object *aobj = (pmd_studio_audio_object *)data;
     aobj->object.x = ((float)uiComboboxSelected(c) -10.0f) / 10.0f;
+#ifdef LIMITED_MODE
+    checkObjectBounds(aobj);
+#endif
     pmd_studio_update_model(aobj->objects->studio);
 }
 
@@ -145,6 +168,9 @@ onObjectYUpdated
 {
     pmd_studio_audio_object *aobj = (pmd_studio_audio_object *)data;
     aobj->object.y = ((float)uiComboboxSelected(c) -10.0f) / 10.0f;
+#ifdef LIMITED_MODE
+    checkObjectBounds(aobj);
+#endif
     pmd_studio_update_model(aobj->objects->studio);
 }
 
@@ -158,6 +184,9 @@ onObjectZUpdated
 {
     pmd_studio_audio_object *aobj = (pmd_studio_audio_object *)data;
     aobj->object.z = (float)uiComboboxSelected(c) / 10.0f;
+#ifdef LIMITED_MODE
+    checkObjectBounds(aobj);
+#endif
     pmd_studio_update_model(aobj->objects->studio);
 }
 
@@ -444,7 +473,15 @@ add_audio_object
         snprintf(tmp, sizeof(tmp), "%0.1f", ((double)i * 0.5) - 25.0);
         uiComboboxAppend(aobj->gain, tmp);
     }
+#ifdef LIMITED_MODE
+    pmd_studio_settings *settings = pmd_studio_get_settings(aobjs->studio);
+    if (!settings->limited_mode)
+    {
+        uiComboboxAppend(aobj->gain, "-inf");
+    }
+#else
     uiComboboxAppend(aobj->gain, "-inf");
+#endif
 
     uiComboboxSetSelected(aobj->gain, 12); /* default to 0.0 dB */
     uiComboboxOnSelected(aobj->gain, onObjectGainUpdated, aobj);
@@ -974,6 +1011,13 @@ pmd_studio_set_obj_gain
         if(obj->object.id == eid)
         {
             int combo_index =  pmd_studio_gaindb_to_combobox_index(gain_db);
+#ifdef LIMITED_MODE
+            pmd_studio_settings *settings = pmd_studio_get_settings(studio);
+            if (settings->limited_mode)
+            {
+                combo_index = combo_index > 62 ? 62 : combo_index;
+            }
+#endif
             uiComboboxSetSelected(obj->gain, combo_index);
             onObjectGainUpdated(obj->gain, obj);
             return PMD_SUCCESS;

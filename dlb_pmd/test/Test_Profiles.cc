@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2023, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,8 @@
  * @file Test_Profiles.cc
  * @brief Test Profiles and levels
  */
+
+#define _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
 
 #include "dlb_pmd_generate.h"
 #include "TestModel.hh"
