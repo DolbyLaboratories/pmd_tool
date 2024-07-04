@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2017-2020, Dolby Laboratories Inc.
+ * Copyright (c) 2017-2020, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

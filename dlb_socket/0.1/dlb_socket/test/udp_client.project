@@ -1,0 +1,5 @@
+udp_client = ProjectSpec(
+    actions=mbuild_compile_and_link,
+    depends=[],
+    build_configuration=mbuild_standard
+)

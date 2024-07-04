@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2021, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2021, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +64,7 @@ extern "C"{
 
 pmd_studio_error_code c;
 
-#define PMD_STUDIO_VERSION "1.8.2"
+#define PMD_STUDIO_VERSION "1.8.3"
 
 
 const char* pmd_studio_error_messages[PMD_STUDIO_NUM_ERROR_MESSAGES] =

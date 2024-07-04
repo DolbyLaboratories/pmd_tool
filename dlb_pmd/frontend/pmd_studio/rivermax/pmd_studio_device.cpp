@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2023, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +68,7 @@ extern "C"{
 using namespace std;
 
 #define SAMPLE_RATE 48000
-#define SADM_DATA_ITEM_TYPE 0x3FF000 // First experimental data item type as per March 2020 Draft of SMPTE 2110-41
+#define SADM_DATA_ITEM_TYPE 0x000100 // Value from preliminary spec of SMPTE 2110-41
 
 const char
 *pmd_studio_device_get_settings_menu_name(void)
@@ -182,7 +183,7 @@ bool Tx41Callback(void *data,
 
     if (device->output_stream_info[tx_index].metadata.dataItemTypes.front() != SADM_DATA_ITEM_TYPE)
     { 
-        pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Wrong DIT, Only sADM supported");
+        pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Wrong DIT, Only S-ADM supported");
     }
 
     // Copy ring buffer associated with this output
@@ -790,7 +791,7 @@ pmd_studio_device_init(
                 device->output_stream_info[i].metadata.maxPayloadSizeBytes = MAX_DATA_BYTES;
                 device->output_stream_info[i].metadata.packetTimeMs = 40.0; // set to 25fps by default, will be changed by output stream
                 device->output_stream_info[i].metadata.dataItemTypes.clear();
-                device->output_stream_info[i].metadata.dataItemTypes.push_back(SADM_DATA_ITEM_TYPE); // Hardcode to SADM for now
+                device->output_stream_info[i].metadata.dataItemTypes.push_back(SADM_DATA_ITEM_TYPE); // Hardcode to S-ADM for now
              break;
             default:
                 pmd_studio_error(PMD_STUDIO_ERR_ASSERT, "Unknown Codec");

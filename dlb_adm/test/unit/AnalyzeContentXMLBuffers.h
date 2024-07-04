@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2023-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2023-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -392,3 +392,247 @@ static std::string packformat_wrong = R"(
     </profileList>
   </audioFormatExtended>
 </frame>)";
+
+static std::string altValSet = R"(
+<?xml version="1.0" encoding="UTF-8"?>
+<frame version="ITU-R_BS.2125-1">
+  <frameHeader>
+    <frameFormat frameFormatID="FF_00000000001" type="full" start="00:00:00.00000" duration="00:00:00.01920S48000" timeReference="local" flowID="a7ac074b-2e21-4f7f-b08b-3c1b59d61959">
+    </frameFormat>
+    <transportTrackFormat transportID="TP_0001" transportName="PMD Audio Interface" numIDs="10" numTracks="10">
+      <audioTrack trackID="1" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="2" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="3" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="4" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="5" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="6" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="7" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="8" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="9" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="10" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_0000000A</audioTrackUIDRef>
+      </audioTrack>
+    </transportTrackFormat>
+    <profileList>
+      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>
+  </frameHeader>
+  <audioFormatExtended version="ITU-R_BS.2076-3">
+    <audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="English" audioProgrammeLanguage="eng">
+      <audioProgrammeLabel language="eng">English</audioProgrammeLabel>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1004</audioContentIDRef>
+    </audioProgramme>
+    <audioProgramme audioProgrammeID="APR_1002" audioProgrammeName="Spanish" audioProgrammeLanguage="spa">
+      <audioProgrammeLabel language="spa">Spanish</audioProgrammeLabel>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1005</audioContentIDRef>
+      <alternativeValueSetIDRef>AVS_1001_0001</alternativeValueSetIDRef>
+    </audioProgramme>
+    <audioProgramme audioProgrammeID="APR_1003" audioProgrammeName="Chinese" audioProgrammeLanguage="und">
+      <audioProgrammeLabel language="und">Chinese</audioProgrammeLabel>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1006</audioContentIDRef>
+      <alternativeValueSetIDRef>AVS_1001_0002</alternativeValueSetIDRef>
+    </audioProgramme>
+    <audioProgramme audioProgrammeID="APR_1004" audioProgrammeName="English VDS" audioProgrammeLanguage="eng">
+      <audioProgrammeLabel language="eng">English VDS</audioProgrammeLabel>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1004</audioContentIDRef>
+      <audioContentIDRef>ACO_1007</audioContentIDRef>
+    </audioProgramme>
+    <audioContent audioContentID="ACO_1001" audioContentName="English" audioContentLanguage="eng">
+      <dialogue mixedContentKind="2">2</dialogue>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1001</audioObjectIDRef>
+    </audioContent>
+    <audioContent audioContentID="ACO_1004" audioContentName="English Dialog" audioContentLanguage="eng">
+      <dialogue dialogueContentKind="1">1</dialogue>
+      <loudnessMetadata>
+        <dialogueLoudness>-23.00</dialogueLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1004</audioObjectIDRef>
+    </audioContent>
+    <audioContent audioContentID="ACO_1005" audioContentName="Spanish Dialog" audioContentLanguage="spa">
+      <dialogue dialogueContentKind="1">1</dialogue>
+      <loudnessMetadata>
+        <dialogueLoudness>-23.00</dialogueLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1005</audioObjectIDRef>
+    </audioContent>
+    <audioContent audioContentID="ACO_1006" audioContentName="Chinese Dialog" audioContentLanguage="und">
+      <dialogue dialogueContentKind="1">1</dialogue>
+      <loudnessMetadata>
+        <dialogueLoudness>-23.00</dialogueLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1006</audioObjectIDRef>
+    </audioContent>
+    <audioContent audioContentID="ACO_1007" audioContentName="English VDS" audioContentLanguage="eng">
+      <dialogue dialogueContentKind="4">1</dialogue>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1007</audioObjectIDRef>
+    </audioContent>
+    <audioObject audioObjectID="AO_1001" audioObjectName="English" interact="0">
+      <alternativeValueSet alternativeValueSetID="AVS_1001_0001">
+        <gain gainUnit="dB">0.00</gain>
+      </alternativeValueSet>
+      <alternativeValueSet alternativeValueSetID="AVS_1001_0002">
+        <gain gainUnit="dB">0.00</gain>
+      </alternativeValueSet>
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1004" audioObjectName="English Dialog" interact="0">
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00031004</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1005" audioObjectName="Spanish Dialog" interact="0">
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00031005</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1006" audioObjectName="Chinese Dialog" interact="0">
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00031006</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1007" audioObjectName="English VDS" interact="0">
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00031007</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_0000000A</audioTrackUIDRef>
+    </audioObject>
+    <audioPackFormat audioPackFormatID="AP_00031004" audioPackFormatName="English Dialog" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031004</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioPackFormat audioPackFormatID="AP_00031005" audioPackFormatName="Spanish Dialog" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031005</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioPackFormat audioPackFormatID="AP_00031006" audioPackFormatName="Chinese Dialog" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031006</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioPackFormat audioPackFormatID="AP_00031007" audioPackFormatName="English VDS" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031007</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031004" audioChannelFormatName="English Dialog" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031004_00000001" lstart="00:00:00.00000" lduration="00:00:00.01920S48000">
+        <gain gainUnit="dB">0.00</gain>
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031005" audioChannelFormatName="Spanish Dialog" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031005_00000001" lstart="00:00:00.00000" lduration="00:00:00.01920S48000">
+        <gain gainUnit="dB">0.00</gain>
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031006" audioChannelFormatName="Chinese Dialog" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031006_00000001" lstart="00:00:00.00000" lduration="00:00:00.01920S48000">
+        <gain gainUnit="dB">0.00</gain>
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031007" audioChannelFormatName="English VDS" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031007_00000001" lstart="00:00:00.00000" lduration="00:00:00.01920S48000">
+        <gain gainUnit="dB">0.00</gain>
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioTrackUID UID="ATU_00000001">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000002">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000003">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010003</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000004">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010004</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000005">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010005</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000006">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010006</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000007">
+      <audioPackFormatIDRef>AP_00031004</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031004</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000008">
+      <audioPackFormatIDRef>AP_00031005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031005</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000009">
+      <audioPackFormatIDRef>AP_00031006</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031006</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_0000000A">
+      <audioPackFormatIDRef>AP_00031007</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031007</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <profileList>
+      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>
+  </audioFormatExtended>
+</frame>
+)";

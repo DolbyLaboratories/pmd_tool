@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2020, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2020, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +33,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
+/**
+ * @file pmd_ctrl_c.c
+ * @brief OSX implementation of the CTRL-C handler
+ */
 
 
 #include <signal.h>

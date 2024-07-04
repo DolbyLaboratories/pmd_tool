@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2020-2023, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 #include "dlb_adm/src/adm_xml/AttributeValue.h"
 #include "dlb_adm/src/adm_xml/AttributeDescriptor.h"
 #include "dlb_adm/src/adm_xml/XMLContainerFlattener.h"
+#include "dlb_adm/src/adm_xml/XMLContainerComplementaryFlattener.h"
 #include "dlb_adm/src/adm_identity/AdmIdTranslator.h"
 #include "dlb_adm/src/core_model/dlb_adm_core_model.h"
 
@@ -802,6 +803,28 @@ dlb_adm_container_flatten
     ActionFn f = [&]
     {
         XMLContainerFlattener flattener(*container, *flattended_container);
+        return flattener.Flatten();
+    };
+
+    return unwind_protect(f);
+}
+
+int
+dlb_adm_container_flatten_complementary
+    (dlb_adm_xml_container      *container
+    ,dlb_adm_xml_container      *flattended_container
+    )
+{
+    if  (  container == nullptr
+        || flattended_container == nullptr
+        )
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    ActionFn f = [&]
+    {
+        XMLContainerComplementaryFlattener flattener(*container, *flattended_container);
         return flattener.Flatten();
     };
 

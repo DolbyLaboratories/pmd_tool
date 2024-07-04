@@ -1,6 +1,6 @@
 /************************************************************************
  * dlb_buffer
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2011-2013, Dolby Laboratories Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
+
 #include "dlb_buffer/include/dlb_buffer.h"
 #include "dlb_buffer/include/internal/dlb_buffer_convert.h"
 #include "dlb_intrinsics.h"

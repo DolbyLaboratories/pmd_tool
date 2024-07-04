@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2020-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -960,6 +960,9 @@ static const char complementaryObjectsXMLBuffer[] GTEST_ATTRIBUTE_UNUSED_ =
 "    <audioProgramme audioProgrammeID=\"APR_1001\" audioProgrammeName=\"audioProgramme_1\" audioProgrammeLanguage=\"eng\">\n"
 "      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
 "      <audioContentIDRef>ACO_1002</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1003</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1004</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1005</audioContentIDRef>\n"
 "      <audioProgrammeLabel language=\"eng\">English</audioProgrammeLabel>\n"
 "      <audioProgrammeLabel language=\"fre\">Anglais</audioProgrammeLabel>\n"
 "      <audioProgrammeLabel language=\"ita\">Inglese</audioProgrammeLabel>\n"
@@ -2468,5 +2471,1177 @@ static const char broadcastMixXMLBuffer[] GTEST_ATTRIBUTE_UNUSED_ =
 "  </audioFormatExtended>\n"
 "</frame>\n"
 ;
+
+static const char multipleComplementaryBuffer[] GTEST_ATTRIBUTE_UNUSED_ =
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+"<frame version=\"ITU-R_BS.2125-1\">\n"
+"  <frameHeader>\n"
+"    <frameFormat frameFormatID=\"FF_00000001\" type=\"full\" start=\"00:00:00.00000S48000\" duration=\"00:00:00.00960S48000\" flowID=\"b52b1102-418d-4b3e-8437-482ef0490db0\" timeReference=\"local\"></frameFormat>\n"
+"    <transportTrackFormat transportID=\"TP_0001\" transportName=\"SDI\" numIDs=\"10\" numTracks=\"10\">\n"
+"      <audioTrack trackID=\"1\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"2\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"3\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"4\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"5\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"6\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"7\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"8\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"9\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"10\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_0000000a</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"    </transportTrackFormat>\n"
+"  </frameHeader>\n"
+"  <audioFormatExtended version=\"ITU-R_BS.2076-3\">\n"
+"    <profileList>\n"
+"      <profile profileName=\"AdvSS Emission ADM and S-ADM Profile\" profileVersion=\"1\" profileLevel=\"1\">ITU-R BS.[ADM-NGA-Emission]-X</profile>\n"
+"    </profileList>\n"
+"    <audioPackFormat audioPackFormatID=\"AP_00031001\" audioPackFormatName=\"audioPackFormat_1\" typeLabel=\"0003\">\n"
+"      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>\n"
+"    </audioPackFormat>\n"
+"    <audioPackFormat audioPackFormatID=\"AP_00031002\" audioPackFormatName=\"audioPackFormat_2\" typeLabel=\"0003\">\n"
+"      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>\n"
+"    </audioPackFormat>\n"
+"    <audioPackFormat audioPackFormatID=\"AP_00031003\" audioPackFormatName=\"audioPackFormat_3\" typeLabel=\"0003\">\n"
+"      <audioChannelFormatIDRef>AC_00031003</audioChannelFormatIDRef>\n"
+"    </audioPackFormat>\n"
+"    <audioPackFormat audioPackFormatID=\"AP_00031004\" audioPackFormatName=\"audioPackFormat_4\" typeLabel=\"0003\">\n"
+"      <audioChannelFormatIDRef>AC_00031004</audioChannelFormatIDRef>\n"
+"    </audioPackFormat>\n"
+"    <audioProgramme audioProgrammeID=\"APR_1001\" audioProgrammeName=\"audioProgramme_1\" audioProgrammeLanguage=\"und\">\n"
+"      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1002</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1003</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1004</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1005</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1006</audioContentIDRef>\n"
+"      <audioProgrammeLabel language=\"eng\">Standard</audioProgrammeLabel>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-16.75000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"    </audioProgramme>\n"
+"    <audioProgramme audioProgrammeID=\"APR_1002\" audioProgrammeName=\"audioProgramme_2\" audioProgrammeLanguage=\"und\">\n"
+"      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1002</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1003</audioContentIDRef>\n"
+"      <audioProgrammeLabel language=\"eng\">Atmosphere Only</audioProgrammeLabel>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-21.25000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"    </audioProgramme>\n"
+"    <audioProgramme audioProgrammeID=\"APR_1003\" audioProgrammeName=\"audioProgramme_3\" audioProgrammeLanguage=\"eng\">\n"
+"      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1002</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1003</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1004</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1007</audioContentIDRef>\n"
+"      <audioProgrammeLabel language=\"eng\">AD English</audioProgrammeLabel>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-13.75000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"    </audioProgramme>\n"
+"    <audioContent audioContentID=\"ACO_1001\" audioContentName=\"audioContent_1\" audioContentLanguage=\"und\">\n"
+"      <audioContentLabel language=\"eng\">Atmosphere Home</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1001</audioObjectIDRef>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-21.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue nonDialogueContentKind=\"2\">0</dialogue>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1002\" audioContentName=\"audioContent_2\" audioContentLanguage=\"und\">\n"
+"      <audioContentLabel language=\"eng\">Atmosphere Away</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1002</audioObjectIDRef>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-21.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue nonDialogueContentKind=\"2\">0</dialogue>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1003\" audioContentName=\"audioContent_3\" audioContentLanguage=\"und\">\n"
+"      <audioContentLabel language=\"eng\">Atmosphere Neutral</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1003</audioObjectIDRef>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-21.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue nonDialogueContentKind=\"2\">0</dialogue>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1004\" audioContentName=\"audioContent_4\" audioContentLanguage=\"eng\">\n"
+"      <audioContentLabel language=\"eng\">English Commentary</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1004</audioObjectIDRef>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-24.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue dialogueContentKind=\"1\">1</dialogue>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1005\" audioContentName=\"audioContent_5\" audioContentLanguage=\"ger\">\n"
+"      <audioContentLabel language=\"eng\">German Commentary</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1005</audioObjectIDRef>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-24.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue dialogueContentKind=\"1\">1</dialogue>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1006\" audioContentName=\"audioContent_6\" audioContentLanguage=\"ita\">\n"
+"      <audioContentLabel language=\"eng\">Italian Commentary</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1006</audioObjectIDRef>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-24.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue dialogueContentKind=\"1\">1</dialogue>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1007\" audioContentName=\"audioContent_7\" audioContentLanguage=\"eng\">\n"
+"      <audioContentLabel language=\"eng\">AD English</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1007</audioObjectIDRef>\n"
+"      <loudnessMetadata>\n"
+"        <integratedLoudness>-24.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue dialogueContentKind=\"4\">1</dialogue>\n"
+"    </audioContent>\n"
+"    <audioObject audioObjectID=\"AO_1001\" audioObjectName=\"audioObject_1\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>\n"
+"      <audioComplementaryObjectGroupLabel language=\"eng\">Atmosphere</audioComplementaryObjectGroupLabel>\n"
+"      <audioComplementaryObjectIDRef>AO_1002</audioComplementaryObjectIDRef>\n"
+"      <audioComplementaryObjectIDRef>AO_1003</audioComplementaryObjectIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioObject audioObjectID=\"AO_1002\" audioObjectName=\"audioObject_2\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioObject audioObjectID=\"AO_1003\" audioObjectName=\"audioObject_6\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioObject audioObjectID=\"AO_1004\" audioObjectName=\"audioObject_3\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>\n"
+"      <audioComplementaryObjectGroupLabel language=\"eng\">Commentary</audioComplementaryObjectGroupLabel>\n"
+"      <audioComplementaryObjectIDRef>AO_1005</audioComplementaryObjectIDRef>\n"
+"      <audioComplementaryObjectIDRef>AO_1006</audioComplementaryObjectIDRef>\n"
+"    </audioObject>\n"
+"    <audioObject audioObjectID=\"AO_1005\" audioObjectName=\"audioObject_4\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioObject audioObjectID=\"AO_1006\" audioObjectName=\"audioObject_5\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00031003</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioObject audioObjectID=\"AO_1007\" audioObjectName=\"audioObject_7\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00031004</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_0000000A</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioTrackUID UID=\"ATU_00000001\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000002\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000003\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000004\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000005\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000006\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000007\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000008\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000009\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00031003</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00031003</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_0000000A\" sampleRate=\"48000\">\n"
+"      <audioPackFormatIDRef>AP_00031004</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00031004</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00031001\" audioChannelFormatName=\"audioChannelFormat_1\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00031001_00000001\" lstart=\"00:00:00.00000S48000\" lduration=\"00:00:00.00960S48000\">\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">0.00000</position>\n"
+"        <position coordinate=\"Y\">1.00000</position>\n"
+"        <position coordinate=\"Z\">0.00000</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00031002\" audioChannelFormatName=\"audioChannelFormat_2\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00031002_00000001\" lstart=\"00:00:00.00000S48000\" lduration=\"00:00:00.00960S48000\">\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">0.00000</position>\n"
+"        <position coordinate=\"Y\">1.00000</position>\n"
+"        <position coordinate=\"Z\">0.00000</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00031003\" audioChannelFormatName=\"audioChannelFormat_3\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00031003_00000001\" lstart=\"00:00:00.00000S48000\" lduration=\"00:00:00.00960S48000\">\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">0.00000</position>\n"
+"        <position coordinate=\"Y\">1.00000</position>\n"
+"        <position coordinate=\"Z\">0.00000</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00031004\" audioChannelFormatName=\"audioChannelFormat_4\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00031004_00000001\" lstart=\"00:00:00.00000S48000\" lduration=\"00:00:00.00960S48000\">\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">0.00000</position>\n"
+"        <position coordinate=\"Y\">1.00000</position>\n"
+"        <position coordinate=\"Z\">0.00000</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"  </audioFormatExtended>\n"
+"</frame>\n"
+;
+
+
+static const char complementaryAndAvsBuffer[] GTEST_ATTRIBUTE_UNUSED_ =
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+"<frame version=\"ITU-R_BS.2125-1\">\n"
+"  <frameHeader>\n"
+"    <frameFormat frameFormatID=\"FF_00000001\" type=\"full\" start=\"00:00:00.00000S48000\" duration=\"00:00:00.00960S48000\" flowID=\"b52b1102-418d-4b3e-8437-482ef0490db0\" timeReference=\"local\"></frameFormat>\n"
+"    <transportTrackFormat transportID=\"TP_0001\" transportName=\"SDI\" numIDs=\"12\" numTracks=\"12\">\n"
+"      <audioTrack trackID=\"1\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"2\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"3\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"4\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"5\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"6\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"7\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"      <audioTrack trackID=\"8\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
+"        <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>\n"
+"      </audioTrack>\n"
+"    </transportTrackFormat>\n"
+"    <profileList>\n"
+"      <profile profileName=\"AdvSS Emission S-ADM Profile\" profileVersion=\"1.0.0\" profileLevel=\"1\">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>\n"
+"    </profileList>\n"
+"  </frameHeader>\n"
+"  <audioFormatExtended version=\"ITU-R_BS.2076-3\">\n"
+"    <audioProgramme audioProgrammeID=\"APR_1001\" audioProgrammeName=\"audioProgramme_1\" audioProgrammeLanguage=\"eng\">\n"
+"      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1002</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1003</audioContentIDRef>\n"
+"      <audioProgrammeLabel language=\"eng\">English</audioProgrammeLabel>\n"
+"      <audioProgrammeLabel language=\"fre\">Anglais</audioProgrammeLabel>\n"
+"      <loudnessMetadata loudnessMethod=\"ITU-R BS.1770\">\n"
+"        <integratedLoudness>-28.75000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"    </audioProgramme>\n"
+"    <audioProgramme audioProgrammeID=\"APR_1002\" audioProgrammeName=\"audioProgramme_2\" audioProgrammeLanguage=\"eng\">\n"
+"      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1002</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1003</audioContentIDRef>\n"
+"      <audioProgrammeLabel language=\"eng\">English Boosted Dialog</audioProgrammeLabel>\n"
+"      <audioProgrammeLabel language=\"fre\">Anglais Boosted Dialog</audioProgrammeLabel>\n"
+"      <loudnessMetadata loudnessMethod=\"ITU-R BS.1770\">\n"
+"        <integratedLoudness>-28.75000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <alternativeValueSetIDRef>AVS_1002_0001</alternativeValueSetIDRef>\n"
+"      <alternativeValueSetIDRef>AVS_1003_0001</alternativeValueSetIDRef>\n"
+"    </audioProgramme>\n"
+"    <audioProgramme audioProgrammeID=\"APR_1003\" audioProgrammeName=\"audioProgramme_3\" audioProgrammeLanguage=\"eng\">\n"
+"      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1002</audioContentIDRef>\n"
+"      <audioProgrammeLabel language=\"eng\">English Only Compl Leader with AVS</audioProgrammeLabel>\n"
+"      <audioProgrammeLabel language=\"fre\">Anglais Only Compl Leader with AVS</audioProgrammeLabel>\n"
+"      <loudnessMetadata loudnessMethod=\"ITU-R BS.1770\">\n"
+"        <integratedLoudness>-28.75000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <alternativeValueSetIDRef>AVS_1002_0002</alternativeValueSetIDRef>\n"
+"    </audioProgramme>\n"
+"    <audioProgramme audioProgrammeID=\"APR_1004\" audioProgrammeName=\"audioProgramme_4\" audioProgrammeLanguage=\"fre\">\n"
+"      <audioContentIDRef>ACO_1001</audioContentIDRef>\n"
+"      <audioContentIDRef>ACO_1003</audioContentIDRef>\n"
+"      <audioProgrammeLabel language=\"eng\">English Only Compl Member with AVS</audioProgrammeLabel>\n"
+"      <audioProgrammeLabel language=\"fre\">Anglais Only Compl Member with AVS</audioProgrammeLabel>\n"
+"      <loudnessMetadata loudnessMethod=\"ITU-R BS.1770\">\n"
+"        <integratedLoudness>-28.75000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <alternativeValueSetIDRef>AVS_1003_0002</alternativeValueSetIDRef>\n"
+"    </audioProgramme>\n"
+"    <audioContent audioContentID=\"ACO_1001\" audioContentName=\"audioContent_1\" audioContentLanguage=\"und\">\n"
+"      <audioContentLabel language=\"eng\">Ambience</audioContentLabel>\n"
+"      <audioContentLabel language=\"fre\">Ambiance</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1001</audioObjectIDRef>\n"
+"      <loudnessMetadata loudnessMethod=\"ITU-R BS.1770\">\n"
+"        <integratedLoudness>-30.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue nonDialogueContentKind=\"0\">0</dialogue>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1002\" audioContentName=\"Commentary Group 1\" audioContentLanguage=\"eng\">\n"
+"      <audioContentLabel language=\"eng\">Talk</audioContentLabel>\n"
+"      <audioContentLabel language=\"fre\">Conversation</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1002</audioObjectIDRef>\n"
+"      <loudnessMetadata loudnessMethod=\"ITU-R BS.1770\">\n"
+"        <integratedLoudness>-33.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue dialogueContentKind=\"1\">1</dialogue>\n"
+"    </audioContent>\n"
+"    <audioContent audioContentID=\"ACO_1003\" audioContentName=\"Commentary Group 2\" audioContentLanguage=\"fre\">\n"
+"      <audioContentLabel language=\"eng\">Talk</audioContentLabel>\n"
+"      <audioContentLabel language=\"fre\">Conversation</audioContentLabel>\n"
+"      <audioObjectIDRef>AO_1003</audioObjectIDRef>\n"
+"      <loudnessMetadata loudnessMethod=\"ITU-R BS.1770\">\n"
+"        <integratedLoudness>-33.50000</integratedLoudness>\n"
+"      </loudnessMetadata>\n"
+"      <dialogue dialogueContentKind=\"1\">1</dialogue>\n"
+"    </audioContent>\n"
+"    <audioObject audioObjectID=\"AO_1001\" audioObjectName=\"audioObject_1\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>\n"
+"    </audioObject>\n"
+"    <audioObject audioObjectID=\"AO_1002\" audioObjectName=\"English Commentators\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>\n"
+"      <audioComplementaryObjectGroupLabel language=\"eng\">English</audioComplementaryObjectGroupLabel>\n"
+"      <audioComplementaryObjectGroupLabel language=\"fre\">Francais</audioComplementaryObjectGroupLabel>\n"
+"      <audioComplementaryObjectIDRef>AO_1003</audioComplementaryObjectIDRef>\n"
+"      <alternativeValueSet alternativeValueSetID=\"AVS_1002_0001\">\n"
+"        <audioObjectLabel language=\"eng\">English</audioObjectLabel>\n"
+"        <audioObjectLabel language=\"fre\">Anglais</audioObjectLabel>\n"
+"        <gain gainUnit=\"dB\">3.0</gain>\n"
+"      </alternativeValueSet>\n"
+"      <alternativeValueSet alternativeValueSetID=\"AVS_1002_0002\">\n"
+"        <audioObjectLabel language=\"eng\">English</audioObjectLabel>\n"
+"        <audioObjectLabel language=\"fre\">Anglais</audioObjectLabel>\n"
+"        <gain gainUnit=\"dB\">-6.0</gain>\n"
+"      </alternativeValueSet>\n"
+"    </audioObject> \n"
+"    <audioObject audioObjectID=\"AO_1003\" audioObjectName=\"French Commentators\" interact=\"0\">\n"
+"      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>\n"
+"      <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>\n"
+"      <alternativeValueSet alternativeValueSetID=\"AVS_1003_0001\">\n"
+"        <audioObjectLabel language=\"eng\">English</audioObjectLabel>\n"
+"        <audioObjectLabel language=\"fre\">Anglais</audioObjectLabel>\n"
+"        <gain gainUnit=\"dB\">4.0</gain>\n"
+"      </alternativeValueSet>\n"
+"      <alternativeValueSet alternativeValueSetID=\"AVS_1003_0002\">\n"
+"        <audioObjectLabel language=\"eng\">English</audioObjectLabel>\n"
+"        <audioObjectLabel language=\"fre\">Anglais</audioObjectLabel>\n"
+"        <gain gainUnit=\"dB\">-7.0</gain>\n"
+"      </alternativeValueSet>\n"
+"    </audioObject>\n"
+"    <audioPackFormat audioPackFormatID=\"AP_00031001\" audioPackFormatName=\"audioPackFormat_1\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>\n"
+"    </audioPackFormat>\n"
+"    <audioPackFormat audioPackFormatID=\"AP_00031002\" audioPackFormatName=\"audioPackFormat_2\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>\n"
+"    </audioPackFormat>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00031001\" audioChannelFormatName=\"audioChannelFormat_1\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00031001_00000001\" lstart=\"00:00:00.00000S48000\" lduration=\"00:00:00.00960S48000\">\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">0.00</position>\n"
+"        <position coordinate=\"Y\">1.00</position>\n"
+"        <position coordinate=\"Z\">0.00</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"    <audioChannelFormat audioChannelFormatID=\"AC_00031002\" audioChannelFormatName=\"audioChannelFormat_2\" typeLabel=\"0003\" typeDefinition=\"Objects\">\n"
+"      <audioBlockFormat audioBlockFormatID=\"AB_00031002_00000001\" lstart=\"00:00:00.00000S48000\" lduration=\"00:00:00.00960S48000\">\n"
+"        <cartesian>1</cartesian>\n"
+"        <position coordinate=\"X\">0.00</position>\n"
+"        <position coordinate=\"Y\">1.00</position>\n"
+"        <position coordinate=\"Z\">0.00</position>\n"
+"      </audioBlockFormat>\n"
+"    </audioChannelFormat>\n"
+"    <audioTrackUID UID=\"ATU_00000001\">\n"
+"      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000002\">\n"
+"      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000003\">\n"
+"      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010003</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000004\">\n"
+"      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010004</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000005\">\n"
+"      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010005</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000006\">\n"
+"      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00010006</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000007\">\n"
+"      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <audioTrackUID UID=\"ATU_00000008\">\n"
+"      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>\n"
+"      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>\n"
+"    </audioTrackUID>\n"
+"    <profileList>\n"
+"      <profile profileName=\"AdvSS Emission S-ADM Profile\" profileVersion=\"1.0.0\" profileLevel=\"1\">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>\n"
+"    </profileList>\n"
+"  </audioFormatExtended>\n"
+"</frame>\n"
+;
+
+// In this S-ADM, there is only 1 programme and only single complementary gropu member (the leader) out of 4 is present in it. In case of flattening such configuration, only 1 presenation is created.
+// Technically, such S-ADM is invalid, since some objects are not referenced by audioProgramme, but it is alright for testing flattening algorithm.
+static std::string singleComplementaryMemberInProgramme= R"(<?xml version="1.0" encoding="UTF-8"?>
+<frame>
+  <frameHeader>
+    <frameFormat frameFormatID="FF_00000001" type="full" start="00:00:00.00000S48000" duration="00:00:00.00960S48000" flowID="b52b1102-418d-4b3e-8437-482ef0490db0" timeReference="local"></frameFormat>
+    <transportTrackFormat transportID="TP_0001" transportName="SDI" numIDs="10" numTracks="10">
+      <audioTrack trackID="1" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="2" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="3" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="4" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="5" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="6" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="7" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="8" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="9" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="10" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_0000000A</audioTrackUIDRef>
+      </audioTrack>
+    </transportTrackFormat>
+    <profileList>
+      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>
+  </frameHeader>
+  <audioFormatExtended version="ITU-R_BS.2076-3">
+   <audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="audioProgramme_1" audioProgrammeLanguage="eng">
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1002</audioContentIDRef>
+      <audioProgrammeLabel language="eng">Cup Final</audioProgrammeLabel>
+      <audioProgrammeLabel language="fre">Finale de Coupe</audioProgrammeLabel>
+      <audioProgrammeLabel language="ita">Finale di Coppa</audioProgrammeLabel>
+      <audioProgrammeLabel language="ger">Pokalfinale</audioProgrammeLabel>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-28.75000</integratedLoudness>
+      </loudnessMetadata>
+    </audioProgramme>
+    <audioContent audioContentID="ACO_1001" audioContentName="audioContent_1" audioContentLanguage="und">
+      <audioContentLabel language="eng">Ambience</audioContentLabel>
+      <audioContentLabel language="fre">Ambiance</audioContentLabel>
+      <audioContentLabel language="ita">Ambiente</audioContentLabel>
+      <audioContentLabel language="ger">Ambience</audioContentLabel>
+      <audioObjectIDRef>AO_1001</audioObjectIDRef>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-30.50000</integratedLoudness>
+      </loudnessMetadata>
+      <dialogue nonDialogueContentKind="0">0</dialogue>
+    </audioContent>
+    <audioContent audioContentID="ACO_1002" audioContentName="audioContent_2" audioContentLanguage="eng">
+      <audioContentLabel language="eng">English</audioContentLabel>
+      <audioContentLabel language="fre">Anglais</audioContentLabel>
+      <audioContentLabel language="ita">Inglese</audioContentLabel>
+      <audioContentLabel language="ger">Englisch</audioContentLabel>
+      <audioObjectIDRef>AO_1002</audioObjectIDRef>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-33.50000</integratedLoudness>
+      </loudnessMetadata>
+      <dialogue dialogueContentKind="1">1</dialogue>
+    </audioContent>
+    <audioContent audioContentID="ACO_1003" audioContentName="audioContent_3" audioContentLanguage="fre">
+      <audioContentLabel language="eng">French</audioContentLabel>
+      <audioContentLabel language="fre">Francais</audioContentLabel>
+      <audioContentLabel language="ita">Francese</audioContentLabel>
+      <audioContentLabel language="ger">Franzosisch</audioContentLabel>
+      <audioObjectIDRef>AO_1003</audioObjectIDRef>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-33.50000</integratedLoudness>
+      </loudnessMetadata>
+      <dialogue dialogueContentKind="1">1</dialogue>
+    </audioContent>
+    <audioContent audioContentID="ACO_1004" audioContentName="audioContent_4" audioContentLanguage="ita">
+      <audioContentLabel language="eng">Italian</audioContentLabel>
+      <audioContentLabel language="fre">Italien</audioContentLabel>
+      <audioContentLabel language="ita">Italiano</audioContentLabel>
+      <audioContentLabel language="ger">Italienisch</audioContentLabel>
+      <audioObjectIDRef>AO_1004</audioObjectIDRef>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-33.50000</integratedLoudness>
+      </loudnessMetadata>
+      <dialogue dialogueContentKind="1">1</dialogue>
+    </audioContent>
+    <audioContent audioContentID="ACO_1005" audioContentName="audioContent_5" audioContentLanguage="ger">
+      <audioContentLabel language="eng">German</audioContentLabel>
+      <audioContentLabel language="fre">Allgemaine</audioContentLabel>
+      <audioContentLabel language="ita">Tedesco</audioContentLabel>
+      <audioContentLabel language="ger">Deutch</audioContentLabel>
+      <audioObjectIDRef>AO_1005</audioObjectIDRef>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-33.50000</integratedLoudness>
+      </loudnessMetadata>
+      <dialogue dialogueContentKind="1">1</dialogue>
+    </audioContent>
+    <audioObject audioObjectID="AO_1001" audioObjectName="audioObject_1" interact="0">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1002" audioObjectName="audioObject_2" interact="0">
+      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+      <audioComplementaryObjectGroupLabel language="eng">Talk</audioComplementaryObjectGroupLabel>
+      <audioComplementaryObjectGroupLabel language="fre">Conversation</audioComplementaryObjectGroupLabel>
+      <audioComplementaryObjectGroupLabel language="ita">Conversazione</audioComplementaryObjectGroupLabel>
+      <audioComplementaryObjectGroupLabel language="ger">Gesprach</audioComplementaryObjectGroupLabel>
+      <audioComplementaryObjectIDRef>AO_1003</audioComplementaryObjectIDRef>
+      <audioComplementaryObjectIDRef>AO_1004</audioComplementaryObjectIDRef>
+      <audioComplementaryObjectIDRef>AO_1005</audioComplementaryObjectIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1003" audioObjectName="audioObject_3" interact="0">
+      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1004" audioObjectName="audioObject_4" interact="0">
+      <audioPackFormatIDRef>AP_00031003</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1005" audioObjectName="audioObject_5" interact="0">
+      <audioPackFormatIDRef>AP_00031004</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_0000000a</audioTrackUIDRef>
+    </audioObject>
+    <audioPackFormat audioPackFormatID="AP_00031001" audioPackFormatName="audioPackFormat_1" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioPackFormat audioPackFormatID="AP_00031002" audioPackFormatName="audioPackFormat_2" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioPackFormat audioPackFormatID="AP_00031003" audioPackFormatName="audioPackFormat_3" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031003</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioPackFormat audioPackFormatID="AP_00031004" audioPackFormatName="audioPackFormat_4" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031004</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031001" audioChannelFormatName="audioChannelFormat_1" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031001_00000001" lstart="00:00:00.00000S48000" lduration="00:00:00.00960S48000">
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031002" audioChannelFormatName="audioChannelFormat_2" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031002_00000001" lstart="00:00:00.00000S48000" lduration="00:00:00.00960S48000">
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031003" audioChannelFormatName="audioChannelFormat_3" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031003_00000001" lstart="00:00:00.00000S48000" lduration="00:00:00.00960S48000">
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031004" audioChannelFormatName="audioChannelFormat_4" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031004_00000001" lstart="00:00:00.00000S48000" lduration="00:00:00.00960S48000">
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioTrackUID UID="ATU_00000001">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000002">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000003">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010003</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000004">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010004</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000005">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010005</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000006">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010006</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000007">
+      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000008">
+      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000009">
+      <audioPackFormatIDRef>AP_00031003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031003</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_0000000a">
+      <audioPackFormatIDRef>AP_00031004</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031004</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <profileList>
+      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>
+  </audioFormatExtended>
+</frame>
+)";
+
+// This S-ADM has inconsisten language tags in composition - programme 1 has language "fre", but references contents with languages "fre" and "eng" at the same time.
+// It also has 2 letter language  codes rather than 3 letter.
+static std::string sadmUnconsistentLanguages= R"(<frame version="ITU-R_BS.2125-1">
+  <frameHeader>
+    <frameFormat duration="00:00:00.01920S48000" flowID="cac0bb2f-c4c8-4c2a-a3ba-aab9165cc458" frameFormatID="FF_00000000001" start="00:00:00.00000" timeReference="local" type="full">
+    </frameFormat>
+    <transportTrackFormat numIDs="12" numTracks="12" transportID="TP_0001" transportName="PMD Audio Interface">
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="1">
+        <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="2">
+        <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="3">
+        <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="4">
+        <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="5">
+        <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="6">
+        <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="7">
+        <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="8">
+        <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="9">
+        <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="10">
+        <audioTrackUIDRef>ATU_0000000A</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="11">
+        <audioTrackUIDRef>ATU_0000000B</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack formatDefinition="PCM" formatLabel="0001" trackID="12">
+        <audioTrackUIDRef>ATU_0000000C</audioTrackUIDRef>
+      </audioTrack>
+    </transportTrackFormat>
+    <profileList>
+      <profile profileLevel="1" profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>
+  </frameHeader>
+  <audioFormatExtended version="ITU-R_BS.2076-3">
+    <audioProgramme audioProgrammeID="APR_1001" audioProgrammeLanguage="fr" audioProgrammeName="Presentation 1">
+      <audioProgrammeLabel language="fr">Presentation 1</audioProgrammeLabel>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1002</audioContentIDRef>
+    </audioProgramme>
+    <audioProgramme audioProgrammeID="APR_1002" audioProgrammeLanguage="en" audioProgrammeName="Presentation 2">
+      <audioProgrammeLabel language="en">Presentation 2</audioProgrammeLabel>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1003</audioContentIDRef>
+    </audioProgramme>
+    <audioContent audioContentID="ACO_1001" audioContentLanguage="en" audioContentName="musicAndEffects">
+      <dialogue nonDialogueContentKind="0">0</dialogue>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1001</audioObjectIDRef>
+    </audioContent>
+    <audioContent audioContentID="ACO_1002" audioContentLanguage="fr" audioContentName="dialog">
+      <dialogue dialogueContentKind="1">1</dialogue>
+      <loudnessMetadata>
+        <dialogueLoudness>-23.00</dialogueLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1002</audioObjectIDRef>
+    </audioContent>
+    <audioContent audioContentID="ACO_1003" audioContentLanguage="en" audioContentName="radioCommentator">
+      <dialogue dialogueContentKind="4">1</dialogue>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1003</audioObjectIDRef>
+    </audioContent>
+    <audioObject audioObjectID="AO_1001" audioObjectName="musicAndEffects" interact="0">
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_0000000A</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1002" audioObjectName="dialog" interact="0">
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_0000000B</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1003" audioObjectName="radioCommentator" interact="0">
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00031003</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_0000000C</audioTrackUIDRef>
+    </audioObject>
+    <audioPackFormat audioPackFormatID="AP_00031002" audioPackFormatName="dialog" typeDefinition="Objects" typeLabel="0003">
+      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioPackFormat audioPackFormatID="AP_00031003" audioPackFormatName="radioCommentator" typeDefinition="Objects" typeLabel="0003">
+      <audioChannelFormatIDRef>AC_00031003</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031002" audioChannelFormatName="dialog" typeDefinition="Objects" typeLabel="0003">
+      <audioBlockFormat audioBlockFormatID="AB_00031002_00000001" lduration="00:00:00.01920S48000" lstart="00:00:00.00000">
+        <gain gainUnit="dB">0.00</gain>
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031003" audioChannelFormatName="radioCommentator" typeDefinition="Objects" typeLabel="0003">
+      <audioBlockFormat audioBlockFormatID="AB_00031003_00000001" lduration="00:00:00.01920S48000" lstart="00:00:00.00000">
+        <gain gainUnit="dB">0.00</gain>
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioTrackUID UID="ATU_00000001">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000002">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000003">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010003</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000004">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010004</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000005">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010005</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000006">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010006</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000007">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_0001000D</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000008">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_0001000F</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000009">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010010</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_0000000A">
+      <audioPackFormatIDRef>AP_00010005</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010012</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_0000000B">
+      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_0000000C">
+      <audioPackFormatIDRef>AP_00031003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031003</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <profileList>
+      <profile profileLevel="1" profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>
+  </audioFormatExtended>
+</frame>
+)";
+
+const std::string sadm_51_MnE_3D_complementary = R"(<?xml version="1.0" encoding="UTF-8"?>
+<frame>
+  <frameHeader>
+    <frameFormat frameFormatID="FF_00000001" type="full" start="00:00:00.00000S48000" duration="00:00:00.00960S48000" flowID="b52b1102-418d-4b3e-8437-482ef0490db0" timeReference="local"></frameFormat>
+    <transportTrackFormat transportID="TP_0001" transportName="SDI" numIDs="10" numTracks="10">
+      <audioTrack trackID="1" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="2" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="3" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="4" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="5" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="6" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="7" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="8" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="9" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+      </audioTrack>
+    </transportTrackFormat>
+    <profileList>
+      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>	
+  </frameHeader>
+  <audioFormatExtended version="ITU-R_BS.2076-3">
+   <audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="audioProgramme_1" audioProgrammeLanguage="eng">
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1002</audioContentIDRef>
+      <audioContentIDRef>ACO_1003</audioContentIDRef>
+      <audioContentIDRef>ACO_1004</audioContentIDRef>
+      <audioProgrammeLabel language="eng">Cup Final</audioProgrammeLabel>
+      <audioProgrammeLabel language="fre">Finale de Coupe</audioProgrammeLabel>
+      <audioProgrammeLabel language="ita">Finale di Coppa</audioProgrammeLabel>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-28.75000</integratedLoudness>
+      </loudnessMetadata>
+    </audioProgramme>
+    <audioContent audioContentID="ACO_1001" audioContentName="audioContent_1" audioContentLanguage="und">
+      <audioContentLabel language="eng">Ambience</audioContentLabel>
+      <audioContentLabel language="fre">Ambiance</audioContentLabel>
+      <audioContentLabel language="ita">Ambiente</audioContentLabel>
+      <audioObjectIDRef>AO_1001</audioObjectIDRef>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-30.50000</integratedLoudness>
+      </loudnessMetadata>
+      <dialogue nonDialogueContentKind="0">0</dialogue>
+    </audioContent>
+    <audioContent audioContentID="ACO_1002" audioContentName="audioContent_2" audioContentLanguage="eng">
+      <audioContentLabel language="eng">English</audioContentLabel>
+      <audioContentLabel language="fre">Anglais</audioContentLabel>
+      <audioContentLabel language="ita">Inglese</audioContentLabel>
+      <audioObjectIDRef>AO_1002</audioObjectIDRef>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-33.50000</integratedLoudness>
+      </loudnessMetadata>
+      <dialogue dialogueContentKind="1">1</dialogue>
+    </audioContent>
+    <audioContent audioContentID="ACO_1003" audioContentName="audioContent_3" audioContentLanguage="fre">
+      <audioContentLabel language="eng">French</audioContentLabel>
+      <audioContentLabel language="fre">Francais</audioContentLabel>
+      <audioContentLabel language="ita">Francese</audioContentLabel>
+      <audioObjectIDRef>AO_1003</audioObjectIDRef>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-33.50000</integratedLoudness>
+      </loudnessMetadata>
+      <dialogue dialogueContentKind="1">1</dialogue>
+    </audioContent>
+    <audioContent audioContentID="ACO_1004" audioContentName="audioContent_4" audioContentLanguage="ita">
+      <audioContentLabel language="eng">Italian</audioContentLabel>
+      <audioContentLabel language="fre">Italien</audioContentLabel>
+      <audioContentLabel language="ita">Italiano</audioContentLabel>
+      <audioObjectIDRef>AO_1004</audioObjectIDRef>
+      <loudnessMetadata loudnessMethod="ITU-R BS.1770">
+        <integratedLoudness>-33.50000</integratedLoudness>
+      </loudnessMetadata>
+      <dialogue dialogueContentKind="1">1</dialogue>
+    </audioContent>
+    <audioObject audioObjectID="AO_1001" audioObjectName="audioObject_1" interact="0">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000005</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000006</audioTrackUIDRef>
+    </audioObject> 
+    <audioObject audioObjectID="AO_1002" audioObjectName="audioObject_2" interact="0">
+      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000007</audioTrackUIDRef>
+      <audioComplementaryObjectGroupLabel language="eng">Talk</audioComplementaryObjectGroupLabel>
+      <audioComplementaryObjectGroupLabel language="fre">Conversation</audioComplementaryObjectGroupLabel>
+      <audioComplementaryObjectGroupLabel language="ita">Conversazione</audioComplementaryObjectGroupLabel>
+      <audioComplementaryObjectIDRef>AO_1003</audioComplementaryObjectIDRef>
+      <audioComplementaryObjectIDRef>AO_1004</audioComplementaryObjectIDRef>
+    </audioObject> 
+    <audioObject audioObjectID="AO_1003" audioObjectName="audioObject_3" interact="0">
+      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000008</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1004" audioObjectName="audioObject_4" interact="0">
+      <audioPackFormatIDRef>AP_00031003</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000009</audioTrackUIDRef>
+    </audioObject>
+    <audioPackFormat audioPackFormatID="AP_00031001" audioPackFormatName="audioPackFormat_1" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioPackFormat audioPackFormatID="AP_00031002" audioPackFormatName="audioPackFormat_2" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioPackFormat audioPackFormatID="AP_00031003" audioPackFormatName="audioPackFormat_3" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031003</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031001" audioChannelFormatName="audioChannelFormat_1" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031001_00000001" lstart="00:00:00.00000S48000" lduration="00:00:00.00960S48000">
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031002" audioChannelFormatName="audioChannelFormat_2" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031002_00000001" lstart="00:00:00.00000S48000" lduration="00:00:00.00960S48000">
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031003" audioChannelFormatName="audioChannelFormat_3" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031003_00000001" lstart="00:00:00.00000S48000" lduration="00:00:00.00960S48000">
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioTrackUID UID="ATU_00000001">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000002">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000003">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010003</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000004">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010004</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000005">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010005</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000006">
+      <audioPackFormatIDRef>AP_00010003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010006</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000007">
+      <audioPackFormatIDRef>AP_00031001</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031001</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000008">
+      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000009">
+      <audioPackFormatIDRef>AP_00031003</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031003</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <profileList>
+      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>	
+  </audioFormatExtended>
+</frame>
+)";
+
+static std::string xml_me_2D_AVS = R"(<?xml version="1.0" encoding="UTF-8"?>
+<frame version="ITU-R_BS.2125-1">
+  <frameHeader>
+    <frameFormat frameFormatID="FF_00000000001" type="full" start="00:00:00.00000" duration="00:00:00.01920S48000" timeReference="local" flowID="c0932589-46f2-41df-9718-890711c0e7a1">
+    </frameFormat>
+    <transportTrackFormat transportID="TP_0001" transportName="PMD Audio Interface" numIDs="3" numTracks="3">
+      <audioTrack trackID="1" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="2" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+      </audioTrack>
+      <audioTrack trackID="3" formatLabel="0001" formatDefinition="PCM">
+        <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+      </audioTrack>
+    </transportTrackFormat>
+    <profileList>
+      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>
+  </frameHeader>
+  <audioFormatExtended version="ITU-R_BS.2076-3">
+    <audioProgramme audioProgrammeID="APR_1001" audioProgrammeName="Presentation 1" audioProgrammeLanguage="pol">
+      <audioProgrammeLabel language="pol">Presentation 1</audioProgrammeLabel>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1002</audioContentIDRef>
+    </audioProgramme>
+    <audioProgramme audioProgrammeID="APR_1002" audioProgrammeName="Presentation 2" audioProgrammeLanguage="pol">
+      <audioProgrammeLabel language="pol">Presentation 2</audioProgrammeLabel>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioContentIDRef>ACO_1001</audioContentIDRef>
+      <audioContentIDRef>ACO_1002</audioContentIDRef>
+      <alternativeValueSetIDRef>AVS_1002_0001</alternativeValueSetIDRef>
+    </audioProgramme>
+    <audioContent audioContentID="ACO_1001" audioContentName="Bed 1" audioContentLanguage="und">
+      <dialogue nonDialogueContentKind="2">0</dialogue>
+      <loudnessMetadata>
+        <integratedLoudness>-23.00</integratedLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1001</audioObjectIDRef>
+    </audioContent>
+    <audioContent audioContentID="ACO_1002" audioContentName="Object 1" audioContentLanguage="pol">
+      <dialogue dialogueContentKind="1">1</dialogue>
+      <loudnessMetadata>
+        <dialogueLoudness>-23.00</dialogueLoudness>
+      </loudnessMetadata>
+      <audioObjectIDRef>AO_1002</audioObjectIDRef>
+    </audioContent>
+    <audioObject audioObjectID="AO_1001" audioObjectName="Bed 1" interact="0">
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000001</audioTrackUIDRef>
+      <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>
+    </audioObject>
+    <audioObject audioObjectID="AO_1002" audioObjectName="Object 1" interact="0">
+      <alternativeValueSet alternativeValueSetID="AVS_1002_0001">
+        <gain gainUnit="dB">-3.00</gain>
+        <positionOffset coordinate="X">0.00</positionOffset>
+      </alternativeValueSet>
+      <gain gainUnit="dB">0.00</gain>
+      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>
+      <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>
+    </audioObject>
+    <audioPackFormat audioPackFormatID="AP_00031002" audioPackFormatName="Object 1" typeLabel="0003" typeDefinition="Objects">
+      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>
+    </audioPackFormat>
+    <audioChannelFormat audioChannelFormatID="AC_00031002" audioChannelFormatName="Object 1" typeLabel="0003" typeDefinition="Objects">
+      <audioBlockFormat audioBlockFormatID="AB_00031002_00000001" lstart="00:00:00.00000" lduration="00:00:00.01920S48000">
+        <cartesian>1</cartesian>
+        <position coordinate="X">0.00</position>
+        <position coordinate="Y">1.00</position>
+        <position coordinate="Z">0.00</position>
+      </audioBlockFormat>
+    </audioChannelFormat>
+    <audioTrackUID UID="ATU_00000001">
+      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000002">
+      <audioPackFormatIDRef>AP_00010002</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <audioTrackUID UID="ATU_00000003">
+      <audioPackFormatIDRef>AP_00031002</audioPackFormatIDRef>
+      <audioChannelFormatIDRef>AC_00031002</audioChannelFormatIDRef>
+    </audioTrackUID>
+    <profileList>
+      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+    </profileList>
+  </audioFormatExtended>
+</frame>
+)";
 
 #endif //DLB_ADM_UNIT_TEST_EMISSION_PROFILE_DATA_H

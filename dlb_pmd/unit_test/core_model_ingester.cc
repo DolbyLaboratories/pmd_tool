@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2021-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2021-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +53,10 @@
 static const char stereo_2D_ADM_InputFileName[]  = "Stereo_2D_ADM.xml";
 static const char stereo_2D_PMD_InputFileName[]  = "Stereo_2D_PMD.xml";
 static const char stereo_2D_PMD_OutputFileName[] = "Stereo_2D_ADM.pmd.out.xml";
+
+static const char only_objects_ADM_InputFileName[]  = "Only_objects.sadm.xml";
+static const char only_objects_PMD_InputFileName[]  = "Only_objects.pmd.xml";
+static const char only_objects_PMD_OutputFileName[] = "Only_objects.pmd.out.xml";
 
 class CoreModelIngester : public testing::Test
 {
@@ -492,4 +497,49 @@ TEST_F(CoreModelIngester, IngestSmallModel)
     success = ::dlb_xmlpmd_file_write(stereo_2D_PMD_OutputFileName, mPmdModel);
     EXPECT_EQ(PMD_SUCCESS, success);
     EXPECT_TRUE(CompareFiles(stereo_2D_PMD_InputFileName, stereo_2D_PMD_OutputFileName));
+}
+
+TEST_F(CoreModelIngester, IngestOnlyObjects)
+{
+    dlb_pmd_success success;
+    dlb_adm_container_counts counts;
+    dlb_adm_xml_container *mFlattenedContainer;
+    const char uuid[] = "c36b3c9a-18f2-4a8e-ba26-800a7184ddd1";
+    int status;
+
+    SetUpTestInput(only_objects_PMD_InputFileName, only_objects_PMD);
+    SetUpTestInput(only_objects_ADM_InputFileName, only_objects_SADM);    
+    ::memset(&counts, 0, sizeof(counts));
+    status = ::dlb_adm_container_open(&mContainer, &counts);
+    status = ::dlb_adm_container_open(&mFlattenedContainer, &counts);  
+
+    status = InitPmdModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_container_read_xml_file(mContainer, only_objects_ADM_InputFileName, DLB_ADM_FALSE);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_container_flatten(mContainer, mFlattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);    
+    status = ::dlb_adm_core_model_open_from_xml_container(&mCoreModel, mFlattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status); 
+
+    success = InitIngester();
+    ASSERT_EQ(PMD_SUCCESS, success);
+
+    success = ::pmd_core_model_ingester_ingest(mIngester, mPmdModel, "Only objects in configuration", mCoreModel);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    EXPECT_EQ(1, dlb_pmd_num_signals(mPmdModel));
+    EXPECT_EQ(0, dlb_pmd_num_beds(mPmdModel));
+    EXPECT_EQ(2, dlb_pmd_num_objects(mPmdModel));
+    EXPECT_EQ(2, dlb_pmd_num_presentations(mPmdModel));
+    EXPECT_EQ(1, dlb_pmd_num_iat(mPmdModel));
+
+    success = ::dlb_pmd_iat_content_id_uuid(mPmdModel, uuid);
+    EXPECT_EQ(PMD_SUCCESS, success);    
+
+    success = ::dlb_xmlpmd_file_write(only_objects_PMD_OutputFileName, mPmdModel);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    EXPECT_TRUE(CompareFiles(only_objects_PMD_InputFileName, only_objects_PMD_OutputFileName));
+
+    (void)::dlb_adm_container_close(&mContainer);
 }

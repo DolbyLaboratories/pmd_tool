@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2023, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,10 +44,10 @@
 
 /** Constants */
 
-#define MAX_AUDIO_OBJECTS (4)
+#define MAX_AUDIO_OBJECTS (10)
 #define MAX_AUDIO_BEDS (4)
 #define MAX_STUDIO_AUDIO_SIGNALS (32)
-#define MAX_AUDIO_PRESENTATIONS (4)
+#define MAX_AUDIO_PRESENTATIONS (10)
 #define MAX_AUDIO_OUTPUTS (8)
 #define MAX_BED_SOURCES (16)
 
@@ -67,7 +68,7 @@ typedef enum
 static const char pmd_studio_metadata_format_names[][MAX_LABEL_LENGTH] = 
 {
     "PMD",
-    "sADM"
+    "S-ADM"
 };
 
 typedef enum

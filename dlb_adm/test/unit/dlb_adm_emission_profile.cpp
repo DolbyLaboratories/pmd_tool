@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2022-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2022-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
+
 #define _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
 
 #include "gtest/gtest.h"
@@ -48,6 +49,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include "dlb_adm_emission_profile_data.h"
 
@@ -85,6 +87,12 @@ static const char audioObjectInteractionFlattenedOutFileName[] = "audioObjectInt
 
 static const char BroadcastMixName[] = "broadcastMixXMLBuffer.xml";
 static const char BroadcastMixOutFileName[] = "broadcastMixXMLBuffer.out.xml";
+
+static const char multipleComplementaryName[] = "multipleComplementary.xml";
+static const char multipleComplementaryFileName[] = "multipleComplementary.out.xml";
+
+static const char complementaryAndAvsName[] = "complementaryAndAvs.xml";
+static const char complementaryAndAvsFileName[] = "complementaryAndAvs.out.xml";
 
 static const dlb_adm_element_count MAX_PMD_PRESENTATION_ELEMENTS = 128;
 static const dlb_adm_alt_val_count MAX_SADM_ALT_VALUE_SETS = 8;
@@ -195,6 +203,8 @@ protected:
         SetUpTestInput(minimalFileName, minimalFileBuffer);
         SetUpTestInput(audioObjectInteractionName, audioObjectInteractionBuffer);
         SetUpTestInput(BroadcastMixName, broadcastMixXMLBuffer);
+        SetUpTestInput(multipleComplementaryName, multipleComplementaryBuffer);
+        SetUpTestInput(complementaryAndAvsName, complementaryAndAvsBuffer);
 
         status = ::dlb_adm_container_open(&oryginalContainer, &containerCounts);
         ASSERT_EQ(DLB_ADM_STATUS_OK, status);
@@ -917,3 +927,1034 @@ TEST_F(DlbAdmEmissionProfile, parseBroacastMix)
     status = CompareFiles(BroadcastMixName, BroadcastMixOutFileName);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 }
+
+static bool GetId(const std::string& strId, dlb_adm_entity_id& id)
+{
+    dlb_adm_entity_id tempId = DLB_ADM_NULL_ENTITY_ID;
+    int status = DLB_ADM_STATUS_OK;
+    status = ::dlb_adm_read_entity_id(&tempId, strId.c_str(), strId.size()+1);
+    if(status != DLB_ADM_STATUS_OK || tempId == DLB_ADM_NULL_ENTITY_ID)
+    {
+        return false;
+    }
+    id = tempId;
+    return true;
+}
+
+static bool prepareIds(const std::vector<std::string>& stringIds, std::vector<dlb_adm_entity_id>& ids)
+{
+    dlb_adm_entity_id tempId = DLB_ADM_NULL_ENTITY_ID;
+    for(auto stringId : stringIds)
+    {
+        if(!GetId(stringId, tempId))
+        {
+            return false;
+        }
+        ids.push_back(tempId);
+    }
+    return true; 
+};
+
+TEST_F(DlbAdmEmissionProfile, flattenComplementary_complementaryObjectsFlatten)
+{
+    int status;
+
+    status = ::dlb_adm_container_read_xml_file(oryginalContainer, complementaryObjectsFileName, DLB_ADM_TRUE);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Flattening ADM structure
+    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_container_write_xml_file(flattenedContainer, complementaryObjectsOutFileName);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // ingest into the core model
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Check if content has been flattend
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_PROGRAMME, &count);
+    ASSERT_EQ(count, 4);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_CONTENT, &count);
+    ASSERT_EQ(count, 5);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_OBJECT, &count);
+    ASSERT_EQ(count, 5);
+
+    dlb_adm_bool isEmissionProfile;
+    status = ::dlb_adm_core_model_has_profile(coreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &isEmissionProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, isEmissionProfile);
+
+    std::vector<std::string>presentationIdStrings{"APR_1001","APR_1002","APR_1003","APR_1004"};
+    std::vector<std::string>contentIdStrings{"ACO_1001","ACO_1002","ACO_1003","ACO_1004","ACO_1005"};
+    std::vector<std::string>objectIdStrings{"AO_1001","AO_1002","AO_1003","AO_1004","AO_1005"};
+    std::vector<std::string>trackIdStrings{"ATU_00000001","ATU_00000007","ATU_00000008","ATU_00000009","ATU_0000000a"};
+
+    std::vector<dlb_adm_entity_id>presentationIds;
+    std::vector<dlb_adm_entity_id>contentIds;
+    std::vector<dlb_adm_entity_id>objectIds;
+    std::vector<dlb_adm_entity_id>trackIds;
+
+    ASSERT_TRUE(prepareIds(presentationIdStrings, presentationIds));
+    ASSERT_TRUE(prepareIds(contentIdStrings, contentIds));
+    ASSERT_TRUE(prepareIds(objectIdStrings, objectIds));
+    ASSERT_TRUE(prepareIds(trackIdStrings, trackIds));
+
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presentationIds[0]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(2, mPresentationData.element_count);
+    EXPECT_EQ(presentationIds[0], mPresentationData.presentation.id);
+    EXPECT_EQ(DLB_ADM_CONTENT_KIND_NK_UNDEFINED, mPresentationData.content_groups[0].content_kind);
+    EXPECT_EQ(contentIds[0], mPresentationData.content_groups[0].id);
+    EXPECT_EQ(objectIds[0], mPresentationData.audio_elements[0].id);
+    EXPECT_EQ(DLB_ADM_CONTENT_KIND_DK_DIALOGUE, mPresentationData.content_groups[1].content_kind);
+    EXPECT_EQ(contentIds[1], mPresentationData.content_groups[1].id);
+    EXPECT_EQ(objectIds[1], mPresentationData.audio_elements[1].id);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presentationIds[0]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(5, mNames.name_count);
+    EXPECT_EQ(4, mNames.label_count);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+    EXPECT_EQ(0, ::strcmp("Inglese", mNames.names[3]));
+    EXPECT_EQ(0, ::strcmp("ita", mNames.langs[3]));
+    EXPECT_EQ(0, ::strcmp("Englisch", mNames.names[4]));
+    EXPECT_EQ(0, ::strcmp("ger", mNames.langs[4]));
+
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presentationIds[1]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(2, mPresentationData.element_count);
+    EXPECT_EQ(presentationIds[1], mPresentationData.presentation.id);
+    EXPECT_EQ(DLB_ADM_CONTENT_KIND_NK_UNDEFINED, mPresentationData.content_groups[0].content_kind);
+    EXPECT_EQ(contentIds[0], mPresentationData.content_groups[0].id);
+    EXPECT_EQ(objectIds[0], mPresentationData.audio_elements[0].id);
+    EXPECT_EQ(DLB_ADM_CONTENT_KIND_DK_DIALOGUE, mPresentationData.content_groups[1].content_kind);
+    EXPECT_EQ(contentIds[2], mPresentationData.content_groups[1].id);
+    EXPECT_EQ(objectIds[2], mPresentationData.audio_elements[1].id);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presentationIds[1]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(5, mNames.name_count);
+    EXPECT_EQ(4, mNames.label_count);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+    EXPECT_EQ(0, ::strcmp("Inglese", mNames.names[3]));
+    EXPECT_EQ(0, ::strcmp("ita", mNames.langs[3]));
+    EXPECT_EQ(0, ::strcmp("Englisch", mNames.names[4]));
+    EXPECT_EQ(0, ::strcmp("ger", mNames.langs[4]));
+
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presentationIds[2]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(2, mPresentationData.element_count);
+    EXPECT_EQ(presentationIds[2], mPresentationData.presentation.id);
+    EXPECT_EQ(DLB_ADM_CONTENT_KIND_NK_UNDEFINED, mPresentationData.content_groups[0].content_kind);
+    EXPECT_EQ(contentIds[0], mPresentationData.content_groups[0].id);
+    EXPECT_EQ(objectIds[0], mPresentationData.audio_elements[0].id);
+    EXPECT_EQ(DLB_ADM_CONTENT_KIND_DK_DIALOGUE, mPresentationData.content_groups[1].content_kind);
+    EXPECT_EQ(contentIds[3], mPresentationData.content_groups[1].id);
+    EXPECT_EQ(objectIds[3], mPresentationData.audio_elements[1].id);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presentationIds[2]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(5, mNames.name_count);
+    EXPECT_EQ(4, mNames.label_count);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("ita", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+    EXPECT_EQ(0, ::strcmp("Inglese", mNames.names[3]));
+    EXPECT_EQ(0, ::strcmp("ita", mNames.langs[3]));
+    EXPECT_EQ(0, ::strcmp("Englisch", mNames.names[4]));
+    EXPECT_EQ(0, ::strcmp("ger", mNames.langs[4]));
+
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presentationIds[3]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(2, mPresentationData.element_count);
+    EXPECT_EQ(presentationIds[3], mPresentationData.presentation.id);
+    EXPECT_EQ(DLB_ADM_CONTENT_KIND_NK_UNDEFINED, mPresentationData.content_groups[0].content_kind);
+    EXPECT_EQ(contentIds[0], mPresentationData.content_groups[0].id);
+    EXPECT_EQ(objectIds[0], mPresentationData.audio_elements[0].id);
+    EXPECT_EQ(DLB_ADM_CONTENT_KIND_DK_DIALOGUE, mPresentationData.content_groups[1].content_kind);
+    EXPECT_EQ(contentIds[4], mPresentationData.content_groups[1].id);
+    EXPECT_EQ(objectIds[4], mPresentationData.audio_elements[1].id);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presentationIds[3]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(5, mNames.name_count);
+    EXPECT_EQ(4, mNames.label_count);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("ger", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+    EXPECT_EQ(0, ::strcmp("Inglese", mNames.names[3]));
+    EXPECT_EQ(0, ::strcmp("ita", mNames.langs[3]));
+    EXPECT_EQ(0, ::strcmp("Englisch", mNames.names[4]));
+    EXPECT_EQ(0, ::strcmp("ger", mNames.langs[4]));
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[0]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(6, mElementData.channel_count);
+    EXPECT_EQ(objectIds[0], mElementData.audio_element.id);
+    EXPECT_EQ(0, mElementData.alt_val_count);
+    EXPECT_EQ(trackIds[0], mElementData.audio_tracks->id);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[1]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(1, mElementData.channel_count);
+    EXPECT_EQ(objectIds[1], mElementData.audio_element.id);
+    EXPECT_EQ(0, mElementData.alt_val_count);
+    EXPECT_EQ(DLB_ADM_AUDIO_TYPE_OBJECTS, mElementData.targets->audio_type);
+    EXPECT_EQ(trackIds[1], mElementData.audio_tracks->id);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[2]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(1, mElementData.channel_count);
+    EXPECT_EQ(objectIds[2], mElementData.audio_element.id);
+    EXPECT_EQ(0, mElementData.alt_val_count);
+    EXPECT_EQ(DLB_ADM_AUDIO_TYPE_OBJECTS, mElementData.targets->audio_type);
+    EXPECT_EQ(trackIds[2], mElementData.audio_tracks->id);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[3]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(1, mElementData.channel_count);
+    EXPECT_EQ(objectIds[3], mElementData.audio_element.id);
+    EXPECT_EQ(0, mElementData.alt_val_count);
+    EXPECT_EQ(DLB_ADM_AUDIO_TYPE_OBJECTS, mElementData.targets->audio_type);
+    EXPECT_EQ(trackIds[3], mElementData.audio_tracks->id);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[4]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(1, mElementData.channel_count);
+    EXPECT_EQ(objectIds[4], mElementData.audio_element.id);
+    EXPECT_EQ(0, mElementData.alt_val_count);
+    EXPECT_EQ(DLB_ADM_AUDIO_TYPE_OBJECTS, mElementData.targets->audio_type);
+    EXPECT_EQ(trackIds[4], mElementData.audio_tracks->id);
+}
+
+void validatePresentation( dlb_adm_data_presentation_data* presData
+                         , dlb_adm_data_names* namesData
+                         , dlb_adm_core_model* coreModel
+                         , std::string presIdString
+                         , std::string contentIdString_1
+                         , std::string contentIdString_2
+                         , std::string objIdString_1
+                         , std::string objIdString_2
+                         , std::string programmeName
+                         , std::string programmeLang
+                         , std::string programmeLabel
+                         , std::string programmeLabelLang)
+{
+    dlb_adm_entity_id presId;
+    dlb_adm_entity_id contentId_1;
+    dlb_adm_entity_id contentId_2;
+    dlb_adm_entity_id objId_1;
+    dlb_adm_entity_id objId_2;
+
+    ASSERT_TRUE(GetId(presIdString, presId));
+    ASSERT_TRUE(GetId(contentIdString_1, contentId_1));
+    ASSERT_TRUE(GetId(contentIdString_2, contentId_2));
+    ASSERT_TRUE(GetId(objIdString_1, objId_1));
+    ASSERT_TRUE(GetId(objIdString_2, objId_2));
+    int status = ::dlb_adm_core_model_get_presentation_data(presData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(presData->element_count, 2);
+    EXPECT_EQ(presData->presentation.id, presId);
+    EXPECT_EQ(presData->content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_EFFECTS);
+    EXPECT_EQ(presData->content_groups[0].id, contentId_1);
+    EXPECT_EQ(presData->audio_elements[0].id, objId_1);
+    EXPECT_EQ(presData->alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(presData->content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(presData->content_groups[1].id, contentId_2);
+    EXPECT_EQ(presData->audio_elements[1].id, objId_2);
+    EXPECT_EQ(presData->alt_val_sets[1].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, namesData, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(namesData->name_count, 2);
+    EXPECT_EQ(namesData->label_count, 1);
+    EXPECT_EQ(0, ::strcmp(programmeName.c_str(), namesData->names[0]));
+    EXPECT_EQ(0, ::strcmp(programmeLang.c_str(), namesData->langs[0]));
+    EXPECT_EQ(0, ::strcmp(programmeLabel.c_str(), namesData->names[1]));
+    EXPECT_EQ(0, ::strcmp(programmeLabelLang.c_str(), namesData->langs[1]));
+}
+
+TEST_F(DlbAdmEmissionProfile, flattenComplementary_multipleComplementary)
+{
+    int status;
+
+    status = ::dlb_adm_container_read_xml_file(oryginalContainer, multipleComplementaryName, DLB_ADM_TRUE);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Flattening ADM structure
+    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_container_write_xml_file(flattenedContainer, multipleComplementaryFileName);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // ingest into the core model
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Check if content has been flattend
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_PROGRAMME, &count);
+    ASSERT_EQ(count, 15);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_CONTENT, &count);
+    ASSERT_EQ(count, 7);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_OBJECT, &count);
+    ASSERT_EQ(count, 7);
+
+    // TODO: Extend checking: programs, contents and objects Id, gain and language
+
+    dlb_adm_bool isEmissionProfile;
+    status = ::dlb_adm_core_model_has_profile(coreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &isEmissionProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, isEmissionProfile);
+
+    validatePresentation( &mPresentationData
+                        , &mNames
+                        , coreModel
+                        , std::string("APR_1001")
+                        , std::string("ACO_1001")
+                        , std::string("ACO_1004")
+                        , std::string("AO_1001")
+                        , std::string("AO_1004")
+                        , std::string("audioProgramme_1")
+                        , std::string("eng")
+                        , std::string("Standard")
+                        , std::string("eng"));
+
+    validatePresentation( &mPresentationData
+                        , &mNames
+                        , coreModel
+                        , std::string("APR_1002")
+                        , std::string("ACO_1001")
+                        , std::string("ACO_1005")
+                        , std::string("AO_1001")
+                        , std::string("AO_1005")
+                        , std::string("audioProgramme_1")
+                        , std::string("ger")
+                        , std::string("Standard")
+                        , std::string("eng"));
+
+    validatePresentation( &mPresentationData
+                        , &mNames
+                        , coreModel
+                        , std::string("APR_1003")
+                        , std::string("ACO_1001")
+                        , std::string("ACO_1006")
+                        , std::string("AO_1001")
+                        , std::string("AO_1006")
+                        , std::string("audioProgramme_1")
+                        , std::string("ita")
+                        , std::string("Standard")
+                        , std::string("eng"));
+
+    validatePresentation( &mPresentationData
+                        , &mNames
+                        , coreModel
+                        , std::string("APR_1004")
+                        , std::string("ACO_1002")
+                        , std::string("ACO_1004")
+                        , std::string("AO_1002")
+                        , std::string("AO_1004")
+                        , std::string("audioProgramme_1")
+                        , std::string("eng")
+                        , std::string("Standard")
+                        , std::string("eng"));
+}
+
+TEST_F(DlbAdmEmissionProfile, flattenComplementary_complementaryAndAvs)
+{
+    int status;
+
+    status = ::dlb_adm_container_read_xml_file(oryginalContainer, complementaryAndAvsName, DLB_ADM_TRUE);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Flattening ADM structure
+    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_container_write_xml_file(flattenedContainer, complementaryAndAvsFileName);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // ingest into the core model
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Check if content has been flattend
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_PROGRAMME, &count);
+    ASSERT_EQ(count, 6);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_CONTENT, &count);
+    ASSERT_EQ(count, 3);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_OBJECT, &count);
+    ASSERT_EQ(count, 3);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET, &count);
+    ASSERT_EQ(count, 4);
+
+    dlb_adm_bool isEmissionProfile;
+    status = ::dlb_adm_core_model_has_profile(coreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &isEmissionProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, isEmissionProfile);
+
+    std::vector<std::string>presentationIdStrings{"APR_1001","APR_1002","APR_1003","APR_1004","APR_1005","APR_1006"};
+    std::vector<std::string>contentIdStrings{"ACO_1001","ACO_1002","ACO_1003"};
+    std::vector<std::string>objectIdStrings{"AO_1001","AO_1002","AO_1003"};
+    std::vector<std::string>trackIdStrings{"ATU_00000001","ATU_00000007","ATU_00000008"};
+    std::vector<std::string>avsIdStrings{"AVS_1002_0001","AVS_1002_0002","AVS_1003_0001","AVS_1003_0002"};
+
+    std::vector<dlb_adm_entity_id>presentationIds;
+    std::vector<dlb_adm_entity_id>contentIds;
+    std::vector<dlb_adm_entity_id>objectIds;
+    std::vector<dlb_adm_entity_id>trackIds;
+    std::vector<dlb_adm_entity_id>avsIds;
+
+    ASSERT_TRUE(prepareIds(presentationIdStrings, presentationIds));
+    ASSERT_TRUE(prepareIds(contentIdStrings, contentIds));
+    ASSERT_TRUE(prepareIds(objectIdStrings, objectIds));
+    ASSERT_TRUE(prepareIds(trackIdStrings, trackIds));
+    ASSERT_TRUE(prepareIds(avsIdStrings, avsIds));
+
+    dlb_adm_entity_id presId = presentationIds[0];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[1]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[1]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 3);
+    EXPECT_EQ(mNames.label_count, 2);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+
+    presId = presentationIds[1];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[2]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[2]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 3);
+    EXPECT_EQ(mNames.label_count, 2);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+
+    presId = presentationIds[2];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[1]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[1]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, avsIds[0]);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 3);
+    EXPECT_EQ(mNames.label_count, 2);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_2", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English Boosted Dialog", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais Boosted Dialog", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+
+    presId = presentationIds[3];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[2]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[2]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, avsIds[2]);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 3);
+    EXPECT_EQ(mNames.label_count, 2);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_2", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English Boosted Dialog", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais Boosted Dialog", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+
+    presId = presentationIds[4];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[1]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[1]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, avsIds[1]);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 3);
+    EXPECT_EQ(mNames.label_count, 2);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_3", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English Only Compl Leader with AVS", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais Only Compl Leader with AVS", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+
+    presId = presentationIds[5];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[2]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[2]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, avsIds[3]);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 3);
+    EXPECT_EQ(mNames.label_count, 2);
+    EXPECT_EQ(0, ::strcmp("audioProgramme_4", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("English Only Compl Member with AVS", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[1]));
+    EXPECT_EQ(0, ::strcmp("Anglais Only Compl Member with AVS", mNames.names[2]));
+    EXPECT_EQ(0, ::strcmp("fre", mNames.langs[2]));
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[0]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(6, mElementData.channel_count);
+    EXPECT_EQ(objectIds[0], mElementData.audio_element.id);
+    EXPECT_EQ(0, mElementData.alt_val_count);
+    EXPECT_EQ(trackIds[0], mElementData.audio_tracks->id);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[1]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(mElementData.channel_count, 1);
+    EXPECT_EQ(mElementData.audio_element.id, objectIds[1]);
+    EXPECT_EQ(mElementData.alt_val_count, 2);
+    EXPECT_EQ(mElementData.alt_val_sets[0].id, avsIds[0]);
+    EXPECT_EQ(mElementData.alt_val_sets[0].has_gain, 1);
+    EXPECT_FLOAT_EQ(mElementData.alt_val_sets[0].gain.gain_value, 3.0);
+    EXPECT_EQ(mElementData.alt_val_sets[1].id, avsIds[1]);
+    EXPECT_EQ(mElementData.alt_val_sets[1].has_gain, 1);
+    EXPECT_FLOAT_EQ(mElementData.alt_val_sets[1].gain.gain_value, -6.0);
+    EXPECT_EQ(mElementData.targets->audio_type, DLB_ADM_AUDIO_TYPE_OBJECTS);
+    EXPECT_EQ(mElementData.audio_tracks->id, trackIds[1]);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[2]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(mElementData.channel_count, 1);
+    EXPECT_EQ(mElementData.audio_element.id, objectIds[2]);
+    EXPECT_EQ(mElementData.alt_val_count, 2);
+    EXPECT_EQ(mElementData.alt_val_sets[0].id, avsIds[2]);
+    EXPECT_EQ(mElementData.alt_val_sets[0].has_gain, 1);
+    EXPECT_FLOAT_EQ(mElementData.alt_val_sets[0].gain.gain_value, 4.0);
+    EXPECT_EQ(mElementData.alt_val_sets[1].id, avsIds[3]);
+    EXPECT_EQ(mElementData.alt_val_sets[1].has_gain, 1);
+    EXPECT_FLOAT_EQ(mElementData.alt_val_sets[1].gain.gain_value, -7.0);
+    EXPECT_EQ(mElementData.targets->audio_type, DLB_ADM_AUDIO_TYPE_OBJECTS);
+    EXPECT_EQ(mElementData.audio_tracks->id, trackIds[2]);
+}
+
+TEST_F(DlbAdmEmissionProfile, flattenComplementary_emissionProfileCompliant)
+{
+    int status;
+
+    status = ::dlb_adm_container_read_xml_file(oryginalContainer, emissionProfileCompliantFileName, DLB_ADM_TRUE);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Flattening ADM structure
+    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_container_write_xml_file(flattenedContainer, complementaryAndAvsFileName);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // ingest into the core model
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Check if content has been flattend
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_PROGRAMME, &count);
+    ASSERT_EQ(count, 4);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_CONTENT, &count);
+    ASSERT_EQ(count, 5);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_OBJECT, &count);
+    ASSERT_EQ(count, 5);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET, &count);
+    ASSERT_EQ(count, 3);
+
+    dlb_adm_bool isEmissionProfile;
+    status = ::dlb_adm_core_model_has_profile(coreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &isEmissionProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, isEmissionProfile);
+
+    std::vector<std::string>presentationIdStrings{"APR_1001","APR_1002","APR_1003","APR_1004"};
+    std::vector<std::string>contentIdStrings{"ACO_1001","ACO_1002","ACO_1003","ACO_1004","ACO_1005"};
+    std::vector<std::string>objectIdStrings{"AO_1001","AO_1002","AO_1003","AO_1004","AO_1005"};
+    std::vector<std::string>trackIdStrings{"ATU_00000001","ATU_00000007","ATU_00000008"};
+    std::vector<std::string>avsIdStrings{"AVS_1001_0001","AVS_1001_0002","AVS_1002_0001"};
+
+    std::vector<dlb_adm_entity_id>presentationIds;
+    std::vector<dlb_adm_entity_id>contentIds;
+    std::vector<dlb_adm_entity_id>objectIds;
+    std::vector<dlb_adm_entity_id>trackIds;
+    std::vector<dlb_adm_entity_id>avsIds;
+
+    ASSERT_TRUE(prepareIds(presentationIdStrings, presentationIds));
+    ASSERT_TRUE(prepareIds(contentIdStrings, contentIds));
+    ASSERT_TRUE(prepareIds(objectIdStrings, objectIds));
+    ASSERT_TRUE(prepareIds(trackIdStrings, trackIds));
+    ASSERT_TRUE(prepareIds(avsIdStrings, avsIds));
+
+    dlb_adm_entity_id presId = presentationIds[0];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[1]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[1]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 4);
+    EXPECT_EQ(mNames.label_count, 3);
+    EXPECT_EQ(0, ::strcmp("English", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[0]));
+
+    presId = presentationIds[1];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, avsIds[0]);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[2]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[2]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 4);
+    EXPECT_EQ(mNames.label_count, 3);
+    EXPECT_EQ(0, ::strcmp("Spanish", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("spa", mNames.langs[0]));
+
+    presId = presentationIds[2];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, avsIds[1]);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[3]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[3]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 4);
+    EXPECT_EQ(mNames.label_count, 3);
+    EXPECT_EQ(0, ::strcmp("Chinese", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("zho", mNames.langs[0]));
+
+    presId = presentationIds[3];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 3);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, avsIds[0]);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[1]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[1]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, avsIds[2]);
+    EXPECT_EQ(mPresentationData.content_groups[2].content_kind, DLB_ADM_CONTENT_KIND_DK_DESCRIPTION);
+    EXPECT_EQ(mPresentationData.content_groups[2].id, contentIds[4]);
+    EXPECT_EQ(mPresentationData.audio_elements[2].id, objectIds[4]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[2].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 4);
+    EXPECT_EQ(mNames.label_count, 3);
+    EXPECT_EQ(0, ::strcmp("English (VDS)", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("eng", mNames.langs[0]));
+}
+
+TEST_F(DlbAdmEmissionProfile, flattenComplementary_singleComplementaryMemberInProgramme)
+{
+    int status;
+
+    status = ::dlb_adm_container_read_xml_buffer(oryginalContainer, singleComplementaryMemberInProgramme.c_str(), singleComplementaryMemberInProgramme.size(), DLB_ADM_TRUE);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Flattening ADM structure
+    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // ingest into the core model
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Check if content has been flattend
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_PROGRAMME, &count);
+    ASSERT_EQ(count, 1);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_CONTENT, &count);
+    ASSERT_EQ(count, 5);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_OBJECT, &count);
+    ASSERT_EQ(count, 5);
+}
+
+TEST_F(DlbAdmEmissionProfile, flattenComplementary_plainCopyNonComplementaryProgrammes)
+{
+    int status;
+
+    status = ::dlb_adm_container_read_xml_buffer(oryginalContainer, sadmUnconsistentLanguages.c_str(), sadmUnconsistentLanguages.size(), DLB_ADM_TRUE);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Flattening ADM structure
+    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // ingest into the core model
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Check if content has been flattend
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_PROGRAMME, &count);
+    ASSERT_EQ(count, 2);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_CONTENT, &count);
+    ASSERT_EQ(count, 3);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_OBJECT, &count);
+    ASSERT_EQ(count, 3);
+
+    dlb_adm_bool isEmissionProfile;
+    status = ::dlb_adm_core_model_has_profile(coreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &isEmissionProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, isEmissionProfile);
+
+    std::vector<std::string>presentationIdStrings{"APR_1001","APR_1002"};
+    std::vector<std::string>contentIdStrings{"ACO_1001","ACO_1002","ACO_1003"};
+    std::vector<std::string>objectIdStrings{"AO_1001","AO_1002","AO_1003"};
+
+    std::vector<dlb_adm_entity_id>presentationIds;
+    std::vector<dlb_adm_entity_id>contentIds;
+    std::vector<dlb_adm_entity_id>objectIds;
+
+    ASSERT_TRUE(prepareIds(presentationIdStrings, presentationIds));
+    ASSERT_TRUE(prepareIds(contentIdStrings, contentIds));
+    ASSERT_TRUE(prepareIds(objectIdStrings, objectIds));
+
+    dlb_adm_entity_id presId = presentationIds[0];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[1]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[1]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 2);
+    EXPECT_EQ(mNames.label_count, 1);
+    EXPECT_EQ(0, ::strcmp("Presentation 1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("fr", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("Presentation 1", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("fr", mNames.langs[1]));
+
+    presId = presentationIds[1];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_UNDEFINED);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DESCRIPTION);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[2]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[2]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 2);
+    EXPECT_EQ(mNames.label_count, 1);
+    EXPECT_EQ(0, ::strcmp("Presentation 2", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("en", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("Presentation 2", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("en", mNames.langs[1]));
+
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, contentIds[0]);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 1);
+    EXPECT_EQ(mNames.label_count, 0);
+    EXPECT_EQ(0, ::strcmp("musicAndEffects", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("en", mNames.langs[0]));
+
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, contentIds[1]);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 1);
+    EXPECT_EQ(mNames.label_count, 0);
+    EXPECT_EQ(0, ::strcmp("dialog", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("fr", mNames.langs[0]));
+
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, contentIds[2]);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 1);
+    EXPECT_EQ(mNames.label_count, 0);
+    EXPECT_EQ(0, ::strcmp("radioCommentator", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("en", mNames.langs[0]));
+}
+
+TEST_F(DlbAdmEmissionProfile, flattenComplementary_sadm_51_MnE_3D_complementary)
+{
+    int status;
+
+    status = ::dlb_adm_container_read_xml_buffer(oryginalContainer, sadm_51_MnE_3D_complementary.c_str(), sadm_51_MnE_3D_complementary.size(), DLB_ADM_TRUE);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Flattening ADM structure
+    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_container_write_xml_file(flattenedContainer, "sadm_51_MnE_3D_complementary.flattned.out.xml");
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // ingest into the core model
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    dlb_adm_xml_container *coreModelContainer = nullptr;
+    status = dlb_adm_container_open_from_core_model(&coreModelContainer, coreModel);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_container_write_xml_file(coreModelContainer, "sadm_51_MnE_3D_complementary.flattned.coreModel.out.xml");
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Check if content has been flattend
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_PROGRAMME, &count);
+    ASSERT_EQ(count, 3);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_CONTENT, &count);
+    ASSERT_EQ(count, 4);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_OBJECT, &count);
+    ASSERT_EQ(count, 4);
+
+    dlb_adm_bool isEmissionProfile;
+    status = ::dlb_adm_core_model_has_profile(coreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &isEmissionProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, isEmissionProfile);
+}
+
+TEST_F(DlbAdmEmissionProfile, flattenComplementary_xml_me_2D_AVS)
+{
+    int status;
+
+    status = ::dlb_adm_container_read_xml_buffer(oryginalContainer, xml_me_2D_AVS.c_str(), xml_me_2D_AVS.size(), DLB_ADM_TRUE);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Flattening ADM structure
+    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // ingest into the core model
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Check if content has been flattend
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_PROGRAMME, &count);
+    ASSERT_EQ(count, 2);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_CONTENT, &count);
+    ASSERT_EQ(count, 2);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_OBJECT, &count);
+    ASSERT_EQ(count, 2);
+
+    dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET, &count);
+    ASSERT_EQ(count, 1);
+
+    dlb_adm_bool isEmissionProfile;
+    status = ::dlb_adm_core_model_has_profile(coreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &isEmissionProfile);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(DLB_ADM_TRUE, isEmissionProfile);
+
+    std::vector<std::string>presentationIdStrings{"APR_1001","APR_1002"};
+    std::vector<std::string>contentIdStrings{"ACO_1001","ACO_1002"};
+    std::vector<std::string>objectIdStrings{"AO_1001","AO_1002"};
+    std::vector<std::string>avsIdStrings{"AVS_1002_0001"};
+
+    std::vector<dlb_adm_entity_id>presentationIds;
+    std::vector<dlb_adm_entity_id>contentIds;
+    std::vector<dlb_adm_entity_id>objectIds;
+    std::vector<dlb_adm_entity_id>avsIds;
+
+    ASSERT_TRUE(prepareIds(presentationIdStrings, presentationIds));
+    ASSERT_TRUE(prepareIds(contentIdStrings, contentIds));
+    ASSERT_TRUE(prepareIds(objectIdStrings, objectIds));
+    ASSERT_TRUE(prepareIds(avsIdStrings, avsIds));
+
+    dlb_adm_entity_id presId = presentationIds[0];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_EFFECTS);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[1]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[1]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, DLB_ADM_NULL_ENTITY_ID);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 2);
+    EXPECT_EQ(mNames.label_count, 1);
+    EXPECT_EQ(0, ::strcmp("Presentation 1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("pol", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("Presentation 1", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("pol", mNames.langs[1]));
+
+    presId = presentationIds[1];
+    status = ::dlb_adm_core_model_get_presentation_data(&mPresentationData, coreModel, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mPresentationData.element_count, 2);
+    EXPECT_EQ(mPresentationData.presentation.id, presId);
+    EXPECT_EQ(mPresentationData.content_groups[0].content_kind, DLB_ADM_CONTENT_KIND_NK_EFFECTS);
+    EXPECT_EQ(mPresentationData.content_groups[0].id, contentIds[0]);
+    EXPECT_EQ(mPresentationData.audio_elements[0].id, objectIds[0]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[0].id, DLB_ADM_NULL_ENTITY_ID);
+    EXPECT_EQ(mPresentationData.content_groups[1].content_kind, DLB_ADM_CONTENT_KIND_DK_DIALOGUE);
+    EXPECT_EQ(mPresentationData.content_groups[1].id, contentIds[1]);
+    EXPECT_EQ(mPresentationData.audio_elements[1].id, objectIds[1]);
+    EXPECT_EQ(mPresentationData.alt_val_sets[1].id, avsIds[0]);
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, presId);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 2);
+    EXPECT_EQ(mNames.label_count, 1);
+    EXPECT_EQ(0, ::strcmp("Presentation 2", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("pol", mNames.langs[0]));
+    EXPECT_EQ(0, ::strcmp("Presentation 2", mNames.names[1]));
+    EXPECT_EQ(0, ::strcmp("pol", mNames.langs[1]));
+
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, contentIds[0]);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 1);
+    EXPECT_EQ(mNames.label_count, 0);
+    EXPECT_EQ(0, ::strcmp("Bed 1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("und", mNames.langs[0]));
+
+    status = ::dlb_adm_core_model_get_names(coreModel, &mNames, contentIds[1]);
+    EXPECT_EQ(status, DLB_ADM_STATUS_OK);
+    EXPECT_EQ(mNames.name_count, 1);
+    EXPECT_EQ(mNames.label_count, 0);
+    EXPECT_EQ(0, ::strcmp("Object 1", mNames.names[0]));
+    EXPECT_EQ(0, ::strcmp("pol", mNames.langs[0]));
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[0]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(2, mElementData.channel_count);
+    EXPECT_EQ(objectIds[0], mElementData.audio_element.id);
+    EXPECT_EQ(0, mElementData.alt_val_count);
+    EXPECT_EQ(MAX_SADM_ALT_VALUE_SETS, mElementData.alt_val_capacity);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[0]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(2, mElementData.channel_count);
+    EXPECT_EQ(objectIds[0], mElementData.audio_element.id);
+    EXPECT_EQ(0, mElementData.alt_val_count);
+    EXPECT_EQ(MAX_SADM_ALT_VALUE_SETS, mElementData.alt_val_capacity);
+
+    status = ::dlb_adm_core_model_get_element_data(&mElementData, coreModel, objectIds[1]);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(1, mElementData.channel_count);
+    EXPECT_EQ(objectIds[1], mElementData.audio_element.id);
+    EXPECT_EQ(1, mElementData.alt_val_count);
+    EXPECT_EQ(MAX_SADM_ALT_VALUE_SETS, mElementData.alt_val_capacity);
+
+    EXPECT_EQ(avsIds[0], mElementData.alt_val_sets[0].id);
+    EXPECT_EQ(DLB_ADM_TRUE, mElementData.alt_val_sets[0].has_position_offset);
+    EXPECT_EQ(DLB_ADM_TRUE, mElementData.alt_val_sets[0].has_gain);
+    EXPECT_EQ(DLB_ADM_GAIN_UNIT_DB, mElementData.alt_val_sets[0].gain.gain_unit);
+    EXPECT_FLOAT_EQ(-3.0, mElementData.alt_val_sets[0].gain.gain_value);
+}
+

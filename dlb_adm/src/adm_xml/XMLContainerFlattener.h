@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2020-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -261,7 +261,7 @@ namespace DlbAdm
              * @param Key DLB_ADM_ENTITY_TYPE of either audioProgramme, audioContent or audioObject
              * @param Value number used to generate next Id of specific entity type
              */
-            std::map<DLB_ADM_ENTITY_TYPE, size_t> mFlattenedIdNumber;
+            std::map<DLB_ADM_ENTITY_TYPE, uint32_t> mFlattenedIdNumber;
 
             bool mRegenerateFlowId;
     };

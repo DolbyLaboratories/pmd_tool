@@ -32,6 +32,8 @@ target_sources(dlb_adm
         XMLContainer.h
         XMLContainerFlattener.cpp
         XMLContainerFlattener.h
+        XMLContainerComplementaryFlattener.cpp
+        XMLContainerComplementaryFlattener.h
         XMLReader.cpp
         XMLReader.h
         XMLReaderStack.cpp

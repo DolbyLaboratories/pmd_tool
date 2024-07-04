@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby Laboratories Inc.
+ * Copyright (c) 2021, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -149,7 +150,7 @@ model_populate
         {
             if (dlb_pmd_sadm_file_read(filename, m->model, use_common_defs, error_callback, NULL))
             {
-                printf("XML read sADM file failed\n");
+                printf("XML read S-ADM file failed\n");
                 return PMD_FAIL;
             }
         }
