@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2023-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2023-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
+
 #define _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
 
 #include "gtest/gtest.h"
@@ -58,6 +59,7 @@ protected:
     dlb_adm_container_counts     containerCounts;
     dlb_adm_core_model_counts    coreModelCounts;
     dlb_adm_xml_container       *oryginalContainer;
+    dlb_adm_xml_container       *flattenedContainer;    
     dlb_adm_core_model          *coreModel;
 
     virtual void SetUp()
@@ -66,10 +68,13 @@ protected:
         ::memset(&containerCounts, 0, sizeof(containerCounts));
         ::memset(&coreModelCounts, 0, sizeof(coreModelCounts));
         oryginalContainer = nullptr;
+        flattenedContainer = nullptr;        
         coreModel = nullptr;
 
         status = ::dlb_adm_container_open(&oryginalContainer, &containerCounts);
         ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+        status = ::dlb_adm_container_open(&flattenedContainer, &containerCounts);
+        ASSERT_EQ(DLB_ADM_STATUS_OK, status);        
         status = ::dlb_adm_core_model_open(&coreModel, &coreModelCounts);
         ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
@@ -84,6 +89,14 @@ protected:
                 oryginalContainer = nullptr;
             }
         }
+
+        if (flattenedContainer != nullptr)
+        {
+            if (::dlb_adm_container_close(&flattenedContainer))
+            {
+                flattenedContainer = nullptr;
+            }
+        }        
 
         if (coreModel != nullptr)
         {
@@ -211,4 +224,26 @@ TEST_F(AnalyzeContentTest, PackFormat_Invalid)
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     status = dlb_adm_core_model_ingest_xml_container(coreModel, oryginalContainer);
     ASSERT_EQ(DLB_ADM_STATUS_ERROR, status);
+}
+
+TEST_F(AnalyzeContentTest, IngestAlternativeValueSetFromPMDStudio)
+{
+    int status = ::dlb_adm_container_clear_all(oryginalContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_container_clear_all(flattenedContainer);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);    
+    status = ::dlb_adm_core_model_clear(coreModel);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = ::dlb_adm_container_read_xml_buffer(oryginalContainer, altValSet.c_str(), altValSet.length(), true);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    //ingest into the core model
+    status = dlb_adm_core_model_add_profile(coreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_container_flatten(oryginalContainer, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    
+    status = dlb_adm_core_model_ingest_xml_container(coreModel, flattenedContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 }

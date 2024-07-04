@@ -1,5 +1,5 @@
 # pmd_tool (dlb_pmd_lib)
-# version 2.2.0
+# version 2.3.0
 
 This project provides applications and libraries to assist with conversion between
 various professional audio metadata formats and containers.
@@ -15,6 +15,8 @@ professional audio metadata in either file or streaming formats.
 
 For more information see the [release notes](ReleaseNotes.md).
 
+
+
 ## Getting Started
 
 These instructions will help you get a copy of the project up and
@@ -23,6 +25,8 @@ running on your local machine for development and testing purposes.
 ### Folder Structure
 
 - **README.md** This file.
+
+- [**PmdStudioFAQ.md**](PmdStudioFAQ.md) Frequently asked questions when getting started with PMD Studio
 
 - **ReleaseNotes.md** Release notes.
 
@@ -68,9 +72,17 @@ For Linux, 32-bit platforms are supported.
 
 The following tools are required for building the libraries and tools:
 
-- CMake
+- CMake >= 3.18
 - Conan 1.XX (tested on 1.58)
 - Git LFS
+
+
+```
+sudo apt-get install python3 python3-pip
+```
+```
+pip3 install cmake conan==1.58
+```
 
 #### Professional Sound Card
 
@@ -84,13 +96,14 @@ sudo apt-get install build-essential libgtk-3-dev libasound2-dev libjack-dev
 #### NVIDIA ConnectX
 
 When using an NVidia ConnectX SMARTNIC ethernet card the appropriate NVIDIA
-ConnectX ethernet driver and Rivermax SDK must be installed. Please contact
-NVIDIA regarding the Rivermax SDK and installation instructions.
-In addition the following packages are required when building under
-Ubuntu/Debian
+ConnectX ethernet driver and Rivermax SDK must be installed. Not all SDK versions 
+are supported, if in doubt of which versions to install, consult the 
+[PMD Studio Frequently Asked Questions](PmdStudioFAQ.md). Please contact NVIDIA 
+regarding the Rivermax SDK and installation instructions. In addition the following 
+packages are required when building under Ubuntu/Debian
 
 ```
-sudo apt-get install build-essential linuxptp libgtk-3-dev python libavahi-client-dev
+sudo apt-get install build-essential linuxptp libgtk-3-dev python python3 python3-pip libavahi-client-dev libavahi-compat-libdnssd-dev libnss-mdns avahi-utils gcc-9 libcurl4-openssl-dev libasound2-dev libjack-dev
 ```
 
 Before running the application, the linux machine must be configured to use PTP
@@ -135,14 +148,12 @@ Building dlb_pmd follows a similar process as most CMake-ready projects:
 | BUILD_PMD_STUDIO_RIVERMAX | TRUE / FALSE         | Builds dlb_pmd_studio_rivermax (requires Rivermax SDK, use when using NVidia ConnectX SMARTNIC ethernet card) | FALSE |
 | RIVERMAX_API_INCLUDE_DIR  | Path                 | Specify the Rivermax API directory | `/usr/include/mellanox/` |
 | CMAKE_BUILD_TYPE          | "Release" / "Debug"  | Project build type | "Release" |
-| USE_CONAN                 | TRUE / FALSE         | Use Conan for dependencies     | FALSE
 
-  USE_CONAN should be set to TRUE for NMOS dependency.
-
-  Example: `cmake .. -DCMAKE_BUILD_TYPE="Release" -DBUILD_PMD_STUDIO_RIVERMAX=TRUE -DUSE_CONAN=TRUE`
+  Example: `cmake .. -DCMAKE_BUILD_TYPE="Release" -DBUILD_PMD_STUDIO_RIVERMAX=TRUE`
 
 3. Build the project with `cmake --build .`
 
+If issues arise, consult the [Frequently Asked Questions](PmdStudioFAQ.md) document.
 
 ## Running the applications
 
@@ -160,7 +171,7 @@ application.
 PMD Studio is an application for authoring professional metadata.
 It provides a simple user interface for configuring audio beds, objects
 and presentations. The authored metadata may be saved as an XML file in
-either sADM or PMD formats or streamed using a professional sound card.  
+either S-ADM or PMD formats or streamed using a professional sound card.  
 
 Please see the [PMD Studio Quick Start Guide](PmdStudioQsg.md)
 

@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2020-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@
 #include <string.h>
 #include <sstream>
 #include <cstdio>
+#include <cmath>
 
 #include "AttributeValue.h"
 #include "AdmIdTranslator.h"
@@ -691,4 +692,50 @@ TEST(dlb_adm_test, ParseValue_String_to_dlb_adm_time_bad_string)
     timeString = "11:57:20.789S41611";
     status = ParseValue(timeConversionResult, timeString);
     EXPECT_EQ(DLB_ADM_STATUS_ERROR, status);
+}
+
+TEST(dlb_adm_test, ParseValue_float)
+{
+    dlb_adm_float value;
+    EXPECT_EQ(ParseValue(value, std::string("-inf")),DLB_ADM_STATUS_OK);
+    EXPECT_FLOAT_EQ(value, -INFINITY);
+
+    EXPECT_EQ(ParseValue(value, std::string("-INF")),DLB_ADM_STATUS_OK);
+    EXPECT_FLOAT_EQ(value, -INFINITY);
+
+    EXPECT_EQ(ParseValue(value, std::string("inf")),DLB_ADM_STATUS_OK);
+    EXPECT_FLOAT_EQ(value, INFINITY);
+
+    EXPECT_EQ(ParseValue(value, std::string("INF")),DLB_ADM_STATUS_OK);
+    EXPECT_FLOAT_EQ(value, INFINITY);
+
+    EXPECT_EQ(ParseValue(value, std::string("0")),DLB_ADM_STATUS_OK);
+    EXPECT_FLOAT_EQ(value, 0.0);
+    EXPECT_EQ(ParseValue(value, std::string("0.1")),DLB_ADM_STATUS_OK);
+    EXPECT_FLOAT_EQ(value, 0.1);
+    EXPECT_EQ(ParseValue(value, std::string("1")),DLB_ADM_STATUS_OK);
+    EXPECT_FLOAT_EQ(value, 1.0);
+}
+
+TEST(dlb_adm_test, WriteValue_float)
+{
+    std::stringstream ss;
+    dlb_adm_float val = -INFINITY;
+    DlbAdm::operator<<(ss, val);
+    EXPECT_STREQ(ss.str().c_str(), "-INF");
+
+    ss.str(std::string());
+    val = INFINITY;
+    DlbAdm::operator<<(ss, val);
+    EXPECT_STREQ(ss.str().c_str(), "INF");
+
+    ss.str(std::string());
+    val = 0.5;
+    DlbAdm::operator<<(ss, val);
+    EXPECT_STREQ(ss.str().c_str(), "0.50");
+
+    ss.str(std::string());
+    val = -10.25;
+    DlbAdm::operator<<(ss, val);
+    EXPECT_STREQ(ss.str().c_str(), "-10.25");
 }

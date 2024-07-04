@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2020-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -349,7 +349,7 @@ namespace DlbAdm
     {
         char buffer[64];
 
-        ::sprintf(buffer, "%.2f", v);   // TODO -- figure out how to do different precisions as desired
+        ::sprintf(buffer, "%.2F", v);   // TODO -- figure out how to do different precisions as desired
 
         mOstream << buffer;
     }

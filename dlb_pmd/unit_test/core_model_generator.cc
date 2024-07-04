@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2021-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2021-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -82,6 +82,14 @@ static const char bedClassME_D_SADMOutputFileName[] = "BedClassME_D.out.sadm.xml
 static const char bedClassDEF_CM_BM_PMDInputFileName[] = "BedClassDEF_CM_BM.pmd.xml";
 static const char bedClassDEF_CM_BM_SADMInputFileName[] = "BedClassDEF_CM_BM.sadm.xml";
 static const char bedClassDEF_CM_BM_SADMOutputFileName[] = "BedClassDEF_CM_BM.out.sadm.xml";
+
+static const char content_label_diff_lang_PMDInputFileName[] = "content_label_diff_lang.pmd.xml";
+static const char content_label_diff_lang_SADMInputFileName[] = "content_label_diff_lang.sadm.xml";
+static const char content_label_diff_lang_SADMOutputFileName[] = "content_label_diff_lang.out.sadm.xml";
+
+static const char content_label_same_lang_PMDInputFileName[] = "content_label_same_lang.pmd.xml";
+static const char content_label_same_lang_SADMInputFileName[] = "content_label_same_lang.sadm.xml";
+static const char content_label_same_lang_SADMOutputFileName[] = "content_label_same_lang.out.sadm.xml";
 
 class CoreModelGenerator : public testing::Test
 {
@@ -598,4 +606,82 @@ TEST_F(CoreModelGenerator, PMD_bedClass_DEF_CM_BM_to_SADM)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     EXPECT_TRUE(CompareFiles(bedClassDEF_CM_BM_SADMInputFileName, bedClassDEF_CM_BM_SADMOutputFileName));
+}
+
+TEST_F(CoreModelGenerator, contentLabelDiffLang)
+{
+    dlb_pmd_success success;
+    int status;
+    dlb_adm_xml_container    *container = NULL;
+    dlb_adm_container_counts  counts;
+
+    SetUpTestInput(content_label_diff_lang_PMDInputFileName, content_label_diff_lang_PMD);
+    SetUpTestInput(content_label_diff_lang_SADMInputFileName, content_label_diff_lang_SADM);
+    status = InitPmdModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    ASSERT_TRUE(InitComboModel(mPmdModel, nullptr));
+
+    status = ::xml_read(content_label_diff_lang_PMDInputFileName, mPmdModelCombo, PMD_FALSE, PMD_TRUE);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = InitCoreModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    success = dlb_adm_core_model_add_profile(mCoreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    status = dlb_adm_container_open(&container, &counts);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_container_load_common_definitions(container);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_core_model_ingest_common_definitions_container(mCoreModel, container);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    success = InitGenerator();
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::pmd_core_model_generator_generate(mGenerator, mCoreModel, mPmdModel);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    status = ::dlb_adm_container_open_from_core_model(&mContainer, mCoreModel);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_container_write_xml_file(mContainer, content_label_diff_lang_SADMOutputFileName);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    EXPECT_TRUE(CompareFiles(content_label_diff_lang_SADMInputFileName, content_label_diff_lang_SADMOutputFileName));
+}
+
+TEST_F(CoreModelGenerator, contentLabelSameLang)
+{
+    dlb_pmd_success success;
+    int status;
+    dlb_adm_xml_container    *container = NULL;
+    dlb_adm_container_counts  counts;
+
+    SetUpTestInput(content_label_same_lang_PMDInputFileName, content_label_same_lang_PMD);
+    SetUpTestInput(content_label_same_lang_SADMInputFileName, content_label_same_lang_SADM);
+    status = InitPmdModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    ASSERT_TRUE(InitComboModel(mPmdModel, nullptr));
+
+    status = ::xml_read(content_label_same_lang_PMDInputFileName, mPmdModelCombo, PMD_FALSE, PMD_TRUE);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    status = InitCoreModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    success = dlb_adm_core_model_add_profile(mCoreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    status = dlb_adm_container_open(&container, &counts);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_container_load_common_definitions(container);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_core_model_ingest_common_definitions_container(mCoreModel, container);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    success = InitGenerator();
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::pmd_core_model_generator_generate(mGenerator, mCoreModel, mPmdModel);
+    EXPECT_EQ(PMD_SUCCESS, success);
+    status = ::dlb_adm_container_open_from_core_model(&mContainer, mCoreModel);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = dlb_adm_container_write_xml_file(mContainer, content_label_same_lang_SADMOutputFileName);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+
+    EXPECT_TRUE(CompareFiles(content_label_same_lang_SADMInputFileName, content_label_same_lang_SADMOutputFileName));
 }

@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2020-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -58,6 +58,26 @@ static int retstat(int s)
 
 namespace DlbAdm
 {
+    static uint32_t GetIdNumber(dlb_adm_entity_id Id)
+    {
+        uint32_t number;
+        AdmIdTranslator translator;
+        translator.DeconstructUntypedId(Id, NULL, &number, NULL);
+        return number;
+    };
+
+    static int IsCommonDefinition(XMLContainer & container, dlb_adm_entity_id id, bool & isCommon)
+    {
+        int status;
+        EntityRecord e;
+
+        status = container.GetEntity(e, id);
+        CHECK_STATUS(status);
+
+        isCommon = e.status == EntityRecord::STATUS::COMMON_DEFINITION;
+        return status;
+    }
+
     XMLContainerFlattener::XMLContainerFlattener(dlb_adm_xml_container &container, dlb_adm_xml_container &flattenedContainer)
         : mSourceContainer(container.GetContainer())
         , mFlattenedContainer(flattenedContainer.GetContainer())
@@ -66,15 +86,24 @@ namespace DlbAdm
         , mFlattenedIdNumber()
         , mRegenerateFlowId(false)
     {
-        EntityDB::EntityCallbackFn countEntity = [&](const EntityRecord &e)
+        EntityDB::EntityCallbackFn getMaxEntitySequenceCounter = [&](const EntityRecord &e)
         {
-            mFlattenedIdNumber[mTranslator.GetEntityType(e.id)]++;
+            uint32_t currentId = mFlattenedIdNumber[mTranslator.GetEntityType(e.id)];
+            uint32_t nextId = GetIdNumber(e.id);
+            if (nextId > currentId)
+            {
+                mFlattenedIdNumber[mTranslator.GetEntityType(e.id)] = nextId;
+            }
             return DLB_ADM_STATUS_OK;
         };
 
-        mFlattenedIdNumber[DLB_ADM_ENTITY_TYPE_PROGRAMME] = 0;    // Start counting programms as they are unfold
-        mSourceContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_CONTENT, countEntity);
-        mSourceContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_OBJECT, countEntity);
+        // numeration starts with 0x1001
+        mFlattenedIdNumber[DLB_ADM_ENTITY_TYPE_PROGRAMME] = 0x1000;    // Start counting programms as they are unfold
+        mFlattenedIdNumber[DLB_ADM_ENTITY_TYPE_CONTENT] = 0x1000;
+        mFlattenedIdNumber[DLB_ADM_ENTITY_TYPE_OBJECT] = 0x1000;
+        mSourceContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_CONTENT, getMaxEntitySequenceCounter);
+        mSourceContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_OBJECT, getMaxEntitySequenceCounter);
+
     };
 
     XMLContainerFlattener::~XMLContainerFlattener()
@@ -109,26 +138,6 @@ namespace DlbAdm
         }
         return status;
     };
-
-    static uint32_t GetIdNumber(dlb_adm_entity_id Id)
-    {
-        uint32_t number;
-        AdmIdTranslator translator;
-        translator.DeconstructUntypedId(Id, NULL, &number, NULL);
-        return number;
-    };
-
-    static int IsCommonDefinition(XMLContainer & container, dlb_adm_entity_id id, bool & isCommon)
-    {
-        int status;
-        EntityRecord e;
-
-        status = container.GetEntity(e, id);
-        CHECK_STATUS(status);
-
-        isCommon = e.status == EntityRecord::STATUS::COMMON_DEFINITION;
-        return status;
-    }
 
     int XMLContainerFlattener::ProcessAndCopyChildEntities(dlb_adm_entity_id sourceParentId, dlb_adm_entity_id flattenedParentId, const RelationshipRecord &r)
     {
@@ -709,7 +718,7 @@ namespace DlbAdm
             case DLB_ADM_ENTITY_TYPE_CONTENT:
             case DLB_ADM_ENTITY_TYPE_OBJECT:
                 {
-                    nextId = mTranslator.ConstructUntypedId(entityType, 0x1000 + (++mFlattenedIdNumber[entityType])); // numeration starts with 0x1001
+                    nextId = mTranslator.ConstructUntypedId(entityType, ++mFlattenedIdNumber[entityType]);
                 }
             default:
                 break;

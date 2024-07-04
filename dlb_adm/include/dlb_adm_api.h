@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2020-2023, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -331,6 +331,13 @@ dlb_adm_container_read_xml_file
 DLB_ADM_DLL_ENTRY
 int
 dlb_adm_container_flatten
+    (dlb_adm_xml_container      *container
+    ,dlb_adm_xml_container      *flattened_container
+    );
+
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_container_flatten_complementary
     (dlb_adm_xml_container      *container
     ,dlb_adm_xml_container      *flattened_container
     );

@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2023, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -204,7 +205,7 @@ pmd_studio_file_menu_init
     fm->new_model  = uiMenuAppendItem(fm->menu, "New");
     fm->open_model = uiMenuAppendItem(fm->menu, "Open");
     fm->save_pmd   = uiMenuAppendItem(fm->menu, "Save PMD");
-    fm->save_sadm  = uiMenuAppendItem(fm->menu, "Save sADM");
+    fm->save_sadm  = uiMenuAppendItem(fm->menu, "Save S-ADM");
     uiMenuAppendSeparator(fm->menu);
     fm->update     = uiMenuAppendItem(fm->menu, "Update");
     fm->settings   = uiMenuAppendItem(fm->menu, "Settings");

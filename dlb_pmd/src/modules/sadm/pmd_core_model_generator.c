@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2021-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2021-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -104,7 +104,7 @@ static dlb_pmd_success ret_fail()
  * @def PMD_SOURCE_GROUP_NAME
  * @brief the name for the PMD "audio interface" source group
  */
-static const char PMD_SOURCE_GROUP_NAME[] = "PMD Audio Interface";
+static const char PMD_SOURCE_GROUP_NAME[] = "Audio Interface";
 
 /**
  * @def SPEAKER_CONFIG_CHANNEL_TOTAL
@@ -114,6 +114,23 @@ static const char PMD_SOURCE_GROUP_NAME[] = "PMD Audio Interface";
 #define SPEAKER_CONFIG_CHANNEL_TOTAL (72)
 
 #define PMD_BED_CLASS_COUNT (3)
+
+#define PMD_LANG_SIZE (4)
+
+/**
+ * @brief languages of presentations labels
+ *
+ */
+typedef struct dlb_pmd_pres_language_tag
+{
+    char language[PMD_LANG_SIZE];                   /**< ISO-639-1/2 language of name */
+} dlb_pmd_pres_language_tag;
+
+/**
+ * @brief array of presentation labels language tags
+ */
+typedef dlb_pmd_pres_language_tag language_tags[DLB_PMD_MAX_PRESENTATION_NAMES];
+
 
 /**
  * @brief Core model generator
@@ -133,7 +150,8 @@ struct pmd_core_model_generator
     char                *names_memory;                                      /* Memory for names data structure */
 
     dlb_adm_entity_id    current_audio_element_id;                          /* The ID for the current audio element during parsing */
-
+    language_tags        lang_tags;                                         /* Language tags used in presentation labels */
+    unsigned int         num_lang_tag;                                      /* Language tags amount */
 };
 
 /**
@@ -207,8 +225,8 @@ static const char* PMD_BED_CLASS_POSTFIX[PMD_BED_CLASS_COUNT] =
  */
 static const DLB_ADM_CONTENT_KIND PMD_TO_BED_CLASS_ADM_CONTENT_KIND[PMD_BED_CLASS_COUNT] = 
 {
-    /* $[ME] */ DLB_ADM_CONTENT_KIND_NK_EFFECTS,
-    /* $[CM] */ DLB_ADM_CONTENT_KIND_MK_MIXED,
+    /* $[ME] */ DLB_ADM_CONTENT_KIND_NK_UNDEFINED,
+    /* $[CM] */ DLB_ADM_CONTENT_KIND_MK_COMPLETE_MAIN,
     /* $[BM] */ DLB_ADM_CONTENT_KIND_MK_VISUALLY_IMPAIRED
 };
 
@@ -1127,6 +1145,80 @@ generate_nonbed_objects
     return PMD_SUCCESS;
 }
 
+static
+void
+generate_content_label
+    (dlb_pmd_element_id          element_id /**< [in] PMD element ID for which to generate core model objects */
+    ,unsigned int                is_bed     /**< [in] Indicate if element is bed */
+    ,DLB_ADM_CONTENT_KIND        content_kind
+    ,dlb_pmd_pres_language_tag*  language_tag
+    ,unsigned int                channel_number
+    ,char*                       content_label
+    )
+{
+    if (is_bed)
+    {
+        strcpy(content_label, "Bed ");
+        switch (channel_number)
+        {
+            case 2: strcat(content_label, "2.0"); break;
+            case 6: strcat(content_label, "5.1"); break;
+            case 10: strcat(content_label, "5.1.4"); break;
+            case 12: strcat(content_label, "7.1.4"); break;
+            case 16: strcat(content_label, "9.1.6"); break;
+            default: break;
+        }
+    }
+    else
+    {
+        switch (content_kind)
+        {
+            case DLB_ADM_CONTENT_KIND_DK_UNDEFINED:
+            case DLB_ADM_CONTENT_KIND_DK_DIALOGUE:
+                strcpy(content_label, "Dialogue "); break;
+            case DLB_ADM_CONTENT_KIND_DK_VOICEOVER:
+                strcpy(content_label, "Voiceover "); break;
+            case DLB_ADM_CONTENT_KIND_DK_SUBTITLE:
+                strcpy(content_label, "Spoken Subtitles "); break;
+            case DLB_ADM_CONTENT_KIND_DK_DESCRIPTION:
+                strcpy(content_label, "Audio Description "); break;
+            case DLB_ADM_CONTENT_KIND_DK_COMMENTARY:
+                strcpy(content_label, "Commentary "); break;
+            case DLB_ADM_CONTENT_KIND_DK_EMERGENCY:
+                strcpy(content_label, "Emergency "); break;
+            default:
+                strcpy(content_label, "Unknown "); break;
+        }
+        strcat(content_label, language_tag->language);
+    }
+}
+
+/**
+ * @brief get content language as language of presentation where this content is used
+ * If content isn't referenced by any presentation, language tag is set to "und"
+ * 
+ * NOTE: For consistency with ADM last presentation with given content is used
+ */
+static
+void
+get_content_language
+    (pmd_core_model_generator   *g
+    ,dlb_pmd_presentation_id     pres_id
+    ,dlb_pmd_pres_language_tag  *content_language
+    )
+{
+    dlb_pmd_element_id elements[DLB_PMD_MAX_AUDIO_ELEMENTS];
+    dlb_pmd_presentation pres;
+    if (pres_id == 0)
+    {
+        strcpy(content_language->language, "und");
+        return;
+    }
+
+    dlb_pmd_presentation_lookup(g->pmd_model, pres_id, &pres, DLB_PMD_MAX_AUDIO_ELEMENTS, elements);
+    strcpy(content_language->language, pres.audio_language);
+}
+
 /**
  * @brief generate core model objects for a PMD element
  */
@@ -1135,6 +1227,7 @@ dlb_pmd_success             /** @return PMD_SUCCESS(=0) on success and PMD_FAIL(
 generate_element_objects
     (pmd_core_model_generator   *g          /**< [in] PMD -> core model converter */
     ,dlb_pmd_element_id          element_id /**< [in] PMD element ID for which to generate core model objects */
+    ,dlb_pmd_presentation_id     pres_id    /**< [in] PMD presentation ID which contain current element */
     )
 {
     dlb_adm_data_content_group content_group;
@@ -1146,6 +1239,10 @@ generate_element_objects
     dlb_pmd_bed bed;
     dlb_pmd_success success;
     int status;
+    unsigned int i = 0;
+    char content_label[DLB_PMD_TITLE_SIZE];
+    dlb_pmd_pres_language_tag content_language;
+    unsigned int number_of_channels = 0;
 
     memset(&content_group, 0, sizeof(content_group));
     memset(&audio_element, 0, sizeof(audio_element));
@@ -1166,6 +1263,7 @@ generate_element_objects
             audio_element.gain.gain_value = bed.sources[0].gain;    /* we'll check other gains for equality later */
             audio_element.object_class = DLB_ADM_OBJECT_CLASS_NONE;
             is_bed = PMD_TRUE;
+            number_of_channels = bed.num_sources;
         }
         else if (!dlb_pmd_object_lookup(g->pmd_model, element_id, &object))
         {
@@ -1184,10 +1282,19 @@ generate_element_objects
         status = dlb_adm_core_model_add_name(&g->names, (is_bed ? bed.name : object.name), "");
         CHECK_STATUS_SUCCESS(status);
 
-        status = dlb_adm_core_model_add_content_group(g->core_model, &content_group, &g->names);
+        status = dlb_adm_core_model_add_audio_element(g->core_model, &audio_element, &g->names);
         CHECK_STATUS_SUCCESS(status);
 
-        status = dlb_adm_core_model_add_audio_element(g->core_model, &audio_element, &g->names);
+        get_content_language(g, pres_id, &content_language);
+        memset(content_label, 0, DLB_PMD_TITLE_SIZE);
+        generate_content_label(element_id, is_bed, content_group.content_kind, &content_language, number_of_channels, content_label);
+        for (i = 0; i < g->num_lang_tag; i++)
+        {
+            status = dlb_adm_core_model_add_label(&g->names, content_label, g->lang_tags[i].language);
+            CHECK_STATUS_SUCCESS(status);
+        }
+
+        status = dlb_adm_core_model_add_content_group(g->core_model, &content_group, &g->names);
         CHECK_STATUS_SUCCESS(status);
 
         g->current_audio_element_id = audio_element.id;
@@ -1369,6 +1476,109 @@ check_if_object_has_same_source
     return PMD_FALSE;
 }
 
+static
+void
+populate_lang_tag
+    (pmd_core_model_generator *g
+    ,dlb_pmd_presentation             pmd_pres
+    ,dlb_pmd_presentation_id   *pres_id 
+    )
+{
+    unsigned int i;
+
+    g->num_lang_tag = pmd_pres.num_names;
+    for (i = 0; i < pmd_pres.num_names; ++i)
+    {
+        strncpy(g->lang_tags[i].language, pmd_pres.names[i].language, PMD_LANG_SIZE);
+        g->lang_tags[i].language[PMD_LANG_SIZE - 1] = '\0';
+    }  
+}
+
+/**
+ * @brief Populates lang_tags structure in pmd_core_model_generator with language 
+ * tags used in presentations labels
+ */
+static
+dlb_pmd_success
+dlb_pmd_initialize_language_tags
+    (pmd_core_model_generator *g
+    ,dlb_pmd_element_id        id
+    ,dlb_pmd_presentation_id   *pres_id
+    ,unsigned int               num_sources
+    ,dlb_pmd_source            *sources
+    )
+{
+    dlb_pmd_presentation_iterator    pi;
+    dlb_pmd_presentation             pmd_pres;
+    dlb_pmd_element_id               elements[DLB_PMD_MAX_AUDIO_ELEMENTS];
+    unsigned int i, el;
+    int status;
+
+    g->num_lang_tag = 0;
+    *pres_id = 0;
+
+    /* Get info from first presentation, if element is not present in any presentation*/
+    status = dlb_pmd_presentation_lookup(g->pmd_model, 1, &pmd_pres, DLB_PMD_MAX_AUDIO_ELEMENTS, elements);
+    if (status != PMD_SUCCESS)
+    {
+        return PMD_SUCCESS;
+    }
+    populate_lang_tag(g, pmd_pres, pres_id);
+
+    if (dlb_pmd_presentation_iterator_init(&pi, g->pmd_model))
+    {
+        return FAILURE;
+    }
+    
+    /* for consistency with ADM the last presentation with current audio element is used */
+    while (!dlb_pmd_presentation_iterator_next(&pi, &pmd_pres, DLB_PMD_MAX_AUDIO_ELEMENTS, elements))
+    {
+        for (el = 0; el < pmd_pres.num_elements; ++el)
+        {
+            dlb_pmd_bed bed;
+            dlb_pmd_source element_sources[MAX_BED_CHANNEL_COUNT];
+
+            /* element is referenced by presentation */
+            if (elements[el] == id)
+            {
+                populate_lang_tag(g, pmd_pres, pres_id);
+                *pres_id = pmd_pres.id;
+                break;
+            }
+
+            if (num_sources > 1)
+            {
+                /* check if model has alternative value bed which is referenced by presentation */
+                if (dlb_pmd_bed_lookup(g->pmd_model, elements[el], &bed, MAX_BED_CHANNEL_COUNT, element_sources) == PMD_SUCCESS)
+                {
+                    if (has_same_channels(num_sources, sources, bed.num_sources, bed.sources))
+                    {
+                        populate_lang_tag(g, pmd_pres, pres_id);
+                        *pres_id = pmd_pres.id;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                dlb_pmd_object object;
+                /* check if model has alternative value object which is referenced by presentation */
+                if (dlb_pmd_object_lookup(g->pmd_model, elements[el], &object) == PMD_SUCCESS)
+                {
+                    if (object.source == sources[0].source)
+                    {
+                        populate_lang_tag(g, pmd_pres, pres_id);
+                        *pres_id = pmd_pres.id;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return PMD_SUCCESS;
+}
+
 
 /**
  * @brief generate a core model element for each PMD element
@@ -1385,9 +1595,11 @@ generate_elements
     dlb_pmd_object_iterator  oi;
     dlb_pmd_object           object;
     dlb_pmd_source           sources[MAX_BED_CHANNEL_COUNT];
+    dlb_pmd_presentation_id  pres_id = 0;
     unsigned int             unum = 0;
     unsigned int             i;
     unsigned int             channel_check[DLB_PMD_MAX_SIGNALS];
+    int                      status;
 
 
     memset(channel_check, 0, sizeof(channel_check));
@@ -1401,6 +1613,9 @@ generate_elements
 
     while (!dlb_pmd_bed_iterator_next(&bi, &bed, MAX_BED_CHANNEL_COUNT, sources))
     {
+        status = dlb_pmd_initialize_language_tags(g, bed.id, &pres_id, bed.num_sources, bed.sources);
+        CHECK_STATUS_SUCCESS(status);
+
         dlb_pmd_element_id main_id;
         if (check_if_bed_has_same_source(g->pmd_model, unique_elements, unum, &main_id, bed.num_sources, sources))
         {
@@ -1408,7 +1623,7 @@ generate_elements
         }
         else
         {
-            if (generate_element_objects(g, bed.id))
+            if (generate_element_objects(g, bed.id, pres_id))
             {
                 return FAILURE;
             }
@@ -1434,6 +1649,11 @@ generate_elements
 
     while (!dlb_pmd_object_iterator_next(&oi, &object))
     {
+        dlb_pmd_source sources[1];
+        sources[0].source = object.source_gain;
+        status = dlb_pmd_initialize_language_tags(g, object.id, &pres_id, 1, sources);
+        CHECK_STATUS_SUCCESS(status);
+        
         dlb_pmd_element_id main_id;
         if (check_if_object_has_same_source(g->pmd_model, unique_elements, unum, &main_id, object.source))
         {
@@ -1441,7 +1661,7 @@ generate_elements
         }
         else
         {
-            if (generate_element_objects(g, object.id))
+            if (generate_element_objects(g, object.id, pres_id))
             {
                 return FAILURE;
             }
@@ -1744,8 +1964,13 @@ generate_presentations
     {
         if (!get_element_bit(element_set, bed.id))
         {
-            status = add_presentation_relation(g, DLB_ADM_NULL_ENTITY_ID, bed.id);
-            CHECK_STATUS_SUCCESS(status);
+            unsigned int sequence_number = 0;
+            dlb_pmd_element_id parent_element_id;
+            if (!check_if_avs_should_be_added(g->pmd_model, bed.id, &parent_element_id, &sequence_number))
+            {
+                status = add_presentation_relation(g, DLB_ADM_NULL_ENTITY_ID, bed.id);
+                CHECK_STATUS_SUCCESS(status);
+            }
         }
     }
 
@@ -1758,8 +1983,13 @@ generate_presentations
     {
         if (!get_element_bit(element_set, object.id))
         {
-            status = add_presentation_relation(g, DLB_ADM_NULL_ENTITY_ID, object.id);
-            CHECK_STATUS_SUCCESS(status);
+            unsigned int sequence_number = 0;
+            dlb_pmd_element_id parent_element_id;
+            if (!check_if_avs_should_be_added(g->pmd_model, object.id, &parent_element_id, &sequence_number))
+            {
+                status = add_presentation_relation(g, DLB_ADM_NULL_ENTITY_ID, object.id);
+                CHECK_STATUS_SUCCESS(status);
+            }
         }
     }
 

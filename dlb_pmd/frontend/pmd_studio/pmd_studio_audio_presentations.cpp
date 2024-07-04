@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2023, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1043,7 +1044,7 @@ pmd_studio_audio_presentations_update_model
             if (eid == get_selected_bed_eid(apre))
             {
                 // Set presentation config to equal bed config
-                // This needs to be be here until a way to convey the bed config is found in sADM
+                // This needs to be be here until a way to convey the bed config is found in S-ADM
                 // and a separate control for bed config can be established
                 apre->presentation.config = pmd_studio_audio_beds_get_bed_config(apres->studio, eid);
             }

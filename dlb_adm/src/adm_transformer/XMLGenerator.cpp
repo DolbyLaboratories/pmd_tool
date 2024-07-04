@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2020-2023, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1019,6 +1019,7 @@ namespace DlbAdm
     static int GetPresentationLanguage(const CoreModel &model, dlb_adm_entity_id contentGroupID, std::string &lang)
     {
         int status = DLB_ADM_STATUS_OK;
+        lang = std::string("und");
         
         CoreModel::PresentationCallbackFn presentationCallback = [&](const PresentationRecord &r)
         {
@@ -1033,6 +1034,7 @@ namespace DlbAdm
                 
                 if (DLB_ADM_CONTENT_KIND_NK_MUSIC == contentGroup->GetContentKind() ||
                     DLB_ADM_CONTENT_KIND_NK_EFFECTS == contentGroup->GetContentKind() ||
+                    DLB_ADM_CONTENT_KIND_NK_UNDEFINED == contentGroup->GetContentKind() ||
                     !program->HasName()
                    )
                 {

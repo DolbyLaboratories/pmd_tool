@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_socket
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2019, Dolby Laboratories Inc.
+ * Copyright (c) 2019, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +33,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************/
+/**
+ * @file client.c
+ * @brief simple command-line tool to test http client library
+ */
 
 #include "dlb_http_client.h"
 #include <stdlib.h>

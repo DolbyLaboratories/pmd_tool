@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2020-2023, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
 #include <inttypes.h>
 
 static const int DLB_ADM_VERSION_MAJOR = 2;
-static const int DLB_ADM_VERSION_MINOR = 2;
+static const int DLB_ADM_VERSION_MINOR = 3;
 static const int DLB_ADM_VERSION_PATCH = 0;
 
 #ifdef EXTERNAL_ADM_COMMON_DEFINITIONS

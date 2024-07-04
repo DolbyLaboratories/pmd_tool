@@ -1,6 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2023, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2023, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -996,7 +997,7 @@ get_sadm_payload(dlb_pmd_model_combo *model, void *payload, unsigned int &max_pa
 
     if (max_payload_size > MAX_DATA_BYTES)
     {
-        pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Memory for sADM payload not large enough");
+        pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Memory for S-ADM payload not large enough");
         return (PMD_FAIL);
     }
 
@@ -1005,7 +1006,7 @@ get_sadm_payload(dlb_pmd_model_combo *model, void *payload, unsigned int &max_pa
 
     if(mem == nullptr)
     {
-        pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Could not allocate memory for SADM/PMD encoder");
+        pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Could not allocate memory for S-ADM/PMD encoder");
         return(PMD_FAIL);
     }
 
@@ -1023,7 +1024,7 @@ get_sadm_payload(dlb_pmd_model_combo *model, void *payload, unsigned int &max_pa
 
     if (sadm_payload_bytes > MAX_DATA_BYTES)
     {
-        pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "sADM payload was larger than expected, corruption may have occurred");
+        pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "S-ADM payload was larger than expected, corruption may have occurred");
         return (PMD_FAIL);
     }
 
@@ -1523,7 +1524,7 @@ pmd_studio_audio_outputs_update_metadata_output
             dlb_pmd_bool sadm = (mout->format == SADM_OUTPUT_MODE)? PMD_TRUE : PMD_FALSE;
             void *mem = malloc(dlb_pcmpmd_augmentor_query_mem(sadm));
             if(mem == nullptr){
-                pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Could not allocate memory for SADM/PMD encoder");
+                pmd_studio_error(PMD_STUDIO_ERR_MEMORY, "Could not allocate memory for S-ADM/PMD encoder");
                 return(PMD_FAIL);
             }
             dlb_pmd_bool pair;
@@ -1629,7 +1630,7 @@ pmd_studio_on_augmentor_fail_cb
     if(mdout != nullptr)
     {
         pmd_studio_warning(model->error);
-        uiMsgBoxError(mdout->outputs->studio->window, "Unable to generate sADM frame", model->error);
+        uiMsgBoxError(mdout->outputs->studio->window, "Unable to generate S-ADM frame", model->error);
         mdout->augmentor_error = PMD_TRUE;  
     }
 }

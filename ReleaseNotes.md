@@ -1,4 +1,4 @@
-PMD 2.2.0 release notes
+PMD 2.3.0 release notes
 =======================
 
 Serialized ADM (ITU-R BS.2125) and Professional Metadata (PMD, SMPTE RDD-49)
@@ -50,36 +50,52 @@ Test applications:
 
 Known issues:
 -------------
-- Only Linux 64 is tested for 2.2.0
+- Only Linux x86_64 (64-bit) is tested for 2.3.0
 - To build the test applications on Linux, you need the ICU unicode library and
   header files (http://site.icu-project.org/home)
 - pmd_studio will not build on Windows and OSX support is limited
-- PMD to S-ADM translation use hardcoded values
+- PMD to S-ADM translation uses hardcoded values
 
-Changes since 2.2:
+Changes in 2.3:
 --------------------
-- Add bed type support to PMD to S-ADM translation
-- Add support for "qaa" language tag
-- Emission Profile fixes
-- Fix translation from PMD to S-ADM (AVS)
-- Partially fix dynamic memory allocation in dlb_adm 
-- PMD Studio is updated
+- ADM library
+  - Fixed flattening algorithm for discontinuous audioObjects and audioContents
+  - Added new flattening algorithm, which flattens only complementary objects 
+  - Fixed incorrect -inf gain value to use proper -INF
+- PMD library
+  - Added audioContentLabel generation for PMD to S-ADM translation
+  - Changed resulting S-ADM audioContentKind for Complete Main and 
+  Music and Effects bed types
+- PMD Studio:
+  - Added support for up to ten presentations and ten objects
+  - Updated data item type (DIT) to "0x000100"
 
-Changes since 2.1.1:
+Changes in 2.2:
+--------------------
+- Added bed type support to PMD to S-ADM translation
+- Added support for "qaa" language tag
+- Fixed Emission Profile issues
+- Fixed translation from PMD to S-ADM for alternativeValueSet
+- Partially fixed dynamic memory allocation in dlb_adm 
+- Updated PMD Studio
+
+Changes in 2.1.1:
 --------------------
 - Add read/write to/from S-ADM buffer
 - Emission Profile fixes
 - Fix translation from PMD to S-ADM (AVS)
 
-Changes since 2.1.0:
+Changes in 2.1.0:
 --------------------
-Add support to ITU-R_BS.2125-1 and ITU-R_BS.2076-3
-Fix translation from PMD to S-ADM
-Changes since 2.0.0:
-Added beta implementation of draft Recommendation ITU-R BS.[ADM-NGA-Emission]-X
-Added new component for flattening S-ADM metadata.
+- Added support for ITU-R_BS.2125-1 and ITU-R_BS.2076-3 standards
+- Fixed translation from PMD to S-ADM issues
 
-Changes since 1.7.4:
+Changes in 2.0.0:
+--------------------
+- Added beta implementation of draft Recommendation ITU-R BS.[ADM-NGA-Emission]-X
+- Added new component for flattening S-ADM metadata.
+
+Changes in 1.7.4:
 --------------------
 - Added the boost C++ library in support of the new ADM library.
 - Added the new ADM library, which is implemented in C++ with a C-callable
@@ -87,7 +103,7 @@ Changes since 1.7.4:
   entirely replaces the original ADM implementation.  It is much more easily
   maintained and extended, and is more than three times faster than the orginal.
 
-Changes since 1.7.3.34:
+Changes in 1.7.3.34:
 -----------------------
 - Added NVIDIA Rivermax support to the PMD Studio Application so that
   SMPTE ST 2110-30/31 streams are natively supported. Professional audio card
@@ -95,7 +111,7 @@ Changes since 1.7.3.34:
   [PMD Studio Quick Start Guide](PmdStudioQsg.md) for more information and
   requirements.
 
-Changes since 1.7.3.33:
+Changes in 1.7.3.33:
 -----------------------
 - Remove some misleading documentation in the PmdStudioQsg.md file.
 - Add "por" to the list of supported language codes in pmd_studio.
@@ -104,7 +120,7 @@ Changes since 1.7.3.33:
   and typeDefinition optional; and if both are present, check that they are
   consistent.
 
-Changes since 1.7.2:
+Changes in 1.7.2:
 --------------------
 - Major improvements to the pmd_studio application.
 - PMDLIB-197: Improve error handling.  Added an error callback mechanism in the
@@ -119,7 +135,7 @@ Changes since 1.7.2:
   the PMD library API to control wrapping bit depth.
 - PMDLIB-146: Change pmd_studio language codes to bibliographic.
 
-Changes since 1.7.1:
+Changes in 1.7.1:
 --------------------
 - PMDLIB-75: Got "flowID" attribute of frameFormat element working end-to-end.
 - If memory pointer is NULL, use malloc() to acquire memory in dlb_pmd_init() and
@@ -194,13 +210,13 @@ Changes since 1.7.1:
 - PMDLIB-178: S-ADM -- gzip header is missing from SMPTE-wrapped, compressed
   databurst.
 
-Changes since 1.7.0:
+Changes in 1.7.0:
 --------------------
 - Fixed a bug in the PCM extractor causing framing errors.
 - Updated the S-ADM implementation to be consistent with the ITU-R BS.2076-2 and
   BS.2125-0 specification documents.
 
-Changes since 1.6.0:
+Changes in 1.6.0:
 --------------------
 - New version of the pmd_studio application, v0.2 (alpha).
 - Fixed pmd_studio to always add the IAT payload.
@@ -225,7 +241,7 @@ Changes since 1.6.0:
 - In pmd_test, fixed the encoding of dialnorm values for testing EEP and ETD.
 
 
-Changes since 1.5.0:
+Changes in 1.5.0:
 --------------------
 - [DPF-2423] bug to make sure APN are transmitted out of ED2 decoder
 - serial ADM support (Dolby Profile)
@@ -237,7 +253,7 @@ Changes since 1.5.0:
   and 4 presentations only.
 
 
-Changes since 1.4.1:
+Changes in 1.4.1:
 --------------------
 - PMD XML schema fix: 'use="required"' attribute added to line 388, specifying that
   the language attribute is required part of presentation name
@@ -261,12 +277,12 @@ Changes since 1.4.1:
 - correct return code bug in dlb_pmd_add_presentation2()
 
  
-Changes since 1.4.0:
+Changes in 1.4.0:
 --------------------
 - bug fix to PMD ED2 layout rules
 
 
-Changes since 1.3.0:
+Changes in 1.3.0:
 --------------------
 - coverity fixes
 - minor tidy of pmd_tool.c and it's support for generating pseudo-random models
@@ -275,7 +291,7 @@ Changes since 1.3.0:
   where 1.0 means 'front' and -1.0 means 'back'
 
 
-Changes since 1.2.0:
+Changes in 1.2.0:
 --------------------
 
 - change Pd value for substream 0 of ED2 systems so that it is 1 word
@@ -291,7 +307,7 @@ Changes since 1.2.0:
   the first MGI packet, not waiting for 8.
 
 
-Changes since 1.1:
+Changes in 1.1:
 ------------------
 
 - [DPF-1900] clarify how to use the dlb_pmd_presentation, dlb_pmd_bed

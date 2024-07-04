@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2021-2024, Dolby Laboratories Inc.
+ * Copyright (c) 2021-2024, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -651,11 +651,6 @@ generate_pmd_presentation
         success = translate_audio_element_id(&elements[i], data->audio_elements[i].id);
         CHECK_SUCCESS(success);
         reconcile_presentation_config(ingester, &pres, i);
-    }
-    if (pres.config == DLB_PMD_SPEAKER_CONFIG_NONE)
-    {
-        /* This will happen if the presentation has no beds (which might be no elements at all) */
-        return FAILURE;     /* TODO: is there an alternative to failure? */
     }
 
     status = dlb_adm_core_model_get_names(ingester->core_model, &ingester->names, data->presentation.id);
