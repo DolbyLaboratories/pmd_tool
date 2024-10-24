@@ -307,6 +307,8 @@ void ST2110Transmitter::MetadataStreamThread(void)
 			// Add 2127 Header to Payload before fragmentation
 			headerSize2127 = GetSadmST2127Header(headerBuf, payloadSizeBytes);
 			metadataProtoBuf.AddPayloadHeader(headerBuf, headerSize2127);
+			// Round up to word boundary
+			metadataProtoBuf.AlignPayload();
 			// calculate the number of strides we need to send this metadata frame
 			stridesToBeTXed = metadataProtoBuf.GetNumFragments();
 		}
@@ -795,6 +797,7 @@ unsigned int ST2110Transmitter::GetRTPHeader(uint8_t *&buff)
 
 unsigned int ST2110Transmitter::GetSMPTE2110_41Header(uint8_t *const buff, unsigned int byteCount, unsigned int byteOffset, bool lastPacket)
 {
+	//unsigned int wordCount = ceil((float)byteCount / 4.0f);
 	unsigned int wordCount = ceil((float)byteCount / 4.0f) + 1; // DIL = number of 32 words that follow including Segment Data Offset
 	unsigned int wordOffset = ceil((float)byteOffset / 4.0f);
 
