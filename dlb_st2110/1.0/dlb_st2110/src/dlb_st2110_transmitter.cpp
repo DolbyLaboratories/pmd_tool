@@ -795,7 +795,7 @@ unsigned int ST2110Transmitter::GetRTPHeader(uint8_t *&buff)
 
 unsigned int ST2110Transmitter::GetSMPTE2110_41Header(uint8_t *const buff, unsigned int byteCount, unsigned int byteOffset, bool lastPacket)
 {
-	unsigned int wordCount = ceil((float)byteCount / 4.0f);
+	unsigned int wordCount = ceil((float)byteCount / 4.0f) + 1; // DIL = number of 32 words that follow including Segment Data Offset
 	unsigned int wordOffset = ceil((float)byteOffset / 4.0f);
 
 	// Assume only one DIT for now
