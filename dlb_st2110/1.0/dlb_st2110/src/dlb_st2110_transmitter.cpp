@@ -870,7 +870,7 @@ unsigned int ST2110Transmitter::GetSadmST2127Header(uint8_t *const buff, unsigne
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 */
 	unsigned int berLengthSize = BERLengthEncode(payloadLength + 2, &buff[6]); // + 2 for version & format
-	uint32_t mgaFrameLength = 3 + berLengthSize + payloadLength;
+	uint32_t mgaFrameLength = 3 + berLengthSize + payloadLength; // 1 for tag + 2 for version & format
 	buff[0] = 2;
 	buff[1] = mgaFrameLength >> 24;
 	buff[2] = (mgaFrameLength >> 16) & 0xff;
