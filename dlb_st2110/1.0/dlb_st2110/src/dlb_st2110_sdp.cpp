@@ -510,7 +510,7 @@ void Sdp2110::SetText(const char *text)
 		// Check -41 string and standard version
 		if ((ditLineFields[3].compare("SSN")) ||
 			(ditLineFields[4].compare("ST2110-41")) ||
-			(ditLineFields[5].compare("2021")) ||
+			(ditLineFields[5].compare("2024")) ||
 			(ditLineFields[6].compare("DIT")))
 		{
 			return;
@@ -659,7 +659,7 @@ void Sdp2110::GetText(char *sdpText, unsigned int size, bool rmax) const
 	strncat(sdpText, "a=sync-time:0\n", size);
 	if ((streamInfo.streamType == SMPTE2110_41) && !rmax)
 	{
-		snprintf(line, lineSize, "a=fmtp:%u SSN=ST2110-41:2021; DIT=", streamInfo.payloadType);
+		snprintf(line, lineSize, "a=fmtp:%u SSN=ST2110-41:2024; DIT=", streamInfo.payloadType);
 		strncat(sdpText, line, size);
 		vector<unsigned int>::const_iterator penultimateDit = streamInfo.metadata.dataItemTypes.end() - 1;
 		for (vector<unsigned int>::const_iterator dit = streamInfo.metadata.dataItemTypes.begin() ; dit != streamInfo.metadata.dataItemTypes.end() ; dit++)
