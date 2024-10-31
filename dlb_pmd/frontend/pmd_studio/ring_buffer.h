@@ -67,6 +67,7 @@ class PMDStudioRingBufferList
         pmd_studio_video_frame_rate frameRate;
         unsigned int numSamples;
         unsigned int bufSizeBytes;
+        unsigned int activeBufSizeBytes;
         // Three references
         int active;
         int queued;
@@ -85,6 +86,7 @@ class PMDStudioRingBufferList
             frameRate(INVALID_FRAME_RATE),
             numSamples(0),
             bufSizeBytes(0),
+            activeBufSizeBytes(0),
             active(-1),
             queued(-1),
             edited(-1)
@@ -143,6 +145,7 @@ class PMDStudioRingBufferList
             }
             numChannels = newNumChannels;
             bufSizeBytes = numSamples * sizeof(uint32_t);
+            activeBufSizeBytes = bufSizeBytes;
             nextSampleIndex = 0;
             frameRateCadenceIndex = 0;
             frameRate = newFrameRate;
@@ -245,6 +248,7 @@ class PMDStudioRingBufferList
             queued = edited;
             edited = -1;
             unsigned int newPcmBufSamples = ceil(newBufSizeBytes / (float)sizeof(int32_t));
+            activeBufSizeBytes = newBufSizeBytes; // avoids round up to sample
             // Check that requested size is not more than allocated size
             if (newPcmBufSamples > maxPcmBufSamples)
             {
@@ -296,7 +300,7 @@ class PMDStudioRingBufferList
                 queued = -1;
             }
 
-            return(bufSizeBytes);
+            return(activeBufSizeBytes);
         }
 
         uint32_t GetNextWord()

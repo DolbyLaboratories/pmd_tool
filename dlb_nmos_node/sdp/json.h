@@ -533,7 +533,7 @@ namespace sdp
     namespace smpte_standard_numbers
     {
         const smpte_standard_number ST2110_20_2017{ U("ST2110-20:2017") };
-        const smpte_standard_number ST2110_41_2021{ U("ST2110-41:2021") };
+        const smpte_standard_number ST2110_41_2024{ U("ST2110-41:2024") };
     }
 
     // TP (Media Type Parameter)

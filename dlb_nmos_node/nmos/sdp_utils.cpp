@@ -625,15 +625,10 @@ static web::json::value make_smpte2110_41_data_session_description(const sdp_par
         dit_hex_ss << std::uppercase << std::hex << sdp_params.smpte2110_41_data.dit;
 
         const auto format_specific_parameters = value_of({
-            { sdp::named_value(sdp::fields::smpte_standard_number, sdp::smpte_standard_numbers::ST2110_41_2021.name) },
+            { sdp::named_value(sdp::fields::smpte_standard_number, sdp::smpte_standard_numbers::ST2110_41_2024.name) },
             { sdp::named_value(sdp::fields::DIT, utility::s2us(dit_hex_ss.str())) },
         });
-/*
-        const auto format_specific_parameters = value_of({
-            { sdp::named_value(sdp::fields::smpte_standard_number, sdp::smpte_standard_numbers::ST2110_41_2021.name) },
-            { sdp::named_value(sdp::fields::DIT, utility::ostringstreamed(sdp_params.smpte2110_41_data.dit)) },
-        });
-*/
+
         const auto fmtp = value_of({
             { sdp::fields::name, sdp::attributes::fmtp },
             { sdp::fields::value, value_of({
