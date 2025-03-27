@@ -63,8 +63,8 @@ typedef struct
 
 const std::vector<ProfileDescriptor> SUPPORTED_PROFILES = 
     {
-        // TODO: ensure those values are correct
-        ProfileDescriptor{"AdvSS Emission S-ADM Profile", "1.0.0", 1, "ITU-R BS.[ADM-NGA-EMISSION]-X", DLB_ADM_PROFILE_SADM_EMISSION_PROFILE}
+        // As per section 2.1.10.1 of ITU-R BS2168-0
+        ProfileDescriptor{"Advanced sound system: ADM and S-ADM profile for emission", "1", 1, "ITU-R BS.2168", DLB_ADM_PROFILE_SADM_EMISSION_PROFILE}
     };
 
 #endif  // DLB_ADM_XML_CONSTANTS_H
