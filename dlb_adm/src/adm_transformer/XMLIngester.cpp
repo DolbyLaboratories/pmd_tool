@@ -1298,7 +1298,7 @@ static int RecognizeProfile
     {
         /*
             <profileList>
-              <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+              <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
             </profileList>
         */
 

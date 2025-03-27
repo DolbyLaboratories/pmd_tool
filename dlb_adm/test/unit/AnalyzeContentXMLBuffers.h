@@ -52,7 +52,7 @@ static std::string object_ref = R"(
       </audioTrack>
     </transportTrackFormat>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </frameHeader>
   <audioFormatExtended version="ITU-R_BS.2076-3">
@@ -94,7 +94,7 @@ static std::string object_ref = R"(
       <audioChannelFormatIDRef>AC_00010001</audioChannelFormatIDRef>
     </audioTrackUID>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </audioFormatExtended>
 </frame>)";
@@ -114,7 +114,7 @@ static std::string xml_20 = R"(
       </audioTrack>
     </transportTrackFormat>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </frameHeader>
   <audioFormatExtended version="ITU-R_BS.2076-3">
@@ -147,7 +147,7 @@ static std::string xml_20 = R"(
       <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
     </audioTrackUID>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </audioFormatExtended>
 </frame>)";
@@ -167,7 +167,7 @@ static std::string object_ref_pack_format_wrong = R"(
       </audioTrack>
     </transportTrackFormat>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </frameHeader>
   <audioFormatExtended version="ITU-R_BS.2076-3">
@@ -203,7 +203,7 @@ static std::string object_ref_pack_format_wrong = R"(
       <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
     </audioTrackUID>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </audioFormatExtended>
 </frame>)";
@@ -223,7 +223,7 @@ static std::string object_ref_wrong = R"(
       </audioTrack>
     </transportTrackFormat>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </frameHeader>
   <audioFormatExtended version="ITU-R_BS.2076-3">
@@ -262,7 +262,7 @@ static std::string object_ref_wrong = R"(
       <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
     </audioTrackUID>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </audioFormatExtended>
 </frame>)";
@@ -283,7 +283,7 @@ static std::string content_wrong = R"(
       </audioTrack>
     </transportTrackFormat>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </frameHeader>
   <audioFormatExtended version="ITU-R_BS.2076-3">
@@ -330,7 +330,7 @@ static std::string content_wrong = R"(
       <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
     </audioTrackUID>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </audioFormatExtended>
 </frame>)";
@@ -351,7 +351,7 @@ static std::string packformat_wrong = R"(
       </audioTrack>
     </transportTrackFormat>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </frameHeader>
   <audioFormatExtended version="ITU-R_BS.2076-3">
@@ -388,7 +388,7 @@ static std::string packformat_wrong = R"(
       <audioChannelFormatIDRef>AC_00010002</audioChannelFormatIDRef>
     </audioTrackUID>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </audioFormatExtended>
 </frame>)";
@@ -432,7 +432,7 @@ static std::string altValSet = R"(
       </audioTrack>
     </transportTrackFormat>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </frameHeader>
   <audioFormatExtended version="ITU-R_BS.2076-3">
@@ -631,7 +631,7 @@ static std::string altValSet = R"(
       <audioChannelFormatIDRef>AC_00031007</audioChannelFormatIDRef>
     </audioTrackUID>
     <profileList>
-      <profile profileName="AdvSS Emission S-ADM Profile" profileVersion="1.0.0" profileLevel="1">ITU-R BS.[ADM-NGA-EMISSION]-X</profile>
+      <profile profileName="Advanced sound system: ADM and S-ADM profile for emission" profileVersion="1" profileLevel="1">ITU-R BS.2168</profile>
     </profileList>
   </audioFormatExtended>
 </frame>
