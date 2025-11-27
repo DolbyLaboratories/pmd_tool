@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2023, Dolby Laboratories Inc.
- * Copyright (c) 2020-2023, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -56,8 +56,14 @@
 #include "dlb_adm/src/core_model/SourceRecord.h"
 #include "dlb_adm/src/core_model/ElementRecord.h"
 #include "dlb_adm/src/core_model/PresentationRecord.h"
+#include "dlb_adm/src/core_model/DolbyeInfo.h"
+#include "dlb_adm/src/core_model/DolbyeEncoderParameters.h"
+#include "dlb_adm/src/core_model/DolbyeProgram.h"
+#include "dlb_adm/src/core_model/ProfileDescriptor.h"
 
 #include "dlb_adm/src/adm_identity/AdmIdTranslator.h"
+
+#include "CustomFormatDolbyeUtils.h"
 
 #define GENERATE_GAIN_FOR_BLOCK_UPDATE_DIRECT_SPEAKERS (0)
 
@@ -118,9 +124,14 @@ namespace DlbAdm
         status = GenerateAudioFormatExtended(frameID);
         CHECK_STATUS(status);
         status = GenerateFrameHeader(frameID);
-#ifndef NDEBUG
         CHECK_STATUS(status);
-#endif
+
+        if (mModel.HasProfile(DLB_ADM_PROFILE_SADM_DOLBY_E))
+        {
+            status = GenerateAudioCustomDBMD(frameID);
+            CHECK_STATUS(status);            
+        }
+
         return status;
     }
 
@@ -528,8 +539,11 @@ namespace DlbAdm
         CHECK_STATUS(status);
         status = mContainer.SetValue(objectID, DLB_ADM_TAG_OBJECT_INTERACT, AttributeValue(OBJECT_INTERACT));
         CHECK_STATUS(status);
-        status = GenerateGain(objectID, gain);
-        CHECK_STATUS(status);
+        if (!gain.IsUnity())
+        {
+            status = GenerateGain(objectID, gain);
+            CHECK_STATUS(status);
+        }
         status = GenerateLabels(e, DLB_ADM_ENTITY_TYPE_OBJECT_LABEL, DLB_ADM_TAG_OBJECT_LABEL_VALUE, DLB_ADM_TAG_OBJECT_LABEL_LANGUAGE);
         CHECK_STATUS(status);
         if (object->GetName(name, 0))
@@ -572,8 +586,11 @@ namespace DlbAdm
                 CHECK_STATUS(status);
             }
         }
-        status = GenerateGain(objectID, gain);
-        CHECK_STATUS(status);
+        if (!gain.IsUnity())
+        {
+            status = GenerateGain(objectID, gain);
+            CHECK_STATUS(status);
+        }
         status = GenerateLabels(e, DLB_ADM_ENTITY_TYPE_OBJECT_LABEL, DLB_ADM_TAG_OBJECT_LABEL_VALUE, DLB_ADM_TAG_OBJECT_LABEL_LANGUAGE);
         CHECK_STATUS(status);
         if (object->GetName(name, 0))
@@ -1034,6 +1051,7 @@ namespace DlbAdm
                 
                 if (DLB_ADM_CONTENT_KIND_NK_MUSIC == contentGroup->GetContentKind() ||
                     DLB_ADM_CONTENT_KIND_NK_EFFECTS == contentGroup->GetContentKind() ||
+                    DLB_ADM_CONTENT_KIND_NK_MUSIC_AND_EFFECTS == contentGroup->GetContentKind() ||
                     DLB_ADM_CONTENT_KIND_NK_UNDEFINED == contentGroup->GetContentKind() ||
                     !program->HasName()
                    )
@@ -1397,27 +1415,7 @@ namespace DlbAdm
         return status;
     }
 
-    static int GetProfileDescriptorIndex(const DLB_ADM_PROFILE type, size_t & index)
-    {
-        int status = DLB_ADM_STATUS_OK;
-
-        for(index = 0; index < SUPPORTED_PROFILES.size(); index++)
-        {
-            if(SUPPORTED_PROFILES[index].type == type)
-            {
-                break;
-            }
-        }
-
-        if(index == SUPPORTED_PROFILES.size())
-        {
-            status = DLB_ADM_STATUS_ERROR; // not implemented profile type
-        }
-
-        return status;
-    }
-
-    int XMLGenerator::GenerateProfileList(dlb_adm_entity_id parentID)
+    int XMLGenerator::GenerateProfileList(dlb_adm_entity_id parentId)
     {
         int status = DLB_ADM_STATUS_OK;
         const std::set<DLB_ADM_PROFILE> profiles = mModel.GetProfiles();
@@ -1427,34 +1425,32 @@ namespace DlbAdm
             return status;
         }
 
-        const dlb_adm_entity_id profileListID = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_PROFILE_LIST);
-        status = mContainer.AddEntity(profileListID);
-        CHECK_STATUS(status);
-        status = mContainer.AddRelationship(parentID, profileListID);
-        CHECK_STATUS(status);
+        const dlb_adm_entity_id profileListId = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_PROFILE_LIST);
+        status = mContainer.AddEntityWithRelationship(parentId, profileListId);
 
-        for (auto & profile : profiles)
+        CoreModel::EntityCallbackFn profileCallback = [&](const ModelEntity *e)
         {
-            size_t index;
-            status = GetProfileDescriptorIndex(profile, index);
-            CHECK_STATUS(status);
+            const dlb_adm_entity_id profileId = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION);
+            int status = mContainer.AddEntityWithRelationship(profileListId, profileId);
+            CHECK_STATUS(status);    
 
-            const dlb_adm_entity_id profileID = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION);
-            status = mContainer.AddEntity(profileID);
+            const ProfileDescriptor *profile = dynamic_cast<const ProfileDescriptor *>(e);
+            if (profile == nullptr)
+            {
+                return static_cast<int>(DLB_ADM_STATUS_ERROR);
+            }
+            status = mContainer.SetValue(profileId, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_VALUE, convertToAttributeString(profile->GetProfileValue()));
             CHECK_STATUS(status);
-            status = mContainer.AddRelationship(profileListID, profileID);
-            CHECK_STATUS(status);
+            status = mContainer.SetValue(profileId, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_NAME, convertToAttributeString(profile->GetProfileName()));
+            CHECK_STATUS(status); 
+            status = mContainer.SetValue(profileId, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_VERSION, convertToAttributeString(profile->GetProfileVersion()));
+            CHECK_STATUS(status); 
+            status = mContainer.SetValue(profileId, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_LEVEL, convertToAttributeString(profile->GetProfileLevel()));
+            CHECK_STATUS(status);       
 
-            status = mContainer.SetValue(profileID, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_NAME,    convertToAttributeString(SUPPORTED_PROFILES[index].name));
-            CHECK_STATUS(status);
-            status = mContainer.SetValue(profileID, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_VERSION, convertToAttributeString(SUPPORTED_PROFILES[index].version));
-            CHECK_STATUS(status);
-            status = mContainer.SetValue(profileID, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_LEVEL,   AttributeValue(SUPPORTED_PROFILES[index].level));
-            CHECK_STATUS(status);
-            status = mContainer.SetValue(profileID, DLB_ADM_TAG_PROFILE_LIST_SPECIFICATION_VALUE,   convertToAttributeString(SUPPORTED_PROFILES[index].value));
-            CHECK_STATUS(status);
-        }
-
+            return status;
+        };
+        status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION, profileCallback);
         return status;
     }
 
@@ -1605,4 +1601,303 @@ namespace DlbAdm
         return status;
     }
 
+    int XMLGenerator::GenerateDbmdMetadataSegment(dlb_adm_entity_id parentId, dlb_adm_entity_id& segmentId, dlb_adm_uint value)
+    {
+        segmentId =  mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_METADATA_SEGMENT);
+        int status = mContainer.AddEntityWithRelationship(parentId, segmentId);
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(segmentId, DLB_ADM_TAG_METADATA_SEGMENT_ID, value);
+        
+        return status;       
+    }
+
+    int XMLGenerator::GenerateDbmdProgramInfo(dlb_adm_entity_id parentId,  const DolbyeProgram *program)
+    {
+        const dlb_adm_entity_id programInfoId =  mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_PROGRAM_INFO);
+        int status = mContainer.AddEntityWithRelationship(parentId, programInfoId);
+
+        status = AddDolbyEUintTagWithValue(mContainer, programInfoId, DLB_ADM_ENTITY_TYPE_ACMOD, DLB_ADM_TAG_ACMOD_VALUE, program->GetAcmod());
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, programInfoId, DLB_ADM_ENTITY_TYPE_BSMOD, DLB_ADM_TAG_BSMOD_VALUE, program->GetBsmod());
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, programInfoId, DLB_ADM_ENTITY_TYPE_LFEON, DLB_ADM_TAG_LFEON_VALUE, program->GetLfeon());
+        return status;
+    }
+
+    int XMLGenerator::GenerateDbmdDRC(dlb_adm_entity_id parentId, DLB_ADM_ENTITY_TYPE type, DLB_ADM_TAG valueTag, DLB_ADM_TAG existTag, dlb_adm_data_dolbye_drc drc)
+    {
+        const dlb_adm_entity_id id = mContainer.GetGenericID(type);
+        int status = mContainer.AddEntityWithRelationship(parentId, id);
+        CHECK_STATUS(status);
+        dlb_adm_uint exist = static_cast<unsigned int>(drc.is_profile ? DLB_ADM_FALSE : DLB_ADM_TRUE);
+        status = mContainer.SetValue(id, existTag, exist);
+        CHECK_STATUS(status);
+        dlb_adm_uint value = drc.is_profile ? drc.drc.profile : drc.drc.gain_word;
+        status = mContainer.SetValue(id, valueTag, value);
+        CHECK_STATUS(status);
+
+        return status;        
+    }
+
+
+    int XMLGenerator::GenerateDbmdAudioProdInfo(dlb_adm_entity_id parentId, const DolbyeProgram *program)
+    {
+        const dlb_adm_entity_id audioProdInfoId =  mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_AUDIO_PROD_INFO);
+        int status = mContainer.AddEntityWithRelationship(parentId, audioProdInfoId);
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(audioProdInfoId, DLB_ADM_TAG_AUDIO_PROD_INFO_EXIST, static_cast<unsigned int>(program->GetAudprodie()));
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, audioProdInfoId, DLB_ADM_ENTITY_TYPE_MIXLEVEL, DLB_ADM_TAG_MIXLEVEL_VALUE, program->GetMixlevel());
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, audioProdInfoId, DLB_ADM_ENTITY_TYPE_ROOMTYP, DLB_ADM_TAG_ROOMTYP_VALUE, program->GetRoomtyp());
+        return status;
+    }
+
+    int XMLGenerator::GenerateDbmdLangCode(dlb_adm_entity_id parentId, const DolbyeProgram *program)
+    {
+        const dlb_adm_entity_id langCodeId =  mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_LANG_CODE);
+        int status = mContainer.AddEntityWithRelationship(parentId, langCodeId);
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(langCodeId, DLB_ADM_TAG_LANG_CODE_EXIST, static_cast<unsigned int>(program->GetLangcodExists()));
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, langCodeId, DLB_ADM_ENTITY_TYPE_LANG_COD, DLB_ADM_TAG_LANG_COD_VALUE, program->GetLangcod());
+        return status;
+    }
+
+    int XMLGenerator::GenerateDbmdExtBsi1(dlb_adm_entity_id parentId, const DolbyeProgram *program)
+    {
+        const dlb_adm_entity_id extBsi1Id =  mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_EXTBSI1E);
+        int status = mContainer.AddEntityWithRelationship(parentId, extBsi1Id);
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(extBsi1Id, DLB_ADM_TAG_EXTBSI1E_EXIST, static_cast<unsigned int>(program->GetXbsi1Exists()));
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, extBsi1Id, DLB_ADM_ENTITY_TYPE_DMIXMOD, DLB_ADM_TAG_DMIXMOD_VALUE, program->GetXbsi1Dmixmod());
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, extBsi1Id, DLB_ADM_ENTITY_TYPE_LORO_CMIXLEV, DLB_ADM_TAG_LORO_CMIXLEV_VALUE, program->GetXbsi1Lorocmixlev());
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, extBsi1Id, DLB_ADM_ENTITY_TYPE_LORO_SURMIXLEV, DLB_ADM_TAG_LORO_SURMIXLEV_VALUE, program->GetXbsi1Lorosurmixlev());
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, extBsi1Id, DLB_ADM_ENTITY_TYPE_LTRT_CMIXLEV, DLB_ADM_TAG_LTRT_CMIXLEV_VALUE, program->GetXbsi1Ltrtcmixlev());
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, extBsi1Id, DLB_ADM_ENTITY_TYPE_LTRT_SURMIXLEV, DLB_ADM_TAG_LTRT_SURMIXLEV_VALUE, program->GetXbsi1Ltrtsurmixlev());
+        return status;
+    }
+
+    int XMLGenerator::GenerateDbmdExtBsi2(dlb_adm_entity_id parentId, const DolbyeProgram *program)
+    {
+        const dlb_adm_entity_id extBsi2Id =  mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_EXTBSI2E);
+        int status = mContainer.AddEntityWithRelationship(parentId, extBsi2Id);
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(extBsi2Id, DLB_ADM_TAG_EXTBSI2E_EXIST, static_cast<unsigned int>(program->GetXbsi2Exists()));
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, extBsi2Id, DLB_ADM_ENTITY_TYPE_DSUREXMOD, DLB_ADM_TAG_DSUREXMOD_VALUE, program->GetXbsi2Dsurexmod());
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, extBsi2Id, DLB_ADM_ENTITY_TYPE_DHEADPHONMOD, DLB_ADM_TAG_DHEADPHONMOD_VALUE, program->GetXbsi2Dheadphonmod());
+        CHECK_STATUS(status);
+
+        status = AddDolbyEUintTagWithValue(mContainer, extBsi2Id, DLB_ADM_ENTITY_TYPE_ADCONVTYP, DLB_ADM_TAG_ADCONVTYP_VALUE, program->GetXbsi2Adconvtyp());
+        return status;
+    }
+
+    int XMLGenerator::GenerateDbmdAC3Programs(dlb_adm_entity_id parentId)
+    {
+        dlb_adm_entity_id metadataSegmentId;
+        int status = GenerateDbmdMetadataSegment(parentId, metadataSegmentId, DLB_ADM_METADATA_SEGMENT_IDS_AC3_PROGRAMS);
+        CHECK_STATUS(status);
+
+        CoreModel::EntityCallbackFn programsCallback = [&](const ModelEntity *e)
+        {
+            const dlb_adm_entity_id programId = e->GetEntityID();
+            int status = mContainer.AddEntityWithRelationship(metadataSegmentId, programId);
+            CHECK_STATUS(status);
+            const DolbyeProgram *program = dynamic_cast<const DolbyeProgram *>(e);
+            if (program == nullptr)
+            {
+                return static_cast<int>(DLB_ADM_STATUS_ERROR);
+            }
+            status = mContainer.SetValue(programId, DLB_ADM_TAG_AC3_PROGRAM_ID, program->GetProgramId());
+            CHECK_STATUS(status); 
+
+            status = GenerateDbmdProgramInfo(programId, program);
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, programId, DLB_ADM_ENTITY_TYPE_CMIXLEV, DLB_ADM_TAG_CMIXLEV_VALUE, program->GetCmixlev());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, programId, DLB_ADM_ENTITY_TYPE_SURMIXLEV, DLB_ADM_TAG_SURMIXLEV_VALUE, program->GetSurmixlev());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, programId, DLB_ADM_ENTITY_TYPE_DSURMOD, DLB_ADM_TAG_DSURMOD_VALUE, program->GetDsurmod());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, programId, DLB_ADM_ENTITY_TYPE_DIALNORM, DLB_ADM_TAG_DIALNORM_VALUE, program->GetDialnorm());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, programId, DLB_ADM_ENTITY_TYPE_COPYRIGHTB, DLB_ADM_TAG_COPYRIGHTB_VALUE, program->GetCopyrightb());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, programId, DLB_ADM_ENTITY_TYPE_ORIGBS, DLB_ADM_TAG_ORIGBS_VALUE, program->GetOrigbs());
+            CHECK_STATUS(status);
+
+            status = GenerateDbmdLangCode(programId, program);
+            CHECK_STATUS(status);
+            status = GenerateDbmdAudioProdInfo(programId, program);
+            CHECK_STATUS(status);
+
+            status = GenerateDbmdExtBsi1(programId, program);
+            CHECK_STATUS(status);
+
+            status = GenerateDbmdExtBsi2(programId, program);
+            CHECK_STATUS(status);
+
+            status = GenerateDbmdDRC(programId, DLB_ADM_ENTITY_TYPE_COMPR1, DLB_ADM_TAG_COMPR1_VALUE, DLB_ADM_TAG_COMPR1_EXIST, program->GetCompr1());
+            CHECK_STATUS(status);
+            status = GenerateDbmdDRC(programId, DLB_ADM_ENTITY_TYPE_DYNRNG1, DLB_ADM_TAG_DYNRNG1_VALUE, DLB_ADM_TAG_DYNRNG1_EXIST, program->GetDynrng1());
+            CHECK_STATUS(status);
+
+            EntityName name;
+            if (program->GetName(name, 0))
+            {
+                status = AddDolbyEStringTagWithValue(mContainer, 
+                                                     programId, 
+                                                     DLB_ADM_ENTITY_TYPE_PROGRAM_DESCRIPTION_TEXT, 
+                                                     DLB_ADM_TAG_PROGRAM_DESCRIPTION_TEXT_VALUE, 
+                                                     name.GetName());
+                CHECK_STATUS(status);
+            }
+
+            return status;
+        };
+        status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_AC3_PROGRAM, programsCallback);
+        CHECK_STATUS(status);
+        
+        return status;       
+    }
+
+int XMLGenerator::GenerateDbmdEncodingParameters(dlb_adm_entity_id parentId)
+    {
+        dlb_adm_entity_id metadataSegmentId;
+        int status = GenerateDbmdMetadataSegment(parentId, metadataSegmentId, DLB_ADM_METADATA_SEGMENT_IDS_ENCODE_PARAMETERS);
+        CHECK_STATUS(status);
+
+        CoreModel::EntityCallbackFn encodingParamsCallback = [&](const ModelEntity *e)
+        {
+            const dlb_adm_entity_id paramsId = e->GetEntityID();
+            int status = mContainer.AddEntityWithRelationship(metadataSegmentId, paramsId);
+            CHECK_STATUS(status);
+            const DolbyeEncoderParameters *params = dynamic_cast<const DolbyeEncoderParameters *>(e);
+            if (params == nullptr)
+            {
+                return static_cast<int>(DLB_ADM_STATUS_ERROR);
+            }
+
+            status = mContainer.SetValue(paramsId, DLB_ADM_TAG_ENCODE_PARAMETERS_ID, params->GetProgramId());
+            CHECK_STATUS(status);            
+
+            status = AddDolbyEUintTagWithValue(mContainer, paramsId, DLB_ADM_ENTITY_TYPE_HPFON, DLB_ADM_TAG_HPFON_VALUE, params->GetHpfon());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, paramsId, DLB_ADM_ENTITY_TYPE_BWLPFON, DLB_ADM_TAG_BWLPFON_VALUE, params->GetBwlpfon());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, paramsId, DLB_ADM_ENTITY_TYPE_LFELPFON, DLB_ADM_TAG_LFELPFON_VALUE, params->GetLfelpfon());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, paramsId, DLB_ADM_ENTITY_TYPE_SUR90ON, DLB_ADM_TAG_SUR90ON_VALUE, params->GetSur90on());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, paramsId, DLB_ADM_ENTITY_TYPE_SURRATTON, DLB_ADM_TAG_SURRATTON_VALUE, params->GetSuratton());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, paramsId, DLB_ADM_ENTITY_TYPE_RFPREMPHON, DLB_ADM_TAG_RFPREMPHON_VALUE, params->GetRfpremphon());
+            CHECK_STATUS(status);  
+
+            return status;
+        };
+        status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS, encodingParamsCallback);
+        CHECK_STATUS(status);
+        
+        return status;       
+    }
+
+    int XMLGenerator::GenerateDbmdDolbyEInfo(dlb_adm_entity_id parentId)
+    {
+        dlb_adm_entity_id metadataSegmentId;
+        int status = GenerateDbmdMetadataSegment(parentId, metadataSegmentId, DLB_ADM_METADATA_SEGMENT_IDS_DOLBY_E);
+        CHECK_STATUS(status);
+
+        CoreModel::EntityCallbackFn dolbyeInfoCallback = [&](const ModelEntity *e)
+        {
+            const dlb_adm_entity_id dolbyEId = e->GetEntityID();
+            int status = mContainer.AddEntityWithRelationship(metadataSegmentId, dolbyEId);
+            CHECK_STATUS(status);
+            status = mContainer.SetValue(dolbyEId, DLB_ADM_TAG_DOLBY_E_ID, 0u);
+            CHECK_STATUS(status);            
+
+            const DolbyeInfo *info = dynamic_cast<const DolbyeInfo *>(e);
+            if (info == nullptr)
+            {
+                return static_cast<int>(DLB_ADM_STATUS_ERROR);
+            }
+
+            status = AddDolbyEUintTagWithValue(mContainer, dolbyEId, DLB_ADM_ENTITY_TYPE_PROGRAM_CONFIG, DLB_ADM_TAG_PROGRAM_CONFIG_VALUE, info->GetProgramConfig());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEUintTagWithValue(mContainer, dolbyEId, DLB_ADM_ENTITY_TYPE_FRAME_RATE_CODE, DLB_ADM_TAG_FRAME_RATE_CODE_VALUE, info->GetFrameRate());
+            CHECK_STATUS(status);
+
+            status = AddDolbyEStringTagWithValue(mContainer, dolbyEId, DLB_ADM_ENTITY_TYPE_SMPTE_TIME_CODE, DLB_ADM_TAG_SMPTE_TIME_CODE_VALUE, info->GetSmpteTimeCodeStr());
+            CHECK_STATUS(status);     
+
+            return status;
+        };
+        status = mModel.ForEach(DLB_ADM_ENTITY_TYPE_DOLBY_E, dolbyeInfoCallback);
+        CHECK_STATUS(status);
+        
+        return status;       
+    }
+
+    int XMLGenerator::GenerateAudioCustomDBMD(dlb_adm_entity_id frameHeaderID)
+    {
+        const dlb_adm_entity_id audioFormatCustomId = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM);
+        int status = mContainer.AddEntityWithRelationship(frameHeaderID, audioFormatCustomId);
+        CHECK_STATUS(status);
+
+        const dlb_adm_entity_id audioFormatCustomSetId =  AdmIdTranslator().ConstructUntypedId(DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET, 0x1001);
+        status = mContainer.AddEntityWithRelationship(audioFormatCustomId, audioFormatCustomSetId);
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(audioFormatCustomSetId, DLB_ADM_TAG_FORMAT_CUSTOM_SET_NAME, convertToAttributeString("DolbyE DBMD Chunk"));
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(audioFormatCustomSetId, DLB_ADM_TAG_FORMAT_CUSTOM_SET_TYPE, convertToAttributeString("CUSTOM_SET_TYPE_DOLBYE_DBMD_CHUNK"));
+        CHECK_STATUS(status);
+        status = mContainer.SetValue(audioFormatCustomSetId, DLB_ADM_TAG_FORMAT_CUSTOM_SET_VERSION,  convertToAttributeString("1"));
+        CHECK_STATUS(status);
+
+        const dlb_adm_entity_id dbmdId = mContainer.GetGenericID(DLB_ADM_ENTITY_TYPE_DBMD);
+        status = mContainer.AddEntityWithRelationship(audioFormatCustomSetId, dbmdId);
+        CHECK_STATUS(status);
+
+        status = GenerateDbmdDolbyEInfo(dbmdId);
+        CHECK_STATUS(status);
+
+        status = GenerateDbmdAC3Programs(dbmdId);
+        CHECK_STATUS(status);
+
+        status = GenerateDbmdEncodingParameters(dbmdId);
+        CHECK_STATUS(status);
+
+        return status;
+    }
 }

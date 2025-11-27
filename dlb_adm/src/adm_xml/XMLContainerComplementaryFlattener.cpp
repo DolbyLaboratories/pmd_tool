@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2023-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2023-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -68,12 +68,12 @@ namespace DlbAdm
         , mSourceComplGroups()
         , mRegenerateFlowId(false)
     {
-    };
+    }
 
     XMLContainerComplementaryFlattener::~XMLContainerComplementaryFlattener()
     {
         /* empty */
-    };
+    }
 
     int XMLContainerComplementaryFlattener::InitFlattening()
     {
@@ -112,7 +112,7 @@ namespace DlbAdm
                 mSourceComplGroups.back().push_back(e.id);
                 status = mSourceContainer.ForEachRelationship(e.id, DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF, ListComplementaryGroupMembers);
             }
-            return DLB_ADM_STATUS_OK; 
+            return status; 
         };
         
         return mSourceContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_OBJECT, ListComplementaryGroups);
@@ -148,7 +148,7 @@ namespace DlbAdm
             status = DLB_ADM_STATUS_ERROR; // flattened container is not empty at start
         }
         return status;
-    };
+    }
 
     static int IsCommonDefinition(XMLContainer & container, dlb_adm_entity_id id, bool & isCommon)
     {
@@ -162,7 +162,7 @@ namespace DlbAdm
         return status;
     }
 
-    int XMLContainerComplementaryFlattener::ProcessAndCopyChildEntities(dlb_adm_entity_id sourceParentId, dlb_adm_entity_id flattenedParentId, const RelationshipRecord &r)
+    int XMLContainerComplementaryFlattener::ProcessAndCopyChildEntities(dlb_adm_entity_id flattenedParentId, const RelationshipRecord &r)
     {
         int status = DLB_ADM_STATUS_OK;
 
@@ -200,7 +200,7 @@ namespace DlbAdm
 #endif
 
         return status;
-    };
+    }
 
     int XMLContainerComplementaryFlattener::RecursivelyProcessAndCopyChildEntities(dlb_adm_entity_id sourceParentId, dlb_adm_entity_id flattenedParentId, RelationshipDB::RelationshipFilterFn filter)
     {
@@ -208,16 +208,15 @@ namespace DlbAdm
                                                     ,ENTITY_RELATIONSHIP::CONTAINS
                                                     ,std::bind(&XMLContainerComplementaryFlattener::ProcessAndCopyChildEntities
                                                               ,this
-                                                              ,sourceParentId
                                                               ,flattenedParentId
                                                               ,std::placeholders::_1)
                                                     ,filter);
-    };
+    }
 
     static bool HasADMId(DLB_ADM_ENTITY_TYPE entityType)
     {
         return (entityType > DLB_ADM_ENTITY_TYPE_FIRST && entityType <= DLB_ADM_ENTITY_TYPE_LAST_WITH_ID);
-    };
+    }
 
     int XMLContainerComplementaryFlattener::RecursivelyCopyChildEntities(dlb_adm_entity_id sourceChildId, dlb_adm_entity_id flattenedParentId)
     {
@@ -233,7 +232,7 @@ namespace DlbAdm
         CHECK_STATUS(status);
 
         return status;
-    };
+    }
 
     int XMLContainerComplementaryFlattener::RecursivelyCopyEntityWithoutImmediateReferences
         (dlb_adm_entity_id sourceChildId
@@ -248,7 +247,7 @@ namespace DlbAdm
         status = mFlattenedContainer.AddEntity(flattenedChildId);
         CHECK_STATUS(status);
 
-        status = CopyAttributes(sourceChildId, flattenedChildId);
+        status = CopyAttributes(sourceChildId, flattenedChildId, attributFilter);
         CHECK_STATUS(status);
 
         status = mFlattenedContainer.AddRelationship(flattenedParentId, flattenedChildId);
@@ -259,7 +258,7 @@ namespace DlbAdm
         CHECK_STATUS(status);
 #endif
         return status;
-    };
+    }
 
     static void SortObjIntoCategories( const std::vector<dlb_adm_entity_id>& objectsInProgramme
                                      , const std::vector<std::vector<dlb_adm_entity_id>>& sourceComplGroups
@@ -281,7 +280,7 @@ namespace DlbAdm
             }
 
             bool foundInCmplGroup = false;
-            for(int i = 0; i < sourceComplGroups.size(); i++)
+            for(size_t i = 0; i < sourceComplGroups.size(); i++)
             {
                 const auto& sourceComplGroup = sourceComplGroups[i];
                 foundInCmplGroup = std::find(sourceComplGroup.begin(), sourceComplGroup.end(), programmeObject) != sourceComplGroup.end();
@@ -413,7 +412,7 @@ namespace DlbAdm
         }
 
         return status;
-    };
+    }
 
     int XMLContainerComplementaryFlattener::AddLanguageToFlattenedProgramme(const dlb_adm_entity_id newProgrammeId)
     {
@@ -507,7 +506,7 @@ namespace DlbAdm
         dlb_adm_entity_id nextId = DLB_ADM_NULL_ENTITY_ID;
         nextId = mTranslator.ConstructUntypedId(DLB_ADM_ENTITY_TYPE_PROGRAMME, 0x1000 + (++mFlattenedProgrammeIdNumber)); // numeration starts with 0x1001
         return nextId;
-    };
+    }
 
     int XMLContainerComplementaryFlattener::CopyAttributes(dlb_adm_entity_id sourceChildId, dlb_adm_entity_id flattenedChildId, std::function<bool(const DLB_ADM_TAG tag)> const& attributFilter)
     {
@@ -521,7 +520,7 @@ namespace DlbAdm
             return status;
         };
         return mSourceContainer.ForEachAttribute(sourceChildId, copyAttributes);
-    };
+    }
 
     int XMLContainerComplementaryFlattener::CopyReferences(dlb_adm_entity_id sourceChildId, dlb_adm_entity_id flattenedChildId, RelationshipDB::RelationshipFilterFn filter)
     {
@@ -534,7 +533,7 @@ namespace DlbAdm
             return status;
         };
         return mSourceContainer.ForEachRelationship(sourceChildId, ENTITY_RELATIONSHIP::REFERENCES, copyReferences, filter);
-    };
+    }
 
     static
     dlb_adm_entity_id

@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2021, Dolby Laboratories Inc.
- * Copyright (c) 2020-2021, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -53,6 +53,7 @@ namespace DlbAdm
     class LoudnessMetadata;
     class XMLGeneratorData;
     class AudioObjectInteraction;
+    class DolbyeProgram;
 
     class XMLGenerator : public boost::noncopyable
     {
@@ -101,6 +102,18 @@ namespace DlbAdm
         int GenerateSourceRelationships();
         int GenerateAudioElementRelationships();
         int GeneratePresentationRelationships();
+
+        int GenerateAudioCustomDBMD(dlb_adm_entity_id frameHeaderId);
+        int GenerateDbmdDolbyEInfo(dlb_adm_entity_id parentId);
+        int GenerateDbmdAC3Programs(dlb_adm_entity_id parentId);
+        int GenerateDbmdEncodingParameters(dlb_adm_entity_id parentId);
+        int GenerateDbmdProgramInfo(dlb_adm_entity_id parentId, const DolbyeProgram *program);
+        int GenerateDbmdExtBsi1(dlb_adm_entity_id parentId, const DolbyeProgram *program);        
+        int GenerateDbmdExtBsi2(dlb_adm_entity_id parentId, const DolbyeProgram *program);
+        int GenerateDbmdMetadataSegment(dlb_adm_entity_id parentId, dlb_adm_entity_id& segmentId, dlb_adm_uint value);
+        int GenerateDbmdDRC(dlb_adm_entity_id parentId, DLB_ADM_ENTITY_TYPE type, DLB_ADM_TAG valueTag, DLB_ADM_TAG existTag, dlb_adm_data_dolbye_drc drc);
+        int GenerateDbmdAudioProdInfo(dlb_adm_entity_id parentId, const DolbyeProgram *program);
+        int GenerateDbmdLangCode(dlb_adm_entity_id parentId, const DolbyeProgram *program);
 
         XMLContainer &mContainer;
         const CoreModel &mModel;

@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
- * Copyright (c) 2020, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -63,6 +63,7 @@ enum class BedClassifier
     COMPLETE_MAIN,
     MUSIC_AND_EFFECTS,
     BROADCAST_MIX,
+    MUSIC_AND_EFFECT_LEGACY,
     LAST
 };
 
@@ -70,14 +71,17 @@ enum class BedClassifier
 // Vector of [classifier, suffix, description] tuples
 const std::vector<std::tuple<const BedClassifier, const std::string, const std::string>> BED_CLASSIFIER_TAG_MAP {
 //  CLASSIFIER                          SUFFIX      DESCRIPTION
-    {BedClassifier::COMPLETE_MAIN,      "$[CM]",    "Complete Main"},
-    {BedClassifier::MUSIC_AND_EFFECTS,  "$[ME]",    "Music & Effects"},
-    {BedClassifier::BROADCAST_MIX,      "$[BM]",    "Broadcast Mix"}
+    {BedClassifier::COMPLETE_MAIN,           "$[CM]",    "Complete Main"},
+    {BedClassifier::MUSIC_AND_EFFECTS,       "$[ME]",    "Music & Effects"},
+    {BedClassifier::BROADCAST_MIX,           "$[BM]",    "Broadcast Mix"},
+    {BedClassifier::MUSIC_AND_EFFECT_LEGACY, "$[ML]",    "Music & Effects (legacy)"}
 };
+
+const std::string CARTESIAN_TAG = "$[C]";
 
 // Scans for and extracts bed classifier strings from label. 
 // Returns [classifier, prefix] (where prefix is the remainder of the input post-extraction)
-std::tuple<BedClassifier, std::string> 
+std::tuple<BedClassifier, std::string, int> 
 parsePMDBedLabel
     (std::string label
     );
@@ -85,8 +89,9 @@ parsePMDBedLabel
 // Generates PMD label - combines label with unique bed classifier suffix
 std::string 
 generatePMDBedLabel
-    (std::string label
+    (std::string   label
     ,BedClassifier bedClass
+    ,int           is_cartesian
     );
 
 const float config_mix_coefs[NUM_PMD_SPEAKER_CONFIGS] = 
@@ -108,6 +113,7 @@ typedef struct
     uiCombobox *start;
     uiCombobox *classifier;
     uiCheckbox *enable;
+    uiCheckbox *cartesian;
 
 } pmd_studio_audio_bed;
 

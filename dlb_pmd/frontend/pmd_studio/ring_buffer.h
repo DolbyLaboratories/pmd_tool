@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2020, Dolby Laboratories Inc.
- * Copyright (c) 2020, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ class PMDStudioRingBufferList
         pmd_studio_video_frame_rate frameRate;
         unsigned int numSamples;
         unsigned int bufSizeBytes;
-        unsigned int activeBufSizeBytes;
+        unsigned int activeBufSizeBytes;        
         // Three references
         int active;
         int queued;

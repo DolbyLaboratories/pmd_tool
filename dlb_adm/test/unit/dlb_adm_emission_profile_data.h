@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2024, Dolby Laboratories Inc.
- * Copyright (c) 2020-2024, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -401,7 +401,7 @@ static const char generatedEmissionProfileXMLBuffer[] GTEST_ATTRIBUTE_UNUSED_ =
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 "<frame version=\"ITU-R_BS.2125-1\">\n"
 "  <frameHeader>\n"
-"    <frameFormat frameFormatID=\"FF_00000000001\" type=\"full\" start=\"00:00:00.00000S48000\" duration=\"00:00:00.00960S48000\" timeReference=\"local\" flowID=\"73486c7b-7bf5-4c01-9356-bc0df0214864\">\n"
+"    <frameFormat frameFormatID=\"FF_00000001\" type=\"full\" start=\"00:00:00.00000S48000\" duration=\"00:00:00.00960S48000\" timeReference=\"local\" flowID=\"73486c7b-7bf5-4c01-9356-bc0df0214864\">\n"
 "    </frameFormat>\n"
 "    <transportTrackFormat transportID=\"TP_0001\" transportName=\"SDI\" numIDs=\"10\" numTracks=\"10\">\n"
 "      <audioTrack trackID=\"1\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
@@ -2186,7 +2186,7 @@ static const char audioObjectInteractionBuffer[] GTEST_ATTRIBUTE_UNUSED_ =
 "      <audioContentIDRef>ACO_1005</audioContentIDRef>\n"
 "    </audioProgramme>\n"
 "    <audioContent audioContentID=\"ACO_1001\" audioContentName=\"audioContent_1\" audioContentLanguage=\"und\">\n"
-"      <dialogue nonDialogueContentKind=\"0\">0</dialogue>\n"
+"      <dialogue nonDialogueContentKind=\"3\">0</dialogue>\n"
 "      <loudnessMetadata loudnessMethod=\"ITU-R BS.1770\">\n"
 "        <integratedLoudness>-30.50</integratedLoudness>\n"
 "      </loudnessMetadata>\n"
@@ -2361,7 +2361,7 @@ static const char broadcastMixXMLBuffer[] GTEST_ATTRIBUTE_UNUSED_ =
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 "<frame>\n"
 "  <frameHeader>\n"
-"    <frameFormat frameFormatID=\"FF_00000000001\" type=\"full\" start=\"00:00:00.00000\" duration=\"00:00:00.20000\" flowID=\"73486c7b-7bf5-4c01-9356-bc0df0214864\">\n"
+"    <frameFormat frameFormatID=\"FF_00000001\" type=\"full\" start=\"00:00:00.00000\" duration=\"00:00:00.20000\" flowID=\"73486c7b-7bf5-4c01-9356-bc0df0214864\">\n"
 "    </frameFormat>\n"
 "    <transportTrackFormat transportID=\"TP_0001\" transportName=\"X\" numIDs=\"22\" numTracks=\"8\">\n"
 "      <audioTrack trackID=\"1\">\n"
@@ -3413,7 +3413,7 @@ const std::string sadm_51_MnE_3D_complementary = R"(<?xml version="1.0" encoding
       <loudnessMetadata loudnessMethod="ITU-R BS.1770">
         <integratedLoudness>-30.50000</integratedLoudness>
       </loudnessMetadata>
-      <dialogue nonDialogueContentKind="0">0</dialogue>
+      <dialogue nonDialogueContentKind="3">0</dialogue>
     </audioContent>
     <audioContent audioContentID="ACO_1002" audioContentName="audioContent_2" audioContentLanguage="eng">
       <audioContentLabel language="eng">English</audioContentLabel>

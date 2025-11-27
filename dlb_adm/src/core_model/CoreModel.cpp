@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2023, Dolby Laboratories Inc.
- * Copyright (c) 2020-2023, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -56,6 +56,10 @@
 #include "FrameFormat.h"
 #include "ComplementaryElement.h"
 #include "AudioObjectInteraction.h"
+#include "DolbyeInfo.h"
+#include "DolbyeEncoderParameters.h"
+#include "DolbyeProgram.h"
+#include "ProfileDescriptor.h"
 
 #include "dlb_adm/src/adm_identity/AdmIdTranslator.h"
 #include "dlb_adm/src/adm_identity/AdmIdSequenceMap.h"
@@ -195,7 +199,24 @@ namespace DlbAdm
                 RemoveModelEntity<ComplementaryElement>(it->GetReference());
                 break;
 
+            case DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION:
+                RemoveModelEntity<ProfileDescriptor>(it->GetReference());
+                break;
+
+            case DLB_ADM_ENTITY_TYPE_DOLBY_E:
+                RemoveModelEntity<DolbyeInfo>(it->GetReference());
+                break;
+
+            case DLB_ADM_ENTITY_TYPE_AC3_PROGRAM:
+                RemoveModelEntity<DolbyeProgram>(it->GetReference());
+                break;
+
+            case DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS:
+                RemoveModelEntity<DolbyeEncoderParameters>(it->GetReference());
+                break;
+
             default:
+                assert(0);
                 break;
             }
             ++it;
@@ -313,6 +334,27 @@ namespace DlbAdm
     {
         return AddModelEntity(frameFormat);
     }
+
+    bool CoreModel::AddEntity(const DolbyeInfo &info)
+    {
+        return AddModelEntity(info);
+    }
+
+    bool CoreModel::AddEntity(const DolbyeProgram &info)
+    {
+        return AddModelEntity(info);
+    }
+
+    bool CoreModel::AddEntity(const DolbyeEncoderParameters &info)
+    {
+        return AddModelEntity(info);
+    }
+
+    bool CoreModel::AddEntity(const ProfileDescriptor &profile)
+    {
+        return AddModelEntity(profile);
+    }
+
 
     template <typename RecordT, typename TableT>
     bool CoreModel::AddModelRecord(const RecordT &record, TableT &table)
@@ -515,7 +557,7 @@ namespace DlbAdm
         }
         else
         {
-            ::memset(&record, 0, sizeof(record));
+            record = {};
         }
 
         return found;
@@ -554,7 +596,7 @@ namespace DlbAdm
                 char buffer[ADM_ID_MAX_LEN + 1];
                 uint32_t seq = mCoreModelData->GetSequenceMap().GetSequenceNumber(entityType);
 
-                snprintf(buffer, sizeof(buffer), "FF_000%08x", seq);
+                snprintf(buffer, sizeof(buffer), "FF_%08x", seq);
                 entityID = translator.Translate(buffer);
                 if (entityID == DLB_ADM_NULL_ENTITY_ID)
                 {

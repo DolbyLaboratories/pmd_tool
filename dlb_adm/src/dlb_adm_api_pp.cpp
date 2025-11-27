@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2023, Dolby Laboratories Inc.
- * Copyright (c) 2020-2023, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -60,6 +60,10 @@
 #include "dlb_adm/src/core_model/UpdateRecord.h"
 #include "dlb_adm/src/core_model/ElementRecord.h"
 #include "dlb_adm/src/core_model/PresentationRecord.h"
+#include "dlb_adm/src/core_model/DolbyeInfo.h"
+#include "dlb_adm/src/core_model/DolbyeEncoderParameters.h"
+#include "dlb_adm/src/core_model/DolbyeProgram.h"
+#include "dlb_adm/src/core_model/ProfileDescriptor.h"
 
 #include "dlb_adm/src/adm_transformer/XMLIngester.h"
 #include "dlb_adm/src/adm_transformer/XMLGenerator.h"
@@ -987,6 +991,27 @@ dlb_adm_core_model_ingest_common_definitions_container
     return status;
 }
 
+static int GetProfileDescriptorIndex(const DLB_ADM_PROFILE type, size_t &index)
+{
+    int status = DLB_ADM_STATUS_OK;
+
+    for(index = 0; index < SUPPORTED_PROFILES.size(); index++)
+    {
+        if(SUPPORTED_PROFILES[index].type == type)
+        {
+            break;
+        }
+    }
+
+    if(index == SUPPORTED_PROFILES.size())
+    {
+        status = DLB_ADM_STATUS_ERROR; // not implemented profile type
+    }
+
+    return status;
+}
+
+/* added supported profile from dictionary */
 int
 dlb_adm_core_model_add_profile
     (dlb_adm_core_model         *model
@@ -1008,7 +1033,84 @@ dlb_adm_core_model_add_profile
     ActionFn f = [&]
     {
         model->GetCoreModel().AddProfile(profile);
-        return DLB_ADM_STATUS_OK;
+
+        size_t index = 0;
+        status = GetProfileDescriptorIndex(profile, index);
+        if (status != DLB_ADM_STATUS_OK)
+        {
+            return status;
+        }        
+
+        dlb_adm_entity_id id;
+        unsigned int profileCount = model->GetCoreModel().Count(DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION);
+        status = dlb_adm_construct_generic_entity_id(&id
+                                                    ,DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION
+                                                    ,profileCount + 1);
+        if (status != DLB_ADM_STATUS_OK)
+        {
+            return status;
+        }
+        std::string name(SUPPORTED_PROFILES[index].name);
+        std::string version(SUPPORTED_PROFILES[index].version);
+        std::string level(SUPPORTED_PROFILES[index].level);
+        std::string value(SUPPORTED_PROFILES[index].value);                        
+
+        ProfileDescriptor profile = ProfileDescriptor(id, name, version, level, value);
+        bool added = model->GetCoreModel().AddEntity(profile);
+
+        return static_cast<int>(added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR);
+    };
+
+    status = unwind_protect(f);
+
+    return status;
+}
+
+int
+dlb_adm_core_model_add_profile_list
+    (dlb_adm_core_model         *model
+    ,dlb_adm_data_profile_list  *adm_profiles
+    )
+{
+    int status;
+
+    if (model == nullptr)
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    CoreModel &coreModel = model->GetCoreModel();
+
+    ActionFn f = [&]
+    {
+        for (unsigned int i = 0; i < adm_profiles->profiles_count; ++i)
+        {
+            dlb_adm_entity_id profileId;
+            int status = dlb_adm_construct_generic_entity_id(&profileId, DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION, i + 1);
+            if (status != DLB_ADM_STATUS_OK)
+            {
+                return status;
+            }
+            std::string profileName(adm_profiles->profiles[i].name);
+            std::string profileVersion(adm_profiles->profiles[i].version);
+            std::string profileLevel(adm_profiles->profiles[i].level);
+            std::string profileValue(adm_profiles->profiles[i].value);
+            
+            ProfileDescriptor descriptor(profileId, profileName, profileVersion, profileLevel, profileValue);
+            DLB_ADM_PROFILE type = descriptor.GetRecognizedProfile();
+            bool added = coreModel.AddEntity(descriptor);
+
+            if (type != DLB_ADM_PROFILE_NOT_INITIALIZED)
+            {
+                model->GetCoreModel().AddProfile(type);
+            }
+
+            if (!added)
+            {
+                return static_cast<int>(DLB_ADM_STATUS_ERROR);
+            }
+        }
+        return static_cast<int>(DLB_ADM_STATUS_OK);
     };
 
     status = unwind_protect(f);
@@ -1039,6 +1141,57 @@ dlb_adm_core_model_has_profile
     status = unwind_protect(f);
 
     return status;
+}
+
+int
+dlb_adm_core_model_get_profile_list
+    (dlb_adm_data_profile_list    *adm_profiles    /**< [out] struct to fill */
+    ,const dlb_adm_core_model     *model           /**< [in]  core model instance to query */
+    )
+{
+    if ((model == nullptr) || (adm_profiles == nullptr))
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    ActionFn f = [&]
+    {
+        int status;
+        unsigned int i = 0;
+
+        auto stringCopy = [](char* dst, const std::string src, unsigned int dst_length) 
+        {
+            unsigned int src_length = src.length();
+            unsigned int length = src_length > dst_length ? dst_length : src_length;
+            ::strncpy(dst, src.data(), length);
+            dst[length] = '\0';
+        };
+
+        CoreModel::EntityCallbackFn profileCallback = [&](const ModelEntity *e)
+        {
+            const ProfileDescriptor * descriptor = dynamic_cast<const ProfileDescriptor *>(e);
+            if (descriptor == nullptr)
+            {
+                return DLB_ADM_STATUS_ERROR;
+            }
+            stringCopy(adm_profiles->profiles[i].name, descriptor->GetProfileName(), DLB_ADM_DATA_NAME_LEN);
+            stringCopy(adm_profiles->profiles[i].version, descriptor->GetProfileVersion(), DLB_ADM_DATA_PROFILE_VERSION_LEN);
+            stringCopy(adm_profiles->profiles[i].level, descriptor->GetProfileLevel(), DLB_ADM_DATA_PROFILE_VERSION_LEN);
+            stringCopy(adm_profiles->profiles[i].value, descriptor->GetProfileValue(), DLB_ADM_DATA_NAME_LEN);
+            adm_profiles->profiles[i].type = descriptor->GetRecognizedProfile();          
+
+            i++;                                   
+            return DLB_ADM_STATUS_OK;
+        };
+
+        status = model->GetCoreModel().ForEach(DLB_ADM_ENTITY_TYPE_PROFILE_LIST_SPECIFICATION, profileCallback);
+        CheckStatus(status);
+        adm_profiles->profiles_count = i;
+
+        return status;
+    };
+
+    return unwind_protect(f);    
 }
 
 static void Translate(const Gain &g, dlb_adm_data_gain &gain)
@@ -1376,6 +1529,7 @@ static int Translate(const ModelEntity *e, dlb_adm_data_complementary_element &c
     return DLB_ADM_STATUS_OK;
 }
 
+
 template <typename T>
 int Translate(const dlb_adm_core_model *model, dlb_adm_entity_id id, T &data)
 {
@@ -1565,6 +1719,285 @@ dlb_adm_core_model_get_presentation_data
         status = model->GetCoreModel().ForEach(presentation_id, presentationCallback);
 
         return status;
+    };
+
+    return unwind_protect(f);
+}
+
+static int Translate(const ModelEntity *e, dlb_adm_data_dolbye_data *dolbye)
+{
+    const DolbyeInfo *dolbyEinfo = dynamic_cast<const DolbyeInfo *>(e);
+
+    if (dolbyEinfo == nullptr)
+    {
+        return DLB_ADM_STATUS_ERROR;
+    }
+
+    dolbye->info.program_config_id = dolbyEinfo->GetProgramConfig();
+    dolbye->info.frame_rate = dolbyEinfo->GetFrameRate();
+    dolbye->program_count = dolbyEinfo->GetProgramCount();
+    dolbye->info.time_code = dolbyEinfo->GetSmpteTimeCode();
+
+    return DLB_ADM_STATUS_OK;
+}
+
+static int Translate(const DolbyeProgram *program, dlb_adm_data_dolbye_ac3_program &ac3Program)
+{
+    ac3Program.acmod = program->GetAcmod();
+    ac3Program.bsmod = program->GetBsmod();
+    ac3Program.lfeon = program->GetLfeon();
+    ac3Program.cmixlev = program->GetCmixlev();
+    ac3Program.surmixlev = program->GetSurmixlev();
+    ac3Program.dsurmod = program->GetDsurmod();
+    ac3Program.dialnorm = program->GetDialnorm();
+    ac3Program.copyrightb = program->GetCopyrightb();
+    ac3Program.origbs = program->GetOrigbs();
+    ac3Program.langcod_exists = program->GetLangcodExists();
+    ac3Program.langcod = program->GetLangcod();
+    ac3Program.audprodie = program->GetAudprodie();
+    ac3Program.mixlevel = program->GetMixlevel();
+    ac3Program.roomtyp = program->GetRoomtyp();
+    ac3Program.xbsi1_exists = program->GetXbsi1Exists();
+    ac3Program.xbsi1_dmixmod = program->GetXbsi1Dmixmod();
+    ac3Program.xbsi1_ltrtcmixlev = program->GetXbsi1Ltrtcmixlev();
+    ac3Program.xbsi1_ltrtsurmixlev = program->GetXbsi1Ltrtsurmixlev();
+    ac3Program.xbsi1_lorocmixlev = program->GetXbsi1Lorocmixlev();
+    ac3Program.xbsi1_lorosurmixlev = program->GetXbsi1Lorosurmixlev();
+    ac3Program.xbsi2_exists = program->GetXbsi2Exists();
+    ac3Program.xbsi2_dsurexmod = program->GetXbsi2Dsurexmod();
+    ac3Program.xbsi2_dheadphonmod = program->GetXbsi2Dheadphonmod();
+    ac3Program.xbsi2_adconvtyp = program->GetXbsi2Adconvtyp();
+    ac3Program.dynrng1 = program->GetDynrng1();
+    ac3Program.compr1 = program->GetCompr1();
+
+    EntityName name;
+    if (program->GetName(name, 0))
+    {
+        ::strncpy(ac3Program.programDescriptionText, name.GetName().data(), sizeof(ac3Program.programDescriptionText));
+    }
+
+    return DLB_ADM_STATUS_OK;
+}
+
+static int Translate(const DolbyeEncoderParameters *encodingParams, dlb_adm_data_dolbye_encoder_parameters &params)
+{
+    params.hpfon = encodingParams->GetHpfon();
+    params.bwlpfon = encodingParams->GetBwlpfon();
+    params.lfelpfon = encodingParams->GetLfelpfon();
+    params.sur90on = encodingParams->GetSur90on();
+    params.suratton = encodingParams->GetSuratton();
+    params.rfpremphon = encodingParams->GetRfpremphon();
+
+    return DLB_ADM_STATUS_OK;
+}
+
+int
+dlb_adm_core_model_get_dolbye_data
+    (dlb_adm_data_dolbye_data     *dolbye_data    /**< [out] struct to fill */
+    ,const dlb_adm_core_model     *model          /**< [in]  core model instance to query */
+    )
+{
+    if ((model == nullptr) || (dolbye_data == nullptr))
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    memset(dolbye_data, 0, sizeof(dlb_adm_data_dolbye_data));
+    bool idsCorrect = true;
+    unsigned int ac3ProgramIdx = 0;
+    unsigned int encodeParamsIdx = 0;
+
+    ActionFn f = [&]
+    {
+        int status;
+
+        CoreModel::EntityCallbackFn dolbyeCallback = [&](const ModelEntity *e)
+        {
+            return Translate(e, dolbye_data);;
+        };
+
+        CoreModel::EntityCallbackFn programCallback = [&](const ModelEntity *e)
+        {
+            const DolbyeProgram * program = dynamic_cast<const DolbyeProgram *>(e);
+            if (program == nullptr)
+            {
+                return DLB_ADM_STATUS_ERROR;
+            }            
+            unsigned int programId = idsCorrect ? program->GetProgramId() : ac3ProgramIdx++;
+            return static_cast<DLB_ADM_STATUS>(Translate(program, dolbye_data->program_ac3_params[programId]));
+        };
+
+        CoreModel::EntityCallbackFn encodeParamsCallback = [&](const ModelEntity *e)
+        {
+            const DolbyeEncoderParameters * encodingParams = dynamic_cast<const DolbyeEncoderParameters *>(e);
+            if (encodingParams == nullptr)
+            {
+                return DLB_ADM_STATUS_ERROR;
+            }             
+            /* check programId */
+            unsigned int programId = idsCorrect ? encodingParams->GetProgramId() : encodeParamsIdx++;
+            return static_cast<DLB_ADM_STATUS>(Translate(encodingParams, dolbye_data->program_encode_params[programId]));
+        };
+
+        status = model->GetCoreModel().ForEach(DLB_ADM_ENTITY_TYPE_DOLBY_E, dolbyeCallback);
+        CheckStatus(status);
+    
+        /* check if program ids correct, amount of programs and ids sililarity were checked in Ingestor */
+        unsigned int ac3ProgramsIdsArray[DLB_ADM_DATA_DOLBYE_PROGRAMS_SZ] = {0};
+        CoreModel::EntityCallbackFn getAC3ProgramIds = [&](const ModelEntity *e)
+        {
+            const DolbyeProgram * program = dynamic_cast<const DolbyeProgram *>(e);
+            if (program == nullptr)
+            {
+                return DLB_ADM_STATUS_ERROR;
+            } 
+            ac3ProgramsIdsArray[program->GetProgramId()]++;
+            return DLB_ADM_STATUS_OK;
+        };
+
+        status = model->GetCoreModel().ForEach(DLB_ADM_ENTITY_TYPE_AC3_PROGRAM, getAC3ProgramIds);
+        CheckStatus(status);
+        for (unsigned int i = 0; i < dolbye_data->program_count; ++i)
+        {
+            if (ac3ProgramsIdsArray[i] != 1)
+            {
+                idsCorrect = false;
+                break;
+            }
+        }
+
+        status = model->GetCoreModel().ForEach(DLB_ADM_ENTITY_TYPE_AC3_PROGRAM, programCallback);
+        CheckStatus(status);
+        status = model->GetCoreModel().ForEach(DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS, encodeParamsCallback);
+        CheckStatus(status);
+
+        return status;
+    };
+
+    return unwind_protect(f);
+}
+
+static
+int
+AddDolbyEInfo
+    (CoreModel                 &coreModel
+    ,dlb_adm_data_dolbye_data  *dolbye_data
+    )
+{
+        dlb_adm_entity_id info_id;
+        int status = dlb_adm_construct_generic_entity_id(&info_id, DLB_ADM_ENTITY_TYPE_DOLBY_E, 1);
+        if (status != DLB_ADM_STATUS_OK)
+        {
+            return status;
+        }
+
+        DolbyeInfo dolbyEInfo(info_id, dolbye_data->info.frame_rate, dolbye_data->info.program_config_id, dolbye_data->program_count);
+        dolbyEInfo.SetSmpteTimeCode(dolbye_data->info.time_code.tc1, dolbye_data->info.time_code.tc2, dolbye_data->info.time_code.tc3, dolbye_data->info.time_code.tc4);
+        bool added = coreModel.AddEntity(dolbyEInfo);
+        return added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR;
+}
+
+static
+int
+AddAC3Program
+    (CoreModel                        &coreModel
+    ,dlb_adm_data_dolbye_ac3_program  &program
+    ,unsigned int                      id
+    )
+{
+        dlb_adm_entity_id program_id;
+
+        int status = dlb_adm_construct_generic_entity_id(&program_id, DLB_ADM_ENTITY_TYPE_AC3_PROGRAM, id);
+        if (status != DLB_ADM_STATUS_OK)
+        {
+            return status;
+        }
+        DolbyeProgram ac3Program(program_id, id, program.acmod, program.bsmod, program.lfeon);
+        ac3Program.SetCmixlev(program.cmixlev);
+        ac3Program.SetSurmixlev(program.surmixlev);
+        ac3Program.SetDsurmod(program.dsurmod);
+        ac3Program.SetDialnorm(program.dialnorm);
+        ac3Program.SetCopyrightb(program.copyrightb);
+        ac3Program.SetOrigbs(program.origbs);
+        ac3Program.SetLangcode(program.langcod_exists, program.langcod);
+        ac3Program.SetAudprodi(program.audprodie, program.mixlevel, program.roomtyp);
+        ac3Program.SetXbsi1Md(program.xbsi1_exists, 
+                              program.xbsi1_dmixmod, 
+                              program.xbsi1_ltrtcmixlev, 
+                              program.xbsi1_ltrtsurmixlev, 
+                              program.xbsi1_lorocmixlev, 
+                              program.xbsi1_lorosurmixlev
+                              );
+        ac3Program.SetXbsi2Md(program.xbsi2_exists, program.xbsi2_dsurexmod, program.xbsi2_dheadphonmod, program.xbsi2_adconvtyp);
+        ac3Program.SetCompr1(!program.compr1.is_profile, program.compr1.is_profile ? program.compr1.drc.gain_word : program.compr1.drc.profile);
+        ac3Program.SetDynrng1(!program.dynrng1.is_profile, program.dynrng1.is_profile ? program.dynrng1.drc.gain_word : program.dynrng1.drc.profile);
+        std::string textDesc(program.programDescriptionText);
+        bool added = ac3Program.AddName(textDesc, "");
+        if (!added)
+        {
+            return DLB_ADM_STATUS_ERROR;
+        }            
+        added = coreModel.AddEntity(ac3Program);
+        return added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR;
+}
+
+static
+int
+AddEncoderParameters
+    (CoreModel                               &coreModel
+    ,dlb_adm_data_dolbye_encoder_parameters  &params
+    ,unsigned int                             id
+    )
+{
+        dlb_adm_entity_id params_id;
+        int status = dlb_adm_construct_generic_entity_id(&params_id, DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS, id);
+        if (status != DLB_ADM_STATUS_OK)
+        {
+            return status;
+        }
+
+        DolbyeEncoderParameters encodeParams(params_id, 
+                                             id, 
+                                             params.hpfon, 
+                                             params.bwlpfon, 
+                                             params.lfelpfon, 
+                                             params.sur90on, 
+                                             params.suratton, 
+                                             params.rfpremphon
+                                             ); 
+        bool added = coreModel.AddEntity(encodeParams);
+        return added ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR;          
+}
+
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_add_dolbye_data
+    (dlb_adm_core_model        *model
+    ,dlb_adm_data_dolbye_data  *dolbye_data
+    )
+{
+    if ((model == nullptr) || (dolbye_data == nullptr))
+    {
+        return DLB_ADM_STATUS_NULL_POINTER;
+    }
+
+    ActionFn f = [&]
+    {
+        CoreModel &coreModel = model->GetCoreModel();
+
+        int status = AddDolbyEInfo(coreModel, dolbye_data);
+        CheckStatus(status);
+
+        for (unsigned int i = 0; i < dolbye_data->program_count; ++i)
+        {
+            unsigned int id = i + 1;
+            status = AddAC3Program(coreModel, dolbye_data->program_ac3_params[i], id);
+            CheckStatus(status);
+            status = AddEncoderParameters(coreModel, dolbye_data->program_encode_params[i], id);
+            CheckStatus(status);
+        }
+
+        return DLB_ADM_STATUS_OK;
     };
 
     return unwind_protect(f);
@@ -1789,6 +2222,57 @@ dlb_adm_core_model_get_frame_format
         return status;
     };
     return unwind_protect(f);
+}
+
+int
+dlb_adm_core_model_get_audio_element_content_kind
+    (const dlb_adm_core_model   *model
+    ,dlb_adm_entity_id           elementId
+    ,DLB_ADM_CONTENT_KIND       *contentKind
+    )
+{
+    int status = DLB_ADM_STATUS_OK;
+    *contentKind = DLB_ADM_CONTENT_KIND_MK_COMPLETE_MAIN;
+    bool found = false;
+
+    CoreModel::EntityCallbackFn programmCallback = [&](const ModelEntity *e)
+    {
+        CoreModel::PresentationCallbackFn presentationRecordCallback = [&](const PresentationRecord &presentationRecord)
+        {
+            if (presentationRecord.audioElementID == elementId)
+            {
+                dlb_adm_entity_id contentId = presentationRecord.contentGroupID;
+
+                CoreModel::EntityCallbackFn contentCallback = [&](const ModelEntity *content)
+                {
+                    if (content->GetEntityID() == contentId)
+                    {
+                        const ContentGroup *contentGroup = dynamic_cast<const ContentGroup *>(content);
+                        if (contentGroup == nullptr)
+                        {
+                            return DLB_ADM_STATUS_ERROR;
+                        }
+
+                        *contentKind = contentGroup->GetContentKind();
+                        found = true;
+                        return DLB_ADM_STATUS_OK;
+                    }
+                    return DLB_ADM_STATUS_OK;
+
+                };
+                status = model->GetCoreModel().ForEach(DLB_ADM_ENTITY_TYPE_CONTENT, contentCallback);
+            }
+
+            return DLB_ADM_STATUS_OK;
+        };
+
+        status = model->GetCoreModel().ForEach(e->GetEntityID(), presentationRecordCallback);
+        return DLB_ADM_STATUS_OK;
+    };
+
+    status = model->GetCoreModel().ForEach(DLB_ADM_ENTITY_TYPE_PROGRAMME, programmCallback);
+
+    return found ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_NOT_FOUND;
 }
 
 int
@@ -2505,6 +2989,7 @@ static bool validate_content_kind(DLB_ADM_CONTENT_KIND kind)
     case DLB_ADM_CONTENT_KIND_NK_UNDEFINED:
     case DLB_ADM_CONTENT_KIND_NK_MUSIC:
     case DLB_ADM_CONTENT_KIND_NK_EFFECTS:
+    case DLB_ADM_CONTENT_KIND_NK_MUSIC_AND_EFFECTS:
     case DLB_ADM_CONTENT_KIND_DK_UNDEFINED:
     case DLB_ADM_CONTENT_KIND_DK_DIALOGUE:
     case DLB_ADM_CONTENT_KIND_DK_VOICEOVER:

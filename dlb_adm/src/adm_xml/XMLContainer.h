@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2021, Dolby Laboratories Inc.
- * Copyright (c) 2020-2021, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,8 @@ namespace DlbAdm
         int GetEntity(EntityRecord &e, const dlb_adm_entity_id &id);
 
         int AddRelationship(const dlb_adm_entity_id &fromId, const dlb_adm_entity_id &toId);
+
+        int AddEntityWithRelationship(const dlb_adm_entity_id &parentID, const dlb_adm_entity_id &id);
 
         int SetValue(const dlb_adm_entity_id &id, DLB_ADM_TAG tag, const AttributeValue &value);
 

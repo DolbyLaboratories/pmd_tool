@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2023-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2025-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,7 @@ source_group_count_callback
     ,void                       *callback_arg
     )
 {
+    (void)model;
     dlb_adm_entity_id *group_id = (dlb_adm_entity_id *)callback_arg;
     
     *group_id = entity_id;
@@ -74,6 +75,7 @@ translate_content_kind_to_obj_class
     case DLB_ADM_CONTENT_KIND_NK_UNDEFINED:
     case DLB_ADM_CONTENT_KIND_NK_MUSIC:
     case DLB_ADM_CONTENT_KIND_NK_EFFECTS:
+    case DLB_ADM_CONTENT_KIND_NK_MUSIC_AND_EFFECTS:
         c = DLB_ADM_OBJECT_CLASS_GENERIC;
         break;
 
@@ -145,11 +147,11 @@ get_common_def_target_group
     switch(speaker_config)
     {
         case DLB_ADM_SPEAKER_CONFIG_2_0:
-            return 0x801000200000000; /* AP_00010002 */
+            return 0x801080200000000; /* AP_00010002 */
         case DLB_ADM_SPEAKER_CONFIG_5_1:
-            return 0x801000300000000;  /* AP_00010003 */                  
+            return 0x801080300000000;  /* AP_00010003 */                  
         case DLB_ADM_SPEAKER_CONFIG_5_1_4:
-            return 0x801000500000000; /* AP_00010005 */
+            return 0x801080500000000; /* AP_00010005 */
         default:
             return DLB_ADM_NULL_ENTITY_ID;
     }
@@ -163,30 +165,30 @@ get_common_def_target
     )
 {
 
-    /* AC_00010001, AC_00010002 */
-    static const dlb_adm_entity_id ids_20[2] = {0xA01000100000000, 0xA01000200000000};
+    /* AC_00010801, AC_00010802 */
+    static const dlb_adm_entity_id ids_20[2] = {0xA01080100000000, 0xA01080200000000};
 
-    /* AC_00010001, AC_00010002, AC_00010003, AC_00010004, AC_00010005, AC_00010006  */
-    static const dlb_adm_entity_id ids_51[6] = {0xA01000100000000
-                                               ,0xA01000200000000
-                                               ,0xA01000300000000
-                                               ,0xA01000400000000
-                                               ,0xA01000500000000
-                                               ,0xA01000600000000
+    /* AC_00010001, AC_00010002, AC_00010803, AC_00010804, AC_00010805, AC_00010806  */
+    static const dlb_adm_entity_id ids_51[6] = {0xA01080100000000
+                                               ,0xA01080200000000
+                                               ,0xA01080300000000
+                                               ,0xA01080400000000
+                                               ,0xA01080500000000
+                                               ,0xA01080600000000
                                                };
 
-    /* AC_00010001, AC_00010002, AC_00010003, AC_00010004, AC_00010005
-    , AC_00010006, AC_0001000D, AC_0001000F, AC_00010010, AC_00010012  */
-    static const dlb_adm_entity_id ids_514[10] = {0xA01000100000000
-                                                 ,0xA01000200000000
-                                                 ,0xA01000300000000
-                                                 ,0xA01000400000000
-                                                 ,0xA01000500000000
-                                                 ,0xA01000600000000
-                                                 ,0xA01000D00000000
-                                                 ,0xA01000F00000000
-                                                 ,0xA01001000000000
-                                                 ,0xA01001200000000
+    /* AC_00010801, AC_00010802, AC_00010803, AC_00010804, AC_00010805
+    , AC_00010806, AC_0001080D, AC_0001080F, AC_00010810, AC_00010812  */
+    static const dlb_adm_entity_id ids_514[10] = {0xA01080100000000
+                                                 ,0xA01080200000000
+                                                 ,0xA01080300000000
+                                                 ,0xA01080400000000
+                                                 ,0xA01080500000000
+                                                 ,0xA01080600000000
+                                                 ,0xA01080D00000000
+                                                 ,0xA01080F00000000
+                                                 ,0xA01081000000000
+                                                 ,0xA01081200000000
                                                  };  
 
     switch(speaker_config)
@@ -222,7 +224,6 @@ add_target_group
     (dlb_adm_core_model        *model
     ,DLB_ADM_SPEAKER_CONFIG     speaker_config
     ,bool                       is_bed
-    ,char                       language_tag[DLB_ADM_DATA_LANG_SZ]
     ,dlb_adm_data_target_group *target_group
     ,dlb_adm_data_names         *names    
     )
@@ -238,7 +239,6 @@ int
 add_target
     (dlb_adm_core_model         *model
     ,bool                       is_bed
-    ,char                       language_tag[DLB_ADM_DATA_LANG_SZ]
     ,dlb_adm_data_target        *target
     ,dlb_adm_data_names         *names    
     )
@@ -332,7 +332,7 @@ dlb_adm_add_audio_element
     /* if AudioPackFormat is not from common definitions it should be added */
     if (DLB_ADM_NULL_ENTITY_ID == target_group.id)
     {
-        status = add_target_group(model, speaker_config, is_bed, language_tag, &target_group, names);
+        status = add_target_group(model, speaker_config, is_bed, &target_group, names);
         if (DLB_ADM_STATUS_OK != status)
         {
             return element_ids;
@@ -364,7 +364,7 @@ dlb_adm_add_audio_element
 
         if (DLB_ADM_NULL_ENTITY_ID == target.id)
         {
-            status = add_target(model, is_bed, language_tag, &target, names);
+            status = add_target(model, is_bed, &target, names);
             if (DLB_ADM_STATUS_OK != status)
             {
                 return element_ids;

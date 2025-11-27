@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020, Dolby Laboratories Inc.
- * Copyright (c) 2020, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -169,7 +169,7 @@ namespace DlbAdm
 
         status = GetAttributeDescriptor(d, tag);
         CHECK_STATUS(status);
-        if (d.entityType != DLB_ADM_ID_GET_ENTITY_TYPE(id))
+        if (static_cast<long unsigned int>(d.entityType) != DLB_ADM_ID_GET_ENTITY_TYPE(id))
         {
             return DLB_ADM_STATUS_INVALID_ARGUMENT;
         }
@@ -214,7 +214,7 @@ namespace DlbAdm
 
         status = GetAttributeDescriptor(d, tag);
         CHECK_STATUS(status);
-        if (d.entityType != DLB_ADM_ID_GET_ENTITY_TYPE(id))
+        if (static_cast<long unsigned int>(d.entityType) != DLB_ADM_ID_GET_ENTITY_TYPE(id))
         {
             return DLB_ADM_STATUS_INVALID_ARGUMENT;
         }

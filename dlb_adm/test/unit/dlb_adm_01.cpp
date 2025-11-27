@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2024, Dolby Laboratories Inc.
- * Copyright (c) 2020-2024, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -85,8 +85,8 @@ TEST(dlb_adm_test, ConfigureTheLibrary)
 TEST(dlb_adm_test, Translate_Good_FF_Id)
 {
     AdmIdTranslator translator;
-    const char *s1 = "FF_00000000001";
-    const char *s2 = "FF_00000000001_01";
+    const char *s1 = "FF_00000001";
+    const char *s2 = "FF_00000001_01";
     dlb_adm_entity_id id;
     DLB_ADM_ENTITY_TYPE entityType;
     std::string s;
@@ -109,6 +109,38 @@ TEST(dlb_adm_test, Translate_Good_FF_Id)
     EXPECT_EQ(0x1, (id >> FRAME_PART_SHIFT) & MASK_08);
     s = translator.Translate(id);
     compare = strcmp(s2, s.data());
+    EXPECT_EQ(0, compare);
+}
+
+TEST(dlb_adm_test, Translate_11_FF_Id)
+{
+    AdmIdTranslator translator;
+    const char *s1 = "FF_00000000001";
+    const char *s2 = "FF_00000000001_01";
+    const char *expected1 = "FF_00000001";
+    const char *expected2 = "FF_00000001_01";    
+    dlb_adm_entity_id id;
+    DLB_ADM_ENTITY_TYPE entityType;
+    std::string s;
+    int compare;
+
+    id = translator.Translate(s1);
+    EXPECT_NE(0, id);
+    entityType = translator.GetEntityType(id);
+    EXPECT_EQ(DLB_ADM_ENTITY_TYPE_FRAME_FORMAT, entityType);
+    EXPECT_EQ(0x1, id & MASK_32);
+    s = translator.Translate(id);
+    compare = strcmp(expected1, s.data());
+    EXPECT_EQ(0, compare);
+
+    id = translator.Translate(s2);
+    EXPECT_NE(0, id);
+    entityType = translator.GetEntityType(id);
+    EXPECT_EQ(DLB_ADM_ENTITY_TYPE_FRAME_FORMAT, entityType);
+    EXPECT_EQ(0x1, id & MASK_32);
+    EXPECT_EQ(0x1, (id >> FRAME_PART_SHIFT) & MASK_08);
+    s = translator.Translate(id);
+    compare = strcmp(expected2, s.data());
     EXPECT_EQ(0, compare);
 }
 

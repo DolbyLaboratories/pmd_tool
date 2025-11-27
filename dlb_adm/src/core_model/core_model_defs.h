@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020, Dolby Laboratories Inc.
- * Copyright (c) 2020, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -58,6 +58,24 @@ namespace DlbAdm
     static const ChannelNumber UNKNOWN_CHANNEL_NUMBER = 0u;
 
     static const size_t DEFAULT_NAME_LIMIT = 32u;
+
+    typedef struct
+    {
+        const std::string     name;
+        const std::string     version;
+        const std::string     level;
+        const std::string     value;
+        const DLB_ADM_PROFILE type;
+    } SupportedProfileDescriptor;
+
+    const std::vector<SupportedProfileDescriptor> SUPPORTED_PROFILES = 
+    {
+        /* latest version of particular profile should be the first*/
+        SupportedProfileDescriptor{"Advanced sound system: ADM and S-ADM profile for emission", "1", "1", "ITU-R BS.2168", DLB_ADM_PROFILE_SADM_EMISSION_PROFILE},        
+        SupportedProfileDescriptor{"AdvSS Emission S-ADM Profile", "1.0.0", "1", "ITU-R BS.[ADM-NGA-EMISSION]-X", DLB_ADM_PROFILE_SADM_EMISSION_PROFILE},
+        SupportedProfileDescriptor{"Dolby E ADM and S-ADM Profile for emission", "1", "1", "Dolby E ADM and S-ADM Profile for emission", DLB_ADM_PROFILE_SADM_DOLBY_E},
+        SupportedProfileDescriptor{"Dolby E ADM and S-ADM Profile for emission", "1", "1", "Dolby E ADM and S-ADM Profile for emission v1.0", DLB_ADM_PROFILE_SADM_DOLBY_E}
+    };
 
 }
 

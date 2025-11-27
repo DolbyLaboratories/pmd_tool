@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020, Dolby Laboratories Inc.
- * Copyright (c) 2020, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@ namespace DlbAdm
         , mLoudnessValue(0.0)
         {
             // empty
-        };
+        }
 
         LoudnessMetadata::LoudnessMetadata(dlb_adm_gain_value value, DLB_ADM_LOUDNESS_TYPE type)
         {
@@ -58,18 +58,18 @@ namespace DlbAdm
                 mLoudnessValue = 0.0;
             }
             
-        };
+        }
 
         LoudnessMetadata::LoudnessMetadata(const LoudnessMetadata &x)
         {
             mLoudnessType = x.GetLoudnessType();
             mLoudnessValue = x.GetLoudnessValue();
-        };
+        }
 
         LoudnessMetadata::~LoudnessMetadata()
         {
             // empty
-        };
+        }
 
         bool LoudnessMetadata::IsInitialized() const 
         {
@@ -79,23 +79,22 @@ namespace DlbAdm
         DLB_ADM_LOUDNESS_TYPE LoudnessMetadata::GetLoudnessType() const
         {
             return mLoudnessType;
-        };
+        }
 
         dlb_adm_gain_value LoudnessMetadata::GetLoudnessValue() const
         {
             return mLoudnessValue;
-        };
+        }
 
         LoudnessMetadata & LoudnessMetadata::operator=(const LoudnessMetadata &x)
         {
             this->mLoudnessType = x.GetLoudnessType();
             this->mLoudnessValue = x.GetLoudnessValue();
             return *this;
-        };
+        }
 
         bool LoudnessMetadata::IsValidType(DLB_ADM_LOUDNESS_TYPE type) const
         {
             return (type >= DLB_ADM_LOUDNESS_TYPE_FIRST && type <= DLB_ADM_LOUDNESS_TYPE_LAST);
-        };
-
+        }
 }

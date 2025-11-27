@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021-2024, Dolby Laboratories Inc.
- * Copyright (c) 2021-2024, Dolby International AB.
+ * Copyright (c) 2021-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2021-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -61,6 +61,11 @@ static dlb_pmd_success ret_fail()
 
 #define PMD_MAX_BED_CHANNELS (16)
 
+#define CARTESIAN_TAG ("$[C]")
+#define BCM_TAG ("$[BM]")
+#define ME_TAG ("$[ME]")
+#define ML_TAG ("$[ML]")
+#define CM_TAG ("$[CM]")
 
 /**
  * @brief table of speaker counts for ADM speaker configs
@@ -366,10 +371,127 @@ translate_speaker_config
     return PMD_SUCCESS;
 }
 
+
+static
+int
+is_broadcast_mix(DLB_ADM_CONTENT_KIND content_kind)
+{
+    return content_kind == DLB_ADM_CONTENT_KIND_MK_VISUALLY_IMPAIRED;
+}
+
+static
+int
+is_music_and_effect(DLB_ADM_CONTENT_KIND content_kind)
+{
+    return content_kind == DLB_ADM_CONTENT_KIND_NK_MUSIC_AND_EFFECTS;
+}
+
+static
+int
+is_music_and_effects_legacy(DLB_ADM_CONTENT_KIND content_kind)
+{
+    return content_kind == DLB_ADM_CONTENT_KIND_NK_UNDEFINED;
+}
+
+static
+int
+is_complete_main(DLB_ADM_CONTENT_KIND content_kind)
+{
+    return content_kind == DLB_ADM_CONTENT_KIND_MK_COMPLETE_MAIN;
+}
+
+static
+int
+is_cartesian_id(dlb_adm_entity_id id)
+{
+    return ((id == 0x801080200000000) || 
+            (id == 0x801080300000000) ||
+            (id == 0x801080500000000)
+           );
+}
+
+static
+void
+add_tag_to_name(char* name, const char* tag, unsigned int *idx, unsigned int tag_size)
+{
+    unsigned int i, j;
+    i = *idx;
+    for (j = 0; j < tag_size; ++i, ++j)
+    {
+        name[i] = tag[j];
+    }
+
+    *idx = i;
+}
+
+static
+void
+add_tags_to_name(char* name, pmd_core_model_ingester *ingester, DLB_ADM_CONTENT_KIND content_kind)
+{
+    unsigned int i  = 0, j = 0;
+    int is_cartesian, is_bcm, is_me, is_ml, is_cm;
+    int tag_size;
+
+    is_cartesian = is_cartesian_id(ingester->element_data.target_group.id);
+    is_cm = is_complete_main(content_kind);
+    is_bcm = is_broadcast_mix(content_kind);
+    is_me = is_music_and_effect(content_kind);
+    is_ml = is_music_and_effects_legacy(content_kind); /* before adding music&effects to S-ADM*/
+
+    tag_size = 0;
+    if (is_cartesian)
+    {
+        tag_size += sizeof(CARTESIAN_TAG);
+    }
+    if (is_bcm || is_me || is_ml || is_cm)
+    {
+        tag_size += sizeof(BCM_TAG);
+    }
+
+    if (tag_size == 0)
+    {
+        return;
+    }
+
+    for (i = 0; i < DLB_PMD_NAME_ARRAY_SIZE - tag_size; i++)
+    {
+        if (name[i] == '\0')
+        {
+             break;
+        }
+    }
+
+    if (is_bcm)
+    {
+        add_tag_to_name(name, BCM_TAG, &i, sizeof(BCM_TAG) - 1);
+    }
+    else if (is_me)
+    {
+        add_tag_to_name(name, ME_TAG, &i, sizeof(ME_TAG) - 1);
+    }
+    else if (is_ml)
+    {
+        add_tag_to_name(name, ML_TAG, &i, sizeof(ML_TAG) - 1);
+    }
+    else if (is_cm)
+    {
+        add_tag_to_name(name, CM_TAG, &i, sizeof(CM_TAG) - 1);
+    }
+
+    if (is_cartesian)
+    {
+        add_tag_to_name(name, CARTESIAN_TAG, &i, sizeof(CARTESIAN_TAG) - 1);
+    }
+
+    name[i] = '\0';
+
+}
+
 static
 dlb_pmd_success
 generate_pmd_bed
     (pmd_core_model_ingester    *ingester
+    ,DLB_ADM_CONTENT_KIND        content_kind
     )
 {
     dlb_pmd_success success = PMD_SUCCESS;
@@ -403,6 +525,9 @@ generate_pmd_bed
     {
         strncpy(bed.name, ingester->names.names[0], sizeof(bed.name));
     }
+
+    add_tags_to_name(bed.name, ingester, content_kind);
+
     /* TODO: we will lose any labels -- is there a way to fix that? */
 
     for (i = 0; i < data->channel_count; i++)
@@ -431,6 +556,7 @@ audio_element_callback
     ,void                       *callback_arg
     )
 {
+    DLB_ADM_CONTENT_KIND content_kind;
     pmd_core_model_ingester *ingester = (pmd_core_model_ingester *)callback_arg;
     int status;
 
@@ -454,7 +580,9 @@ audio_element_callback
             } 
             else
             {
-                if (generate_pmd_bed(ingester))
+                status = dlb_adm_core_model_get_audio_element_content_kind(ingester->core_model, entity_id, &content_kind);
+                CHECK_STATUS(status);
+                if (generate_pmd_bed(ingester, content_kind))
                 {
                     status = DLB_ADM_STATUS_ERROR;
                 }

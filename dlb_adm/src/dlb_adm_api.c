@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2023, Dolby Laboratories Inc.
- * Copyright (c) 2020-2023, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
 #include <inttypes.h>
 
 static const int DLB_ADM_VERSION_MAJOR = 2;
-static const int DLB_ADM_VERSION_MINOR = 3;
+static const int DLB_ADM_VERSION_MINOR = 5;
 static const int DLB_ADM_VERSION_PATCH = 0;
 
 #ifdef EXTERNAL_ADM_COMMON_DEFINITIONS
@@ -104,6 +104,7 @@ dlb_adm_configure
     (const dlb_adm_library_config   *config
     )
 {
+    (void)config;
     return DLB_ADM_STATUS_OK;
 }
 #endif
@@ -139,6 +140,7 @@ dlb_adm_translate_content_kind
     case DLB_ADM_CONTENT_KIND_NK_UNDEFINED:
     case DLB_ADM_CONTENT_KIND_NK_MUSIC:
     case DLB_ADM_CONTENT_KIND_NK_EFFECTS:
+    case DLB_ADM_CONTENT_KIND_NK_MUSIC_AND_EFFECTS:
         c = DLB_ADM_OBJECT_CLASS_GENERIC;
         break;
 

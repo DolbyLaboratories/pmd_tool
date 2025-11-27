@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_st2110
- * Copyright (c) 2019-2020, Dolby Laboratories Inc.
- * Copyright (c) 2019-2020, Dolby International AB.
+ * Copyright (c) 2019-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

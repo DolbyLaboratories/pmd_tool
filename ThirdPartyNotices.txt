@@ -1,7 +1,7 @@
 Third Party Notices
 -------------------
 
-PMD Library v2.2.0 redistributes several third-party, open-source software
+PMD Library v2.5.0 redistributes several third-party, open-source software
 packages:
 
 * boost -- various copyrights

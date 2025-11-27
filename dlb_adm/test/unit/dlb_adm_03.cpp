@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2022, Dolby Laboratories Inc.
- * Copyright (c) 2020-2022, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,7 @@
 #include "dlb_adm_xml_container.h"
 #include "AdmIdTranslator.h"
 #include "AdmId.h"
+#include "TestUtilities.h"
 
 #include <stdio.h>
 #include <fstream>
@@ -81,38 +82,6 @@ protected:
 
             ofs << content;
         }
-    }
-
-    bool CompareFiles(const char *fname1, const char *fname2)
-    {
-        std::ifstream ifs1(fname1);
-        std::ifstream ifs2(fname2);
-        bool eq = ifs1.good() && ifs2.good();
-
-        if (eq)
-        {
-            std::string line1;
-            std::string line2;
-            bool got1 = !std::getline(ifs1, line1).eof();
-            bool got2 = !std::getline(ifs2, line2).eof();
-
-            while (got1 && got2)
-            {
-                if (!(line1 == line2))
-                {
-                    eq = false;
-                    break;
-                }
-                got1 = !std::getline(ifs1, line1).eof();
-                got2 = !std::getline(ifs2, line2).eof();
-            }
-            if (eq && (got1 || got2))
-            {
-                eq = false; // they should end at the same time
-            }
-        }
-
-        return eq;
     }
 
     virtual void SetUp()
@@ -578,7 +547,7 @@ TEST_F(DlbAdm03, ReadXmlFileBasic)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_container_write_xml_file(theContainer, dolbyReferenceOutFileName);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
-    EXPECT_TRUE(CompareFiles(dolbyReferenceFileName, dolbyReferenceOutFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(dolbyReferenceFileName, dolbyReferenceOutFileName));
 
     status = ::dlb_adm_container_close(&theContainer);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
@@ -589,7 +558,7 @@ TEST_F(DlbAdm03, ReadXmlFileBasic)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_container_write_xml_file(theContainer, dolbyReferenceOutOutFileName);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
-    EXPECT_TRUE(CompareFiles(dolbyReferenceOutFileName, dolbyReferenceOutOutFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(dolbyReferenceOutFileName, dolbyReferenceOutOutFileName));
 }
 
 TEST_F(DlbAdm03, ReadXmlFileEBU)
@@ -603,7 +572,7 @@ TEST_F(DlbAdm03, ReadXmlFileEBU)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_container_write_xml_file(theContainer, ebuPart1OutFileName);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
-    EXPECT_TRUE(CompareFiles(ebuPart1FileName, ebuPart1OutFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(ebuPart1FileName, ebuPart1OutFileName));
     
     status = ::dlb_adm_container_close(&theContainer);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
@@ -614,7 +583,7 @@ TEST_F(DlbAdm03, ReadXmlFileEBU)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_container_write_xml_file(theContainer, ebuPart1OutOutFileName);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
-    EXPECT_TRUE(CompareFiles(ebuPart1OutFileName, ebuPart1OutOutFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(ebuPart1OutFileName, ebuPart1OutOutFileName));
 }
 
 #ifdef EXTERNAL_ADM_COMMON_DEFINITIONS
@@ -685,7 +654,7 @@ TEST_F(DlbAdm03, ReadXmlBufferBasic)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_container_write_xml_file(theContainer, dolbyReferenceOutFileName);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
-    EXPECT_TRUE(CompareFiles(dolbyReferenceFileName, dolbyReferenceOutFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(dolbyReferenceFileName, dolbyReferenceOutFileName));
 }
 
 TEST_F(DlbAdm03, ReadXmlBufferSeveralTimes)
@@ -710,6 +679,6 @@ TEST_F(DlbAdm03, ReadXmlBufferSeveralTimes)
 
     status = ::dlb_adm_container_write_xml_file(theContainer, dolbyReferenceOutFileName);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
-    EXPECT_TRUE(CompareFiles(dolbyReferenceFileName, dolbyReferenceOutFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(dolbyReferenceFileName, dolbyReferenceOutFileName));
 }
 

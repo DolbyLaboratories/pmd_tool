@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2023-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2023-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -82,7 +82,7 @@ namespace DlbAdm
              * @param r Relationship record from source container
              * @return DLB_ADM_STATUS_OK on success
              */
-            int ProcessAndCopyChildEntities(dlb_adm_entity_id sourceParentId, dlb_adm_entity_id flattenedParentId, const RelationshipRecord &r);
+            int ProcessAndCopyChildEntities(dlb_adm_entity_id flattenedParentId, const RelationshipRecord &r);
 
             /**
              * @brief Recursively copy "child" entities contained in "parent" entity from mSourceContainer to mFlattnedContainer.

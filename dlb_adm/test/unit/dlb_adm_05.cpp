@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2021, Dolby Laboratories Inc.
- * Copyright (c) 2020-2021, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,7 @@
 #include "XMLIngester.h"
 #include "XMLGenerator.h"
 #include "CoreModel.h"
+#include "TestUtilities.h"
 
 #include "dlb_adm_data.h"
 
@@ -73,38 +74,6 @@ protected:
 
             ofs << stereoXML;
         }
-    }
-
-    bool CompareFiles(const char *fname1, const char *fname2)
-    {
-        std::ifstream ifs1(fname1);
-        std::ifstream ifs2(fname2);
-        bool eq = ifs1.good() && ifs2.good();
-
-        if (eq)
-        {
-            std::string line1;
-            std::string line2;
-            bool got1 = !std::getline(ifs1, line1).eof();
-            bool got2 = !std::getline(ifs2, line2).eof();
-
-            while (got1 && got2)
-            {
-                if (!(line1 == line2))
-                {
-                    eq = false;
-                    break;
-                }
-                got1 = !std::getline(ifs1, line1).eof();
-                got2 = !std::getline(ifs2, line2).eof();
-            }
-            if (eq && (got1 || got2))
-            {
-                eq = false; // they should end at the same time
-            }
-        }
-
-        return eq;
     }
 
     virtual void SetUp()
@@ -149,7 +118,7 @@ TEST_F(DlbAdm05, ReadAndWriteStereoXMLFile)
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // compare the output files
-    EXPECT_TRUE(CompareFiles(stereoOut1XMLFileName, stereoOut2XMLFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(stereoOut1XMLFileName, stereoOut2XMLFileName));
 
     // close the container
     status = ::dlb_adm_container_close(&c2);
@@ -203,7 +172,7 @@ TEST_F(DlbAdm05, ReadIngestGenerateAndWriteStereoXMLFile)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // compare the output files
-    EXPECT_TRUE(CompareFiles(stereoXMLFileName, stereoXMLGenOutFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(stereoXMLFileName, stereoXMLGenOutFileName));
 
     // close the "generate" container
     status = ::dlb_adm_container_close(&c);
@@ -269,7 +238,7 @@ TEST_F(DlbAdm05, ReadAndWriteStereoXMLFileViaAPI)
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // compare the output files
-    EXPECT_TRUE(CompareFiles(apiStereoOut1XMLFileName, apiStereoOut2XMLFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(apiStereoOut1XMLFileName, apiStereoOut2XMLFileName));
 
     // close everything
     status = ::dlb_adm_core_model_close(&cm);
@@ -367,5 +336,5 @@ TEST_F(DlbAdm05, TestXMLBuffer)
         }
     }
     EXPECT_EQ(stereoXMLSize, gotTotal);
-    EXPECT_TRUE(CompareFiles(stereoXMLFileName, stereoXMLBufferOutFileName));
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(stereoXMLFileName, stereoXMLBufferOutFileName));
 }

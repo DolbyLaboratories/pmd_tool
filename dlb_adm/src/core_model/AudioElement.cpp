@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2021, Dolby Laboratories Inc.
- * Copyright (c) 2020-2021, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -92,7 +92,7 @@ namespace DlbAdm
         , mGain(gainValue, gainUnit)
         , mPositionOffset(offset.offset_value, offset.cartesian)
         , mObjectClass(objectClass)
-        , mInteract(0)
+        , mInteract(interact)
         , mObjectInteraction(objectIteraction)
     {
         mNameLimit = DEFAULT_NAME_LIMIT;
