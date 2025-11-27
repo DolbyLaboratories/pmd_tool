@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020, Dolby Laboratories Inc.
- * Copyright (c) 2020, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -592,4 +592,256 @@ static const RelationshipDescriptor initializers[] =
         { 0, 1 },
     },
 
+    {
+        DLB_ADM_ENTITY_TYPE_FORMAT_CUSTOM_SET,
+        DLB_ADM_ENTITY_TYPE_DBMD,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },    
+    {
+        DLB_ADM_ENTITY_TYPE_DBMD,
+        DLB_ADM_ENTITY_TYPE_METADATA_SEGMENT,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 3, 3 },  /* ?????? */
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_METADATA_SEGMENT,
+        DLB_ADM_ENTITY_TYPE_DOLBY_E,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_DOLBY_E,
+        DLB_ADM_ENTITY_TYPE_PROGRAM_CONFIG,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_DOLBY_E,
+        DLB_ADM_ENTITY_TYPE_FRAME_RATE_CODE,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_DOLBY_E,
+        DLB_ADM_ENTITY_TYPE_SMPTE_TIME_CODE,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_METADATA_SEGMENT,
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_PROGRAM_INFO,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_PROGRAM_INFO,
+        DLB_ADM_ENTITY_TYPE_ACMOD,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_PROGRAM_INFO,
+        DLB_ADM_ENTITY_TYPE_BSMOD,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_PROGRAM_INFO,
+        DLB_ADM_ENTITY_TYPE_LFEON,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_CMIXLEV,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_SURMIXLEV,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_DSURMOD,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_DIALNORM,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_COPYRIGHTB,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_ORIGBS,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_LANG_CODE,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_LANG_CODE,
+        DLB_ADM_ENTITY_TYPE_LANG_COD,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_AUDIO_PROD_INFO,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AUDIO_PROD_INFO,
+        DLB_ADM_ENTITY_TYPE_MIXLEVEL,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AUDIO_PROD_INFO,
+        DLB_ADM_ENTITY_TYPE_ROOMTYP,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_EXTBSI1E,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_EXTBSI1E,
+        DLB_ADM_ENTITY_TYPE_LORO_CMIXLEV,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_EXTBSI1E,
+        DLB_ADM_ENTITY_TYPE_LORO_SURMIXLEV,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_EXTBSI1E,
+        DLB_ADM_ENTITY_TYPE_LTRT_CMIXLEV,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_EXTBSI1E,
+        DLB_ADM_ENTITY_TYPE_LTRT_SURMIXLEV,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_EXTBSI1E,
+        DLB_ADM_ENTITY_TYPE_DMIXMOD,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_EXTBSI2E,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_EXTBSI2E,
+        DLB_ADM_ENTITY_TYPE_DSUREXMOD,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_EXTBSI2E,
+        DLB_ADM_ENTITY_TYPE_DHEADPHONMOD,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_EXTBSI2E,
+        DLB_ADM_ENTITY_TYPE_ADCONVTYP,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, 1 },
+    },                       
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_COMPR1,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_DYNRNG1,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_AC3_PROGRAM,
+        DLB_ADM_ENTITY_TYPE_PROGRAM_DESCRIPTION_TEXT,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },        
+    {
+        DLB_ADM_ENTITY_TYPE_METADATA_SEGMENT,
+        DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 0, RelationshipArity::ANY },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS,
+        DLB_ADM_ENTITY_TYPE_HPFON,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS,
+        DLB_ADM_ENTITY_TYPE_BWLPFON,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS,
+        DLB_ADM_ENTITY_TYPE_LFELPFON,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS,
+        DLB_ADM_ENTITY_TYPE_SUR90ON,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS,
+        DLB_ADM_ENTITY_TYPE_SURRATTON,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },
+    {
+        DLB_ADM_ENTITY_TYPE_ENCODE_PARAMETERS,
+        DLB_ADM_ENTITY_TYPE_RFPREMPHON,
+        ENTITY_RELATIONSHIP::CONTAINS,
+        { 1, 1 },
+    },                          
 };

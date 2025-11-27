@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2021, Dolby Laboratories Inc.
- * Copyright (c) 2020-2021, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@
 #define DLB_ADM_XML_INGESTER_H
 
 #include "dlb_adm/include/dlb_adm_api_types.h"
+#include "dlb_adm/include/dlb_adm_data_types.h"
 
 #include <boost/core/noncopyable.hpp>
 #include <memory>
@@ -82,6 +83,12 @@ namespace DlbAdm
         int IngestContentTables();
         int IngestSourceTable();
         int IngestUpdateTable();
+
+        int IngestAudioCustomDBMD();
+        int CheckADMConstraintsForDBMD();        
+        int IngestAudioCustomDolbyEInfo(dlb_adm_entity_id metadataSedmentId, dlb_adm_element_count &programCount);
+        int IngestAudioCustomAC3Programs(dlb_adm_entity_id metadataSedmentId, unsigned int &ac3ProgramIdsMask);
+        int IngestAudioCustomEncodingParameters(dlb_adm_entity_id metadataSedmentId, unsigned int &encodeParamsIdsMask);
 
         CoreModel &mModel;
         XMLContainer &mContainer;

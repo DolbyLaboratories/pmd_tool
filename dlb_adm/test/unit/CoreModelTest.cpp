@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2021, Dolby Laboratories Inc.
- * Copyright (c) 2021, Dolby International AB.
+ * Copyright (c) 2021-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2021-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,8 +37,11 @@
 #define _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
 
 #include "gtest/gtest.h"
-#include "CoreModelTest.h"
+#include "TestUtilities.h"
 #include "dlb_adm/include/dlb_adm_api.h"
+#include "dlb_adm/include/dlb_adm_data_types.h"
+#include "dlb_adm/src/core_model/dlb_adm_core_model.h"
+#include "dlb_adm/src/core_model/ModelEntity.h"
 #include "dlb_adm/src/core_model/Presentation.h"
 #include "dlb_adm/src/core_model/ContentGroup.h"
 #include "dlb_adm/src/core_model/LoudnessMetadata.h"
@@ -47,152 +50,6 @@
 #include <cmath>
 
 using namespace DlbAdm;
-
-static inline void CheckStatus(int x)
-{
-    if (x != DLB_ADM_STATUS_OK)
-    {
-        throw false;
-    }
-}
-
-static inline void CheckTrue(bool x)
-{
-    if (!x)
-    {
-        throw false;
-    }
-}
-
-namespace DlbAdmTest
-{
-
-    bool CheckNames(dlb_adm_core_model &model, dlb_adm_entity_id id, dlb_adm_data_names &names)
-    {
-        bool good = false;
-
-        try
-        {
-            CoreModel &coreModel = model.GetCoreModel();
-            const ModelEntity *entity;
-            dlb_adm_bool hasName;
-            int status;
-
-            good = coreModel.GetEntity(id, &entity);
-            CheckTrue(good);
-            status = ::dlb_adm_core_model_has_name(&hasName, &names);
-            CheckStatus(status);
-            good = !(static_cast<dlb_adm_bool>(entity->HasName()) ^ hasName);   // Same number of names (0 or 1)?
-            CheckTrue(good);
-            good = (entity->GetLabelCount() == names.label_count);              // Same number of labels (0+)?
-            CheckTrue(good);
-
-            EntityName entityName;
-            std::string dataName;
-            std::string dataLang;
-            size_t i = 0;
-
-            if (hasName)                    // Are the names the same?
-            {
-                good = entity->GetName(entityName, i);
-                CheckTrue(good);
-                dataName = names.names[i];
-                dataLang = names.langs[i];
-                good = ((entityName.GetName() == dataName) && (entityName.GetLanguage() == dataLang));
-                CheckTrue(good);
-                ++i;
-            }
-
-            while (i < names.name_count)    // Are the labels the same?
-            {
-                good = entity->GetName(entityName, i);
-                CheckTrue(good);
-                dataName = names.names[i];
-                dataLang = names.langs[i];
-                good = ((entityName.GetName() == dataName) && (entityName.GetLanguage() == dataLang));
-                CheckTrue(good);
-                ++i;
-            }
-        }
-        catch (bool x)
-        {
-            good = x;
-        }
-        catch (...)
-        {
-            good = false;
-        }
-
-        return good;
-    }
-
-    template
-    <typename T>
-    static bool GetLoudnessMetadata(const ModelEntity *entity, LoudnessMetadata &outLoudness)
-    {
-        bool ok = false;
-
-        const T *specificPtr = dynamic_cast<const T *>(entity);
-        if(specificPtr != nullptr)
-        {
-            outLoudness = specificPtr->GetLoudnessMetadata();
-            ok = true;
-        }
-
-        return ok;
-    }
-
-    bool CheckLoudnessMetadata(dlb_adm_core_model &model, const dlb_adm_entity_id id, const dlb_adm_data_loudness &source_loudness, DLB_ADM_ENTITY_TYPE type)
-    {
-        bool good = false;
-
-        try
-        {
-            CoreModel &coreModel = model.GetCoreModel();
-            const ModelEntity *entity;
-
-            good = coreModel.GetEntity(id, &entity);
-            CheckTrue(good);
-
-            LoudnessMetadata entityLoudness;
-
-            switch (type)
-            {
-            case DLB_ADM_ENTITY_TYPE_PROGRAMME:
-                good = GetLoudnessMetadata<Presentation>(entity, entityLoudness);
-                break;
-
-            case DLB_ADM_ENTITY_TYPE_CONTENT:
-                good = GetLoudnessMetadata<ContentGroup>(entity, entityLoudness);
-                break;
-
-            default:
-                good = false;
-                break;
-            }
-            CheckTrue(good);
-
-            good = entityLoudness.GetLoudnessType() == source_loudness.loudness_type;
-            CheckTrue(good);
-
-            good = std::fabs( entityLoudness.GetLoudnessValue() - source_loudness.loudness_value) < 0.00001f; // float comparision....
-            CheckTrue(good);
-        }
-        catch (bool x)
-        {
-            good = x;
-        }
-        catch (...)
-        {
-            good = false;
-        }
-
-        return good;
-    }
-
-}
-
-using namespace DlbAdmTest;
 
 
 class MockEntity : public ModelEntity

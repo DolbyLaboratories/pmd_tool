@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2023, Dolby Laboratories Inc.
- * Copyright (c) 2020-2023, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,10 @@ namespace DlbAdm
     class CoreModelData;
     class ComplementaryElement;
     class AudioObjectInteraction;
+    class DolbyeInfo;
+    class DolbyeEncoderParameters;
+    class DolbyeProgram;
+    class ProfileDescriptor;
 
     class CoreModel : public boost::noncopyable
     {
@@ -112,6 +116,14 @@ namespace DlbAdm
         bool AddEntity(const BlockUpdate &update);
 
         bool AddEntity(const FrameFormat &frameFormat);
+
+        bool AddEntity(const DolbyeInfo &info);
+        
+        bool AddEntity(const DolbyeProgram &info);
+
+        bool AddEntity(const DolbyeEncoderParameters &info);
+
+        bool AddEntity(const ProfileDescriptor &profile);
 
         // Add table records
 

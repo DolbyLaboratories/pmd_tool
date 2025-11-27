@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2024, Dolby Laboratories Inc.
- * Copyright (c) 2020-2024, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,7 @@ namespace DlbAdm
         AdmIdTranslator translator;
         translator.DeconstructUntypedId(Id, NULL, &number, NULL);
         return number;
-    };
+    }
 
     static int IsCommonDefinition(XMLContainer & container, dlb_adm_entity_id id, bool & isCommon)
     {
@@ -104,12 +104,12 @@ namespace DlbAdm
         mSourceContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_CONTENT, getMaxEntitySequenceCounter);
         mSourceContainer.ForEachEntity(DLB_ADM_ENTITY_TYPE_OBJECT, getMaxEntitySequenceCounter);
 
-    };
+    }
 
     XMLContainerFlattener::~XMLContainerFlattener()
     {
         /* empty */
-    };
+    }
 
     int XMLContainerFlattener::Flatten()
     {
@@ -137,9 +137,9 @@ namespace DlbAdm
             status = DLB_ADM_STATUS_ERROR; // flattened container is not empty at start
         }
         return status;
-    };
+    }
 
-    int XMLContainerFlattener::ProcessAndCopyChildEntities(dlb_adm_entity_id sourceParentId, dlb_adm_entity_id flattenedParentId, const RelationshipRecord &r)
+    int XMLContainerFlattener::ProcessAndCopyChildEntities(dlb_adm_entity_id flattenedParentId, const RelationshipRecord &r)
     {
         int status = DLB_ADM_STATUS_OK;
 
@@ -180,7 +180,7 @@ namespace DlbAdm
 #endif
 
         return status;
-    };
+    }
 
     int XMLContainerFlattener::ProcessAndCopyReferencedContentObject
         (dlb_adm_entity_id sourceProgrammeId
@@ -232,7 +232,7 @@ namespace DlbAdm
             status = mFlattenedContainer.AddRelationship(sourceProgrammeId, flattenedContentId);
         }
         return status;
-    };
+    }
 
     int XMLContainerFlattener::RecursivelyProcessAndCopyChildEntities(dlb_adm_entity_id sourceParentId, dlb_adm_entity_id flattenedParentId, RelationshipDB::RelationshipFilterFn filter)
     {
@@ -240,16 +240,15 @@ namespace DlbAdm
                                                     ,ENTITY_RELATIONSHIP::CONTAINS
                                                     ,std::bind(&XMLContainerFlattener::ProcessAndCopyChildEntities
                                                               ,this
-                                                              ,sourceParentId
                                                               ,flattenedParentId
                                                               ,std::placeholders::_1)
                                                     ,filter);
-    };
+    }
 
     static bool HasADMId(DLB_ADM_ENTITY_TYPE entityType)
     {
         return (entityType > DLB_ADM_ENTITY_TYPE_FIRST && entityType <= DLB_ADM_ENTITY_TYPE_LAST_WITH_ID);
-    };
+    }
 
     int XMLContainerFlattener::RecursivelyCopyChildEntities(dlb_adm_entity_id sourceChildId, dlb_adm_entity_id flattenedParentId)
     {
@@ -265,7 +264,7 @@ namespace DlbAdm
         CHECK_STATUS(status);
 
         return status;
-    };
+    }
 
     int XMLContainerFlattener::RecursivelyCopyEntityWithoutImmediateReferences
         (dlb_adm_entity_id sourceChildId
@@ -293,7 +292,7 @@ namespace DlbAdm
         CHECK_STATUS(status);
 #endif
         return status;
-    };
+    }
 
     int XMLContainerFlattener::PlainCopyReferencedObject(dlb_adm_entity_id flattenedParentId, const RelationshipRecord &r)
     {
@@ -311,7 +310,7 @@ namespace DlbAdm
         CHECK_STATUS(status);
 
         return status;
-    };
+    }
 
     int XMLContainerFlattener::ProcessProgrammeGroup(dlb_adm_entity_id sourceProgrammeId, dlb_adm_entity_id flattenedParentId)
     {
@@ -358,7 +357,7 @@ namespace DlbAdm
         }
 
         return status;
-    };
+    }
 
     int XMLContainerFlattener::ProcessProgrammeWithAVS(dlb_adm_entity_id sourceProgrammeId, dlb_adm_entity_id flattenedParentId)
     {
@@ -392,7 +391,7 @@ namespace DlbAdm
                                                                ,std::placeholders::_1));
 
         return status;
-    };
+    }
 
     int XMLContainerFlattener::MapComplementaryObjects(const RelationshipRecord &r, std::map<dlb_adm_entity_id, dlb_adm_entity_id> &contentToObject)
     {
@@ -422,7 +421,7 @@ namespace DlbAdm
         return mSourceContainer.ForEachRelationship(r.GetToId()
                                                    ,DLB_ADM_ENTITY_TYPE_COMPLEMENTARY_OBJECT_REF
                                                    ,FindRef);
-    };
+    }
 
     int XMLContainerFlattener::UnfoldProgramContent(const RelationshipRecord &r, std::vector<std::map<dlb_adm_entity_id, dlb_adm_entity_id>> &contentToObjects)
     {
@@ -435,7 +434,7 @@ namespace DlbAdm
                                                              ,this
                                                              ,std::placeholders::_1
                                                              ,std::ref(contentToObjects.back())));
-    };
+    }
 
     int XMLContainerFlattener::CopyObjectToContainer(dlb_adm_entity_id sourceObjectId, dlb_adm_entity_id flattenedObjectId, dlb_adm_entity_id flattenedParentId)
     {
@@ -459,7 +458,7 @@ namespace DlbAdm
         CHECK_STATUS(status);
 
         return status;
-    };
+    }
 
     int XMLContainerFlattener::AddContentToFlattenedProgramme(dlb_adm_entity_id newProgrammeId, dlb_adm_entity_id contentId, dlb_adm_entity_id objectId, dlb_adm_entity_id flattenedParentId)
     {
@@ -482,7 +481,7 @@ namespace DlbAdm
         /* Add Relationship to Content -> Object */
         status = mFlattenedContainer.AddRelationship(contentId, objectId);
         return status;
-    };
+    }
 
     int XMLContainerFlattener::AddLabelToFlattenedProgramme(dlb_adm_entity_id newProgrammeId, dlb_adm_entity_id contentId, dlb_adm_entity_id objectId)
     {
@@ -529,7 +528,7 @@ namespace DlbAdm
         status = mFlattenedContainer.AddRelationship(newProgrammeId, labelId);
 
         return status;
-    };
+    }
 
     int XMLContainerFlattener::ProcessProgrammeWithComplementaryObject(dlb_adm_entity_id sourceProgrammeId, dlb_adm_entity_id flattenedParentId)
     {
@@ -597,7 +596,7 @@ namespace DlbAdm
         } while (newProgrammeCount != newProgrammesNeeded);
 
         return status;
-    };
+    }
 
     int XMLContainerFlattener::GenerateContentObjectWithAVS
         (dlb_adm_entity_id sourceContentId
@@ -682,7 +681,7 @@ namespace DlbAdm
         mCreatedObjectsMap[std::make_pair(sourceContentId, AltValId)] = newContentId;
 
         return status;
-    };
+    }
 
     bool XMLContainerFlattener::ComplementaryObjectPresent(dlb_adm_entity_id programmeId)
     {
@@ -701,12 +700,12 @@ namespace DlbAdm
 
         mSourceContainer.ForEachRelationship(programmeId, DLB_ADM_ENTITY_TYPE_CONTENT, traverseContent);
         return complObjPresent;
-    };
+    }
 
     bool XMLContainerFlattener::AlternativeValueSetPresent(dlb_adm_entity_id programmeId)
     {
         return mSourceContainer.RelationshipExists(programmeId, DLB_ADM_ENTITY_TYPE_ALT_VALUE_SET);
-    };
+    }
 
     dlb_adm_entity_id XMLContainerFlattener::GenerateNextId(DLB_ADM_ENTITY_TYPE entityType)
     {
@@ -724,7 +723,7 @@ namespace DlbAdm
                 break;
         }
         return nextId;
-    };
+    }
 
     int XMLContainerFlattener::CopyAttributes(dlb_adm_entity_id sourceChildId, dlb_adm_entity_id flattenedChildId)
     {
@@ -733,7 +732,7 @@ namespace DlbAdm
             return mFlattenedContainer.SetValue(flattenedChildId, tag, value);
         };
         return mSourceContainer.ForEachAttribute(sourceChildId, copyAttributes);
-    };
+    }
 
     int XMLContainerFlattener::CopyReferences(dlb_adm_entity_id sourceChildId, dlb_adm_entity_id flattenedChildId, RelationshipDB::RelationshipFilterFn filter)
     {
@@ -746,7 +745,7 @@ namespace DlbAdm
             return status;
         };
         return mSourceContainer.ForEachRelationship(sourceChildId, ENTITY_RELATIONSHIP::REFERENCES, copyReferences, filter);
-    };
+    }
 
     static
     dlb_adm_entity_id

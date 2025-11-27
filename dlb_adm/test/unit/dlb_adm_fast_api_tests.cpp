@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2023, Dolby Laboratories Inc.
- * Copyright (c) 2023, Dolby International AB.
+ * Copyright (c) 2023-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2023-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -293,3 +293,8 @@ TEST_F(DlbFastApiTests, addAudioProgramme)
     EXPECT_EQ(0, strcmp("slv",          mNames.langs[2]));
 }
 
+TEST_F(DlbFastApiTests, getDolbyEData)
+{
+    dlb_adm_data_dolbye_data testData;
+    ASSERT_EQ(dlb_adm_core_model_get_dolbye_data(&testData, coreModel), DLB_ADM_STATUS_OK);
+}

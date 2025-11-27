@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021-2024, Dolby Laboratories Inc.
- * Copyright (c) 2021-2024, Dolby International AB.
+ * Copyright (c) 2021-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2021-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -70,6 +70,12 @@ static const char altSpkrADMOutputFileName[] = "AltSpkr.out.sadm.xml";
 
 static const char altSpkrPMDOriginalFileName[] = "AltSpkr.pmd.xml";
 static const char altSpkrPMDOutputFileName[] = "AltSpkr.out.pmd.xml";
+
+static const char contentKindADMInputFileName[] = "ContentKind.sadm.xml";
+static const char contentKindADMOutputFileName[] = "ContentKind.out.sadm.xml";
+
+static const char contentKindPMDOriginalFileName[] = "ContentKind.pmd.xml";
+static const char contentKindPMDOutputFileName[] = "ContentKind.out.pmd.xml";
 
 static const char bedClassCM_PMDInputFileName[] = "BedClassCM.pmd.xml";
 static const char bedClassCM_SADMInputFileName[] = "BedClassCM.sadm.xml";
@@ -456,7 +462,7 @@ TEST_F(CoreModelGenerator, AltSpkrs)
     ASSERT_EQ(PMD_SUCCESS, success);
     success = ::dlb_pmd_add_signals(mPmdModel, 18);
     ASSERT_EQ(PMD_SUCCESS, success);
-    success = ::dlb_pmd_add_bed(mPmdModel, 1, "Bed 1", DLB_PMD_SPEAKER_CONFIG_5_1,   1, 0);
+    success = ::dlb_pmd_add_bed(mPmdModel, 1, "Bed 1$[ME]$[C]", DLB_PMD_SPEAKER_CONFIG_5_1,   1, 0);
     ASSERT_EQ(PMD_SUCCESS, success);
     success = ::dlb_pmd_add_bed(mPmdModel, 2, "Bed 2", DLB_PMD_SPEAKER_CONFIG_7_1_4, 7, 0);
     ASSERT_EQ(PMD_SUCCESS, success);
@@ -489,6 +495,69 @@ TEST_F(CoreModelGenerator, AltSpkrs)
     ASSERT_EQ(PMD_SUCCESS, success);
 
     EXPECT_TRUE(CompareFiles(altSpkrPMDOriginalFileName, altSpkrPMDOutputFileName));
+}
+
+TEST_F(CoreModelGenerator, ContentKindCheck)
+{
+    dlb_pmd_model_combo *comboModel;
+    dlb_pmd_element_id eid;
+    dlb_pmd_success success;
+    int status;
+
+    SetUpTestInput(contentKindADMInputFileName, contentKindADM);
+    status = InitPmdModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    status = InitCoreModel();
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+
+    // Set up and write out the PMD model
+    success = ::dlb_pmd_set_title(mPmdModel, "Converted from Serial ADM");
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_pmd_add_signals(mPmdModel, 12);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_pmd_add_bed(mPmdModel, 1, "Bed 1$[CM]$[C]", DLB_PMD_SPEAKER_CONFIG_5_1,   1, 0);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_pmd_add_bed(mPmdModel, 2, "Bed 2$[ME]", DLB_PMD_SPEAKER_CONFIG_2_0, 7, 0);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_pmd_add_bed(mPmdModel, 3, "Bed 3$[ML]$[C]", DLB_PMD_SPEAKER_CONFIG_2_0, 9, 0);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_pmd_add_bed(mPmdModel, 4, "Bed 4$[BM]", DLB_PMD_SPEAKER_CONFIG_2_0, 11, 0);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    eid = 1;
+    success = ::dlb_pmd_add_presentation(mPmdModel, 1, "en", "Pres 1", "en", DLB_PMD_SPEAKER_CONFIG_5_1, 1, &eid);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    eid = 2;
+    success = ::dlb_pmd_add_presentation(mPmdModel, 2, "en", "Pres 2", "en", DLB_PMD_SPEAKER_CONFIG_2_0, 1, &eid);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    eid = 3;
+    success = ::dlb_pmd_add_presentation(mPmdModel, 3, "en", "Pres 3", "en", DLB_PMD_SPEAKER_CONFIG_2_0, 1, &eid);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    eid = 4;
+    success = ::dlb_pmd_add_presentation(mPmdModel, 4, "en", "Pres 4", "en", DLB_PMD_SPEAKER_CONFIG_2_0, 1, &eid);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_xmlpmd_file_write(contentKindPMDOriginalFileName, mPmdModel);
+    ASSERT_EQ(PMD_SUCCESS, success);
+
+    // Wrap the model, write the S-ADM and compare with the "gold standard"
+    DlbAdm::DlbPmdModelWrapper pmdWrapper(&comboModel, mPmdModel, PMD_FALSE);
+
+    success = ::dlb_pmd_sadm_file_write(contentKindADMOutputFileName, comboModel);
+    EXPECT_EQ(PMD_SUCCESS, success);
+
+    EXPECT_TRUE(CompareFiles(contentKindADMInputFileName, contentKindADMOutputFileName));
+
+    // Read the S-ADM, convert it to PMD, write it out and compare with the original PMD
+    DlbAdm::DlbPmdModelWrapper sadmWrapper(&comboModel, mCoreModel, PMD_FALSE);
+    const dlb_pmd_model *pmdModel;
+
+    success = ::dlb_pmd_sadm_file_read(contentKindADMOutputFileName, comboModel, PMD_TRUE, nullptr, nullptr);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_pmd_model_combo_ensure_readable_pmd_model(comboModel, &pmdModel, PMD_FALSE);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::dlb_xmlpmd_file_write(contentKindPMDOutputFileName, pmdModel);
+    ASSERT_EQ(PMD_SUCCESS, success);
+
+    EXPECT_TRUE(CompareFiles(contentKindPMDOriginalFileName, contentKindPMDOutputFileName));
 }
 
 TEST_F(CoreModelGenerator, PMD_bedClass_CM_to_SADM)

@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2019-2020, Dolby Laboratories Inc.
- * Copyright (c) 2019-2020, Dolby International AB.
+ * Copyright (c) 2019-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2019-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -132,7 +132,7 @@ updateStudioAbedNameFromUi
     )
 {
     BedClassifier classifier = static_cast<BedClassifier>(uiComboboxSelected(abed->classifier));
-    std::string pmdBedLabel = generatePMDBedLabel(uiEntryText(abed->name), classifier);
+    std::string pmdBedLabel = generatePMDBedLabel(uiEntryText(abed->name), classifier, uiCheckboxChecked(abed->cartesian));
     snprintf(abed->bed.name, sizeof(abed->bed.name), "%s", pmdBedLabel.c_str());
     pmd_studio_update_model(abed->audio_beds->studio);
 }
@@ -143,8 +143,9 @@ updateUiFromStudioAbedName
     (pmd_studio_audio_bed *abed
     )
 {
-    auto [classifier, label] = parsePMDBedLabel(abed->bed.name);
+    auto [classifier, label, is_cartesian] = parsePMDBedLabel(abed->bed.name);
     uiComboboxSetSelected(abed->classifier, static_cast<int>(classifier));
+    uiCheckboxSetChecked(abed->cartesian, is_cartesian);
     uiEntrySetText(abed->name, label.c_str());
 }
 
@@ -163,6 +164,17 @@ inline
 void
 onBedClassUpdated
     (uiCombobox *cb
+    ,void *data
+    )
+{
+    pmd_studio_audio_bed *abed = (pmd_studio_audio_bed *) data;
+    updateStudioAbedNameFromUi(abed);
+}
+
+inline
+void
+onCartesianCheckBoxToggle
+    (uiCheckbox *cb
     ,void *data
     )
 {
@@ -312,6 +324,10 @@ add_audio_bed
 
     uiComboboxOnSelected(abed->classifier, onBedClassUpdated, abed);
 
+    abed->cartesian = uiNewCheckbox("");
+    uiCheckboxOnToggled(abed->cartesian, onCartesianCheckBoxToggle, abed);
+    uiCheckboxSetChecked(abed->cartesian, 0);
+
     abed->name = uiNewEntry();
 
     // With classifier and name initialized, now parse bed label and update.
@@ -365,6 +381,7 @@ add_audio_bed
     uiGridAppend(abeds->grid, uiControl(abed->start),       i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);
     uiGridAppend(abeds->grid, uiControl(abed->gain),        i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignFill);    
     uiGridAppend(abeds->grid, uiControl(abed->name),        i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignCenter);
+    uiGridAppend(abeds->grid, uiControl(abed->cartesian),   i++, row, 1, 1, 1, uiAlignFill, 1, uiAlignCenter);
 
     // Add bed to presentations bed comboboxes if intialized enabled
     if(abed->enabled) pmd_studio_presentations_bed_enable(abed->bed.id, PMD_TRUE, abeds->studio);
@@ -424,6 +441,7 @@ pmd_studio_audio_beds_init
     uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Start")),  i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
     uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Gain")),   i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
     uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Name")),   i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
+    uiGridAppend((*ab1)->grid, uiControl(uiNewLabel("Cartesian")),   i++, 0, 1, 1, 1, uiAlignFill, 0, uiAlignFill);
 
     (*ab1)->bed_count = 0;
     
@@ -540,6 +558,7 @@ pmd_studio_audio_beds_reset
         uiGridDelete(abeds->grid, uiControl(abeds->beds[i].start));
         uiGridDelete(abeds->grid, uiControl(abeds->beds[i].enable));
         uiGridDelete(abeds->grid, uiControl(abeds->beds[i].classifier));
+        uiGridDelete(abeds->grid, uiControl(abeds->beds[i].cartesian));
         uiControlDestroy(uiControl(abeds->beds[i].label));
         uiControlDestroy(uiControl(abeds->beds[i].cfg));
         uiControlDestroy(uiControl(abeds->beds[i].name));
@@ -547,6 +566,7 @@ pmd_studio_audio_beds_reset
         uiControlDestroy(uiControl(abeds->beds[i].start));
         uiControlDestroy(uiControl(abeds->beds[i].enable));
         uiControlDestroy(uiControl(abeds->beds[i].classifier));
+        uiControlDestroy(uiControl(abeds->beds[i].cartesian));
     }
     abeds->bed_count = 0;
 }
@@ -565,6 +585,7 @@ pmd_studio_audio_beds_enable
         uiControlEnable(uiControl(abeds->beds[i].enable));
         uiControlEnable(uiControl(abeds->beds[i].name));
         uiControlEnable(uiControl(abeds->beds[i].classifier));
+        uiControlEnable(uiControl(abeds->beds[i].cartesian));
     }
 
 }
@@ -592,6 +613,7 @@ pmd_studio_audio_beds_disable
         {
             uiControlEnable(uiControl(abeds->beds[i].gain));
         }
+        uiControlDisable(uiControl(abeds->beds[i].cartesian));
     }
 }
 
@@ -886,32 +908,41 @@ pmd_studio_set_bed_gain
 
 
 // Scans for and parses bed classifier strings in label
-std::tuple<BedClassifier, std::string> 
+std::tuple<BedClassifier, std::string, int> 
 parsePMDBedLabel
     (std::string label
     )
 {
+    int is_cartesian = 0;
+
+    if(boost::algorithm::ends_with(label, CARTESIAN_TAG))
+    {
+        label = label.substr(0, label.size() - CARTESIAN_TAG.size());
+        is_cartesian =  1;
+    }
+
     for(auto [classifier, tag, description] : BED_CLASSIFIER_TAG_MAP)
     {
         if(tag.size() > label.size()) continue;
         if(boost::algorithm::ends_with(label, tag))
         {
             std::string text = label.substr(0, label.size() - tag.size());
-            return{classifier, text};
+            return{classifier, text, is_cartesian};
         }
     }
     // Default bed classifier is first defined classifier
-    return {BedClassifier::DEFAULT, label};
+    return {BedClassifier::DEFAULT, label, is_cartesian};
 }
 
 // Generates PMD label with bed classifier string
 std::string 
 generatePMDBedLabel
-    (std::string label
+    (std::string   label
     ,BedClassifier bedClass
+    ,int           is_cartesian
     )
 {
-    if(bedClass == BedClassifier::DEFAULT) return label;
+    if ((bedClass == BedClassifier::DEFAULT) && !is_cartesian) return label;
 
     std::stringstream ss;
     ss << label;
@@ -922,6 +953,11 @@ generatePMDBedLabel
             ss << tag;
             break;
         }
+    }
+
+    if (is_cartesian)
+    {
+        ss << CARTESIAN_TAG;
     }
     return ss.str();
 }

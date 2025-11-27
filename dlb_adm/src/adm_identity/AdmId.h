@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020, Dolby Laboratories Inc.
- * Copyright (c) 2020, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@ namespace DlbAdm
     static const size_t X_W_SHIFT = 4 * 8;
     static const size_t FRAME_PART_SHIFT = AUDIO_TYPE_SHIFT;
 
-    static const unsigned int FF_HEX_WIDTH = 11;
+    static const unsigned int FF_HEX_WIDTH = 8;
 
     static const dlb_adm_entity_id MASK_08 = 0x00000000000000ff;
     static const dlb_adm_entity_id MASK_16 = 0x000000000000ffff;

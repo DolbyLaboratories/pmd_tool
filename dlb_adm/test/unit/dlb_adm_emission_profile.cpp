@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2022-2024, Dolby Laboratories Inc.
- * Copyright (c) 2022-2024, Dolby International AB.
+ * Copyright (c) 2022-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2022-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,7 @@
 #include "core_model/core_model_defs.h"
 #include "AdmIdTranslator.h"
 #include "AdmId.h"
+#include "TestUtilities.h"
 
 #include <stdio.h>
 #include <fstream>
@@ -106,7 +107,7 @@ class DlbAdmEmissionProfile : public testing::Test
 protected:
 
     dlb_adm_container_counts     containerCounts;
-    dlb_adm_xml_container       *oryginalContainer;
+    dlb_adm_xml_container       *originalContainer;
     dlb_adm_xml_container       *flattenedContainer;
     dlb_adm_core_model          *coreModel;
     size_t                       count;
@@ -133,38 +134,6 @@ protected:
         }
     }
 
-    bool CompareFiles(const char *fname1, const char *fname2)
-    {
-        std::ifstream ifs1(fname1);
-        std::ifstream ifs2(fname2);
-        bool eq = ifs1.good() && ifs2.good();
-
-        if (eq)
-        {
-            std::string line1;
-            std::string line2;
-            bool got1 = !std::getline(ifs1, line1).eof();
-            bool got2 = !std::getline(ifs2, line2).eof();
-
-            while (got1 && got2)
-            {
-                if (!(line1 == line2))
-                {
-                    eq = false;
-                    break;
-                }
-                got1 = !std::getline(ifs1, line1).eof();
-                got2 = !std::getline(ifs2, line2).eof();
-            }
-            if (eq && (got1 || got2))
-            {
-                eq = false; // they should end at the same time
-            }
-        }
-
-        return eq ? DLB_ADM_STATUS_OK : DLB_ADM_STATUS_ERROR;
-    }
-
     int SetUpNames()
     {
         size_t memorySize;
@@ -188,7 +157,7 @@ protected:
         mNamesMemory0 = nullptr;
         mPresentationDataMemory = nullptr;
         ::memset(&containerCounts, 0, sizeof(containerCounts));
-        oryginalContainer = nullptr;
+        originalContainer = nullptr;
         flattenedContainer = nullptr;
         coreModel = nullptr;
 
@@ -206,7 +175,7 @@ protected:
         SetUpTestInput(multipleComplementaryName, multipleComplementaryBuffer);
         SetUpTestInput(complementaryAndAvsName, complementaryAndAvsBuffer);
 
-        status = ::dlb_adm_container_open(&oryginalContainer, &containerCounts);
+        status = ::dlb_adm_container_open(&originalContainer, &containerCounts);
         ASSERT_EQ(DLB_ADM_STATUS_OK, status);
         status = ::dlb_adm_container_open(&flattenedContainer, &containerCounts);
         ASSERT_EQ(DLB_ADM_STATUS_OK, status);
@@ -245,11 +214,11 @@ protected:
 
     virtual void TearDown()
     {
-        if (oryginalContainer != nullptr)
+        if (originalContainer != nullptr)
         {
-            if (::dlb_adm_container_close(&oryginalContainer))
+            if (::dlb_adm_container_close(&originalContainer))
             {
-                oryginalContainer = nullptr;
+                originalContainer = nullptr;
             }
         }
 
@@ -287,11 +256,11 @@ TEST_F(DlbAdmEmissionProfile, dolbyPMDStudioReference)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, dolbyPMDStudioReferenceFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, dolbyPMDStudioReferenceFileName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, dolbyPMDStudioReferenceOutFileName);
@@ -320,14 +289,13 @@ TEST_F(DlbAdmEmissionProfile, parse_EmissionProfile)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, generatedEmissionProfileFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, generatedEmissionProfileFileName, DLB_ADM_TRUE);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
-    status = ::dlb_adm_container_write_xml_file(oryginalContainer, generatedEmissionProfileOutFileName);
+    status = ::dlb_adm_container_write_xml_file(originalContainer, generatedEmissionProfileOutFileName);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
-    status = CompareFiles(generatedEmissionProfileFileName, generatedEmissionProfileOutFileName);
-    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(generatedEmissionProfileFileName, generatedEmissionProfileOutFileName));
 }
 
 
@@ -336,11 +304,11 @@ TEST_F(DlbAdmEmissionProfile, flatten_emissionProfileCompliant)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, emissionProfileCompliantFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, emissionProfileCompliantFileName, DLB_ADM_TRUE);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten(originalContainer, flattenedContainer);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, emissionProfileCompliantOutFileName);
@@ -459,11 +427,11 @@ TEST_F(DlbAdmEmissionProfile, ingest_emissionProfileCompliant)
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     ASSERT_NE(DLB_ADM_NULL_ENTITY_ID, AltValSetID21);
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, emissionProfileCompliantFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, emissionProfileCompliantFileName, DLB_ADM_TRUE);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // ingest into the core model
-    status = dlb_adm_core_model_open_from_xml_container(&coreModel, oryginalContainer);
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, originalContainer);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     /* dlb_adm_container_open_from_core_model will open new container */
@@ -554,11 +522,11 @@ TEST_F(DlbAdmEmissionProfile, multipleProgrammes)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, multipleProgrammesFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, multipleProgrammesFileName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, multipleProgrammesOutFileName);
@@ -591,11 +559,11 @@ TEST_F(DlbAdmEmissionProfile, complementaryObjectsFlatten)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, complementaryObjectsFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, complementaryObjectsFileName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, complementaryObjectsOutFileName);
@@ -628,14 +596,14 @@ TEST_F(DlbAdmEmissionProfile, complementaryObjects)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, complementaryObjectsFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, complementaryObjectsFileName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
-    status = ::dlb_adm_container_write_xml_file(oryginalContainer, complementaryObjectsOutFileName);
+    status = ::dlb_adm_container_write_xml_file(originalContainer, complementaryObjectsOutFileName);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // ingest into the core model
-    status = dlb_adm_core_model_open_from_xml_container(&coreModel, oryginalContainer);
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, originalContainer);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Check if content has been flattend
@@ -662,11 +630,11 @@ TEST_F(DlbAdmEmissionProfile, adAndSpokenSubtitles)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, adAndSpokenSubtitlesFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, adAndSpokenSubtitlesFileName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, adAndSpokenSubtitlesOutFileName);
@@ -699,10 +667,10 @@ TEST_F(DlbAdmEmissionProfile, complementaryMultichannelObjects)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, complementaryMultichannelObjectsFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, complementaryMultichannelObjectsFileName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
-    status = ::dlb_adm_container_flatten(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, complementaryMultichannelObjectsOutFileName);
@@ -735,11 +703,11 @@ TEST_F(DlbAdmEmissionProfile, multipleProgrammesUsingMonoObjects)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, multipleProgrammesUsingMonoObjectsFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, multipleProgrammesUsingMonoObjectsFileName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, multipleProgrammesUsingMonoObjectsOutFileName);
@@ -774,11 +742,11 @@ TEST_F(DlbAdmEmissionProfile, noCommonDefinitionsInOutputXML)
     dlb_adm_xml_container *ingestedContainer = flattenedContainer; // alias
 
     // read minimal XML file, just to load common defs to XML Container
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, minimalFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, minimalFileName, DLB_ADM_TRUE);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // ingest into the core model
-    status = dlb_adm_core_model_open_from_xml_container(&coreModel, oryginalContainer);
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, originalContainer);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // generate XML to another container
@@ -790,7 +758,7 @@ TEST_F(DlbAdmEmissionProfile, noCommonDefinitionsInOutputXML)
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // clear container and core model
-    status = ::dlb_adm_container_close(&oryginalContainer);
+    status = ::dlb_adm_container_close(&originalContainer);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_close(&ingestedContainer);
@@ -800,14 +768,14 @@ TEST_F(DlbAdmEmissionProfile, noCommonDefinitionsInOutputXML)
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // read just created file to XML container (without common definitions)
-    status = ::dlb_adm_container_open(&oryginalContainer, &containerCounts);
+    status = ::dlb_adm_container_open(&originalContainer, &containerCounts);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, minimalOutFileName, DLB_ADM_FALSE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, minimalOutFileName, DLB_ADM_FALSE);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // ingest into the core model
-    status = dlb_adm_core_model_open_from_xml_container(&coreModel, oryginalContainer);
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, originalContainer);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // check if any common definition is present
@@ -826,14 +794,14 @@ TEST_F(DlbAdmEmissionProfile, audioObjectInteraction)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, audioObjectInteractionName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, audioObjectInteractionName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
-    status = ::dlb_adm_container_write_xml_file(oryginalContainer, audioObjectInteractionOutFileName);
+    status = ::dlb_adm_container_write_xml_file(originalContainer, audioObjectInteractionOutFileName);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, audioObjectInteractionFlattenedOutFileName);
@@ -882,11 +850,11 @@ TEST_F(DlbAdmEmissionProfile, parseBroacastMix)
     ASSERT_NE(DLB_ADM_NULL_ENTITY_ID, objectId2);
 
     /* load S-ADM to Core Model*/
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, BroadcastMixName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, BroadcastMixName, DLB_ADM_TRUE);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // ingest into the core model
-    status = dlb_adm_core_model_open_from_xml_container(&coreModel, oryginalContainer);
+    status = dlb_adm_core_model_open_from_xml_container(&coreModel, originalContainer);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     /* Validate Core Model */
@@ -920,12 +888,11 @@ TEST_F(DlbAdmEmissionProfile, parseBroacastMix)
     EXPECT_EQ(0, mElementData.alt_val_count);
 
     /* Write S-ADM from Core Model */
-    status = ::dlb_adm_container_write_xml_file(oryginalContainer, BroadcastMixOutFileName);
+    status = ::dlb_adm_container_write_xml_file(originalContainer, BroadcastMixOutFileName);
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     /* Compare received and resulted S-ADMs*/
-    status = CompareFiles(BroadcastMixName, BroadcastMixOutFileName);
-    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_TRUE(DlbAdmTest::CompareFiles(BroadcastMixName, BroadcastMixOutFileName));
 }
 
 static bool GetId(const std::string& strId, dlb_adm_entity_id& id)
@@ -953,17 +920,17 @@ static bool prepareIds(const std::vector<std::string>& stringIds, std::vector<dl
         ids.push_back(tempId);
     }
     return true; 
-};
+}
 
 TEST_F(DlbAdmEmissionProfile, flattenComplementary_complementaryObjectsFlatten)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, complementaryObjectsFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, complementaryObjectsFileName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten_complementary(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, complementaryObjectsOutFileName);
@@ -1193,11 +1160,11 @@ TEST_F(DlbAdmEmissionProfile, flattenComplementary_multipleComplementary)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, multipleComplementaryName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, multipleComplementaryName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten_complementary(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, multipleComplementaryFileName);
@@ -1281,11 +1248,11 @@ TEST_F(DlbAdmEmissionProfile, flattenComplementary_complementaryAndAvs)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, complementaryAndAvsName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, complementaryAndAvsName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten_complementary(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, complementaryAndAvsFileName);
@@ -1515,11 +1482,11 @@ TEST_F(DlbAdmEmissionProfile, flattenComplementary_emissionProfileCompliant)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_file(oryginalContainer, emissionProfileCompliantFileName, DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_file(originalContainer, emissionProfileCompliantFileName, DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten_complementary(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, complementaryAndAvsFileName);
@@ -1654,11 +1621,11 @@ TEST_F(DlbAdmEmissionProfile, flattenComplementary_singleComplementaryMemberInPr
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_buffer(oryginalContainer, singleComplementaryMemberInProgramme.c_str(), singleComplementaryMemberInProgramme.size(), DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_buffer(originalContainer, singleComplementaryMemberInProgramme.c_str(), singleComplementaryMemberInProgramme.size(), DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten_complementary(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // ingest into the core model
@@ -1680,11 +1647,11 @@ TEST_F(DlbAdmEmissionProfile, flattenComplementary_plainCopyNonComplementaryProg
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_buffer(oryginalContainer, sadmUnconsistentLanguages.c_str(), sadmUnconsistentLanguages.size(), DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_buffer(originalContainer, sadmUnconsistentLanguages.c_str(), sadmUnconsistentLanguages.size(), DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten_complementary(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // ingest into the core model
@@ -1788,11 +1755,11 @@ TEST_F(DlbAdmEmissionProfile, flattenComplementary_sadm_51_MnE_3D_complementary)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_buffer(oryginalContainer, sadm_51_MnE_3D_complementary.c_str(), sadm_51_MnE_3D_complementary.size(), DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_buffer(originalContainer, sadm_51_MnE_3D_complementary.c_str(), sadm_51_MnE_3D_complementary.size(), DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten_complementary(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     status = ::dlb_adm_container_write_xml_file(flattenedContainer, "sadm_51_MnE_3D_complementary.flattned.out.xml");
@@ -1807,6 +1774,8 @@ TEST_F(DlbAdmEmissionProfile, flattenComplementary_sadm_51_MnE_3D_complementary)
     ASSERT_EQ(DLB_ADM_STATUS_OK, status);
     status = ::dlb_adm_container_write_xml_file(coreModelContainer, "sadm_51_MnE_3D_complementary.flattned.coreModel.out.xml");
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    status = ::dlb_adm_container_close(&coreModelContainer);
+    ASSERT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Check if content has been flattend
     dlb_adm_core_model_count_entities(coreModel, DLB_ADM_ENTITY_TYPE_PROGRAMME, &count);
@@ -1822,17 +1791,28 @@ TEST_F(DlbAdmEmissionProfile, flattenComplementary_sadm_51_MnE_3D_complementary)
     status = ::dlb_adm_core_model_has_profile(coreModel, DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, &isEmissionProfile);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
     EXPECT_EQ(DLB_ADM_TRUE, isEmissionProfile);
+
+    dlb_adm_data_profile_list profiles;
+    status = ::dlb_adm_core_model_get_profile_list(&profiles, coreModel);
+    EXPECT_EQ(DLB_ADM_STATUS_OK, status);
+    EXPECT_EQ(1, profiles.profiles_count);
+
+    EXPECT_STREQ("AdvSS Emission S-ADM Profile", profiles.profiles[0].name);
+    EXPECT_STREQ("ITU-R BS.[ADM-NGA-EMISSION]-X", profiles.profiles[0].value);
+    EXPECT_STREQ("1.0.0", profiles.profiles[0].version);
+    EXPECT_STREQ("1", profiles.profiles[0].level);
+    EXPECT_EQ(DLB_ADM_PROFILE_SADM_EMISSION_PROFILE, profiles.profiles[0].type);
 }
 
 TEST_F(DlbAdmEmissionProfile, flattenComplementary_xml_me_2D_AVS)
 {
     int status;
 
-    status = ::dlb_adm_container_read_xml_buffer(oryginalContainer, xml_me_2D_AVS.c_str(), xml_me_2D_AVS.size(), DLB_ADM_TRUE);
+    status = ::dlb_adm_container_read_xml_buffer(originalContainer, xml_me_2D_AVS.c_str(), xml_me_2D_AVS.size(), DLB_ADM_TRUE);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // Flattening ADM structure
-    status = ::dlb_adm_container_flatten_complementary(oryginalContainer, flattenedContainer);
+    status = ::dlb_adm_container_flatten_complementary(originalContainer, flattenedContainer);
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     // ingest into the core model
@@ -1957,4 +1937,3 @@ TEST_F(DlbAdmEmissionProfile, flattenComplementary_xml_me_2D_AVS)
     EXPECT_EQ(DLB_ADM_GAIN_UNIT_DB, mElementData.alt_val_sets[0].gain.gain_unit);
     EXPECT_FLOAT_EQ(-3.0, mElementData.alt_val_sets[0].gain.gain_value);
 }
-

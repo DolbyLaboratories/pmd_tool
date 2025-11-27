@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2021, Dolby Laboratories Inc.
- * Copyright (c) 2020-2021, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
 //
 #include "dlb_adm/include/dlb_adm_api.h"
 #include "core_model/core_model_defs.h"
-#include "CoreModelTest.h"
+#include "TestUtilities.h"
 #include "dlb_adm_data.h"
 
 #include "AttributeValue.h"
@@ -124,38 +124,6 @@ protected:
         bool ok = status == DLB_ADM_STATUS_OK ? true : false;
 
         return ok && sourceId == idFromString;
-    }
-
-    bool CompareFiles(const char *fname1, const char *fname2)
-    {
-        std::ifstream ifs1(fname1);
-        std::ifstream ifs2(fname2);
-        bool eq = ifs1.good() && ifs2.good();
-
-        if (eq)
-        {
-            std::string line1;
-            std::string line2;
-            bool got1 = !std::getline(ifs1, line1).eof();
-            bool got2 = !std::getline(ifs2, line2).eof();
-
-            while (got1 && got2)
-            {
-                if (!(line1 == line2))
-                {
-                    eq = false;
-                    break;
-                }
-                got1 = !std::getline(ifs1, line1).eof();
-                got2 = !std::getline(ifs2, line2).eof();
-            }
-            if (eq && (got1 || got2))
-            {
-                eq = false; // they should end at the same time
-            }
-        }
-
-        return eq;
     }
 
     int SetUpNames()

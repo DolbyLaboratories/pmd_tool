@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2021, Dolby Laboratories Inc.
- * Copyright (c) 2020-2021, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -59,6 +59,11 @@
 
 #define DLB_ADM_DATA_FF_TYPE_LEN (12)
 #define DLB_ADM_DATA_FF_TYPE_SZ (DLB_ADM_DATA_FF_TYPE_LEN + 1)
+
+#define DLB_ADM_DATA_DOLBYE_PROGRAMS_SZ (8)
+#define DLB_ADM_DATA_PROFILES (8)
+#define DLB_ADM_DATA_PROFILE_VERSION_LEN (10)
+#define DLB_ADM_DATA_PROFILE_VERSION_SIZE (DLB_ADM_DATA_PROFILE_VERSION_LEN + 1)
 
 /*
  * Time format is hh:mm:ss.<samples>S<rate> where samples and rate are five to nine characters each:
@@ -268,6 +273,94 @@ typedef struct
     uint8_t                     *array_storage;
 
 } dlb_adm_data_presentation_data;
+
+/**
+ * @brief Dolby E stream info.
+ */
+typedef struct
+{
+    DLB_ADM_DOLBYE_PROGRAM_CONFIG         program_config_id;
+    DLB_ADM_DOLBYE_FRAME_RATE             frame_rate;
+    dlb_adm_data_SMPTE_timecode_dolbye    time_code;
+} dlb_adm_data_dolbye_info;
+
+/**
+ * @brief Dolby E program info.
+ */
+typedef struct
+{
+    char programDescriptionText[DLB_ADM_DATA_NAME_SZ];
+    DLB_ADM_DOLBYE_ACMOD acmod;                         /**< Audio coding mode */
+    DLB_ADM_DOLBYE_BSMOD bsmod;                         /**< Bitstream mode */
+    dlb_adm_bool lfeon;                                 /**< Low frequency effects channel on */
+    DLB_ADM_DOLBYE_CMIXLEV cmixlev;                     /**< Centre mix level */
+    DLB_ADM_DOLBYE_SURMIXLEV surmixlev;                 /**< Surround mix level */
+    DLB_ADM_DOLBYE_DSURMOD dsurmod;                     /**< Dolby Surround mode */
+    int32_t dialnorm;                                   /**< Dialogue normalization */
+    dlb_adm_bool copyrightb;                            /**< Copyright bit */
+    dlb_adm_bool origbs;                                /**< Original bitstream */
+    dlb_adm_bool langcod_exists;                        /**< Language of the audio service of the AC-3 bitstream exists */
+    int32_t langcod;                                    /**< Language of the audio service of the AC-3 bitstream */
+    dlb_adm_bool audprodie;                             /**< Audio production info exists */
+    int32_t mixlevel;                                   /**< Mixing level */
+    DLB_ADM_DOLBYE_ROOM_TYPE roomtyp;                   /**< Room type */
+    dlb_adm_bool xbsi1_exists;                          /**< extBsi1e exists */
+    DLB_ADM_DOLBYE_DMIXMODE xbsi1_dmixmod;              /**< Preferred downmix mode */
+    DLB_ADM_DOLBYE_LX_RX_MIXLEV xbsi1_ltrtcmixlev;      /**< Center downmix level in LtRt mode */
+    DLB_ADM_DOLBYE_LX_RX_MIXLEV xbsi1_ltrtsurmixlev;    /**< Surround downmix level in LtRt mode */
+    DLB_ADM_DOLBYE_LX_RX_MIXLEV xbsi1_lorocmixlev;      /**< Center downmix level in LoRo mode */
+    DLB_ADM_DOLBYE_LX_RX_MIXLEV xbsi1_lorosurmixlev;    /**< Surround downmix level in LoRo mode */
+    dlb_adm_bool xbsi2_exists;                          /**< extBsi2e exists */
+    DLB_ADM_DOLBYE_DSUREXMOD xbsi2_dsurexmod;           /**< Dolby Surround EX Mode */
+    DLB_ADM_DOLBYE_DHEADPHONEMOD xbsi2_dheadphonmod;    /**< Dolby Headphone mode */
+    dlb_adm_bool xbsi2_adconvtyp;                       /**< A/D converter type */
+    dlb_adm_data_dolbye_drc dynrng1;                    /**< Line mode compression */
+    dlb_adm_data_dolbye_drc compr1;                     /**< RF mode compression */
+} dlb_adm_data_dolbye_ac3_program;
+
+/**
+ * @brief Dolby E encoder parameters for one program.
+ */
+typedef struct
+{
+    dlb_adm_bool hpfon;              /**< DC filter */
+    dlb_adm_bool bwlpfon;            /**< Bandwidth Lowpass Filter */
+    dlb_adm_bool lfelpfon;           /**< Low frequency effects lowpass filter on */
+    dlb_adm_bool sur90on;            /**< Surround phase shift on */
+    dlb_adm_bool suratton;           /**< Surround attenuation on */
+    dlb_adm_bool rfpremphon;         /**< Overmodulation protection */
+} dlb_adm_data_dolbye_encoder_parameters;
+ 
+
+ /**
+ * @brief Dolby E structure describing stream info and all programs.
+ */
+typedef struct
+{
+    dlb_adm_data_dolbye_info                info;
+    dlb_adm_element_count                   program_count;
+    dlb_adm_data_dolbye_ac3_program         program_ac3_params[DLB_ADM_DATA_DOLBYE_PROGRAMS_SZ];
+    dlb_adm_data_dolbye_encoder_parameters  program_encode_params[DLB_ADM_DATA_DOLBYE_PROGRAMS_SZ];
+} dlb_adm_data_dolbye_data;
+
+
+typedef struct
+{
+    char name[DLB_ADM_DATA_NAME_SZ];
+    char version[DLB_ADM_DATA_PROFILE_VERSION_SIZE];
+    char level[DLB_ADM_DATA_PROFILE_VERSION_SIZE];
+    char value[DLB_ADM_DATA_NAME_SZ];
+    DLB_ADM_PROFILE type;
+} dlb_adm_profile;
+
+ /**
+ * @brief Profile list with profiles used in S-ADM.
+ */
+typedef struct
+{
+    dlb_adm_element_count                profiles_count;
+    dlb_adm_profile                      profiles[DLB_ADM_DATA_PROFILES];
+} dlb_adm_data_profile_list;
 
 #ifdef __cplusplus
 }

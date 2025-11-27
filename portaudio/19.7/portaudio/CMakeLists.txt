@@ -15,7 +15,11 @@ set(LIBS rt asound jack pthread m)
 set(LIBS_ASIO ${LIBS})
 
 if(APPLE)
-    set(LIBS CoreAudio AudioToolbox AudioUnit Cocoa)
+    set(LIBS 
+    "-framework CoreAudio"
+    "-framework AudioToolbox"
+    "-framework AudioUnit"
+    "-framework Cocoa")
     set(LIBS_ASIO ${LIBS})
 elseif(WIN32)
     set(LIBS advapi32 ole32)

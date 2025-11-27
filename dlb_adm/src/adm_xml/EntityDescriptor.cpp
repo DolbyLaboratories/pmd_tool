@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2022, Dolby Laboratories Inc.
- * Copyright (c) 2020-2022, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -66,8 +66,10 @@ namespace DlbAdm
         DLB_ADM_ENTITY_TYPE_ILLEGAL,
         false,
         false,
+        false,
         DLB_ADM_TAG_UNKNOWN
     };
+
 
     static EntityIndex theADMEntityIndex;
 

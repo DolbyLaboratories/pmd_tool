@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020, Dolby Laboratories Inc.
- * Copyright (c) 2020, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,12 +42,12 @@ namespace DlbAdm
 
     bool EntityTypeCompare::operator()(const EntityRecord &lhs, DLB_ADM_ENTITY_TYPE rhs) const
     {
-        return DLB_ADM_ID_GET_ENTITY_TYPE(lhs.id) < rhs;
+        return DLB_ADM_ID_GET_ENTITY_TYPE(lhs.id) < static_cast<long unsigned int>(rhs);
     }
 
     bool EntityTypeCompare::operator()(DLB_ADM_ENTITY_TYPE lhs, const EntityRecord &rhs) const
     {
-        return lhs < DLB_ADM_ID_GET_ENTITY_TYPE(rhs.id);
+        return static_cast<long unsigned int>(lhs) < DLB_ADM_ID_GET_ENTITY_TYPE(rhs.id);
     }
 
     bool EntityIdCompare::operator()(const EntityRecord &lhs, dlb_adm_entity_id rhs) const

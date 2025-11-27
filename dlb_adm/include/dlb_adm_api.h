@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2023, Dolby Laboratories Inc.
- * Copyright (c) 2020-2023, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -406,10 +406,24 @@ dlb_adm_core_model_add_profile
 
 DLB_ADM_DLL_ENTRY
 int
+dlb_adm_core_model_add_profile_list
+    (dlb_adm_core_model         *model
+    ,dlb_adm_data_profile_list  *adm_profiles
+    );
+
+DLB_ADM_DLL_ENTRY
+int
 dlb_adm_core_model_has_profile
     (const dlb_adm_core_model   *model          /**< [in] The model to test */
     ,const DLB_ADM_PROFILE       profile        /**< [in] The profile to test against */
     ,dlb_adm_bool               *has_profile    /**< [out] Whether the specific profile is set in Core Model */
+    );
+
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_get_profile_list
+    (dlb_adm_data_profile_list    *profiles    /**< [out] struct to fill */
+    ,const dlb_adm_core_model     *model       /**< [in]  core model instance to query */
     );
 
 /**
@@ -666,6 +680,15 @@ dlb_adm_core_model_add_presentation_relation
     ,dlb_adm_entity_id       complementary_ref_id
     );
 
+
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_add_dolbye_data
+    (dlb_adm_core_model        *model
+    ,dlb_adm_data_dolbye_data  *dolbye_data
+    );
+
+
 /**
  * @brief Restore the model to the empty state.
  */
@@ -779,6 +802,17 @@ dlb_adm_core_model_get_presentation_data
     );
 
 /**
+ * @brief In #model, access Dolby E data,
+ * translate them into C structures, and copy them into #dolbye_data.
+ */
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_get_dolbye_data
+    (dlb_adm_data_dolbye_data     *dolbye_data    /**< [out] struct to fill */
+    ,const dlb_adm_core_model     *model          /**< [in]  core model instance to query */
+    );
+
+/**
  * @brief Count the number of entities in #model of a particular #entity_type.
  */
 DLB_ADM_DLL_ENTRY
@@ -854,6 +888,19 @@ dlb_adm_core_model_get_frame_format
     (const dlb_adm_core_model  *model
     ,dlb_adm_data_frame_format *frame_format_data
     );
+
+/**
+ * @brief contentKind is populated with content kind value for given object id
+ * If object isn't found DLB_ADM_STATUS_NOT_FOUND returned
+ */
+DLB_ADM_DLL_ENTRY
+int
+dlb_adm_core_model_get_audio_element_content_kind
+    (const dlb_adm_core_model   *model
+    ,dlb_adm_entity_id           elementId
+    ,DLB_ADM_CONTENT_KIND       *contentKind
+    );
+
 
 /* Closing the model */
 

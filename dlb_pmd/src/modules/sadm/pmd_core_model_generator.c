@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_pmd
- * Copyright (c) 2021-2024, Dolby Laboratories Inc.
- * Copyright (c) 2021-2024, Dolby International AB.
+ * Copyright (c) 2021-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2021-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -113,7 +113,8 @@ static const char PMD_SOURCE_GROUP_NAME[] = "Audio Interface";
  */
 #define SPEAKER_CONFIG_CHANNEL_TOTAL (72)
 
-#define PMD_BED_CLASS_COUNT (3)
+#define PMD_BED_CLASS_COUNT (4)
+#define PMD_COORDINATE_TYPE_COUNT (2)
 
 #define PMD_LANG_SIZE (4)
 
@@ -140,8 +141,11 @@ struct pmd_core_model_generator
     dlb_adm_core_model  *core_model;                                        /* The core model instance to generate */
     const dlb_pmd_model *pmd_model;                                         /* The PMD model instance to parse */
 
-    dlb_adm_entity_id    bed_target_groups[NUM_PMD_SPEAKER_CONFIGS + 1];    /* TargetGroup IDs for standard bed channels */
-    dlb_adm_entity_id    bed_targets[SPEAKER_CONFIG_CHANNEL_TOTAL];         /* Target IDs for standard bed channels */
+    dlb_adm_entity_id    bed_cartesian_target_groups[NUM_PMD_SPEAKER_CONFIGS + 1];    /* TargetGroup IDs for standard bed channels */
+    dlb_adm_entity_id    bed_cartesian_targets[SPEAKER_CONFIG_CHANNEL_TOTAL];         /* Target IDs for standard bed channels */
+
+    dlb_adm_entity_id    bed_polar_target_groups[NUM_PMD_SPEAKER_CONFIGS + 1];        /* TargetGroup IDs for standard bed channels */
+    dlb_adm_entity_id    bed_polar_targets[SPEAKER_CONFIG_CHANNEL_TOTAL];             /* Target IDs for standard bed channels */
 
     dlb_adm_entity_id    source_group_id;                                   /* The SourceGroup ID for the PMD "audio interface" */
     dlb_adm_entity_id    sources[DLB_PMD_MAX_SIGNALS + 1];                  /* Source IDs for audio signals */
@@ -217,17 +221,24 @@ static const char* PMD_BED_CLASS_POSTFIX[PMD_BED_CLASS_COUNT] =
 {
     "$[ME]",
     "$[CM]",
-    "$[BM]"
+    "$[BM]",
+    "$[ML]" /* Legacy Music and Effect, in old version of Emission profile DLB_ADM_CONTENT_KIND_NK_MUSIC_AND_EFFECTS doesn't exist*/
 };
+
+/**
+ * @brief Second postfix added to bed name is indicates if coordinate type is cartesian.
+*/
+static const char* CARTESIAN_TAG = "$[C]";
 
 /**
  * @brief Translate PMD bed class to S-ADM CONTENT_KIND
  */
 static const DLB_ADM_CONTENT_KIND PMD_TO_BED_CLASS_ADM_CONTENT_KIND[PMD_BED_CLASS_COUNT] = 
 {
-    /* $[ME] */ DLB_ADM_CONTENT_KIND_NK_UNDEFINED,
-    /* $[CM] */ DLB_ADM_CONTENT_KIND_MK_COMPLETE_MAIN,
-    /* $[BM] */ DLB_ADM_CONTENT_KIND_MK_VISUALLY_IMPAIRED
+    /* $[ME] */     DLB_ADM_CONTENT_KIND_NK_MUSIC_AND_EFFECTS,
+    /* $[CM] */     DLB_ADM_CONTENT_KIND_MK_COMPLETE_MAIN,
+    /* $[BM] */     DLB_ADM_CONTENT_KIND_MK_VISUALLY_IMPAIRED,
+    /* $[ML] */     DLB_ADM_CONTENT_KIND_NK_UNDEFINED
 };
 
 /**
@@ -253,8 +264,10 @@ pmd_core_model_generator_init
     g->pmd_model = pmd_model;
 
     /* Clear any old information */
-    memset(g->bed_target_groups, 0, sizeof(g->bed_target_groups));
-    memset(g->bed_targets, 0, sizeof(g->bed_targets));
+    memset(g->bed_polar_target_groups, 0, sizeof(g->bed_polar_target_groups));
+    memset(g->bed_polar_targets, 0, sizeof(g->bed_polar_targets));
+    memset(g->bed_cartesian_target_groups, 0, sizeof(g->bed_cartesian_target_groups));
+    memset(g->bed_cartesian_targets, 0, sizeof(g->bed_cartesian_targets));
     memset(g->sources, 0, sizeof(g->sources));
     g->source_group_id = DLB_ADM_NULL_ENTITY_ID;
     g->current_audio_element_id = DLB_ADM_NULL_ENTITY_ID;
@@ -276,32 +289,59 @@ pmd_core_model_generator_init
     if (hasProfile)
     {
         /* Mark AudioPackFormat -> TargetGroup */
-        g->bed_target_groups[DLB_PMD_SPEAKER_CONFIG_2_0] = 0x801000200000000;   // AP_00010002
-        g->bed_target_groups[DLB_PMD_SPEAKER_CONFIG_5_1] = 0x801000300000000;   // AP_00010003
-        g->bed_target_groups[DLB_PMD_SPEAKER_CONFIG_5_1_4] = 0x801000500000000; // AP_00010005
+        g->bed_cartesian_target_groups[DLB_PMD_SPEAKER_CONFIG_2_0] = 0x801080200000000;   // AP_00010802
+        g->bed_cartesian_target_groups[DLB_PMD_SPEAKER_CONFIG_5_1] = 0x801080300000000;   // AP_00010803
+        g->bed_cartesian_target_groups[DLB_PMD_SPEAKER_CONFIG_5_1_4] = 0x801080500000000; // AP_00010805
+
+        g->bed_polar_target_groups[DLB_PMD_SPEAKER_CONFIG_2_0] = 0x801000200000000;   // AP_00010802
+        g->bed_polar_target_groups[DLB_PMD_SPEAKER_CONFIG_5_1] = 0x801000300000000;   // AP_00010803
+        g->bed_polar_target_groups[DLB_PMD_SPEAKER_CONFIG_5_1_4] = 0x801000500000000; // AP_00010805
 
         /* Mark AudioChannelFormat -> Target */
         /* 2.0 channels */
-        g->bed_targets[0] = 0xA01000100000000;    // AC_00010001
-        g->bed_targets[1] = 0xA01000200000000;    // AC_00010002
+        g->bed_cartesian_targets[0] = 0xA01080100000000;    // AC_00010801
+        g->bed_cartesian_targets[1] = 0xA01080200000000;    // AC_00010802
         /* 5.1 channels */
-        g->bed_targets[5] = 0xA01000100000000;    // AC_00010001
-        g->bed_targets[6] = 0xA01000200000000;    // AC_00010002
-        g->bed_targets[7] = 0xA01000300000000;    // AC_00010003
-        g->bed_targets[8] = 0xA01000400000000;    // AC_00010004
-        g->bed_targets[9] = 0xA01000500000000;    // AC_00010005
-        g->bed_targets[10] = 0xA01000600000000;    // AC_00010006
+        g->bed_cartesian_targets[5] = 0xA01080100000000;    // AC_00010801
+        g->bed_cartesian_targets[6] = 0xA01080200000000;    // AC_00010802
+        g->bed_cartesian_targets[7] = 0xA01080300000000;    // AC_00010803
+        g->bed_cartesian_targets[8] = 0xA01080400000000;    // AC_00010804
+        g->bed_cartesian_targets[9] = 0xA01080500000000;    // AC_00010805
+        g->bed_cartesian_targets[10] = 0xA01080600000000;    // AC_00010806
         /* 5.1.4 channels */
-        g->bed_targets[19] = 0xA01000100000000;    // AC_00010001
-        g->bed_targets[20] = 0xA01000200000000;    // AC_00010002
-        g->bed_targets[21] = 0xA01000300000000;    // AC_00010003
-        g->bed_targets[22] = 0xA01000400000000;    // AC_00010004
-        g->bed_targets[23] = 0xA01000500000000;    // AC_00010005
-        g->bed_targets[24] = 0xA01000600000000;    // AC_00010006
-        g->bed_targets[25] = 0xA01000D00000000;    // AC_0001000D
-        g->bed_targets[26] = 0xA01000F00000000;    // AC_0001000F
-        g->bed_targets[27] = 0xA01001000000000;    // AC_00010010
-        g->bed_targets[28] = 0xA01001200000000;    // AC_00010012
+        g->bed_cartesian_targets[19] = 0xA01080100000000;    // AC_00010801
+        g->bed_cartesian_targets[20] = 0xA01080200000000;    // AC_00010802
+        g->bed_cartesian_targets[21] = 0xA01080300000000;    // AC_00010803
+        g->bed_cartesian_targets[22] = 0xA01080400000000;    // AC_00010804
+        g->bed_cartesian_targets[23] = 0xA01080500000000;    // AC_00010805
+        g->bed_cartesian_targets[24] = 0xA01080600000000;    // AC_00010806
+        g->bed_cartesian_targets[25] = 0xA01080D00000000;    // AC_0001080D
+        g->bed_cartesian_targets[26] = 0xA01080F00000000;    // AC_0001080F
+        g->bed_cartesian_targets[27] = 0xA01081000000000;    // AC_00010810
+        g->bed_cartesian_targets[28] = 0xA01081200000000;    // AC_00010812
+
+
+        /* 2.0 channels */
+        g->bed_polar_targets[0] = 0xA01000100000000;    // AC_00010001
+        g->bed_polar_targets[1] = 0xA01000200000000;    // AC_00010002
+        /* 5.1 channels */
+        g->bed_polar_targets[5] = 0xA01000100000000;    // AC_00010001
+        g->bed_polar_targets[6] = 0xA01000200000000;    // AC_00010002
+        g->bed_polar_targets[7] = 0xA01000300000000;    // AC_00010003
+        g->bed_polar_targets[8] = 0xA01000400000000;    // AC_00010004
+        g->bed_polar_targets[9] = 0xA01000500000000;    // AC_00010005
+        g->bed_polar_targets[10] = 0xA01000600000000;    // AC_00010006
+        /* 5.1.4 channels */
+        g->bed_polar_targets[19] = 0xA01000100000000;    // AC_00010001
+        g->bed_polar_targets[20] = 0xA01000200000000;    // AC_00010002
+        g->bed_polar_targets[21] = 0xA01000300000000;    // AC_00010003
+        g->bed_polar_targets[22] = 0xA01000400000000;    // AC_00010004
+        g->bed_polar_targets[23] = 0xA01000500000000;    // AC_00010005
+        g->bed_polar_targets[24] = 0xA01000600000000;    // AC_00010006
+        g->bed_polar_targets[25] = 0xA01000D00000000;    // AC_0001000D
+        g->bed_polar_targets[26] = 0xA01000F00000000;    // AC_0001000F
+        g->bed_polar_targets[27] = 0xA01001000000000;    // AC_00010010
+        g->bed_polar_targets[28] = 0xA01001200000000;    // AC_00010012
     }
     return status;
 }
@@ -474,10 +514,10 @@ generate_element_id
 static
 int                         /** @return 0 on success and non-zero otherwise */
 generate_target_group_id
-    (DLB_ADM_AUDIO_TYPE          type   /**< [in] core model audio type */
-    ,dlb_pmd_element_id          eid    /**< [in] PMD element identifier */
-    ,dlb_pmd_speaker_config      cfg    /**< [in] PMD speaker config */
-    ,dlb_adm_entity_id          *id     /**< [out] core model ID to generate */
+    (DLB_ADM_AUDIO_TYPE          type         /**< [in] core model audio type */
+    ,dlb_pmd_element_id          eid          /**< [in] PMD element identifier */
+    ,dlb_pmd_speaker_config      cfg          /**< [in] PMD speaker config */
+    ,dlb_adm_entity_id          *id           /**< [out] core model ID to generate */
     )
 {
     unsigned int yyyy = (unsigned int)type;
@@ -571,6 +611,27 @@ generate_source
     *id = g->sources[s];
 
     return DLB_ADM_STATUS_OK;
+}
+
+/**
+ * @brief Detect from PMD bed name if cartesian coordinates should be used
+ */
+static
+int
+is_cartesian_bed
+    (const char *name
+    )
+{
+    int cartesian = PMD_FALSE;
+    char *type_ptr = NULL;
+
+    type_ptr = strstr(name, CARTESIAN_TAG);
+    if (type_ptr != NULL)
+    {
+        strncpy(type_ptr, "\0", 1);
+        cartesian = PMD_TRUE;
+    }
+    return cartesian;
 }
 
 /**
@@ -947,18 +1008,21 @@ generate_bed_target_group_objects
     (pmd_core_model_generator   *g                  /**< [in] PMD -> core model converter */
     ,dlb_pmd_bed                *bed                /**< [in] PMD bed object */
     ,dlb_pmd_bool                bed_is_7_0_4       /**< [in] Special case for 7.0.4? */
+    ,dlb_pmd_bool                is_cartesian       /**< [in] another target groups for cartesian */
     )
 {
     dlb_pmd_speaker_config cfg = (bed_is_7_0_4 ? PMD_SPEAKER_CONFIG_7_0_4 : bed->config);
     size_t channel_count = SPEAKER_CONFIG_COUNT[cfg];
     size_t block_index = SPEAKER_CONFIG_CHANNEL_BLOCK_INDEX[cfg];
-    dlb_adm_entity_id *targets = &g->bed_targets[block_index];
+    dlb_adm_entity_id *targets = is_cartesian ? &g->bed_cartesian_targets[block_index] : &g->bed_polar_targets[block_index];
     dlb_adm_entity_id target_group_id;
     int status;
     size_t i;
 
+    target_group_id = is_cartesian ? g->bed_cartesian_target_groups[cfg] : g->bed_polar_target_groups[cfg];
+
     /* Add the target group (or re-use the one generated earlier) */
-    if (g->bed_target_groups[cfg] == DLB_ADM_NULL_ENTITY_ID)
+    if (target_group_id == DLB_ADM_NULL_ENTITY_ID)
     {
         dlb_adm_data_target_group target_group;
 
@@ -973,9 +1037,16 @@ generate_bed_target_group_objects
         CHECK_STATUS(status);
         status = dlb_adm_core_model_add_target_group(g->core_model, &target_group, &g->names);
         CHECK_STATUS(status);
-        g->bed_target_groups[cfg] = target_group.id;
+        if (is_cartesian)
+        {
+            g->bed_cartesian_target_groups[cfg] = target_group.id;
+        }
+        else
+        {
+            g->bed_polar_target_groups[cfg] = target_group.id;
+        }
+        target_group_id = target_group.id;
     }
-    target_group_id = g->bed_target_groups[cfg];
 
     /* Add the target objects, per channel */
     for (i = 0; i < channel_count; i++) /* TODO: is there any special handling for 7.0.4? */
@@ -993,8 +1064,9 @@ generate_bed_target_group_objects
 static
 dlb_pmd_success             /** @return PMD_SUCCESS(=0) on success and PMD_FAIL(=1) otherwise */
 generate_bed_objects
-    (pmd_core_model_generator   *g          /**< [in] PMD -> core model converter */
-    ,dlb_pmd_bed                *bed        /**< [in] PMD bed object */
+    (pmd_core_model_generator   *g             /**< [in] PMD -> core model converter */
+    ,dlb_pmd_bed                *bed           /**< [in] PMD bed object */
+    ,dlb_pmd_bool                is_cartesian  /**< [in] indicates if bed should be generated with cartesian target group  */
     )
 {
     dlb_pmd_bool bed_is_7_0_4 = PMD_FALSE;
@@ -1033,7 +1105,7 @@ generate_bed_objects
     }
 
     /* Add the TargetGroup objects */
-    status = generate_bed_target_group_objects(g, bed, bed_is_7_0_4);
+    status = generate_bed_target_group_objects(g, bed, bed_is_7_0_4, is_cartesian);
     CHECK_STATUS_SUCCESS(status);
 
     return PMD_SUCCESS;
@@ -1240,6 +1312,7 @@ generate_element_objects
     dlb_pmd_success success;
     int status;
     unsigned int i = 0;
+    int is_cartesian = PMD_FALSE;
     char content_label[DLB_PMD_TITLE_SIZE];
     dlb_pmd_pres_language_tag content_language;
     unsigned int number_of_channels = 0;
@@ -1258,7 +1331,7 @@ generate_element_objects
         audio_element.gain.gain_unit = DLB_ADM_GAIN_UNIT_DB;
         if (!dlb_pmd_bed_lookup(g->pmd_model, element_id, &bed, MAX_BED_CHANNEL_COUNT, sources))
         {
-
+            is_cartesian = is_cartesian_bed(bed.name);
             content_group.content_kind = translate_bed_class_to_content_kind(bed.name);
             audio_element.gain.gain_value = bed.sources[0].gain;    /* we'll check other gains for equality later */
             audio_element.object_class = DLB_ADM_OBJECT_CLASS_NONE;
@@ -1300,7 +1373,7 @@ generate_element_objects
         g->current_audio_element_id = audio_element.id;
         if (is_bed)
         {
-            success = generate_bed_objects(g, &bed);
+            success = generate_bed_objects(g, &bed, is_cartesian);
         }
         else
         {

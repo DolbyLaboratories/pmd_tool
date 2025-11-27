@@ -1,7 +1,7 @@
 /************************************************************************
  * dlb_adm
- * Copyright (c) 2020-2023, Dolby Laboratories Inc.
- * Copyright (c) 2020-2023, Dolby International AB.
+ * Copyright (c) 2020-2025, Dolby Laboratories Inc.
+ * Copyright (c) 2020-2025, Dolby International AB.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ static const char stereoXML[] GTEST_ATTRIBUTE_UNUSED_ =
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 "<frame version=\"ITU-R_BS.2125-1\">\n"
 "  <frameHeader>\n"
-"    <frameFormat frameFormatID=\"FF_00000000001\" type=\"full\" start=\"00:00:00.00000\" duration=\"00:00:00.01920S48000\" timeReference=\"local\" flowID=\"f8cc7821-09b2-41cb-bd42-ec35e9fcb9a8\">\n"
+"    <frameFormat frameFormatID=\"FF_00000001\" type=\"full\" start=\"00:00:00.00000\" duration=\"00:00:00.01920S48000\" timeReference=\"local\" flowID=\"f8cc7821-09b2-41cb-bd42-ec35e9fcb9a8\">\n"
 "    </frameFormat>\n"
 "    <transportTrackFormat transportID=\"TP_0001\" transportName=\"X\" numIDs=\"4\" numTracks=\"4\">\n"
 "      <audioTrack trackID=\"1\" formatLabel=\"0001\" formatDefinition=\"PCM\">\n"
@@ -109,7 +109,7 @@ static const char stereoXML[] GTEST_ATTRIBUTE_UNUSED_ =
 "        <audioObjectLabel language=\"ger\">English</audioObjectLabel>\n"
 "        <gain gainUnit=\"dB\">-1.50</gain>\n"
 "      </alternativeValueSet>\n"
-"      <gain gainUnit=\"dB\">0.00</gain>\n"
+"      <gain gainUnit=\"dB\">-3.00</gain>\n"
 "      <audioObjectInteraction onOffInteract=\"0\" gainInteract=\"0\" positionInteract=\"1\">\n"
 "        <positionInteractionRange bound=\"min\" coordinate=\"X\">-1.00</positionInteractionRange>\n"
 "        <positionInteractionRange bound=\"max\" coordinate=\"X\">1.00</positionInteractionRange>\n"
@@ -119,7 +119,7 @@ static const char stereoXML[] GTEST_ATTRIBUTE_UNUSED_ =
 "      <audioTrackUIDRef>ATU_00000002</audioTrackUIDRef>\n"
 "    </audioObject>\n"
 "    <audioObject audioObjectID=\"AO_1002\" audioObjectName=\"English Dialog\" interact=\"1\">\n"
-"      <gain gainUnit=\"dB\">0.00</gain>\n"
+"      <gain gainUnit=\"dB\">3.00</gain>\n"
 "      <audioObjectInteraction onOffInteract=\"0\" gainInteract=\"0\" positionInteract=\"0\">\n"
 "        <positionInteractionRange bound=\"min\" coordinate=\"X\">-1.00</positionInteractionRange>\n"
 "        <positionInteractionRange bound=\"max\" coordinate=\"X\">1.00</positionInteractionRange>\n"
@@ -130,7 +130,7 @@ static const char stereoXML[] GTEST_ATTRIBUTE_UNUSED_ =
 "      <audioTrackUIDRef>ATU_00000003</audioTrackUIDRef>\n"
 "    </audioObject>\n"
 "    <audioObject audioObjectID=\"AO_1003\" audioObjectName=\"Dialogue Francaise\" interact=\"0\">\n"
-"      <gain gainUnit=\"dB\">0.00</gain>\n"
+"      <gain gainUnit=\"dB\">1.00</gain>\n"
 "      <audioPackFormatIDRef>AP_00031003</audioPackFormatIDRef>\n"
 "      <audioTrackUIDRef>ATU_00000004</audioTrackUIDRef>\n"
 "    </audioObject>\n"
@@ -205,7 +205,7 @@ static const char dolbyReferenceXML[] GTEST_ATTRIBUTE_UNUSED_ =
 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
 "<frame>\n"
 "  <frameHeader>\n"
-"    <frameFormat frameFormatID=\"FF_00000000001\" type=\"full\" start=\"00:00:00.00000\" duration=\"00:00:00.01920S48000\" timeReference=\"local\" flowID=\"f8cc7821-09b2-41cb-bd42-ec35e9fcb9a8\">\n"
+"    <frameFormat frameFormatID=\"FF_00000001\" type=\"full\" start=\"00:00:00.00000\" duration=\"00:00:00.01920S48000\" timeReference=\"local\" flowID=\"f8cc7821-09b2-41cb-bd42-ec35e9fcb9a8\">\n"
 "      <changedIDs>\n"
 "        <audioProgrammeIDRef>APR_1001</audioProgrammeIDRef>\n"
 "        <audioProgrammeIDRef>APR_1002</audioProgrammeIDRef>\n"
@@ -462,7 +462,7 @@ static const char ebuPart1XML[] GTEST_ATTRIBUTE_UNUSED_ =
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 "<frame>\n"
 "  <frameHeader>\n"
-"    <frameFormat frameFormatID=\"FF_00000000001\" type=\"full\" start=\"00:00:00.00000\" duration=\"00:00:00.20000\" timeReference=\"local\" flowID=\"af419c78-9712-4e9d-a6d8-e44546e31fe6\">\n"
+"    <frameFormat frameFormatID=\"FF_00000001\" type=\"full\" start=\"00:00:00.00000\" duration=\"00:00:00.20000\" timeReference=\"local\" flowID=\"af419c78-9712-4e9d-a6d8-e44546e31fe6\">\n"
 "      <changedIDs>\n"
 "        <audioProgrammeIDRef>APR_1001</audioProgrammeIDRef>\n"
 "        <audioProgrammeIDRef>APR_1002</audioProgrammeIDRef>\n"

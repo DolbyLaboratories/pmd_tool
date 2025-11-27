@@ -1,4 +1,4 @@
-PMD 2.3.0 release notes
+Professional Metadata libraries 2.5.0 release notes
 =======================
 
 Serialized ADM (ITU-R BS.2125) and Professional Metadata (PMD, SMPTE RDD-49)
@@ -50,11 +50,30 @@ Test applications:
 
 Known issues:
 -------------
-- Only Linux x86_64 (64-bit) is tested for 2.3.0
+- Only Linux x86_64 (64-bit) is tested for 2.5.0
 - To build the test applications on Linux, you need the ICU unicode library and
   header files (http://site.icu-project.org/home)
 - pmd_studio will not build on Windows and OSX support is limited
 - PMD to S-ADM translation uses hardcoded values
+
+Changes in 2.5:
+--------------------
+- ADM library
+  - Added support for Dolby E ADM and S-ADM profile for emission
+  - Updated support according to the latest Recommendation ITU-R BS.2168-0(02/2025): Audio definition model 
+  and serial representation of audio definition model profile for advanced sound
+  systems emission
+    - Used new profile value and attributes
+    - Added support of Cartesian coordinates
+    - Fixed frameFormatID
+    - Added support for new nonDialogueContentKind "Music and Effects"
+    - Added support for storing unrecognized profiles
+    - Attribute profileLevel value type changed from uint_8 to string 
+- PMD Studio:
+  - Added support for Cartesian coordinates
+  - Added support for new Music and Effects bed class
+- PMD library
+  - Added support for new PMD Studio features
 
 Changes in 2.3:
 --------------------
