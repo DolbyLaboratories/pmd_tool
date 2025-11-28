@@ -97,6 +97,9 @@ static const char content_label_same_lang_PMDInputFileName[] = "content_label_sa
 static const char content_label_same_lang_SADMInputFileName[] = "content_label_same_lang.sadm.xml";
 static const char content_label_same_lang_SADMOutputFileName[] = "content_label_same_lang.out.sadm.xml";
 
+static const char content_with_AVS_SADM_InputFileName[]  = "content_with_AVS.sadm.xml";
+static const char content_with_AVS_SADM_OutputFileName[]  = "content_with_AVS.sadm.out.xml";
+
 class CoreModelGenerator : public testing::Test
 {
 protected:
@@ -753,4 +756,22 @@ TEST_F(CoreModelGenerator, contentLabelSameLang)
     EXPECT_EQ(DLB_ADM_STATUS_OK, status);
 
     EXPECT_TRUE(CompareFiles(content_label_same_lang_SADMInputFileName, content_label_same_lang_SADMOutputFileName));
+}
+
+TEST_F(CoreModelGenerator, SADM_in_SADM_out_with_AVS)
+{
+    dlb_pmd_model_combo *comboModel;
+    dlb_pmd_element_id eid;
+    dlb_pmd_success success;
+    int status;
+
+    SetUpTestInput(content_with_AVS_SADM_InputFileName, SADM_with_AVS);  
+    ASSERT_TRUE(InitComboModel(NULL, NULL));
+
+    success = ::xml_read_custom(content_with_AVS_SADM_InputFileName, mPmdModelCombo, PMD_TRUE, PMD_TRUE, PMD_TRUE);
+    ASSERT_EQ(PMD_SUCCESS, success);
+    success = ::xml_write(content_with_AVS_SADM_OutputFileName, mPmdModelCombo, PMD_TRUE);
+    ASSERT_EQ(PMD_SUCCESS, success);
+
+    EXPECT_TRUE(CompareFiles(content_with_AVS_SADM_InputFileName, content_with_AVS_SADM_OutputFileName));
 }

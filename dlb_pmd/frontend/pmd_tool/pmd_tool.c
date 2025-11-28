@@ -813,7 +813,7 @@ read_input
     switch (args->inmode)
     {
     case MODE_XML:
-        result = xml_read(in, model, args->strict_xml, args->sadm_common);
+        result = xml_read_custom(in, model, args->strict_xml, args->sadm_common, args->sadm_out);
         try_it = args->try_frame;
         break;
     case MODE_KLV:

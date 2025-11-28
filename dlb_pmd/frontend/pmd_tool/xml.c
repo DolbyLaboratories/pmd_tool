@@ -60,7 +60,6 @@ error_callback
     puts(msg);
 }
 
-
 int
 xml_read
     (const char             *filename
@@ -69,12 +68,26 @@ xml_read
     ,dlb_pmd_bool            use_common_defs
     )
 {
+    xml_read_custom(filename, model, strict, use_common_defs, PMD_FALSE);
+}
+
+
+int
+xml_read_custom
+    (const char             *filename
+    ,dlb_pmd_model_combo    *model
+    ,dlb_pmd_bool            strict
+    ,dlb_pmd_bool            use_common_defs
+    ,dlb_pmd_bool            sadm_out
+    )
+{
     dlb_pmd_bool     is_pmd  = dlb_xmlpmd_file_is_pmd (filename);
     dlb_pmd_bool     is_sadm = dlb_xmlpmd_file_is_sadm(filename);
+    dlb_pmd_bool     use_flattening = !sadm_out;
 
     if (is_sadm)
     {
-        if (dlb_pmd_sadm_file_read(filename, model, use_common_defs, error_callback, NULL))
+        if (dlb_pmd_sadm_file_read_custom(filename, model, use_common_defs, use_flattening, error_callback, NULL))
         {
             printf("XML read sADM file failed\n");
             return 1;

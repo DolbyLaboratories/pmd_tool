@@ -79,6 +79,28 @@ dlb_pmd_sadm_file_read
    ,void                        *arg                /**< [in] user-parameter for error callback */
    );
 
+/**
+ * @brief helper routine to actually read and parse S-ADM from file
+ * 
+ * If use_flattening is set to true, flattening algorithm is used
+ *
+ * Upon parse error, this function will return 1, and the error message
+ * can be retrieved via dlb_pmd_error().
+ *
+ * see the note on #dlb_xmlpmd_parse for an explanation of the #strict
+ * field.
+ */
+DLB_PMD_DLL_ENTRY
+dlb_pmd_success          /** @return 0 if file read and parsed successfully, 1 otherwise */
+dlb_pmd_sadm_file_read_custom
+   (const char                  *filename           /**< [in] file to read */
+   ,dlb_pmd_model_combo         *model              /**< [in] model to populate */
+   ,dlb_pmd_bool                 use_common_defs    /**< [in] Use S-ADM common definitions? */
+   ,dlb_pmd_bool                 use_flattening     /**< [in] Use flattening for Core Model? */
+   ,dlb_pmd_sadm_error_callback  err                /**< [in] error callback */
+   ,void                        *arg                /**< [in] user-parameter for error callback */
+   );
+
 
 /**
  * @brief write a PMD model to a file in S-ADM XML format

@@ -169,9 +169,7 @@ sadm_bitstream_decoder_decode
     )
 {
     dlb_adm_container_counts     counts;
-    dlb_adm_container_counts     counts_flat;
     dlb_adm_xml_container       *container = NULL;
-    dlb_adm_xml_container       *container_flat = NULL;
     dlb_pmd_success              result = PMD_SUCCESS;
 
     memset(&counts, 0, sizeof(counts));
@@ -203,11 +201,9 @@ sadm_bitstream_decoder_decode
     }
 
     if (dlb_adm_container_open(&container, &counts)                                           ||
-        dlb_adm_container_open(&container_flat, &counts_flat)                                 ||
         dlb_adm_container_read_xml_buffer(container, dec->xmlbuf, dec->size, use_common_defs) ||
-        dlb_adm_container_flatten(container, container_flat)                                  ||
         dlb_adm_core_model_clear(model)                                                       ||
-        dlb_adm_core_model_ingest_xml_container(model, container_flat)
+        dlb_adm_core_model_ingest_xml_container(model, container)
        )
     {
         result = PMD_FAIL;
@@ -221,7 +217,6 @@ sadm_bitstream_decoder_decode
     if (container != NULL)
     {
         (void)dlb_adm_container_close(&container);
-        (void)dlb_adm_container_close(&container_flat);
     }
 
     return result;
