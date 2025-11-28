@@ -56,6 +56,18 @@ xml_read
     ,dlb_pmd_bool            use_common_defs    /**< [in] use ADM common definitions? */
     );
 
+/**
+ * @brief parse an XML file to ingest a PMD model
+ */
+int
+xml_read_custom
+    (const char             *filename           /**< [in] name of file to ingest */
+    ,dlb_pmd_model_combo    *model              /**< [out] destination struct for model */
+    ,dlb_pmd_bool            strict             /**< [in] strict XML checking? */
+    ,dlb_pmd_bool            use_common_defs    /**< [in] use ADM common definitions? */
+    ,dlb_pmd_bool            sadm_out           /**< [in] is expected sadm_out? */
+    );
+
 
 /**
  * @brief write an XML file to given filename

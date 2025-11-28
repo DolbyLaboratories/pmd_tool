@@ -85,12 +85,26 @@ remove_path
 
 /** ------------------------------ public API ------------------------- */
 
-
 dlb_pmd_success
 dlb_pmd_sadm_file_read
    (const char                  *filename
    ,dlb_pmd_model_combo         *model
    ,dlb_pmd_bool                 use_common_defs
+   ,dlb_pmd_sadm_error_callback  error_callback
+   ,void                        *error_callback_arg
+   )
+{
+    /* by default flattening is turning on */
+    return dlb_pmd_sadm_file_read_custom(filename, model, use_common_defs, PMD_TRUE, error_callback, error_callback_arg);
+}
+
+
+dlb_pmd_success
+dlb_pmd_sadm_file_read_custom
+   (const char                  *filename
+   ,dlb_pmd_model_combo         *model
+   ,dlb_pmd_bool                 use_common_defs
+   ,dlb_pmd_bool                 use_flattening
    ,dlb_pmd_sadm_error_callback  error_callback
    ,void                        *error_callback_arg
    )
@@ -116,14 +130,22 @@ dlb_pmd_sadm_file_read
     status = dlb_adm_container_read_xml_file(container, filename, use_common_defs);
     CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to read XML file");
 
-    status = dlb_adm_container_flatten(container, flattened_container);
-    CHECK_STATUS(status, "dlb_adm_container_flatten(): failed to flatten XML container");
-
     success = dlb_pmd_model_combo_get_writable_core_model(model, &core_model);
     CHECK_SUCCESS(success, "dlb_pmd_sadm_file_read(): could not get writable core model");
-    
-    status = dlb_adm_core_model_ingest_xml_container(core_model, flattened_container);
-    CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to ingest core model from XML container");
+
+    if (use_flattening)
+    {
+        status = dlb_adm_container_flatten(container, flattened_container);
+        CHECK_STATUS(status, "dlb_adm_container_flatten(): failed to flatten XML container");
+
+        status = dlb_adm_core_model_ingest_xml_container(core_model, flattened_container);
+        CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to ingest core model from XML container");
+    }
+    else
+    {
+        status = dlb_adm_core_model_ingest_xml_container(core_model, container);
+        CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to ingest core model from XML container");
+    }
 
     status = dlb_adm_container_close(&container);
     CHECK_STATUS(status, "dlb_pmd_sadm_file_read(): failed to close XML container");
