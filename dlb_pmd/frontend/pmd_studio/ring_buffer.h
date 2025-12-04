@@ -41,6 +41,7 @@
 #include <vector>
 #include <memory>
 #include <cstring>
+#include <stdexcept>
 
 #include "pmd_studio_common_defs.h"
 
