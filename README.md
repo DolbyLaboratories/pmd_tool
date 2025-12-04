@@ -93,6 +93,8 @@ using a professional sound card:
 sudo apt-get install build-essential libgtk-3-dev libasound2-dev libjack-dev
 ```
 
+When building under Ubuntu 24.04 (or later) additionally install libnsl-dev
+
 #### NVIDIA ConnectX
 
 When using an NVidia ConnectX SMARTNIC ethernet card the appropriate NVIDIA
